@@ -1,0 +1,4 @@
+persistence:
+  type: FILE
+  file:
+    dataDirectory: src/test/resources/.data/bps-budget

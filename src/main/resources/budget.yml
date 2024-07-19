@@ -1,0 +1,4 @@
+persistence:
+  type: FILE
+  file:
+    dataDirectory: ~/.data/bps-budget

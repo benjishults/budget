@@ -1,0 +1,13 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class MenuStack
+class MenuApplication
+interface Menu
+class MenuItem
+
+MenuApplication ..> "1" MenuStack
+MenuStack ..> "1..*" Menu
+Menu ..> "1..10" MenuItem
+
+@enduml

@@ -1,0 +1,22 @@
+@startuml
+'https://plantuml.com/state-diagram
+
+scale 350 width
+[*] --> TopLevelMenu
+
+state TopLevelMenu {
+'  [*] --> Displayed
+'  Displayed--> ChildMenu : ChildSelected
+'  Idle --> Configuring : EvConfig
+'  Configuring --> Idle : EvConfig
+}
+
+TopLevelMenu --> TopLevelMenu : ActionPerformed
+TopLevelMenu --> ChildMenu : ChildSelected
+ChildMenu -> ChildMenu : ActionPerformed
+ChildMenu -> ChildMenu : ChildSelected
+
+state ChildMenu {
+}
+
+@enduml
