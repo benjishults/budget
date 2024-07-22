@@ -1,9 +1,8 @@
 package bps.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.uchuhimo.konf.Config
-import com.uchuhimo.konf.Feature
-import com.uchuhimo.konf.source.yaml
+import io.github.nhubbard.konf.Config
+import io.github.nhubbard.konf.source.yaml.yaml
 
 /**
  *
@@ -56,26 +55,27 @@ open class ConfigurationHelper(
     loadSystemProperties: Boolean = true,
 ) {
 
-    val config: Config = Config()
-        .also { config: Config ->
-            objectMapperConfigurer(config.mapper)
-        }
-        .let {
-            filesProducer.fold(it) { config: Config, fileName: String ->
-                config.from.yaml.resource(fileName, optional = true)
+    val config: Config =
+        Config()
+            .also { config: Config ->
+                objectMapperConfigurer(config.mapper)
             }
-        }
-        .let { config: Config ->
-            if (loadEnv)
-                config.from.env()
-            else
-                config
-        }
-        .let { config: Config ->
-            if (loadSystemProperties)
-                config.from.systemProperties()
-            else
-                config
-        }
+            .let {
+                filesProducer.fold(it) { config: Config, fileName: String ->
+                    config.from.yaml.resource(fileName, optional = true)
+                }
+            }
+            .let { config: Config ->
+                if (loadEnv)
+                    config.from.env()
+                else
+                    config
+            }
+            .let { config: Config ->
+                if (loadSystemProperties)
+                    config.from.systemProperties()
+                else
+                    config
+            }
 
 }

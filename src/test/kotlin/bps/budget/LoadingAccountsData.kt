@@ -1,37 +1,25 @@
-package bps.budget.model
+package bps.budget
 
-import bps.budget.BudgetConfigurations
 import bps.budget.data.BudgetData
-import bps.budget.persistence.CategoryAccountConfig
-import bps.budget.persistence.RealAccountConfig
 import bps.budget.ui.ConsoleUiFunctions
-import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.equals.shouldBeEqual
 import java.util.UUID
 
-class AccountTest : FreeSpec() {
+class LoadingAccountsData : FreeSpec() {
 
     init {
-        "load a few accounts" - {
+
+        "budget with general food and wallet" {
             val uiFunctions = ConsoleUiFunctions()
             val configurations = BudgetConfigurations(sequenceOf("hasGeneralWalletAndFood.yml"))
             val budgetData = BudgetData(configurations.persistence, uiFunctions)
             budgetData.generalAccount.id shouldBeEqual UUID.fromString("dfa8a21c-f0ad-434d-bcb5-9e37749fa81e")
             budgetData.realAccounts shouldHaveSize 1
             budgetData.categoryAccounts shouldHaveSize 2
-
-            val food: CategoryAccount = budgetData.categoryAccounts.find { it.name == "Food" }
-                ?: fail("There should be a Food account in there")
-            val wallet: RealAccount =
-                budgetData.realAccounts.firstOrNull() ?: fail("There should be a real account in there")
-
-            "record income" {
-
-            }
-
         }
+
     }
 
 }

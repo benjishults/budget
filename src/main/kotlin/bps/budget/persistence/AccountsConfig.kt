@@ -1,6 +1,7 @@
 package bps.budget.persistence
 
 import bps.budget.data.BudgetData
+import bps.budget.model.RealAccount
 import java.util.UUID
 
 data class AccountsConfig(
@@ -10,15 +11,39 @@ data class AccountsConfig(
     val draft: List<DraftAccountConfig>,
 ) {
     fun toBudgetData(): BudgetData {
-        val generalAccount = category.find { it.id == generalAccountId }!!
+        val generalAccount = category.find { it.id == generalAccountId }!!.toCategoryAccount()
+        val realAccounts = real.map { realAccountConfig: RealAccountConfig ->
+            realAccountConfig
+                .toRealAccount()
+                .also { currentRealAccount: RealAccount ->
+                    realAccountConfig.draftCompanionId
+                        ?.let { companionId: UUID ->
+                            draft.find { draftAccountConfig: DraftAccountConfig ->
+                                draftAccountConfig.id == companionId
+                            }
+                        }
+                        ?.let { draftAccountConfig: DraftAccountConfig ->
+                            currentRealAccount.setDraftCompanion(draftAccountConfig.toDraftAccount(currentRealAccount))
+                        }
+                }
+        }
+        val draftAccounts =
+            realAccounts.mapNotNull { realAccount: RealAccount ->
+                realAccount.draftCompanion
+            }
         return BudgetData(
             generalAccount = generalAccount,
-            virtualAccounts = listOf(generalAccount),
-            realAccounts = real,
-            draftAccounts = draft,
+            categoryAccounts = category.map { it.toCategoryAccount() },
+            realAccounts = realAccounts,
+            draftAccounts = draftAccounts,
         )
     }
 }
 
 fun BudgetData.toAccountsConfig(): AccountsConfig =
-    AccountsConfig(generalAccount.id, virtualAccounts, realAccounts, draftAccounts)
+    AccountsConfig(
+        generalAccount.id,
+        categoryAccounts.map { it.toConfig() },
+        realAccounts.map { it.toConfig() },
+        draftAccounts.map { it.toConfig() },
+    )

@@ -1,18 +1,28 @@
 package bps.budget.ui
 
 import bps.budget.data.BudgetData
-import bps.budget.persistence.CategoryAccountConfig
+import bps.budget.model.CategoryAccount
 import bps.budget.persistence.PersistenceConfiguration
-import bps.console.inputs.PromptWithDefault
-import bps.console.inputs.collectInputs
+import bps.budget.persistence.toAccountsConfig
+import bps.config.ApiObjectMapperConfigurer
+import bps.console.inputs.RecursivePrompt
+import bps.console.inputs.SimplePromptWithDefault
 import bps.console.io.DefaultInputReader
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import java.io.FileWriter
+import kotlin.io.path.Path
 
 interface UiFunctions {
-    fun createGeneralAccount(): CategoryAccountConfig
-    fun saveData(persistenceConfiguration: PersistenceConfiguration, budgetData: BudgetData)
+    fun createGeneralAccount(): CategoryAccount
+    fun saveData(
+        persistenceConfiguration: PersistenceConfiguration,
+        budgetData: BudgetData,
+        accountsFileName: String = "accounts.yml",
+    )
 }
 
 class ConsoleUiFunctions(
@@ -20,10 +30,10 @@ class ConsoleUiFunctions(
     val outPrinter: OutPrinter = DefaultOutPrinter,
 ) : UiFunctions {
 
-    override fun createGeneralAccount(): CategoryAccountConfig =
-        collectInputs(
+    override fun createGeneralAccount(): CategoryAccount =
+        RecursivePrompt(
             listOf(
-                PromptWithDefault(
+                SimplePromptWithDefault<String>(
                     """
             |Looks like this is your first time running Budget.
             |Enter the name for your "General" account""".trimMargin(),
@@ -31,21 +41,30 @@ class ConsoleUiFunctions(
                     inputReader,
                     outPrinter,
                 ),
-                PromptWithDefault(
+                SimplePromptWithDefault(
                     """Enter the description for your "General" account""".trimMargin(),
                     "Income is automatically deposited here and allowances are made from here.",
                     inputReader,
                     outPrinter,
                 ),
             ),
-        ) { CategoryAccountConfig(it[0], it[1]) }
+        ) { CategoryAccount(it[0] as String, it[1] as String) }
+            .getResult()
 
-    override fun saveData(persistenceConfiguration: PersistenceConfiguration, budgetData: BudgetData) {
+    override fun saveData(
+        persistenceConfiguration: PersistenceConfiguration,
+        budgetData: BudgetData,
+        accountsFileName: String,
+    ) {
         // TODO for now, let's get the accounts file saved
-        val dataDirectory: String = persistenceConfiguration.file.dataDirectory
-        val accountsFileName = "accounts.yml"
-
-        budgetData.generalAccount.id
-        outPrinter("pretending to save")
+        val accountsPath = Path(persistenceConfiguration.file.dataDirectory, accountsFileName)
+        val objectMapper = ObjectMapper(YAMLFactory()).also { ApiObjectMapperConfigurer.configureObjectMapper(it) }
+        objectMapper.writeValue(
+            FileWriter(
+                accountsPath.toFile()
+                    .apply { createNewFile() },
+            ),
+            budgetData.toAccountsConfig(),
+        )
     }
 }

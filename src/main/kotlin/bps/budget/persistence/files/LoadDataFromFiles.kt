@@ -4,8 +4,8 @@ import bps.budget.data.BudgetData
 import bps.budget.persistence.AccountsConfig
 import bps.budget.persistence.FileConfig
 import bps.config.ConfigurationHelper
-import com.uchuhimo.konf.source.LoadException
-import com.uchuhimo.konf.toValue
+import io.github.nhubbard.konf.source.LoadException
+import io.github.nhubbard.konf.toValue
 
 /**
  * Loads data from files to produce an instance of [BudgetData]

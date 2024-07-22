@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val kotestVersion = "5.9.1"
 val jacksonVersion = "2.17.2"
-val konfVersion = "1.1.2"
+val konfVersion = "2.1.0"
 val mockkVersion = "1.13.12"
 
 plugins {
@@ -29,13 +29,16 @@ tasks.named("compileKotlin", org.jetbrains.kotlin.gradle.tasks.KotlinCompilation
 
 dependencies {
 
-//    implementation("com.uchuhimo:konf:$konfVersion")
-    implementation("com.uchuhimo:konf-core:$konfVersion")
-    implementation("com.uchuhimo:konf-yaml:$konfVersion")
+//    implementation("io.github.nhubbard:konf:$konfVersion")
+//    implementation("io.github.config4k:config4k:0.7.0")
+//    implementation("io.github.nhubbard:konf-core:$konfVersion")
+//    implementation("io.github.nhubbard:konf-yaml:$konfVersion")
+    implementation("io.github.nhubbard:konf:$konfVersion")
     implementation("org.apache.commons:commons-csv:1.11.0")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion") {
         exclude(group = "org.jetbrains.kotlin")
     }

@@ -1,4 +1,4 @@
-package bps.budget.customize
+package bps.budget.transaction
 
 import bps.budget.AllMenus
 import bps.budget.persistence.CategoryAccountConfig
@@ -11,16 +11,16 @@ import bps.console.menu.menuBuilder
 import bps.console.menu.quitItem
 import bps.console.menu.takeAction
 
-val AllMenus.customizeMenu: Menu
+val AllMenus.recordTransactionMenu: Menu
     get() =
-        menuBuilder("Customize!") {
+        menuBuilder("Re") {
             add(
                 takeAction("Create Category Fund") {
                     val categoryAccount: CategoryAccountConfig =
                         RecursivePrompt(
                             listOf(
-                                SimplePrompt<String>("Name of category: ", inputReader, outPrinter),
-                                SimplePromptWithDefault("Description", "\"\"", inputReader, outPrinter),
+                                SimplePrompt("Name of category: ", inputReader, outPrinter),
+                                SimplePromptWithDefault<String>("Description", "\"\"", inputReader, outPrinter),
                             ),
                         ) { inputs: List<*> ->
                             CategoryAccountConfig(inputs[0] as String, inputs[1] as String)

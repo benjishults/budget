@@ -1,4 +1,0 @@
-persistence:
-  type: FILE
-  file:
-    dataDirectory: hasAccount

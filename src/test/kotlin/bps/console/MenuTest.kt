@@ -12,12 +12,6 @@ import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 
-//import io.mockk.confirmVerified
-//import io.mockk.every
-//import io.mockk.mockk
-//import io.mockk.verify
-//import io.mockk.verifySequence
-
 class MenuTest : FreeSpec() {
 
 
@@ -50,9 +44,11 @@ class MenuTest : FreeSpec() {
                     )
                     add(quitItem)
                 }
-            val application: MenuApplication = MenuApplicationWithQuit(topMenu, inputReader, outPrinter)
             inputs.addAll(listOf("1", "2", "2"))
-            application.run()
+            MenuApplicationWithQuit(topMenu, inputReader, outPrinter)
+                .use {
+                    it.run()
+                }
             outputs shouldContainExactly listOf(
                 """
                       |top

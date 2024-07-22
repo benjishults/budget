@@ -11,7 +11,7 @@ open class MenuApplicationWithQuit(
     topLevelMenu: Menu,
     val inputReader: InputReader = DefaultInputReader,
     val outPrinter: OutPrinter = DefaultOutPrinter,
-) : MenuApplication {
+) : MenuApplication, AutoCloseable {
 
     private val menuSession: MenuSession = MenuSession(topLevelMenu)
 
@@ -56,6 +56,10 @@ open class MenuApplicationWithQuit(
             }
         }
     }
+
+    override fun close() {
+    }
+
 }
 
 interface MenuApplication {

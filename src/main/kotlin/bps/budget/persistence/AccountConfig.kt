@@ -1,33 +1,54 @@
 package bps.budget.persistence
 
+import bps.budget.model.CategoryAccount
+import bps.budget.model.DraftAccount
+import bps.budget.model.RealAccount
 import java.util.UUID
 
-sealed interface AccountConfig {
+interface AccountConfig {
     val name: String
     val id: UUID
     val description: String
     val balance: Double
 }
 
-data class CategoryAccountConfig(
+open class CategoryAccountConfig(
     override val name: String,
     override val description: String,
     override val id: UUID = UUID.randomUUID(),
     override val balance: Double = 0.0,
 ) : AccountConfig
 
-data class RealAccountConfig(
+fun CategoryAccountConfig.toCategoryAccount(): CategoryAccount =
+    CategoryAccount(name, description, id, balance)
+
+fun CategoryAccount.toConfig(): CategoryAccountConfig =
+    CategoryAccountConfig(name, description, id, balance)
+
+open class RealAccountConfig(
     override val name: String,
     override val description: String,
-    val draftCompanionId: UUID,
     override val id: UUID = UUID.randomUUID(),
     override val balance: Double = 0.0,
+    val draftCompanionId: UUID? = null,
 ) : AccountConfig
 
-data class DraftAccountConfig(
+fun RealAccountConfig.toRealAccount(draftCompanion: DraftAccount? = null): RealAccount =
+    RealAccount(name, description, id, balance, draftCompanion)
+
+fun RealAccount.toConfig(): RealAccountConfig =
+    RealAccountConfig(name, description, id, balance, draftCompanion?.id)
+
+open class DraftAccountConfig(
     override val name: String,
     override val description: String,
+    override val id: UUID = UUID.randomUUID(),
+    override val balance: Double = 0.0,
     val realCompanionId: UUID,
-    override val id: UUID = UUID.randomUUID(),
-    override val balance: Double = 0.0,
 ) : AccountConfig
+
+fun DraftAccountConfig.toDraftAccount(realCompanion: RealAccount): DraftAccount =
+    DraftAccount(name, description, id, balance, realCompanion)
+
+fun DraftAccount.toConfig(): DraftAccountConfig =
+    DraftAccountConfig(name, description, id, balance, realCompanion.id)
