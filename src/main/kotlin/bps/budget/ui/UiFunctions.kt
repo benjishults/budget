@@ -5,6 +5,7 @@ import bps.budget.model.CategoryAccount
 import bps.budget.persistence.PersistenceConfiguration
 import bps.budget.persistence.toAccountsConfig
 import bps.config.ApiObjectMapperConfigurer
+import bps.config.convertToPath
 import bps.console.inputs.RecursivePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.io.DefaultInputReader
@@ -57,12 +58,15 @@ class ConsoleUiFunctions(
         accountsFileName: String,
     ) {
         // TODO for now, let's get the accounts file saved
-        val accountsPath = Path(persistenceConfiguration.file.dataDirectory, accountsFileName)
+        Path(convertToPath(persistenceConfiguration.file.dataDirectory)).toFile().mkdirs()
+        val accountsPath = Path(convertToPath(persistenceConfiguration.file.dataDirectory), accountsFileName)
         val objectMapper = ObjectMapper(YAMLFactory()).also { ApiObjectMapperConfigurer.configureObjectMapper(it) }
         objectMapper.writeValue(
             FileWriter(
                 accountsPath.toFile()
-                    .apply { createNewFile() },
+                    .apply {
+                        createNewFile()
+                    },
             ),
             budgetData.toAccountsConfig(),
         )

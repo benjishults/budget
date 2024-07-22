@@ -7,10 +7,16 @@ val mockkVersion = "1.13.12"
 
 plugins {
     kotlin("jvm") version "2.0.0"
+    application
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "benjishults"
 version = "1.0-SNAPSHOT"
+
+application {
+    mainClass = "bps.budget.Budget"
+}
 
 repositories {
     mavenCentral()
