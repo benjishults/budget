@@ -2,6 +2,7 @@ package bps.budget
 
 import bps.budget.data.BudgetData
 import bps.budget.model.CategoryAccount
+import bps.budget.persistence.files.BudgetFilesDao
 import bps.budget.ui.ConsoleUiFunctions
 import bps.config.convertToPath
 import bps.console.MenuApplicationWithQuit
@@ -42,9 +43,12 @@ class NoOrLowDataScenariosBudgetTest : FreeSpec() {
             BudgetApplication(
                 uiFunctions,
                 configurations,
+                BudgetFilesDao(
+                    configurations.persistence.file!!,
+                    "delete-me-${UUID.randomUUID()}.yml",
+                ),
                 inputReader,
                 outPrinter,
-                "delete-me-${UUID.randomUUID()}.yml",
             )
                 .use {
                     it.run()
@@ -68,7 +72,7 @@ Enter the name for your "General" account [General] """,
                 "Quitting\n",
             )
             inputs shouldHaveSize 0
-            File(convertToPath(configurations.persistence.file.dataDirectory)).deleteContentsOfNonEmptyFolder() shouldBe true
+            File(convertToPath(configurations.persistence.file!!.dataDirectory)).deleteContentsOfNonEmptyFolder() shouldBe true
         }
 
         val menus = AllMenus(inputReader, outPrinter)

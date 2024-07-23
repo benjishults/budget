@@ -5,12 +5,15 @@ import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftAccount
 import bps.budget.model.RealAccount
 import bps.budget.persistence.BudgetConfigLookup
+import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.DataConfigurationException
 import bps.budget.persistence.FileConfig
+import bps.budget.persistence.JdbcConfig
 import bps.budget.persistence.PersistenceConfiguration
-import bps.budget.persistence.files.loadAccountsFromFiles
+import bps.budget.persistence.files.BudgetFilesDao
+import bps.budget.persistence.jdbc.JdbcDao
 import bps.budget.transaction.Transaction
 import bps.budget.ui.UiFunctions
-import io.github.nhubbard.konf.source.LoadException
 import java.util.UUID
 
 class BudgetData(
@@ -47,10 +50,11 @@ class BudgetData(
         operator fun invoke(persistenceConfiguration: PersistenceConfiguration, uiFunctions: UiFunctions): BudgetData =
             try {
                 BudgetDataBuilderMap[persistenceConfiguration.type]
-                    ?.let { (configFetcher: ConfigFetcher, builder: BudgetDataFactory) ->
+                    ?.let { (configFetcher: ConfigFetcher, builder: (BudgetConfigLookup) -> BudgetDao<*>) ->
                         builder(configFetcher(persistenceConfiguration))
+                            .load()
                     }
-            } catch (loadException: LoadException) {
+            } catch (loadException: DataConfigurationException) {
                 uiFunctions.createGeneralAccount()
                     .let {
                         BudgetData(it, listOf(it), emptyList())
@@ -62,11 +66,11 @@ class BudgetData(
 }
 
 fun interface ConfigFetcher : (PersistenceConfiguration) -> BudgetConfigLookup
-fun interface BudgetDataFactory : (BudgetConfigLookup) -> BudgetData
 
-val BudgetDataBuilderMap: Map<String, Pair<ConfigFetcher, BudgetDataFactory>> =
+val BudgetDataBuilderMap: Map<String, Pair<ConfigFetcher, (BudgetConfigLookup) -> BudgetDao<*>>> =
     mapOf(
+        "JDBC" to (ConfigFetcher { it.jdbc!! } to { JdbcDao(it as JdbcConfig) }),
         "FILE" to
-                (ConfigFetcher(PersistenceConfiguration::file) to
-                        BudgetDataFactory { loadAccountsFromFiles(it as FileConfig) }),
+                (ConfigFetcher { it.file!! } to
+                        { BudgetFilesDao(it as FileConfig) }),
     )

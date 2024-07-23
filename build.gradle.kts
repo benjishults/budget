@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 val kotestVersion = "5.9.1"
 val jacksonVersion = "2.17.2"
 val konfVersion = "2.1.0"
@@ -39,6 +37,7 @@ dependencies {
 //    implementation("io.github.config4k:config4k:0.7.0")
 //    implementation("io.github.nhubbard:konf-core:$konfVersion")
 //    implementation("io.github.nhubbard:konf-yaml:$konfVersion")
+    runtimeOnly("org.postgresql:postgresql:42.7.3")
     implementation("io.github.nhubbard:konf:$konfVersion")
     implementation("org.apache.commons:commons-csv:1.11.0")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")

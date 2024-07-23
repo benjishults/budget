@@ -4,8 +4,12 @@ package bps.budget
 
 import bps.budget.customize.customizeMenu
 import bps.budget.data.BudgetData
+import bps.budget.data.BudgetDataBuilderMap
+import bps.budget.data.ConfigFetcher
 import bps.budget.model.CategoryAccount
 import bps.budget.model.RealAccount
+import bps.budget.persistence.BudgetConfigLookup
+import bps.budget.persistence.BudgetDao
 import bps.budget.transaction.Transaction
 import bps.budget.ui.ConsoleUiFunctions
 import bps.budget.ui.UiFunctions
@@ -25,38 +29,45 @@ import bps.console.menu.takeActionAndPush
 fun main(args: Array<String>) {
     val uiFunctions = ConsoleUiFunctions()
     val configurations = BudgetConfigurations(sequenceOf("budget.yml", "~/.config/bps-budget/budget.yml"))
-    BudgetApplication(uiFunctions, configurations, uiFunctions.inputReader, uiFunctions.outPrinter)
+    val budgetDao: BudgetDao<*> = BudgetDataBuilderMap[configurations.persistence.type]!!
+        .let { (configFetcher: ConfigFetcher, builder: (BudgetConfigLookup) -> BudgetDao<*>) ->
+            builder(configFetcher(configurations.persistence))
+        }
+
+    BudgetApplication(
+        uiFunctions,
+        configurations,
+        budgetDao,
+        uiFunctions.inputReader,
+        uiFunctions.outPrinter,
+    )
         .use() {
             it.run()
         }
 }
 
 class BudgetApplication private constructor(
-    val uiFunctions: UiFunctions,
-    val configurations: BudgetConfigurations,
     inputReader: InputReader,
     outPrinter: OutPrinter,
-    private val accountsFileName: String,
+    val budgetDao: BudgetDao<*>,
     val budgetData: BudgetData,
 ) : MenuApplicationWithQuit(AllMenus().budgetMenu(budgetData), inputReader, outPrinter) {
 
     constructor(
         uiFunctions: UiFunctions,
         configurations: BudgetConfigurations,
+        budgetDao: BudgetDao<*>,
         inputReader: InputReader = DefaultInputReader,
         outPrinter: OutPrinter = DefaultOutPrinter,
-        accountsFileName: String = "accounts.yml",
     ) : this(
-        uiFunctions,
-        configurations,
         inputReader,
         outPrinter,
-        accountsFileName,
+        budgetDao,
         BudgetData(configurations.persistence, uiFunctions),
     )
 
     override fun close() {
-        uiFunctions.saveData(configurations.persistence, budgetData, accountsFileName)
+        budgetDao.save(budgetData)
     }
 
 }

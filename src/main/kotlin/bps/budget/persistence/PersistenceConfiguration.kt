@@ -1,17 +1,20 @@
 package bps.budget.persistence
 
-import bps.budget.data.BudgetData
-import bps.budget.persistence.files.loadAccountsFromFiles
-
 interface BudgetConfigLookup {
 //    val generalAccountId: UUID?
 }
 
 data class PersistenceConfiguration(
     val type: String,
-    val file: FileConfig,
+    val file: FileConfig?,
+    val jdbc: JdbcConfig?,
 )
 
 data class FileConfig(
     val dataDirectory: String,
+) : BudgetConfigLookup
+
+data class JdbcConfig(
+    val driver: String,
+    val url: String,
 ) : BudgetConfigLookup
