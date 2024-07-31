@@ -1,0 +1,20 @@
+accounts:
+  generalAccountId: dfa8a21c-f0ad-434d-bcb5-9e37749fa81e
+  category:
+    - name: General
+      id: dfa8a21c-f0ad-434d-bcb5-9e37749fa81e
+      description: Income is automatically deposited here and allowances are made from here.
+      balance: BigDecimal.ZERO
+    - name: Food
+      id: c4a56f88-e18d-431d-9ee5-0c9bcafe1288
+      description: Food from the grocery store
+      balance: BigDecimal.ZERO
+  real:
+    - name: Wallet
+      description: Cash in wallet
+      id: 7d97e2bf-3f20-40db-ab93-8b9061032d9e
+      balance: BigDecimal.ZERO
+  draft: [ ]
+#    - name: Affinity Plus Checking Drafts
+#      description: Affinity Plus Checking Drafts
+#      balance: 0.0

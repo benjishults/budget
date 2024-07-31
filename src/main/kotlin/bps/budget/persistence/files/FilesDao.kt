@@ -19,7 +19,7 @@ import kotlin.io.path.Path
 /**
  * Loads data from files to produce an instance of [BudgetData]
  */
-class BudgetFilesDao(
+class FilesDao(
     override val config: FileConfig,
     val accountsFileName: String = "accounts.yml",
 ) : BudgetDao<FileConfig> {
@@ -53,6 +53,9 @@ class BudgetFilesDao(
             ),
             data.toAccountsConfig(),
         )
+    }
+
+    override fun close() {
     }
 
 }

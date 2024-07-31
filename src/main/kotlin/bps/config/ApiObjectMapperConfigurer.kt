@@ -29,6 +29,7 @@ interface ApiObjectMapperConfigurer {
             .registerModule(JavaTimeModule())
             .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS, true)
             // ensuring the default is active
             .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, true)
             // begin from geoplace
@@ -41,6 +42,6 @@ interface ApiObjectMapperConfigurer {
             }
     }
 
-    companion object: ApiObjectMapperConfigurer
+    companion object : ApiObjectMapperConfigurer
 
 }

@@ -1,0 +1,11 @@
+persistence:
+  type: JDBC
+  jdbc:
+    driver: org.postgresql.Driver
+    schema: test
+    user: test
+    password: test
+    budgetName: test with wallet and food
+    host: localhost
+  file:
+    dataDirectory: hasGeneralWalletAndFood

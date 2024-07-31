@@ -563,8 +563,6 @@ ij_html_text_wrap = normal
 ij_kotlin_code_style_defaults = KOTLIN_OFFICIAL
 ij_kotlin_allow_trailing_comma = true
 ij_kotlin_allow_trailing_comma_on_call_site = true
-
-[{*.kt,*.kts}]
 ij_kotlin_align_in_columns_case_branch = false
 ij_kotlin_align_multiline_binary_operation = false
 ij_kotlin_align_multiline_extends_list = false
@@ -605,7 +603,7 @@ ij_kotlin_keep_first_column_comment = true
 ij_kotlin_keep_indents_on_empty_lines = false
 ij_kotlin_keep_line_breaks = true
 ij_kotlin_lbrace_on_next_line = false
-ij_kotlin_line_break_after_multiline_when_entry = true
+ij_kotlin_line_break_after_multiline_when_entry = false
 ij_kotlin_line_comment_add_space = false
 ij_kotlin_line_comment_add_space_on_reformat = false
 ij_kotlin_line_comment_at_first_column = true

@@ -4,18 +4,15 @@ package bps.budget
 
 import bps.budget.customize.customizeMenu
 import bps.budget.data.BudgetData
-import bps.budget.data.BudgetDataBuilderMap
-import bps.budget.data.ConfigFetcher
-import bps.budget.model.CategoryAccount
-import bps.budget.model.RealAccount
-import bps.budget.persistence.BudgetConfigLookup
 import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.budgetDaoBuilder
 import bps.budget.transaction.Transaction
 import bps.budget.ui.ConsoleUiFunctions
 import bps.budget.ui.UiFunctions
 import bps.console.MenuApplicationWithQuit
 import bps.console.inputs.RecursivePrompt
 import bps.console.inputs.SimplePrompt
+import bps.console.inputs.TimestampPrompt
 import bps.console.io.DefaultInputReader
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
@@ -25,19 +22,18 @@ import bps.console.menu.menuBuilder
 import bps.console.menu.quitItem
 import bps.console.menu.takeAction
 import bps.console.menu.takeActionAndPush
+import java.math.BigDecimal
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 fun main(args: Array<String>) {
-    val uiFunctions = ConsoleUiFunctions()
     val configurations = BudgetConfigurations(sequenceOf("budget.yml", "~/.config/bps-budget/budget.yml"))
-    val budgetDao: BudgetDao<*> = BudgetDataBuilderMap[configurations.persistence.type]!!
-        .let { (configFetcher: ConfigFetcher, builder: (BudgetConfigLookup) -> BudgetDao<*>) ->
-            builder(configFetcher(configurations.persistence))
-        }
+    val uiFunctions = ConsoleUiFunctions()
 
     BudgetApplication(
         uiFunctions,
         configurations,
-        budgetDao,
         uiFunctions.inputReader,
         uiFunctions.outPrinter,
     )
@@ -49,32 +45,43 @@ fun main(args: Array<String>) {
 class BudgetApplication private constructor(
     inputReader: InputReader,
     outPrinter: OutPrinter,
+    configurations: BudgetConfigurations,
+    uiFunctions: UiFunctions,
     val budgetDao: BudgetDao<*>,
-    val budgetData: BudgetData,
-) : MenuApplicationWithQuit(AllMenus().budgetMenu(budgetData), inputReader, outPrinter) {
+) : AutoCloseable {
 
     constructor(
         uiFunctions: UiFunctions,
         configurations: BudgetConfigurations,
-        budgetDao: BudgetDao<*>,
         inputReader: InputReader = DefaultInputReader,
         outPrinter: OutPrinter = DefaultOutPrinter,
     ) : this(
         inputReader,
         outPrinter,
-        budgetDao,
-        BudgetData(configurations.persistence, uiFunctions),
+        configurations,
+        uiFunctions,
+        budgetDaoBuilder(configurations.persistence),
     )
+
+    val budgetData: BudgetData = BudgetData(configurations.persistence, uiFunctions, budgetDao)
+    private val menuApplicationWithQuit =
+        MenuApplicationWithQuit(AllMenus().budgetMenu(budgetData, budgetDao), inputReader, outPrinter)
+
+    fun run() {
+        menuApplicationWithQuit.run()
+    }
 
     override fun close() {
         budgetDao.save(budgetData)
+        budgetDao.close()
+        menuApplicationWithQuit.close()
     }
 
 }
 
 const val spendMoneyItemLabel = "Record Transactions"
 
-fun AllMenus.budgetMenu(budgetData: BudgetData): Menu =
+fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
     menuBuilder("Budget!") {
         add(
             takeAction("Record Income") {
@@ -107,27 +114,42 @@ fun AllMenus.budgetMenu(budgetData: BudgetData): Menu =
                 )
                 RecursivePrompt(
                     listOf(
-                        SimplePrompt("Amount Spent: ", inputReader, outPrinter) { it!!.toDouble() },
+                        SimplePrompt("Amount Spent: ", inputReader, outPrinter) { it!!.toCurrencyAmount() },
+                        SimplePrompt("Description: ", inputReader, outPrinter),
+                        TimestampPrompt(inputReader, outPrinter),
                         SimplePrompt(
-                            "Select Category Account: ",
-                            inputReader,
-                            outPrinter,
-                        ) { name: String? ->
-                            budgetData.categoryAccounts.find { it.name == name }
-                        },
-                        SimplePrompt(
+                            // TODO need to show list
                             "Select Real Account: ",
                             inputReader,
                             outPrinter,
                         ) { name: String? ->
                             budgetData.realAccounts.find { it.name == name }
                         },
+                        // TODO allow more than one
+                        SimplePrompt(
+                            // TODO need to show list
+                            "Select Category Account: ",
+                            inputReader,
+                            outPrinter,
+                        ) { name: String? ->
+                            budgetData.categoryAccounts.find { it.name == name }
+                        },
                     ),
-                ) {
-                    Transaction(it[0] as Double, it[1] as CategoryAccount, it[2] as RealAccount)
+                ) { inputs: List<*> ->
+                    Transaction(
+                        inputs[0] as BigDecimal,
+                        inputs[1] as String,
+                        OffsetDateTime
+                            .of(inputs[2] as LocalDateTime, ZoneOffset.of(ZoneOffset.systemDefault().id)),
+                        // TODO postgres stores at UTC.  Not sure if I need to set that or if it will translate automatically
+//                            .atZoneSameInstant(ZoneId.of("UTC"))
+//                            .toOffsetDateTime(),
+//                        listOf(inputs[3] as )
+
+                    )
                 }
                     .getResult()
-                    .commit()
+                    .also { budgetDao.commit(it) }
             },
         )
         add(
@@ -175,3 +197,6 @@ fun AllMenus.budgetMenu(budgetData: BudgetData): Menu =
         )
         add(quitItem)
     }
+
+fun String.toCurrencyAmount(): BigDecimal =
+    BigDecimal(this).setScale(2)

@@ -3,20 +3,21 @@ package bps.budget.persistence
 import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftAccount
 import bps.budget.model.RealAccount
+import java.math.BigDecimal
 import java.util.UUID
 
 interface AccountConfig {
     val name: String
     val id: UUID
     val description: String
-    val balance: Double
+    val balance: BigDecimal
 }
 
 open class CategoryAccountConfig(
     override val name: String,
     override val description: String,
     override val id: UUID = UUID.randomUUID(),
-    override val balance: Double = 0.0,
+    override val balance: BigDecimal = BigDecimal.ZERO,
 ) : AccountConfig
 
 fun CategoryAccountConfig.toCategoryAccount(): CategoryAccount =
@@ -29,7 +30,7 @@ open class RealAccountConfig(
     override val name: String,
     override val description: String,
     override val id: UUID = UUID.randomUUID(),
-    override val balance: Double = 0.0,
+    override val balance: BigDecimal = BigDecimal.ZERO,
     val draftCompanionId: UUID? = null,
 ) : AccountConfig
 
@@ -43,7 +44,7 @@ open class DraftAccountConfig(
     override val name: String,
     override val description: String,
     override val id: UUID = UUID.randomUUID(),
-    override val balance: Double = 0.0,
+    override val balance: BigDecimal = BigDecimal.ZERO,
     val realCompanionId: UUID,
 ) : AccountConfig
 

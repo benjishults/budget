@@ -1,8 +1,12 @@
-package bps.budget
+package bps.budget.file
 
+import bps.budget.AllMenus
+import bps.budget.BudgetApplication
+import bps.budget.BudgetConfigurations
+import bps.budget.budgetMenu
 import bps.budget.data.BudgetData
-import bps.budget.model.CategoryAccount
-import bps.budget.persistence.files.BudgetFilesDao
+import bps.budget.persistence.files.FilesDao
+import bps.budget.spendMoneyItemLabel
 import bps.budget.ui.ConsoleUiFunctions
 import bps.config.convertToPath
 import bps.console.MenuApplicationWithQuit
@@ -13,7 +17,6 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import java.io.File
-import java.util.UUID
 
 class NoOrLowDataScenariosBudgetTest : FreeSpec() {
 
@@ -29,7 +32,6 @@ class NoOrLowDataScenariosBudgetTest : FreeSpec() {
         val inputReader = InputReader {
             inputs.removeFirst()
         }
-        val uiFunctions = ConsoleUiFunctions(inputReader, outPrinter)
         beforeEach {
             inputs.clear()
             outputs.clear()
@@ -40,13 +42,10 @@ class NoOrLowDataScenariosBudgetTest : FreeSpec() {
                 listOf("", "", "8"),
             )
             val configurations = BudgetConfigurations(sequenceOf("noData.yml"))
+            val uiFunctions = ConsoleUiFunctions(inputReader, outPrinter)
             BudgetApplication(
                 uiFunctions,
                 configurations,
-                BudgetFilesDao(
-                    configurations.persistence.file!!,
-                    "delete-me-${UUID.randomUUID()}.yml",
-                ),
                 inputReader,
                 outPrinter,
             )
@@ -81,8 +80,11 @@ Enter the name for your "General" account [General] """,
                 listOf("", "", "8"),
             )
             val configurations = BudgetConfigurations(sequenceOf("noData.yml"))
+            val budgetDao = FilesDao(configurations.persistence.file!!)
+            val uiFunctions = ConsoleUiFunctions(inputReader, outPrinter)
             val budgetMenu = menus.budgetMenu(
-                BudgetData(configurations.persistence, uiFunctions),
+                BudgetData(configurations.persistence, uiFunctions, budgetDao),
+                budgetDao,
             )
             MenuApplicationWithQuit(budgetMenu, inputReader, outPrinter)
                 .use {
@@ -112,8 +114,11 @@ Enter the name for your "General" account [General] """,
         "budget with starting account.yml" {
             inputs.addAll(listOf("7", "5"))
             val configurations = BudgetConfigurations(sequenceOf("hasGeneralAccount.yml"))
+            val budgetDao = FilesDao(configurations.persistence.file!!)
+            val uiFunctions = ConsoleUiFunctions(inputReader, outPrinter)
             val budgetMenu = menus.budgetMenu(
-                BudgetData(configurations.persistence, uiFunctions),
+                BudgetData(configurations.persistence, uiFunctions, budgetDao),
+                budgetDao,
             )
             MenuApplicationWithQuit(budgetMenu, inputReader, outPrinter)
                 .use {
@@ -149,43 +154,6 @@ The user may associate a drafts account with a checking account and vice-versa."
             inputs shouldHaveSize 0
         }
 
-        "budget not caring about data" {
-            inputs.addAll(listOf("7", "5"))
-            val generalAccount = CategoryAccount("general", "")
-            val budgetData = BudgetData(generalAccount, listOf(generalAccount))
-            MenuApplicationWithQuit(menus.budgetMenu(budgetData), inputReader, outPrinter)
-                .use {
-                    it.run()
-                }
-            outputs shouldContainExactly listOf(
-                """
-                        |Budget!
-                        | 1. Record Income
-                        | 2. Make Allowances
-                        | 3. $spendMoneyItemLabel
-                        | 4. Write Checks or Use Credit Cards
-                        | 5. Clear Drafts
-                        | 6. Transfer Money
-                        | 7. Customize
-                        | 8. Quit
-                        |""".trimMargin(),
-                "Enter selection: ",
-                """The user must be able to add/remove accounts and categorize accounts (category fund account, real fund account, etc.)
-The user may change the information associated with some account.
-The user may associate a drafts account with a checking account and vice-versa.""",
-                """
-                        |Customize!
-                        | 1. Create Category Fund
-                        | 2. Create Real Fund
-                        | 3. Create Draft Fund
-                        | 4. Back
-                        | 5. Quit
-                        |""".trimMargin(),
-                "Enter selection: ",
-                "Quitting\n",
-            )
-            inputs shouldHaveSize 0
-        }
     }
 
 }

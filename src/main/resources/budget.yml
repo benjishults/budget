@@ -1,5 +1,15 @@
 persistence:
-  type: JDBC
+  type: FILE
   jdbc:
     driver: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/budget
+    budgetName: budget
+    #    database: budget
+    #    schema: public
+    #    dbProvider: postgresql
+    #    port: 5432
+    host: localhost
+  #    user: budget
+  #    password: budget
+  file:
+    dataDirectory: ~/.data/bps-budget

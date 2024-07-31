@@ -4,11 +4,11 @@ import bps.console.io.DefaultInputReader
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
+import java.time.LocalDateTime
 
-interface Prompt<out T> {
+fun interface Prompt<out T> {
 
     fun getResult(): T
-
 }
 
 interface SimplePrompt<T> : Prompt<T> {
@@ -46,7 +46,7 @@ interface SimplePrompt<T> : Prompt<T> {
 }
 
 @Suppress("UNCHECKED_CAST")
-data class SimplePromptWithDefault<T>(
+open class SimplePromptWithDefault<T>(
     override val basicPrompt: String,
     val defaultValue: String,
     override val inputReader: InputReader = DefaultInputReader,
@@ -70,13 +70,25 @@ data class SimplePromptWithDefault<T>(
 interface RecursivePrompt<T> : Prompt<T> {
     val prompts: List<Prompt<*>>
     val transformer: (List<*>) -> T
+    val onError: (Throwable) -> T
+        //        get() = { getResult() }
+        get() = {
+            throw it
+        }
 
+    /**
+     * calls [onError] on exception
+     */
     override fun getResult(): T =
-        transformer(
-            prompts.map { innerPrompt: Prompt<*> ->
-                innerPrompt.getResult()
-            },
-        )
+        try {
+            transformer(
+                prompts.map { innerPrompt: Prompt<*> ->
+                    innerPrompt.getResult()
+                },
+            )
+        } catch (ex: Exception) {
+            onError(ex)
+        }
 
     companion object {
         operator fun <T> invoke(
@@ -88,15 +100,39 @@ interface RecursivePrompt<T> : Prompt<T> {
                 override val transformer: (List<*>) -> T = transformer
             }
     }
-
 }
 
-//fun <T> collectInputs(
-//    prompts: List<Prompt<*>>,
-//    inputsConverter: (List<String>) -> T,
-//): T =
-//    inputsConverter(
-//        prompts.map { prompt: Prompt<> ->
-//            prompt.getResult()!!
-//        },
-//    )
+class TimestampPrompt(
+    inputReader: InputReader = DefaultInputReader,
+    outPrinter: OutPrinter = DefaultOutPrinter,
+    val now: LocalDateTime = LocalDateTime.now(),
+) : SimplePromptWithDefault<LocalDateTime>(
+    "Time: ", now.toString(), inputReader, outPrinter,
+    {
+        when (it) {
+            "" -> {
+                now
+            }
+            else -> {
+                RecursivePrompt<LocalDateTime>(
+                    listOf(
+                        SimplePromptWithDefault("          year: ", now.year.toString(), inputReader, outPrinter),
+                        SimplePromptWithDefault("         month: ", now.month.toString(), inputReader, outPrinter),
+                        SimplePromptWithDefault("  day of month: ", now.dayOfMonth.toString(), inputReader, outPrinter),
+                        SimplePromptWithDefault(" 24 hour clock: ", now.hour.toString(), inputReader, outPrinter),
+                        SimplePromptWithDefault("minute of hour: ", now.minute.toString(), inputReader, outPrinter),
+                        SimplePromptWithDefault<String>(
+                            "        second: ",
+                            now.second.toString(),
+                            inputReader,
+                            outPrinter,
+                        ),
+                    ),
+                ) { entries ->
+                    LocalDateTime.parse("${entries[0]}-${entries[1]}-${entries[2]}T${entries[3]}:${entries[4]}:${entries[5]}")
+                }
+                    .getResult()
+            }
+        }
+    },
+)

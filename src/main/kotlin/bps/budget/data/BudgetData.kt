@@ -4,16 +4,12 @@ import bps.budget.model.Account
 import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftAccount
 import bps.budget.model.RealAccount
-import bps.budget.persistence.BudgetConfigLookup
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.DataConfigurationException
-import bps.budget.persistence.FileConfig
-import bps.budget.persistence.JdbcConfig
 import bps.budget.persistence.PersistenceConfiguration
-import bps.budget.persistence.files.BudgetFilesDao
-import bps.budget.persistence.jdbc.JdbcDao
 import bps.budget.transaction.Transaction
 import bps.budget.ui.UiFunctions
+import java.math.BigDecimal
 import java.util.UUID
 
 class BudgetData(
@@ -42,35 +38,48 @@ class BudgetData(
         _categoryAccounts.add(account)
     }
 
+    /**
+     * Balances sum up properly and there is a general account.
+     */
+    fun validate(): Boolean {
+        val categoryAndDraftSum: BigDecimal =
+            (categoryAccounts + draftAccounts)
+                .fold(BigDecimal.ZERO) { sum: BigDecimal, account: Account ->
+                    sum + account.balance
+                }
+        val realSum: BigDecimal =
+            realAccounts
+                .fold(BigDecimal.ZERO) { sum: BigDecimal, account: Account ->
+                    sum + account.balance
+                }
+        return categoryAndDraftSum.setScale(2) == realSum.setScale(2) && categoryAccounts.any { it.id == generalAccount.id }
+    }
+
     companion object {
 
         /**
          * Will build basic data if there is an error getting it from a file.
          */
-        operator fun invoke(persistenceConfiguration: PersistenceConfiguration, uiFunctions: UiFunctions): BudgetData =
+        operator fun invoke(
+            persistenceConfiguration: PersistenceConfiguration,
+            uiFunctions: UiFunctions,
+            budgetDao: BudgetDao<*>,
+        ): BudgetData =
             try {
-                BudgetDataBuilderMap[persistenceConfiguration.type]
-                    ?.let { (configFetcher: ConfigFetcher, builder: (BudgetConfigLookup) -> BudgetDao<*>) ->
-                        builder(configFetcher(persistenceConfiguration))
-                            .load()
-                    }
-            } catch (loadException: DataConfigurationException) {
-                uiFunctions.createGeneralAccount()
-                    .let {
-                        BudgetData(it, listOf(it), emptyList())
+                with(budgetDao) {
+                    prepForFirstLoad()
+                    load()
+                }
+            } catch (ex: DataConfigurationException) {
+                uiFunctions.createGeneralAccount(budgetDao)
+                    .let { generalAccount: CategoryAccount ->
+                        BudgetData(generalAccount, listOf(generalAccount))
+                            .also { budgetData: BudgetData ->
+                                budgetDao.save(budgetData)
+                            }
                     }
             }
                 ?: throw Exception("Unsupported persistence type: ${persistenceConfiguration.type}")
     }
 
 }
-
-fun interface ConfigFetcher : (PersistenceConfiguration) -> BudgetConfigLookup
-
-val BudgetDataBuilderMap: Map<String, Pair<ConfigFetcher, (BudgetConfigLookup) -> BudgetDao<*>>> =
-    mapOf(
-        "JDBC" to (ConfigFetcher { it.jdbc!! } to { JdbcDao(it as JdbcConfig) }),
-        "FILE" to
-                (ConfigFetcher { it.file!! } to
-                        { BudgetFilesDao(it as FileConfig) }),
-    )
