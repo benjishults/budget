@@ -10,6 +10,7 @@ import bps.budget.persistence.DataConfigurationException
 import bps.budget.persistence.JdbcConfig
 import bps.budget.transaction.Transaction
 import bps.budget.transaction.TransactionItem
+import bps.jdbc.JdbcFixture
 import java.math.BigDecimal
 import java.net.URLEncoder
 import java.sql.Connection
@@ -24,7 +25,7 @@ import java.util.concurrent.TimeUnit
 
 class JdbcDao(
     override val config: JdbcConfig,
-) : BudgetDao<JdbcConfig> {
+) : BudgetDao<JdbcConfig>, JdbcFixture {
 
     private var jdbcURL: String =
         "jdbc:${config.dbProvider}://${config.host}:${config.port}/${
@@ -35,7 +36,7 @@ class JdbcDao(
         }?currentSchema=${URLEncoder.encode(config.schema, "utf-8")}"
 
     @Volatile
-    var connection: Connection = startConnection()
+    override var connection: Connection = startConnection()
         private set
     private val keepAliveSingleThreadScheduledExecutor = Executors
         .newSingleThreadScheduledExecutor()
@@ -71,16 +72,30 @@ class JdbcDao(
             }
 
     override fun prepForFirstLoad() {
-        connection.transaction {
+        transaction {
             createStatement().use { createTablesStatement: Statement ->
                 createTablesStatement.executeUpdate(
                     """
 create table if not exists budgets
 (
-    general_account_id uuid         not null unique,
+    general_account_id uuid         not null unique, --  references category_accounts (id)
     budget_name        varchar(110) not null primary key
 )
-""".trimIndent(),
+                    """.trimIndent(),
+                )
+            }
+            createStatement().use { createTablesStatement: Statement ->
+                createTablesStatement.executeUpdate(
+                    """
+create table if not exists staged_category_accounts
+(
+    id          uuid           not null,
+    name        varchar(50)    not null,
+    description varchar(110)   not null default '',
+    balance     numeric(30, 2) not null default 0.0,
+    budget_name varchar(110)   not null
+)
+                    """.trimIndent(),
                 )
             }
             createStatement().use { createTablesStatement: Statement ->
@@ -102,6 +117,20 @@ create table if not exists category_accounts
             createStatement().use { createTablesStatement: Statement ->
                 createTablesStatement.executeUpdate(
                     """
+create table if not exists staged_real_accounts
+(
+    id          uuid           not null,
+    name        varchar(50)    not null,
+    description varchar(110)   not null default '',
+    balance     numeric(30, 2) not null default 0.0,
+    budget_name varchar(110)   not null
+)
+""".trimIndent(),
+                )
+            }
+            createStatement().use { createTablesStatement: Statement ->
+                createTablesStatement.executeUpdate(
+                    """
 create table if not exists real_accounts
 (
     id          uuid           not null unique,
@@ -111,6 +140,21 @@ create table if not exists real_accounts
     budget_name varchar(110)   not null references budgets (budget_name),
     primary key (id, budget_name),
     unique (name, budget_name)
+)
+""".trimIndent(),
+                )
+            }
+            createStatement().use { createTablesStatement: Statement ->
+                createTablesStatement.executeUpdate(
+                    """
+create table if not exists staged_draft_accounts
+(
+    id              uuid           not null,
+    name            varchar(50)    not null,
+    description     varchar(110)   not null default '',
+    balance         numeric(30, 2) not null default 0.0,
+    real_account_id uuid           not null,
+    budget_name     varchar(110)   not null
 )
 """.trimIndent(),
                 )
@@ -180,7 +224,7 @@ create table if not exists transaction_items
      */
     override fun load(): BudgetData =
         try {
-            connection.transaction(
+            transaction(
                 onRollback = { ex ->
                     if (ex.message?.contains("category_accounts") == true && ex.message?.contains("not exist") == true)
                     // TODO fix it right now
@@ -296,18 +340,82 @@ create table if not exists transaction_items
         }
             ?: throw DataConfigurationException("Transaction rolled back.")
 
+    /**
+     * Inserts the transaction records and updates the account balances in the DB.
+     */
     override fun commit(transaction: Transaction) {
         check(transaction.validate())
-        connection.transaction {
+        transaction {
             insertTransactionPreparedStatement(transaction)
                 .use { insertTransaction: PreparedStatement ->
                     insertTransaction.executeUpdate()
                 }
             insertTransactionItemsPreparedStatement(transaction)
-                .use { transactionItemInsert: PreparedStatement ->
-                    transactionItemInsert.executeUpdate()
+                .use { insertTransactionItem: PreparedStatement ->
+                    insertTransactionItem.executeUpdate()
                 }
+            updateBalances(transaction)
         }
+    }
+
+    private fun Connection.updateBalances(transaction: Transaction) {
+        val categoryAccountUpdateStatement = """
+            update category_accounts
+            set balance = balance + ?
+            where id = ? and budget_name = ?""".trimIndent()
+        val realAccountUpdateStatement = """
+            update real_accounts
+            set balance = balance + ?
+            where id = ? and budget_name = ?""".trimIndent()
+        val draftAccountUpdateStatement = """
+            update draft_accounts
+            set balance = balance + ?
+            where id = ? and budget_name = ?""".trimIndent()
+        buildMap {
+            put(
+                categoryAccountUpdateStatement,
+                buildList {
+                    transaction.categoryItems.forEach { transactionItem: TransactionItem ->
+                        add(
+                            transactionItem.categoryAccount!!.id to
+                                    transactionItem.amount,
+                        )
+                    }
+                },
+            )
+            put(
+                realAccountUpdateStatement,
+                buildList {
+                    transaction.realItems.forEach { transactionItem: TransactionItem ->
+                        add(
+                            transactionItem.realAccount!!.id to
+                                    transactionItem.amount,
+                        )
+                    }
+                },
+            )
+            put(
+                draftAccountUpdateStatement,
+                buildList {
+                    transaction.draftItems.forEach { transactionItem: TransactionItem ->
+                        add(
+                            transactionItem.draftAccount!!.id to
+                                    transactionItem.amount,
+                        )
+                    }
+                },
+            )
+        }
+            .forEach { (statement: String, accountIdAmountPair: List<Pair<UUID, BigDecimal>>) ->
+                prepareStatement(statement).use { preparedStatement: PreparedStatement ->
+                    accountIdAmountPair.forEach { (id, amount) ->
+                        preparedStatement.setBigDecimal(1, amount)
+                        preparedStatement.setObject(2, id)
+                        preparedStatement.setString(3, config.budgetName)
+                        preparedStatement.executeUpdate()
+                    }
+                }
+            }
     }
 
     private fun Connection.insertTransactionItemsPreparedStatement(transaction: Transaction): PreparedStatement {
@@ -328,19 +436,19 @@ create table if not exists transaction_items
         transaction.categoryItems.forEach { transactionItem: TransactionItem ->
             parameterIndex += setStandardProperties(transactionItemInsert, parameterIndex, transaction, transactionItem)
             transactionItemInsert.setObject(parameterIndex++, transactionItem.categoryAccount!!.id)
-            transactionItemInsert.setNull(parameterIndex++, Types.JAVA_OBJECT)
-            transactionItemInsert.setNull(parameterIndex++, Types.JAVA_OBJECT)
+            transactionItemInsert.setNull(parameterIndex++, Types.OTHER)
+            transactionItemInsert.setNull(parameterIndex++, Types.OTHER)
         }
         transaction.realItems.forEach { transactionItem: TransactionItem ->
             parameterIndex += setStandardProperties(transactionItemInsert, parameterIndex, transaction, transactionItem)
-            transactionItemInsert.setNull(parameterIndex++, Types.JAVA_OBJECT)
+            transactionItemInsert.setNull(parameterIndex++, Types.OTHER)
             transactionItemInsert.setObject(parameterIndex++, transactionItem.realAccount!!.id)
-            transactionItemInsert.setNull(parameterIndex++, Types.JAVA_OBJECT)
+            transactionItemInsert.setNull(parameterIndex++, Types.OTHER)
         }
         transaction.draftItems.forEach { transactionItem: TransactionItem ->
             parameterIndex += setStandardProperties(transactionItemInsert, parameterIndex, transaction, transactionItem)
-            transactionItemInsert.setNull(parameterIndex++, Types.JAVA_OBJECT)
-            transactionItemInsert.setNull(parameterIndex++, Types.JAVA_OBJECT)
+            transactionItemInsert.setNull(parameterIndex++, Types.OTHER)
+            transactionItemInsert.setNull(parameterIndex++, Types.OTHER)
             transactionItemInsert.setObject(parameterIndex++, transactionItem.draftAccount!!.id)
         }
         return transactionItemInsert
@@ -372,7 +480,7 @@ create table if not exists transaction_items
         )
         insertTransaction.setObject(1, transaction.id)
         insertTransaction.setString(2, transaction.description)
-        insertTransaction.setString(3, transaction.timestamp.toString())
+        insertTransaction.setObject(3, transaction.timestamp)
         insertTransaction.setString(4, config.budgetName)
         return insertTransaction
     }
@@ -380,7 +488,7 @@ create table if not exists transaction_items
     override fun save(data: BudgetData) {
         check(data.validate())
         // create budget if it isn't there
-        connection.transaction {
+        transaction {
             val generalAccountId = data.generalAccount.id
             prepareStatement(
                 """
@@ -395,85 +503,124 @@ create table if not exists transaction_items
 //                        .also { if (it == 0)  }
                 }
             // create accounts that aren't there and update those that are
-            upsertAccountData(data.categoryAccounts, "category_accounts", "category_accounts_name_budget_name_key")
-            upsertAccountData(data.realAccounts, "real_accounts", "real_accounts_name_budget_name_key")
+            upsertAccountData(data.categoryAccounts, "category_accounts")
+            upsertAccountData(data.realAccounts, "real_accounts")
 //            upsertAccountData(data.draftAccounts, "draft_accounts_name_budget_name_key")
             data.draftAccounts.forEach { draftAccount: DraftAccount ->
                 prepareStatement(
                     """
-                    insert into draft_accounts (id, name, description, balance, real_account_id, budget_name)
-                    values (?, ?, ?, ?, ?, ?) on conflict on constraint draft_accounts_name_budget_name_key do update set name = ?, description = ?, balance = ?""",
+                insert into staged_draft_accounts (id, name, description, balance, real_account_id, budget_name)
+                VALUES (?, ?, ?, ?, ?, ?)
+                on conflict do nothing
+            """.trimIndent(),
+                )
+                    .use { createStagedAccountStatement: PreparedStatement ->
+                        createStagedAccountStatement.setObject(1, draftAccount.id)
+                        createStagedAccountStatement.setString(2, draftAccount.name)
+                        createStagedAccountStatement.setString(3, draftAccount.description)
+                        createStagedAccountStatement.setBigDecimal(4, draftAccount.balance)
+                        createStagedAccountStatement.setObject(5, draftAccount.realCompanion.id)
+                        createStagedAccountStatement.setString(6, config.budgetName)
+                        createStagedAccountStatement.executeUpdate()
+                    }
+                prepareStatement(
+                    """
+                merge into draft_accounts as t
+                    using staged_draft_accounts as s
+                    on (t.id = s.id or t.name = s.name) and t.budget_name = s.budget_name
+                    when matched then
+                        update
+                        set name = s.name,
+                            description = s.description,
+                            balance = s.balance
+                    when not matched then
+                        insert (id, name, description, balance, real_account_id, budget_name)
+                        values (s.id, s.name, s.description, s.balance, s.real_account_id, s.budget_name);
+                """.trimIndent(),
                 )
                     .use { createAccountStatement: PreparedStatement ->
-                        createAccountStatement.setObject(1, draftAccount.id)
-                        createAccountStatement.setString(2, draftAccount.name)
-                        createAccountStatement.setString(3, draftAccount.description)
-                        createAccountStatement.setBigDecimal(4, draftAccount.balance)
-                        createAccountStatement.setObject(5, draftAccount.realCompanion.id)
-                        createAccountStatement.setString(6, config.budgetName)
-                        createAccountStatement.setString(7, draftAccount.name)
-                        createAccountStatement.setString(8, draftAccount.description)
-                        createAccountStatement.setBigDecimal(9, draftAccount.balance)
                         createAccountStatement.executeUpdate()
                     }
-
+                // NOTE may have to do this later all at once at the end?
+                prepareStatement("delete from staged_draft_accounts where (id = ? or name = ?) and budget_name = ?")
+                    .use { preparedStatement: PreparedStatement ->
+                        preparedStatement.setObject(1, draftAccount.id)
+                        preparedStatement.setString(2, draftAccount.name)
+                        preparedStatement.setString(3, config.budgetName)
+                        preparedStatement.executeUpdate()
+                    }
+//                prepareStatement(
+//                    """
+//                    insert into draft_accounts (id, name, description, balance, real_account_id, budget_name)
+//                    values (?, ?, ?, ?, ?, ?) on conflict on constraint draft_accounts_pkey do update set name = ?, description = ?, balance = ?""",
+//                )
+//                    .use { createAccountStatement: PreparedStatement ->
+//                        createAccountStatement.setObject(1, draftAccount.id)
+//                        createAccountStatement.setString(2, draftAccount.name)
+//                        createAccountStatement.setString(3, draftAccount.description)
+//                        createAccountStatement.setBigDecimal(4, draftAccount.balance)
+//                        createAccountStatement.setObject(5, draftAccount.realCompanion.id)
+//                        createAccountStatement.setString(6, config.budgetName)
+//                        createAccountStatement.setString(7, draftAccount.name)
+//                        createAccountStatement.setString(8, draftAccount.description)
+//                        createAccountStatement.setBigDecimal(9, draftAccount.balance)
+//                        createAccountStatement.executeUpdate()
+//                    }
             }
             // TODO mark deleted accounts as in-active
             //      see account_active_periods which is currently unused
         }
     }
 
-    private fun Connection.upsertAccountData(accounts: List<Account>, tableName: String, constraintName: String) {
+    private fun Connection.upsertAccountData(accounts: List<Account>, tableName: String) {
         accounts.forEach { account ->
             prepareStatement(
                 """
-                    insert into $tableName (id, name, description, balance, budget_name)
-                    values (?, ?, ?, ?, ?) on conflict on constraint $constraintName do update set name = ?, description = ?, balance = ?""",
+                insert into staged_$tableName (id, name, description, balance, budget_name)
+                VALUES (?, ?, ?, ?, ?)
+                on conflict do nothing
+            """.trimIndent(),
+            )
+                .use { createStagedAccountStatement: PreparedStatement ->
+                    createStagedAccountStatement.setObject(1, account.id)
+                    createStagedAccountStatement.setString(2, account.name)
+                    createStagedAccountStatement.setString(3, account.description)
+                    createStagedAccountStatement.setBigDecimal(4, account.balance)
+                    createStagedAccountStatement.setString(5, config.budgetName)
+                    createStagedAccountStatement.executeUpdate()
+                }
+            prepareStatement(
+                """
+                merge into $tableName as t
+                    using staged_$tableName as s
+                    on (t.id = s.id or t.name = s.name) and t.budget_name = s.budget_name
+                    when matched then
+                        update
+                        set name = s.name,
+                            description = s.description,
+                            balance = s.balance
+                    when not matched then
+                        insert (id, name, description, balance, budget_name)
+                        values (s.id, s.name, s.description, s.balance, s.budget_name);
+                """.trimIndent(),
             )
                 .use { createAccountStatement: PreparedStatement ->
-                    createAccountStatement.setObject(1, account.id)
-                    createAccountStatement.setString(2, account.name)
-                    createAccountStatement.setString(3, account.description)
-                    createAccountStatement.setBigDecimal(4, account.balance)
-                    createAccountStatement.setString(5, config.budgetName)
-                    createAccountStatement.setString(6, account.name)
-                    createAccountStatement.setString(7, account.description)
-                    createAccountStatement.setBigDecimal(8, account.balance)
                     createAccountStatement.executeUpdate()
+                }
+            // NOTE may have to do this later all at once at the end?
+            prepareStatement("delete from staged_$tableName where (id = ? or name = ?) and budget_name = ?")
+                .use { preparedStatement: PreparedStatement ->
+                    preparedStatement.setObject(1, account.id)
+                    preparedStatement.setString(2, account.name)
+                    preparedStatement.setString(3, config.budgetName)
+                    preparedStatement.executeUpdate()
                 }
         }
     }
 
     override fun close() {
         keepAliveSingleThreadScheduledExecutor.close()
-        connection.close()
+        super.close()
     }
-
-    /**
-     * commits after running [block].
-     * @returns the value of executing [onRollback] if the transaction was rolled back otherwise the result of [block]
-     * @param onRollback defaults to throwing the exception
-     */
-    fun <T : Any> Connection.transaction(
-        onRollback: (Exception) -> T? = { throw it },
-        block: Connection.() -> T,
-    ): T? =
-        try {
-            block()
-                .also {
-                    commit()
-                }
-        } catch (exception: Exception) {
-            try {
-                rollback()
-                onRollback(exception)
-            } catch (rollbackException: Exception) {
-                rollbackException.addSuppressed(exception)
-                throw rollbackException
-            }
-        }
-
-    fun ResultSet.getCurrencyAmount(name: String): BigDecimal =
-        getBigDecimal(name).setScale(2)
 
 }

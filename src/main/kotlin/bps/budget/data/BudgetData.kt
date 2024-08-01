@@ -6,11 +6,9 @@ import bps.budget.model.DraftAccount
 import bps.budget.model.RealAccount
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.DataConfigurationException
-import bps.budget.persistence.PersistenceConfiguration
 import bps.budget.transaction.Transaction
 import bps.budget.ui.UiFunctions
 import java.math.BigDecimal
-import java.util.UUID
 
 class BudgetData(
     val generalAccount: CategoryAccount,
@@ -27,8 +25,8 @@ class BudgetData(
     private val _draftAccounts: MutableList<DraftAccount> = draftAccounts.toMutableList()
     val draftAccounts: List<DraftAccount> = _draftAccounts
     private val _transactions: MutableList<Transaction> = transactions.toMutableList()
-    val transactions: List<Transaction> = _transactions
-    private val byId: MutableMap<UUID, Account> = mutableMapOf()
+//    val transactions: List<Transaction> = _transactions
+//    private val byId: MutableMap<UUID, Account> = mutableMapOf()
 
     fun addRealAccount(account: RealAccount) {
         _realAccounts.add(account)
@@ -52,7 +50,8 @@ class BudgetData(
                 .fold(BigDecimal.ZERO) { sum: BigDecimal, account: Account ->
                     sum + account.balance
                 }
-        return categoryAndDraftSum.setScale(2) == realSum.setScale(2) && categoryAccounts.any { it.id == generalAccount.id }
+        return categoryAndDraftSum.setScale(2) == realSum.setScale(2) &&
+                categoryAccounts.any { it.id == generalAccount.id }
     }
 
     companion object {
@@ -61,7 +60,6 @@ class BudgetData(
          * Will build basic data if there is an error getting it from a file.
          */
         operator fun invoke(
-            persistenceConfiguration: PersistenceConfiguration,
             uiFunctions: UiFunctions,
             budgetDao: BudgetDao<*>,
         ): BudgetData =
@@ -79,7 +77,6 @@ class BudgetData(
                             }
                     }
             }
-                ?: throw Exception("Unsupported persistence type: ${persistenceConfiguration.type}")
     }
 
 }

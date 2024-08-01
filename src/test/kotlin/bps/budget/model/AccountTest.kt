@@ -17,7 +17,7 @@ class AccountTest : FreeSpec() {
             val uiFunctions = ConsoleUiFunctions()
             budgetDaoBuilder(configurations.persistence).use { budgetDao ->
 
-                val budgetData = BudgetData(configurations.persistence, uiFunctions, budgetDao)
+                val budgetData = BudgetData(uiFunctions, budgetDao)
                 budgetData.generalAccount.id.toString() shouldBeEqual "dfa8a21c-f0ad-434d-bcb5-9e37749fa81e"
                 budgetData.realAccounts shouldHaveSize 1
                 budgetData.categoryAccounts shouldHaveSize 2

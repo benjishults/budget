@@ -1,62 +1,76 @@
+@file:JvmName("DataCleanupUtils")
+
 package bps.budget.jdbc
 
 import bps.budget.persistence.jdbc.JdbcDao
+import bps.jdbc.JdbcFixture
 
-fun deleteTables(jdbcDao: JdbcDao) {
-    require(jdbcDao.config.schema == "clean_after_test")
-
-    jdbcDao.connection.createStatement()
-        .use { statement ->
-            statement.execute("drop table if exists transaction_items")
-            statement.execute("drop table if exists transactions")
-            statement.execute("drop table if exists draft_accounts")
-            statement.execute("drop table if exists real_accounts")
-            statement.execute("drop table if exists category_accounts")
-            statement.execute("drop table if exists budgets")
+fun deleteTables(jdbcDao: JdbcDao, schema: String = "clean_after_test") {
+    require(jdbcDao.config.schema == schema)
+    with(JdbcFixture(jdbcDao.connection)) {
+        transaction {
+            createStatement()
+                .use { statement ->
+                    statement.execute("drop table if exists transaction_items")
+                    statement.execute("drop table if exists transactions")
+                    statement.execute("drop table if exists draft_accounts")
+                    statement.execute("drop table if exists real_accounts")
+                    statement.execute("drop table if exists category_accounts")
+                    statement.execute("drop table if exists budgets")
+                }
         }
-    jdbcDao.connection.commit()
+    }
 }
 
 fun cleanupBudget(jdbcDao: JdbcDao) {
     cleanupAccounts(jdbcDao)
-    jdbcDao.connection.prepareStatement("delete from budgets where budget_name = ?")
-        .use {
-            it.setString(1, jdbcDao.config.budgetName)
-            it.executeUpdate()
+    with(JdbcFixture(jdbcDao.connection)) {
+        transaction {
+            prepareStatement("delete from budgets where budget_name = ?")
+                .use {
+                    it.setString(1, jdbcDao.config.budgetName)
+                    it.executeUpdate()
+                }
         }
-    jdbcDao.connection.commit()
+    }
 }
 
 fun cleanupAccounts(jdbcDao: JdbcDao) {
     cleanupTransactions(jdbcDao)
-    jdbcDao.connection.prepareStatement("delete from draft_accounts where budget_name = ?")
-        .use {
-            it.setString(1, jdbcDao.config.budgetName)
-            it.execute()
+    with(JdbcFixture(jdbcDao.connection)) {
+        transaction {
+            prepareStatement("delete from draft_accounts where budget_name = ?")
+                .use {
+                    it.setString(1, jdbcDao.config.budgetName)
+                    it.execute()
+                }
+            prepareStatement("delete from real_accounts where budget_name = ?")
+                .use {
+                    it.setString(1, jdbcDao.config.budgetName)
+                    it.execute()
+                }
+            prepareStatement("delete from category_accounts where budget_name = ?")
+                .use {
+                    it.setString(1, jdbcDao.config.budgetName)
+                    it.execute()
+                }
         }
-    jdbcDao.connection.prepareStatement("delete from real_accounts where budget_name = ?")
-        .use {
-            it.setString(1, jdbcDao.config.budgetName)
-            it.execute()
-        }
-    jdbcDao.connection.prepareStatement("delete from category_accounts where budget_name = ?")
-        .use {
-            it.setString(1, jdbcDao.config.budgetName)
-            it.execute()
-        }
-    jdbcDao.connection.commit()
+    }
 }
 
 fun cleanupTransactions(jdbcDao: JdbcDao) {
-    jdbcDao.connection.prepareStatement("delete from transaction_items where budget_name = ?")
-        .use {
-            it.setString(1, jdbcDao.config.budgetName)
-            it.execute()
+    with(JdbcFixture(jdbcDao.connection)) {
+        transaction {
+            prepareStatement("delete from transaction_items where budget_name = ?")
+                .use {
+                    it.setString(1, jdbcDao.config.budgetName)
+                    it.execute()
+                }
+            prepareStatement("delete from transactions where budget_name = ?")
+                .use {
+                    it.setString(1, jdbcDao.config.budgetName)
+                    it.execute()
+                }
         }
-    jdbcDao.connection.prepareStatement("delete from transactions where budget_name = ?")
-        .use {
-            it.setString(1, jdbcDao.config.budgetName)
-            it.execute()
-        }
-    jdbcDao.connection.commit()
+    }
 }

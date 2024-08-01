@@ -4,6 +4,7 @@ import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftAccount
 import bps.budget.model.RealAccount
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -21,12 +22,12 @@ interface Transaction {
     fun validate(): Boolean {
         val categoryAndDraftSum: BigDecimal =
             (categoryItems + draftItems)
-                .fold(BigDecimal.ZERO) { sum: BigDecimal, item: TransactionItem ->
+                .fold(BigDecimal.ZERO.setScale(2)) { sum: BigDecimal, item: TransactionItem ->
                     sum + item.amount
                 }
         val realSum: BigDecimal =
             realItems
-                .fold(BigDecimal.ZERO) { sum: BigDecimal, item: TransactionItem ->
+                .fold(BigDecimal.ZERO.setScale(2)) { sum: BigDecimal, item: TransactionItem ->
                     sum + item.amount
                 }
         return categoryAndDraftSum == realSum
@@ -44,7 +45,7 @@ interface Transaction {
         ): Transaction = object : Transaction {
             override val id: UUID = UUID.randomUUID()
             override val description: String = description
-            override val amount: BigDecimal = amount
+            override val amount: BigDecimal = amount.setScale(2, RoundingMode.HALF_UP)
             override val timestamp: OffsetDateTime = timestamp
             override val categoryItems: List<TransactionItem> = categoryItems
             override val realItems: List<TransactionItem> = realItems
@@ -55,13 +56,26 @@ interface Transaction {
 }
 
 interface TransactionItem {
-    val description: String
+    val description: String?
     val amount: BigDecimal
     val categoryAccount: CategoryAccount?
     val realAccount: RealAccount?
     val draftAccount: DraftAccount?
 
-    fun commit() {
-
+    companion object {
+        operator fun invoke(
+            amount: BigDecimal,
+            description: String? = null,
+            categoryAccount: CategoryAccount? = null,
+            realAccount: RealAccount? = null,
+            draftAccount: DraftAccount? = null,
+        ): TransactionItem = object : TransactionItem {
+            override val description: String? = description
+            override val amount: BigDecimal = amount
+            override val categoryAccount: CategoryAccount? = categoryAccount
+            override val realAccount: RealAccount? = realAccount
+            override val draftAccount: DraftAccount? = draftAccount
+        }
     }
+
 }

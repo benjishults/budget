@@ -4,6 +4,26 @@ import bps.budget.persistence.AccountConfig
 import java.math.BigDecimal
 import java.util.UUID
 
+// TODO consider creating all these accounts on first run.
+const val defaultWalletAccountName = "Wallet"
+const val defaultWalletAccountDescription = "Cash on hand"
+const val defaultCheckingAccountName = "Checking"
+const val defaultCheckingAccountDescription = "Account from which checks clear"
+const val defaultFoodAccountName = "Food"
+const val defaultFoodAccountDescription = "Food other than what's covered in entertainment."
+const val defaultTransportationAccountName = "Transportation"
+const val defaultTransportationAccountDescription = "Fuel, up-keep, fares, etc."
+const val defaultTravelAccountName = "Travel"
+const val defaultTravelAccountDescription = "Travel for vacation."
+const val defaultEntertainmentAccountName = "Entertainment"
+const val defaultEntertainmentAccountDescription = "Games, books, going out for food or fun."
+const val defaultEducationAccountName = "Education"
+const val defaultEducationAccountDescription = "Tuition, books, etc."
+const val defaultNecessitiesAccountName = "Necessities"
+const val defaultCheckingDraftsAccountName = "Checking Drafts"
+const val defaultCheckingDraftsAccountDescription =
+    "When a check is written or clears, a transaction occurs in this account."
+
 sealed interface Account : AccountConfig {
 //    val transactions: List<Transaction>
 
@@ -12,9 +32,9 @@ sealed interface Account : AccountConfig {
 }
 
 abstract class BaseAccount(
-    override val name: String,
-    override val description: String = "",
-    override val id: UUID = UUID.randomUUID(),
+    override var name: String,
+    override var description: String = "",
+    override var id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO,
 //    transactions: List<Transaction> = emptyList(),
 ) : Account {

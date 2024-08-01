@@ -63,7 +63,7 @@ class BudgetApplication private constructor(
         budgetDaoBuilder(configurations.persistence),
     )
 
-    val budgetData: BudgetData = BudgetData(configurations.persistence, uiFunctions, budgetDao)
+    val budgetData: BudgetData = BudgetData(uiFunctions, budgetDao)
     private val menuApplicationWithQuit =
         MenuApplicationWithQuit(AllMenus().budgetMenu(budgetData, budgetDao), inputReader, outPrinter)
 

@@ -83,7 +83,7 @@ Enter the name for your "General" account [General] """,
             val budgetDao = FilesDao(configurations.persistence.file!!)
             val uiFunctions = ConsoleUiFunctions(inputReader, outPrinter)
             val budgetMenu = menus.budgetMenu(
-                BudgetData(configurations.persistence, uiFunctions, budgetDao),
+                BudgetData(uiFunctions, budgetDao),
                 budgetDao,
             )
             MenuApplicationWithQuit(budgetMenu, inputReader, outPrinter)
@@ -109,6 +109,7 @@ Enter the name for your "General" account [General] """,
                 "Quitting\n",
             )
             inputs shouldHaveSize 0
+            File(convertToPath(configurations.persistence.file!!.dataDirectory)).deleteContentsOfNonEmptyFolder() shouldBe true
         }
 
         "budget with starting account.yml" {
@@ -117,7 +118,7 @@ Enter the name for your "General" account [General] """,
             val budgetDao = FilesDao(configurations.persistence.file!!)
             val uiFunctions = ConsoleUiFunctions(inputReader, outPrinter)
             val budgetMenu = menus.budgetMenu(
-                BudgetData(configurations.persistence, uiFunctions, budgetDao),
+                BudgetData(uiFunctions, budgetDao),
                 budgetDao,
             )
             MenuApplicationWithQuit(budgetMenu, inputReader, outPrinter)
@@ -152,6 +153,7 @@ The user may associate a drafts account with a checking account and vice-versa."
                 "Quitting\n",
             )
             inputs shouldHaveSize 0
+//            File(convertToPath(configurations.persistence.file!!.dataDirectory)).deleteContentsOfNonEmptyFolder() shouldBe true
         }
 
     }
