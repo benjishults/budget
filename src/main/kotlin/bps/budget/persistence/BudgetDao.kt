@@ -1,8 +1,8 @@
 package bps.budget.persistence
 
-import bps.budget.data.BudgetData
 import bps.budget.model.Account
-import bps.budget.transaction.Transaction
+import bps.budget.model.BudgetData
+import bps.budget.model.Transaction
 
 /**
  * @param C the [BudgetConfigLookup] type determining how the data is found in the first place.

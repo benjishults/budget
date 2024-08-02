@@ -1,7 +1,6 @@
 package bps.budget.model
 
 import bps.budget.BudgetConfigurations
-import bps.budget.data.BudgetData
 import bps.budget.persistence.budgetDaoBuilder
 import bps.budget.ui.ConsoleUiFunctions
 import io.kotest.assertions.fail

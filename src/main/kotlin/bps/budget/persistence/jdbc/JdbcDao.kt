@@ -1,15 +1,15 @@
 package bps.budget.persistence.jdbc
 
-import bps.budget.data.BudgetData
 import bps.budget.model.Account
+import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftAccount
 import bps.budget.model.RealAccount
+import bps.budget.model.Transaction
+import bps.budget.model.TransactionItem
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.DataConfigurationException
 import bps.budget.persistence.JdbcConfig
-import bps.budget.transaction.Transaction
-import bps.budget.transaction.TransactionItem
 import bps.jdbc.JdbcFixture
 import java.math.BigDecimal
 import java.net.URLEncoder
@@ -84,7 +84,6 @@ create table if not exists budgets
                     """.trimIndent(),
                 )
             }
-            createStagingCategoryAccountsTable()
             createStatement().use { createTablesStatement: Statement ->
                 createTablesStatement.executeUpdate(
                     """
@@ -101,7 +100,6 @@ create table if not exists category_accounts
                     """.trimIndent(),
                 )
             }
-            createStagingRealAccountsTable()
             createStatement().use { createTablesStatement: Statement ->
                 createTablesStatement.executeUpdate(
                     """
@@ -118,7 +116,6 @@ create table if not exists real_accounts
                     """.trimIndent(),
                 )
             }
-            createStagingDraftAccountsTable()
             createStatement().use { createTablesStatement: Statement ->
                 createTablesStatement.executeUpdate(
                     """
@@ -192,7 +189,7 @@ create table if not exists transaction_items
         real_account_id uuid           not null,
         budget_name     varchar(110)   not null
     )
-        on commit delete rows
+        on commit drop
                         """.trimIndent(),
             )
         }
@@ -211,7 +208,7 @@ create table if not exists transaction_items
         balance     numeric(30, 2) not null default 0.0,
         budget_name varchar(110)   not null
     )
-        on commit delete rows
+        on commit drop
                         """.trimIndent(),
             )
         }
@@ -230,7 +227,7 @@ create table if not exists transaction_items
         balance     numeric(30, 2) not null default 0.0,
         budget_name varchar(110)   not null
     )
-        on commit delete rows
+        on commit drop
                         """.trimIndent(),
             )
         }

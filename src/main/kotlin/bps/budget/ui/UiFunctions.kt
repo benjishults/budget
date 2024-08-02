@@ -1,6 +1,7 @@
 package bps.budget.ui
 
 import bps.budget.model.CategoryAccount
+import bps.budget.model.defaultGeneralAccountName
 import bps.budget.persistence.BudgetDao
 import bps.console.inputs.RecursivePrompt
 import bps.console.inputs.SimplePromptWithDefault
@@ -29,7 +30,7 @@ class ConsoleUiFunctions(
                             """
             |Looks like this is your first time running Budget.
             |Enter the name for your "General" account""".trimMargin(),
-                            "General",
+                            defaultGeneralAccountName,
                             inputReader,
                             outPrinter,
                         ),

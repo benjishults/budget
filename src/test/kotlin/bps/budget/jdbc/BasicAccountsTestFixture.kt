@@ -1,13 +1,14 @@
 package bps.budget.jdbc
 
 import bps.budget.BudgetConfigurations
-import bps.budget.data.BudgetData
+import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftAccount
 import bps.budget.model.RealAccount
 import bps.budget.model.defaultCheckingAccountName
 import bps.budget.model.defaultCheckingDraftsAccountName
 import bps.budget.model.defaultFoodAccountName
+import bps.budget.model.defaultGeneralAccountName
 import bps.budget.model.defaultNecessitiesAccountName
 import bps.budget.model.defaultWalletAccountName
 import bps.budget.persistence.jdbc.JdbcDao
@@ -29,6 +30,7 @@ interface BasicAccountsTestFixture : JdbcFixture {
      */
     fun Spec.useBasicAccounts() {
         beforeSpec {
+            cleanupAccounts(jdbcDao)
             upsertBasicAccounts()
         }
         afterSpec {
@@ -45,7 +47,7 @@ interface BasicAccountsTestFixture : JdbcFixture {
     fun upsertBasicAccounts() {
         val generalAccount =
             CategoryAccount(
-                "General",
+                defaultGeneralAccountName,
                 id = UUID.fromString("dfa8a21c-f0ad-434d-bcb5-9e37749fa81e"),
             )
         val walletAccount = RealAccount(defaultWalletAccountName)

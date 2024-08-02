@@ -1,7 +1,7 @@
 package bps.budget.file
 
 import bps.budget.BudgetConfigurations
-import bps.budget.data.BudgetData
+import bps.budget.model.BudgetData
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.budgetDaoBuilder
 import bps.budget.ui.ConsoleUiFunctions

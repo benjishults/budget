@@ -1,28 +1,35 @@
 package bps.budget.model
 
-import bps.budget.transaction.TransactionItem
 import java.math.BigDecimal
 import java.util.UUID
 
 // TODO consider creating all these accounts on first run.
+const val defaultGeneralAccountName = "General"
 const val defaultWalletAccountName = "Wallet"
-const val defaultWalletAccountDescription = "Cash on hand"
+const val defaultWalletAccountDescription = "Cash on hand."
 const val defaultCheckingAccountName = "Checking"
-const val defaultCheckingAccountDescription = "Account from which checks clear"
+const val defaultCheckingAccountDescription = "Account from which checks clear."
 const val defaultFoodAccountName = "Food"
 const val defaultFoodAccountDescription = "Food other than what's covered in entertainment."
 const val defaultTransportationAccountName = "Transportation"
-const val defaultTransportationAccountDescription = "Fuel, up-keep, fares, etc."
+const val defaultTransportationAccountDescription = "Vehicle payments, fuel, up-keep, fares, etc."
 const val defaultTravelAccountName = "Travel"
-const val defaultTravelAccountDescription = "Travel for vacation."
+const val defaultTravelAccountDescription = "Travel expenses for vacation."
 const val defaultEntertainmentAccountName = "Entertainment"
-const val defaultEntertainmentAccountDescription = "Games, books, going out for food or fun."
+const val defaultEntertainmentAccountDescription = "Games, books, subscriptions, going out for food or fun."
 const val defaultEducationAccountName = "Education"
 const val defaultEducationAccountDescription = "Tuition, books, etc."
+const val defaultNetworkAccountName = "Network"
+const val defaultNetworkAccountDescription = "Mobile plan, routers, internet access."
+const val defaultWorkAccountName = "Work"
+const val defaultWorkAccountDescription = "Work-related expenses (possibly to be reimbursed)."
+const val defaultMedicalAccountName = "Medical"
+const val defaultMedicalAccountDescription = "Medicine, supplies, insurance, etc."
 const val defaultNecessitiesAccountName = "Necessities"
+const val defaultNecessitiesAccountDescription = "Soap, light bulbs, etc."
 const val defaultCheckingDraftsAccountName = "Checking Drafts"
 const val defaultCheckingDraftsAccountDescription =
-    "When a check is written or clears, a transaction occurs in this account."
+    "Records checks being written or clearing."
 
 // TODO consider whether it makes sense for this to inherit from AccountConfig
 sealed interface Account : AccountData {
@@ -47,7 +54,7 @@ abstract class BaseAccount(
     }
 
     override fun toString(): String {
-        return "Account($name, $balance)"
+        return "Account('$name', $balance)"
     }
 //    private val _transactions: MutableList<Transaction> = transactions.toMutableList()
 //    override val transactions: List<Transaction>

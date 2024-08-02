@@ -1,8 +1,5 @@
-package bps.budget.transaction
+package bps.budget.model
 
-import bps.budget.model.CategoryAccount
-import bps.budget.model.DraftAccount
-import bps.budget.model.RealAccount
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.OffsetDateTime
@@ -50,6 +47,16 @@ interface Transaction {
             override val categoryItems: List<TransactionItem> = categoryItems
             override val realItems: List<TransactionItem> = realItems
             override val draftItems: List<TransactionItem> = draftItems
+            override fun toString(): String =
+                buildString {
+                    append("Transaction('$description', $amount")
+                    (categoryItems + realItems + draftItems).forEach { transactionItem: TransactionItem ->
+                        append(", $transactionItem")
+                    }
+                    append(")")
+                }
+
+
         }
 
     }
@@ -75,6 +82,13 @@ interface TransactionItem {
             override val categoryAccount: CategoryAccount? = categoryAccount
             override val realAccount: RealAccount? = realAccount
             override val draftAccount: DraftAccount? = draftAccount
+            override fun toString(): String =
+                "TransactionItem(${categoryAccount ?: realAccount ?: draftAccount}, $amount${
+                    if (description?.isNotBlank() == true)
+                        ", '$description'"
+                    else
+                        ""
+                })"
         }
     }
 

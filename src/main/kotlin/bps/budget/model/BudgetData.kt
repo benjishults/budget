@@ -1,13 +1,7 @@
-package bps.budget.data
+package bps.budget.model
 
-import bps.budget.model.Account
-import bps.budget.model.CategoryAccount
-import bps.budget.model.DraftAccount
-import bps.budget.model.RealAccount
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.DataConfigurationException
-import bps.budget.transaction.Transaction
-import bps.budget.transaction.TransactionItem
 import bps.budget.ui.UiFunctions
 import java.math.BigDecimal
 import java.util.UUID
@@ -98,6 +92,15 @@ class BudgetData(
         return categoryAndDraftSum.setScale(2) == realSum.setScale(2) &&
                 categoryAccounts.any { it.id == generalAccount.id }
     }
+
+    override fun toString(): String =
+        buildString {
+            append("BudgetData($generalAccount")
+            ((categoryAccounts - generalAccount) + realAccounts + draftAccounts).forEach {
+                append(", $it")
+            }
+            append(")")
+        }
 
     companion object {
 

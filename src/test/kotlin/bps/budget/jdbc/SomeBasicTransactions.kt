@@ -1,15 +1,23 @@
 package bps.budget.jdbc
 
 import bps.budget.BudgetConfigurations
-import bps.budget.data.BudgetData
+import bps.budget.model.BudgetData
+import bps.budget.model.CategoryAccount
+import bps.budget.model.DraftAccount
+import bps.budget.model.RealAccount
+import bps.budget.model.Transaction
+import bps.budget.model.TransactionItem
 import bps.budget.model.defaultCheckingAccountName
 import bps.budget.model.defaultCheckingDraftsAccountName
 import bps.budget.model.defaultFoodAccountName
+import bps.budget.model.defaultGeneralAccountName
+import bps.budget.model.defaultNecessitiesAccountName
+import bps.budget.model.defaultWalletAccountName
 import bps.budget.persistence.jdbc.JdbcDao
-import bps.budget.transaction.Transaction
-import bps.budget.transaction.TransactionItem
 import bps.budget.ui.ConsoleUiFunctions
+import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FreeSpec
+import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
 import java.time.OffsetDateTime
 
@@ -48,10 +56,10 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                     description = "allocate",
                     timestamp = OffsetDateTime.now(),
                     categoryItems = buildList {
-                        add(TransactionItem(amount, categoryAccount = budgetData.generalAccount))
+                        add(TransactionItem(-amount, categoryAccount = budgetData.generalAccount))
                         add(
                             TransactionItem(
-                                -amount,
+                                amount,
                                 categoryAccount = budgetData.categoryAccounts.find { it.name == defaultFoodAccountName }!!,
                             ),
                         )
@@ -68,13 +76,13 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                     timestamp = OffsetDateTime.now(),
                     categoryItems = listOf(
                         TransactionItem(
-                            amount,
+                            -amount,
                             categoryAccount = budgetData.categoryAccounts.find { it.name == defaultFoodAccountName }!!,
                         ),
                     ),
                     draftItems = listOf(
                         TransactionItem(
-                            -amount,
+                            amount,
                             draftAccount = budgetData.draftAccounts.find { it.name == defaultCheckingDraftsAccountName }!!,
                         ),
                     ),
@@ -83,6 +91,31 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                 jdbcDao.commit(writeCheck)
             }
             "check balances" {
+                budgetData.realAccounts.forEach { realAccount: RealAccount ->
+                    when (realAccount.name) {
+                        defaultCheckingAccountName -> {
+                            realAccount.balance shouldBe BigDecimal("1000.00")
+                        }
+                        defaultWalletAccountName ->
+                            realAccount.balance shouldBe BigDecimal.ZERO.setScale(2)
+                        else ->
+                            fail("unexpected real account")
+                    }
+                    budgetData.categoryAccounts.forEach { it: CategoryAccount ->
+                        when (it.name) {
+                            defaultGeneralAccountName -> it.balance shouldBe BigDecimal("700.00")
+                            defaultFoodAccountName -> it.balance shouldBe BigDecimal("200.00")
+                            defaultNecessitiesAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
+                            else -> fail("unexpected category account")
+                        }
+                    }
+                    budgetData.draftAccounts.forEach { it: DraftAccount ->
+                        when (it.name) {
+                            defaultCheckingDraftsAccountName -> it.balance shouldBe BigDecimal("100.00")
+                            else -> fail("unexpected draft account")
+                        }
+                    }
+                }
             }
         }
 

@@ -3,10 +3,10 @@
 package bps.budget
 
 import bps.budget.customize.customizeMenu
-import bps.budget.data.BudgetData
+import bps.budget.model.BudgetData
+import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.budgetDaoBuilder
-import bps.budget.transaction.Transaction
 import bps.budget.ui.ConsoleUiFunctions
 import bps.budget.ui.UiFunctions
 import bps.console.MenuApplicationWithQuit

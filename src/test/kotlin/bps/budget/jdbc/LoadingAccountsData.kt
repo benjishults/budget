@@ -1,7 +1,7 @@
 package bps.budget.jdbc
 
 import bps.budget.BudgetConfigurations
-import bps.budget.data.BudgetData
+import bps.budget.model.BudgetData
 import bps.budget.persistence.jdbc.JdbcDao
 import bps.budget.ui.ConsoleUiFunctions
 import io.kotest.core.spec.style.FreeSpec

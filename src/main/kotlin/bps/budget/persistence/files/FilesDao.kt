@@ -1,6 +1,6 @@
 package bps.budget.persistence.files
 
-import bps.budget.data.BudgetData
+import bps.budget.model.BudgetData
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.DataConfigurationException
 import bps.budget.persistence.FileConfig

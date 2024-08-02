@@ -45,17 +45,17 @@ fun cleanupAccounts(jdbcDao: JdbcDao) {
             prepareStatement("delete from draft_accounts where budget_name = ?")
                 .use {
                     it.setString(1, jdbcDao.config.budgetName)
-                    it.execute()
+                    it.executeUpdate()
                 }
             prepareStatement("delete from real_accounts where budget_name = ?")
                 .use {
                     it.setString(1, jdbcDao.config.budgetName)
-                    it.execute()
+                    it.executeUpdate()
                 }
             prepareStatement("delete from category_accounts where budget_name = ?")
                 .use {
                     it.setString(1, jdbcDao.config.budgetName)
-                    it.execute()
+                    it.executeUpdate()
                 }
         }
     }

@@ -1,6 +1,6 @@
 package bps.budget.persistence.files
 
-import bps.budget.data.BudgetData
+import bps.budget.model.BudgetData
 import java.util.UUID
 
 data class AccountsConfig(
