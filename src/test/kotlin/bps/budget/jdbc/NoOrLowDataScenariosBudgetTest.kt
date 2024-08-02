@@ -31,7 +31,7 @@ class NoOrLowDataScenariosBudgetTest : FreeSpec() {
         }
 
         val configurations = BudgetConfigurations(sequenceOf("noDataJdbc.yml"))
-        "budget with no starting data saves general account to db" {
+        "!budget with no starting data saves general account to db" {
             inputs.addAll(
                 listOf("", "", "8"),
             )

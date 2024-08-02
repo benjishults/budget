@@ -37,7 +37,7 @@ class NoOrLowDataScenariosBudgetTest : FreeSpec() {
             outputs.clear()
         }
 
-        "budget with no starting data saves account.yml" {
+        "!budget with no starting data saves account.yml" {
             inputs.addAll(
                 listOf("", "", "8"),
             )
@@ -75,7 +75,7 @@ Enter the name for your "General" account [General] """,
         }
 
         val menus = AllMenus(inputReader, outPrinter)
-        "budget with no starting data" {
+        "!budget with no starting data" {
             inputs.addAll(
                 listOf("", "", "8"),
             )

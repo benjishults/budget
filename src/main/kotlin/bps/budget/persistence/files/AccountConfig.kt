@@ -11,7 +11,7 @@ open class CategoryAccountConfig(
     override val name: String,
     override val description: String,
     override val id: UUID = UUID.randomUUID(),
-    override val balance: BigDecimal = BigDecimal.ZERO,
+    override val balance: BigDecimal = BigDecimal.ZERO.setScale(2),
 ) : AccountData
 
 fun CategoryAccountConfig.toCategoryAccount(): CategoryAccount =
@@ -24,7 +24,7 @@ open class RealAccountConfig(
     override val name: String,
     override val description: String,
     override val id: UUID = UUID.randomUUID(),
-    override val balance: BigDecimal = BigDecimal.ZERO,
+    override val balance: BigDecimal = BigDecimal.ZERO.setScale(2),
 ) : AccountData
 
 fun RealAccountConfig.toRealAccount(): RealAccount =
@@ -37,7 +37,7 @@ open class DraftAccountConfig(
     override val name: String,
     override val description: String,
     override val id: UUID = UUID.randomUUID(),
-    override val balance: BigDecimal = BigDecimal.ZERO,
+    override val balance: BigDecimal = BigDecimal.ZERO.setScale(2),
     val realCompanionId: UUID,
 ) : AccountData
 

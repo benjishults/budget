@@ -45,7 +45,6 @@ fun main(args: Array<String>) {
 class BudgetApplication private constructor(
     inputReader: InputReader,
     outPrinter: OutPrinter,
-    configurations: BudgetConfigurations,
     uiFunctions: UiFunctions,
     val budgetDao: BudgetDao<*>,
 ) : AutoCloseable {
@@ -58,7 +57,6 @@ class BudgetApplication private constructor(
     ) : this(
         inputReader,
         outPrinter,
-        configurations,
         uiFunctions,
         budgetDaoBuilder(configurations.persistence),
     )

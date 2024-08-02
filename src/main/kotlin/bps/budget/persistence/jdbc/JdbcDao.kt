@@ -143,9 +143,18 @@ create table if not exists transactions
     description varchar(110)             not null default '',
     timestamp   timestamp with time zone not null default now(),
     budget_name varchar(110)             not null references budgets (budget_name),
-    primary key (id, budget_name),
-    unique (timestamp, budget_name)
+    primary key (id, budget_name)
 )
+                    """.trimIndent(),
+                )
+            }
+            createStatement().use { createIndexStatement: Statement ->
+                createIndexStatement.executeUpdate(
+                    """
+create index if not exists lookup_transaction_by_date
+    on transactions
+        (timestamp desc,
+         budget_name)
                     """.trimIndent(),
                 )
             }
@@ -164,12 +173,42 @@ create table if not exists transaction_items
     constraint only_one_account_per_transaction_item check
         ((real_account_id is not null and (category_account_id is null and draft_account_id is null)) or
          (category_account_id is not null and (real_account_id is null and draft_account_id is null)) or
-         (draft_account_id is not null and (category_account_id is null and real_account_id is null))),
-    unique (transaction_id, draft_account_id, budget_name),
-    unique (transaction_id, category_account_id, budget_name),
-    unique (transaction_id, real_account_id, budget_name)
+         (draft_account_id is not null and (category_account_id is null and real_account_id is null)))
 )
                 """.trimIndent(),
+                )
+            }
+            createStatement().use { createIndexStatement: Statement ->
+                createIndexStatement.executeUpdate(
+                    """
+create index if not exists lookup_category_account_transaction_items_by_account
+    on transaction_items
+        (category_account_id,
+         budget_name)
+    where category_account_id is not null
+                    """.trimIndent(),
+                )
+            }
+            createStatement().use { createIndexStatement: Statement ->
+                createIndexStatement.executeUpdate(
+                    """
+create index if not exists lookup_real_account_transaction_items_by_account
+    on transaction_items
+        (real_account_id,
+         budget_name)
+    where real_account_id is not null
+                    """.trimIndent(),
+                )
+            }
+            createStatement().use { createIndexStatement: Statement ->
+                createIndexStatement.executeUpdate(
+                    """
+create index if not exists lookup_draft_account_transaction_items_by_account
+    on transaction_items
+        (draft_account_id,
+         budget_name)
+    where draft_account_id is not null
+                    """.trimIndent(),
                 )
             }
         }

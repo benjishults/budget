@@ -23,6 +23,9 @@ interface BudgetConfigurations {
                     config
                         .at("persistence")
                         .toValue()
+
+                override fun toString(): String =
+                    "BudgetConfigurations($persistence)"
             }
     }
 }

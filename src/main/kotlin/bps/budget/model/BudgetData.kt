@@ -11,7 +11,6 @@ class BudgetData(
     categoryAccounts: List<CategoryAccount>,
     realAccounts: List<RealAccount> = emptyList(),
     draftAccounts: List<DraftAccount> = emptyList(),
-    transactions: List<Transaction> = emptyList(),
 ) {
 
     private val _categoryAccounts: MutableList<CategoryAccount> = categoryAccounts.toMutableList()
@@ -21,8 +20,6 @@ class BudgetData(
     private val _draftAccounts: MutableList<DraftAccount> = draftAccounts.toMutableList()
     val draftAccounts: List<DraftAccount> = _draftAccounts
 
-    //    private val _transactions: MutableList<Transaction> = transactions.toMutableList()
-//    val transactions: List<Transaction> = _transactions
     private val byId: MutableMap<UUID, Account> = mutableMapOf()
 
     fun addCategoryAccount(account: CategoryAccount) {
@@ -81,12 +78,12 @@ class BudgetData(
     fun validate(): Boolean {
         val categoryAndDraftSum: BigDecimal =
             (categoryAccounts + draftAccounts)
-                .fold(BigDecimal.ZERO) { sum: BigDecimal, account: Account ->
+                .fold(BigDecimal.ZERO.setScale(2)) { sum: BigDecimal, account: Account ->
                     sum + account.balance
                 }
         val realSum: BigDecimal =
             realAccounts
-                .fold(BigDecimal.ZERO) { sum: BigDecimal, account: Account ->
+                .fold(BigDecimal.ZERO.setScale(2)) { sum: BigDecimal, account: Account ->
                     sum + account.balance
                 }
         return categoryAndDraftSum.setScale(2) == realSum.setScale(2) &&
@@ -104,6 +101,38 @@ class BudgetData(
 
     companion object {
 
+        @JvmStatic
+        fun withBasicAccounts(): BudgetData {
+            val generalAccount = CategoryAccount(defaultGeneralAccountName, defaultGeneralAccountDescription)
+            val checkingAccount = RealAccount(defaultCheckingAccountName, defaultCheckingAccountDescription)
+            return BudgetData(
+                generalAccount,
+                listOf(
+                    generalAccount,
+                    CategoryAccount(defaultNecessitiesAccountName, defaultNecessitiesAccountDescription),
+                    CategoryAccount(defaultFoodAccountName, defaultFoodAccountDescription),
+                    CategoryAccount(defaultEducationAccountName, defaultEducationAccountDescription),
+                    CategoryAccount(defaultEntertainmentAccountName, defaultEntertainmentAccountDescription),
+                    CategoryAccount(defaultMedicalAccountName, defaultMedicalAccountDescription),
+                    CategoryAccount(defaultNetworkAccountName, defaultNetworkAccountDescription),
+                    CategoryAccount(defaultTransportationAccountName, defaultTransportationAccountDescription),
+                    CategoryAccount(defaultTravelAccountName, defaultTravelAccountDescription),
+                    CategoryAccount(defaultWorkAccountName, defaultWorkAccountDescription),
+                ),
+                listOf(
+                    RealAccount(defaultWalletAccountName, defaultWalletAccountDescription),
+                    checkingAccount,
+                ),
+                listOf(
+                    DraftAccount(
+                        name = defaultCheckingDraftsAccountName,
+                        description = defaultCheckingDraftsAccountDescription,
+                        realCompanion = checkingAccount,
+                    ),
+                ),
+            )
+        }
+
         /**
          * Will build basic data if there is an error getting it from a file.
          */
@@ -117,13 +146,20 @@ class BudgetData(
                     load()
                 }
             } catch (ex: DataConfigurationException) {
-                uiFunctions.createGeneralAccount(budgetDao)
-                    .let { generalAccount: CategoryAccount ->
-                        BudgetData(generalAccount, listOf(generalAccount))
-                            .also { budgetData: BudgetData ->
-                                budgetDao.save(budgetData)
-                            }
-                    }
+                if (uiFunctions.createBasicAccounts()) {
+                    withBasicAccounts()
+                        .also { budgetData: BudgetData ->
+                            budgetDao.save(budgetData)
+                        }
+                } else {
+                    uiFunctions.createGeneralAccount(budgetDao)
+                        .let { generalAccount: CategoryAccount ->
+                            BudgetData(generalAccount, listOf(generalAccount))
+                                .also { budgetData: BudgetData ->
+                                    budgetDao.save(budgetData)
+                                }
+                        }
+                }
             }
     }
 

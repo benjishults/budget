@@ -5,6 +5,7 @@ import java.util.UUID
 
 // TODO consider creating all these accounts on first run.
 const val defaultGeneralAccountName = "General"
+const val defaultGeneralAccountDescription = "Income is automatically deposited here and allowances are made from here."
 const val defaultWalletAccountName = "Wallet"
 const val defaultWalletAccountDescription = "Cash on hand."
 const val defaultCheckingAccountName = "Checking"
@@ -33,32 +34,25 @@ const val defaultCheckingDraftsAccountDescription =
 
 // TODO consider whether it makes sense for this to inherit from AccountConfig
 sealed interface Account : AccountData {
-//    val transactions: List<Transaction>
-
-//    fun commit(transaction: Transaction)
-
+    fun commit(item: TransactionItem)
 }
 
 abstract class BaseAccount(
     override var name: String,
     override var description: String = "",
     override var id: UUID = UUID.randomUUID(),
-    balance: BigDecimal = BigDecimal.ZERO,
-//    transactions: List<Transaction> = emptyList(),
+    balance: BigDecimal = BigDecimal.ZERO.setScale(2),
 ) : Account {
     override var balance: BigDecimal = balance
         protected set
 
-    fun commit(item: TransactionItem) {
+    override fun commit(item: TransactionItem) {
         balance += item.amount
     }
 
     override fun toString(): String {
         return "Account('$name', $balance)"
     }
-//    private val _transactions: MutableList<Transaction> = transactions.toMutableList()
-//    override val transactions: List<Transaction>
-//        get() = _transactions.toList()
 
 }
 
@@ -66,9 +60,8 @@ class CategoryAccount(
     name: String,
     description: String = "",
     id: UUID = UUID.randomUUID(),
-    balance: BigDecimal = BigDecimal.ZERO,
-//    transactions: List<Transaction> = emptyList(),
-) : BaseAccount(name, description, id, balance /*transactions*/) {
+    balance: BigDecimal = BigDecimal.ZERO.setScale(2),
+) : BaseAccount(name, description, id, balance) {
     override fun toString(): String {
         return "Category${super.toString()}"
     }
@@ -78,9 +71,8 @@ class RealAccount(
     name: String,
     description: String = "",
     id: UUID = UUID.randomUUID(),
-    balance: BigDecimal = BigDecimal.ZERO,
-//    transactions: List<Transaction> = emptyList(),
-) : BaseAccount(name, description, id, balance /*transactions*/) {
+    balance: BigDecimal = BigDecimal.ZERO.setScale(2),
+) : BaseAccount(name, description, id, balance) {
     override fun toString(): String {
         return "Real${super.toString()}"
     }
@@ -91,10 +83,9 @@ class DraftAccount(
     name: String,
     description: String = "",
     id: UUID = UUID.randomUUID(),
-    balance: BigDecimal = BigDecimal.ZERO,
+    balance: BigDecimal = BigDecimal.ZERO.setScale(2),
     val realCompanion: RealAccount,
-//    transactions: List<Transaction> = emptyList(),
-) : BaseAccount(name, description, id, balance /*transactions*/) {
+) : BaseAccount(name, description, id, balance) {
     override fun toString(): String {
         return "Draft${super.toString()}"
     }

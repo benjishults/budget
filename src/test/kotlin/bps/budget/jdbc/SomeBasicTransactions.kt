@@ -90,7 +90,7 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                 budgetData.commit(writeCheck)
                 jdbcDao.commit(writeCheck)
             }
-            "check balances" {
+            "check balances after writing check" {
                 budgetData.realAccounts.forEach { realAccount: RealAccount ->
                     when (realAccount.name) {
                         defaultCheckingAccountName -> {
@@ -101,24 +101,83 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                         else ->
                             fail("unexpected real account")
                     }
-                    budgetData.categoryAccounts.forEach { it: CategoryAccount ->
-                        when (it.name) {
-                            defaultGeneralAccountName -> it.balance shouldBe BigDecimal("700.00")
-                            defaultFoodAccountName -> it.balance shouldBe BigDecimal("200.00")
-                            defaultNecessitiesAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-                            else -> fail("unexpected category account")
-                        }
+                }
+                budgetData.categoryAccounts.forEach { it: CategoryAccount ->
+                    when (it.name) {
+                        defaultGeneralAccountName -> it.balance shouldBe BigDecimal("700.00")
+                        defaultFoodAccountName -> it.balance shouldBe BigDecimal("200.00")
+                        defaultNecessitiesAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
+                        else -> fail("unexpected category account")
                     }
-                    budgetData.draftAccounts.forEach { it: DraftAccount ->
-                        when (it.name) {
-                            defaultCheckingDraftsAccountName -> it.balance shouldBe BigDecimal("100.00")
-                            else -> fail("unexpected draft account")
-                        }
+                }
+                budgetData.draftAccounts.forEach { it: DraftAccount ->
+                    when (it.name) {
+                        defaultCheckingDraftsAccountName -> it.balance shouldBe BigDecimal("100.00")
+                        else -> fail("unexpected draft account")
                     }
                 }
             }
+            "check clears" {
+                val amount = BigDecimal("100.00")
+                val writeCheck = Transaction(
+                    amount = amount,
+                    description = "groceries",
+                    timestamp = OffsetDateTime.now(),
+                    realItems = listOf(
+                        TransactionItem(
+                            -amount,
+                            realAccount = budgetData.realAccounts.find { it.name == defaultCheckingAccountName }!!,
+                        ),
+                    ),
+                    draftItems = listOf(
+                        TransactionItem(
+                            -amount,
+                            draftAccount = budgetData.draftAccounts.find { it.name == defaultCheckingDraftsAccountName }!!,
+                        ),
+                    ),
+                )
+                budgetData.commit(writeCheck)
+                jdbcDao.commit(writeCheck)
+            }
+            "check balances after check clears" {
+                checkBalancesAfterCheckClears(budgetData)
+            }
+            "check balances in DB" {
+                checkBalancesAfterCheckClears(jdbcDao.load())
+            }
         }
 
+    }
+
+    private fun checkBalancesAfterCheckClears(budgetData: BudgetData) {
+        budgetData.realAccounts.size shouldBe 2
+        budgetData.realAccounts.forEach { realAccount: RealAccount ->
+            when (realAccount.name) {
+                defaultCheckingAccountName -> {
+                    realAccount.balance shouldBe BigDecimal("900.00")
+                }
+                defaultWalletAccountName ->
+                    realAccount.balance shouldBe BigDecimal.ZERO.setScale(2)
+                else ->
+                    fail("unexpected real account")
+            }
+        }
+        budgetData.categoryAccounts.size shouldBe 3
+        budgetData.categoryAccounts.forEach { it: CategoryAccount ->
+            when (it.name) {
+                defaultGeneralAccountName -> it.balance shouldBe BigDecimal("700.00")
+                defaultFoodAccountName -> it.balance shouldBe BigDecimal("200.00")
+                defaultNecessitiesAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
+                else -> fail("unexpected category account")
+            }
+        }
+        budgetData.draftAccounts.size shouldBe 1
+        budgetData.draftAccounts.forEach { it: DraftAccount ->
+            when (it.name) {
+                defaultCheckingDraftsAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
+                else -> fail("unexpected draft account")
+            }
+        }
     }
 
 }
