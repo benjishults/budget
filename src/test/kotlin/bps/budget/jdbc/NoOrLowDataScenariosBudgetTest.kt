@@ -1,6 +1,5 @@
 package bps.budget.jdbc
 
-import bps.budget.AllMenus
 import bps.budget.BudgetApplication
 import bps.budget.BudgetConfigurations
 import bps.budget.persistence.jdbc.JdbcDao
@@ -11,7 +10,6 @@ import bps.console.io.OutPrinter
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
-import java.io.File
 
 class NoOrLowDataScenariosBudgetTest : FreeSpec() {
 
@@ -68,7 +66,7 @@ Enter the name for your "General" account [General] """,
             inputs shouldHaveSize 0
         }
 
-        val menus = AllMenus(inputReader, outPrinter)
+//        val menus = AllMenus(inputReader, outPrinter)
         "! FIX SINCE IT'S USING NON-JDBC CONFIG: budget with no starting data" {
 //            inputs.addAll(
 //                listOf("", "", "8"),
@@ -162,18 +160,3 @@ Enter the name for your "General" account [General] """,
     }
 
 }
-
-/**
- * @return `true` if the receiver
- * 1. exists
- * 2. is a folder
- * 3. is not empty at time of call
- * 4. has all contents deleted on completion of this call
- */
-fun File.deleteContentsOfNonEmptyFolder(): Boolean =
-    this.exists() &&
-            this.isDirectory &&
-            this.list()!!.isNotEmpty() &&
-            this.walkBottomUp()
-                .filter { it != this }
-                .all(File::delete)

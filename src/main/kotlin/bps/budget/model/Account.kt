@@ -1,6 +1,6 @@
 package bps.budget.model
 
-import bps.budget.persistence.AccountConfig
+import bps.budget.transaction.TransactionItem
 import java.math.BigDecimal
 import java.util.UUID
 
@@ -24,7 +24,8 @@ const val defaultCheckingDraftsAccountName = "Checking Drafts"
 const val defaultCheckingDraftsAccountDescription =
     "When a check is written or clears, a transaction occurs in this account."
 
-sealed interface Account : AccountConfig {
+// TODO consider whether it makes sense for this to inherit from AccountConfig
+sealed interface Account : AccountData {
 //    val transactions: List<Transaction>
 
 //    fun commit(transaction: Transaction)
@@ -40,14 +41,17 @@ abstract class BaseAccount(
 ) : Account {
     override var balance: BigDecimal = balance
         protected set
+
+    fun commit(item: TransactionItem) {
+        balance += item.amount
+    }
+
+    override fun toString(): String {
+        return "Account($name, $balance)"
+    }
 //    private val _transactions: MutableList<Transaction> = transactions.toMutableList()
 //    override val transactions: List<Transaction>
 //        get() = _transactions.toList()
-
-//    override fun commit(transaction: Transaction) {
-////        _transactions.add(transaction)
-//        balance += transaction.amount
-//    }
 
 }
 
@@ -57,29 +61,24 @@ class CategoryAccount(
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO,
 //    transactions: List<Transaction> = emptyList(),
-) : BaseAccount(name, description, id, balance /*transactions*/)
+) : BaseAccount(name, description, id, balance /*transactions*/) {
+    override fun toString(): String {
+        return "Category${super.toString()}"
+    }
+}
 
 class RealAccount(
     name: String,
     description: String = "",
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO,
-    draftCompanion: DraftAccount? = null,
 //    transactions: List<Transaction> = emptyList(),
 ) : BaseAccount(name, description, id, balance /*transactions*/) {
-
-    var draftCompanion: DraftAccount? = draftCompanion
-        private set
-
-    /**
-     * Can only be called once with a non-`null` value
-     */
-    fun setDraftCompanion(draftAccount: DraftAccount) {
-        check(draftCompanion === null)
-        draftCompanion = draftAccount
+    override fun toString(): String {
+        return "Real${super.toString()}"
     }
-
 }
+
 
 class DraftAccount(
     name: String,
@@ -88,4 +87,8 @@ class DraftAccount(
     balance: BigDecimal = BigDecimal.ZERO,
     val realCompanion: RealAccount,
 //    transactions: List<Transaction> = emptyList(),
-) : BaseAccount(name, description, id, balance /*transactions*/)
+) : BaseAccount(name, description, id, balance /*transactions*/) {
+    override fun toString(): String {
+        return "Draft${super.toString()}"
+    }
+}

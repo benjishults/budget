@@ -1,11 +1,9 @@
 package bps.budget.persistence.files
 
 import bps.budget.data.BudgetData
-import bps.budget.persistence.AccountsConfig
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.DataConfigurationException
 import bps.budget.persistence.FileConfig
-import bps.budget.persistence.toAccountsConfig
 import bps.config.ApiObjectMapperConfigurer
 import bps.config.ConfigurationHelper
 import bps.config.convertToPath

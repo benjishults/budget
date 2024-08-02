@@ -7,8 +7,10 @@ import bps.budget.model.RealAccount
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.DataConfigurationException
 import bps.budget.transaction.Transaction
+import bps.budget.transaction.TransactionItem
 import bps.budget.ui.UiFunctions
 import java.math.BigDecimal
+import java.util.UUID
 
 class BudgetData(
     val generalAccount: CategoryAccount,
@@ -24,16 +26,59 @@ class BudgetData(
     val realAccounts: List<RealAccount> = _realAccounts
     private val _draftAccounts: MutableList<DraftAccount> = draftAccounts.toMutableList()
     val draftAccounts: List<DraftAccount> = _draftAccounts
-    private val _transactions: MutableList<Transaction> = transactions.toMutableList()
-//    val transactions: List<Transaction> = _transactions
-//    private val byId: MutableMap<UUID, Account> = mutableMapOf()
 
-    fun addRealAccount(account: RealAccount) {
-        _realAccounts.add(account)
-    }
+    //    private val _transactions: MutableList<Transaction> = transactions.toMutableList()
+//    val transactions: List<Transaction> = _transactions
+    private val byId: MutableMap<UUID, Account> = mutableMapOf()
 
     fun addCategoryAccount(account: CategoryAccount) {
         _categoryAccounts.add(account)
+        byId[account.id] = account
+    }
+
+    fun addRealAccount(account: RealAccount) {
+        _realAccounts.add(account)
+        byId[account.id] = account
+    }
+
+    fun addDraftAccount(account: DraftAccount) {
+        _draftAccounts.add(account)
+        byId[account.id] = account
+    }
+
+    fun deleteCategoryAccount(account: CategoryAccount) {
+        _categoryAccounts.remove(account)
+        byId.remove(account.id)
+    }
+
+    fun commit(transaction: Transaction) {
+        require(transaction.validate())
+        transaction.categoryItems
+            .forEach { item: TransactionItem ->
+                _categoryAccounts
+                    .find { account: CategoryAccount ->
+                        account.id == item.categoryAccount!!.id
+                    }!!
+                    .commit(item)
+            }
+        transaction.realItems
+            .forEach { item: TransactionItem ->
+                _realAccounts
+                    // TODO consider putting a map from ID to object in the BudgetData
+                    .find { account: RealAccount ->
+                        account.id == item.realAccount!!.id
+                    }!!
+                    .commit(item)
+            }
+        transaction.draftItems
+            .forEach { item: TransactionItem ->
+                _draftAccounts
+                    .find { account: DraftAccount ->
+                        account.id == item.draftAccount!!.id
+                    }!!
+                    .commit(item)
+            }
+
     }
 
     /**

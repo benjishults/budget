@@ -1,24 +1,18 @@
-package bps.budget.persistence
+package bps.budget.persistence.files
 
+import bps.budget.model.AccountData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftAccount
 import bps.budget.model.RealAccount
 import java.math.BigDecimal
 import java.util.UUID
 
-interface AccountConfig {
-    val name: String
-    val id: UUID
-    val description: String
-    val balance: BigDecimal
-}
-
 open class CategoryAccountConfig(
     override val name: String,
     override val description: String,
     override val id: UUID = UUID.randomUUID(),
     override val balance: BigDecimal = BigDecimal.ZERO,
-) : AccountConfig
+) : AccountData
 
 fun CategoryAccountConfig.toCategoryAccount(): CategoryAccount =
     CategoryAccount(name, description, id, balance)
@@ -31,14 +25,13 @@ open class RealAccountConfig(
     override val description: String,
     override val id: UUID = UUID.randomUUID(),
     override val balance: BigDecimal = BigDecimal.ZERO,
-    val draftCompanionId: UUID? = null,
-) : AccountConfig
+) : AccountData
 
-fun RealAccountConfig.toRealAccount(draftCompanion: DraftAccount? = null): RealAccount =
-    RealAccount(name, description, id, balance, draftCompanion)
+fun RealAccountConfig.toRealAccount(): RealAccount =
+    RealAccount(name, description, id, balance)
 
 fun RealAccount.toConfig(): RealAccountConfig =
-    RealAccountConfig(name, description, id, balance, draftCompanion?.id)
+    RealAccountConfig(name, description, id, balance)
 
 open class DraftAccountConfig(
     override val name: String,
@@ -46,7 +39,7 @@ open class DraftAccountConfig(
     override val id: UUID = UUID.randomUUID(),
     override val balance: BigDecimal = BigDecimal.ZERO,
     val realCompanionId: UUID,
-) : AccountConfig
+) : AccountData
 
 fun DraftAccountConfig.toDraftAccount(realCompanion: RealAccount): DraftAccount =
     DraftAccount(name, description, id, balance, realCompanion)

@@ -1,7 +1,7 @@
 package bps.budget.transaction
 
 import bps.budget.AllMenus
-import bps.budget.persistence.CategoryAccountConfig
+import bps.budget.persistence.files.CategoryAccountConfig
 import bps.console.inputs.RecursivePrompt
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault

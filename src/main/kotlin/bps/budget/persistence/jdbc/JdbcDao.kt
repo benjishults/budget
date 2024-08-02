@@ -84,20 +84,7 @@ create table if not exists budgets
                     """.trimIndent(),
                 )
             }
-            createStatement().use { createTablesStatement: Statement ->
-                createTablesStatement.executeUpdate(
-                    """
-create table if not exists staged_category_accounts
-(
-    id          uuid           not null,
-    name        varchar(50)    not null,
-    description varchar(110)   not null default '',
-    balance     numeric(30, 2) not null default 0.0,
-    budget_name varchar(110)   not null
-)
-                    """.trimIndent(),
-                )
-            }
+            createStagingCategoryAccountsTable()
             createStatement().use { createTablesStatement: Statement ->
                 createTablesStatement.executeUpdate(
                     """
@@ -111,23 +98,10 @@ create table if not exists category_accounts
     primary key (id, budget_name),
     unique (name, budget_name)
 )
-""".trimIndent(),
+                    """.trimIndent(),
                 )
             }
-            createStatement().use { createTablesStatement: Statement ->
-                createTablesStatement.executeUpdate(
-                    """
-create table if not exists staged_real_accounts
-(
-    id          uuid           not null,
-    name        varchar(50)    not null,
-    description varchar(110)   not null default '',
-    balance     numeric(30, 2) not null default 0.0,
-    budget_name varchar(110)   not null
-)
-""".trimIndent(),
-                )
-            }
+            createStagingRealAccountsTable()
             createStatement().use { createTablesStatement: Statement ->
                 createTablesStatement.executeUpdate(
                     """
@@ -141,24 +115,10 @@ create table if not exists real_accounts
     primary key (id, budget_name),
     unique (name, budget_name)
 )
-""".trimIndent(),
+                    """.trimIndent(),
                 )
             }
-            createStatement().use { createTablesStatement: Statement ->
-                createTablesStatement.executeUpdate(
-                    """
-create table if not exists staged_draft_accounts
-(
-    id              uuid           not null,
-    name            varchar(50)    not null,
-    description     varchar(110)   not null default '',
-    balance         numeric(30, 2) not null default 0.0,
-    real_account_id uuid           not null,
-    budget_name     varchar(110)   not null
-)
-""".trimIndent(),
-                )
-            }
+            createStagingDraftAccountsTable()
             createStatement().use { createTablesStatement: Statement ->
                 createTablesStatement.executeUpdate(
                     """
@@ -174,7 +134,7 @@ create table if not exists draft_accounts
     unique (name, budget_name),
     unique (real_account_id, budget_name)
 )
-""".trimIndent(),
+                    """.trimIndent(),
                 )
             }
             createStatement().use { createTablesStatement: Statement ->
@@ -189,7 +149,7 @@ create table if not exists transactions
     primary key (id, budget_name),
     unique (timestamp, budget_name)
 )
-""".trimIndent(),
+                    """.trimIndent(),
                 )
             }
             createStatement().use { createTablesStatement: Statement ->
@@ -218,6 +178,64 @@ create table if not exists transaction_items
         }
     }
 
+    private fun Connection.createStagingDraftAccountsTable() {
+        createStatement().use { createTablesStatement: Statement ->
+            createTablesStatement.executeUpdate(
+                """
+    create temp table if not exists staged_draft_accounts
+    (
+        id              uuid           not null,
+        gen             integer        not null generated always as identity,
+        name            varchar(50)    not null,
+        description     varchar(110)   not null default '',
+        balance         numeric(30, 2) not null default 0.0,
+        real_account_id uuid           not null,
+        budget_name     varchar(110)   not null
+    )
+        on commit delete rows
+                        """.trimIndent(),
+            )
+        }
+    }
+
+    private fun Connection.createStagingRealAccountsTable() {
+        createStatement().use { createTablesStatement: Statement ->
+            createTablesStatement.executeUpdate(
+                """
+    create temp table if not exists staged_real_accounts
+    (
+        id          uuid           not null,
+        gen         integer        not null generated always as identity,
+        name        varchar(50)    not null,
+        description varchar(110)   not null default '',
+        balance     numeric(30, 2) not null default 0.0,
+        budget_name varchar(110)   not null
+    )
+        on commit delete rows
+                        """.trimIndent(),
+            )
+        }
+    }
+
+    private fun Connection.createStagingCategoryAccountsTable() {
+        createStatement().use { createTablesStatement: Statement ->
+            createTablesStatement.executeUpdate(
+                """
+    create temp table if not exists staged_category_accounts
+    (
+        id          uuid           not null,
+        gen         integer        not null generated always as identity,
+        name        varchar(50)    not null,
+        description varchar(110)   not null default '',
+        balance     numeric(30, 2) not null default 0.0,
+        budget_name varchar(110)   not null
+    )
+        on commit delete rows
+                        """.trimIndent(),
+            )
+        }
+    }
+
     /**
      * Just loads top-level account info.  Details of transactions are loaded on-demand.
      * @throws DataConfigurationException if data isn't found.
@@ -226,7 +244,7 @@ create table if not exists transaction_items
         try {
             transaction(
                 onRollback = { ex ->
-                    if (ex.message?.contains("category_accounts") == true && ex.message?.contains("not exist") == true)
+                    if (ex.message?.contains(CATEGORY_ACCOUNT_TABLE_NAME) == true && ex.message?.contains("not exist") == true)
                     // TODO fix it right now
                         throw DataConfigurationException("tables do not exist", ex)
                     else
@@ -503,90 +521,42 @@ create table if not exists transaction_items
 //                        .also { if (it == 0)  }
                 }
             // create accounts that aren't there and update those that are
-            upsertAccountData(data.categoryAccounts, "category_accounts")
-            upsertAccountData(data.realAccounts, "real_accounts")
-//            upsertAccountData(data.draftAccounts, "draft_accounts_name_budget_name_key")
-            data.draftAccounts.forEach { draftAccount: DraftAccount ->
-                prepareStatement(
-                    """
-                insert into staged_draft_accounts (id, name, description, balance, real_account_id, budget_name)
-                VALUES (?, ?, ?, ?, ?, ?)
-                on conflict do nothing
-            """.trimIndent(),
-                )
-                    .use { createStagedAccountStatement: PreparedStatement ->
-                        createStagedAccountStatement.setObject(1, draftAccount.id)
-                        createStagedAccountStatement.setString(2, draftAccount.name)
-                        createStagedAccountStatement.setString(3, draftAccount.description)
-                        createStagedAccountStatement.setBigDecimal(4, draftAccount.balance)
-                        createStagedAccountStatement.setObject(5, draftAccount.realCompanion.id)
-                        createStagedAccountStatement.setString(6, config.budgetName)
-                        createStagedAccountStatement.executeUpdate()
-                    }
-                prepareStatement(
-                    """
-                merge into draft_accounts as t
-                    using staged_draft_accounts as s
-                    on (t.id = s.id or t.name = s.name) and t.budget_name = s.budget_name
-                    when matched then
-                        update
-                        set name = s.name,
-                            description = s.description,
-                            balance = s.balance
-                    when not matched then
-                        insert (id, name, description, balance, real_account_id, budget_name)
-                        values (s.id, s.name, s.description, s.balance, s.real_account_id, s.budget_name);
-                """.trimIndent(),
-                )
-                    .use { createAccountStatement: PreparedStatement ->
-                        createAccountStatement.executeUpdate()
-                    }
-                // NOTE may have to do this later all at once at the end?
-                prepareStatement("delete from staged_draft_accounts where (id = ? or name = ?) and budget_name = ?")
-                    .use { preparedStatement: PreparedStatement ->
-                        preparedStatement.setObject(1, draftAccount.id)
-                        preparedStatement.setString(2, draftAccount.name)
-                        preparedStatement.setString(3, config.budgetName)
-                        preparedStatement.executeUpdate()
-                    }
-//                prepareStatement(
-//                    """
-//                    insert into draft_accounts (id, name, description, balance, real_account_id, budget_name)
-//                    values (?, ?, ?, ?, ?, ?) on conflict on constraint draft_accounts_pkey do update set name = ?, description = ?, balance = ?""",
-//                )
-//                    .use { createAccountStatement: PreparedStatement ->
-//                        createAccountStatement.setObject(1, draftAccount.id)
-//                        createAccountStatement.setString(2, draftAccount.name)
-//                        createAccountStatement.setString(3, draftAccount.description)
-//                        createAccountStatement.setBigDecimal(4, draftAccount.balance)
-//                        createAccountStatement.setObject(5, draftAccount.realCompanion.id)
-//                        createAccountStatement.setString(6, config.budgetName)
-//                        createAccountStatement.setString(7, draftAccount.name)
-//                        createAccountStatement.setString(8, draftAccount.description)
-//                        createAccountStatement.setBigDecimal(9, draftAccount.balance)
-//                        createAccountStatement.executeUpdate()
-//                    }
-            }
+            createStagingCategoryAccountsTable()
+            upsertAccountData(data.categoryAccounts, CATEGORY_ACCOUNT_TABLE_NAME)
+            createStagingRealAccountsTable()
+            upsertAccountData(data.realAccounts, REAL_ACCOUNT_TABLE_NAME)
+            createStagingDraftAccountsTable()
+            upsertAccountData(data.draftAccounts, DRAFT_ACCOUNT_TABLE_NAME)
             // TODO mark deleted accounts as in-active
             //      see account_active_periods which is currently unused
         }
     }
 
+    /**
+     * Must be called within a transaction with manual commits
+     */
     private fun Connection.upsertAccountData(accounts: List<Account>, tableName: String) {
         accounts.forEach { account ->
             prepareStatement(
                 """
-                insert into staged_$tableName (id, name, description, balance, budget_name)
-                VALUES (?, ?, ?, ?, ?)
+                insert into staged_$tableName (id, name, description, balance, ${if (tableName == DRAFT_ACCOUNT_TABLE_NAME) "real_account_id, " else ""}budget_name)
+                VALUES (?, ?, ?, ?,${if (tableName == DRAFT_ACCOUNT_TABLE_NAME) " ?," else ""} ?)
                 on conflict do nothing
             """.trimIndent(),
             )
                 .use { createStagedAccountStatement: PreparedStatement ->
-                    createStagedAccountStatement.setObject(1, account.id)
-                    createStagedAccountStatement.setString(2, account.name)
-                    createStagedAccountStatement.setString(3, account.description)
-                    createStagedAccountStatement.setBigDecimal(4, account.balance)
-                    createStagedAccountStatement.setString(5, config.budgetName)
+                    var parameterIndex = 1
+                    createStagedAccountStatement.setObject(parameterIndex++, account.id)
+                    createStagedAccountStatement.setString(parameterIndex++, account.name)
+                    createStagedAccountStatement.setString(parameterIndex++, account.description)
+                    createStagedAccountStatement.setBigDecimal(parameterIndex++, account.balance)
+                    if (tableName == DRAFT_ACCOUNT_TABLE_NAME) {
+                        createStagedAccountStatement.setObject(
+                            parameterIndex++,
+                            (account as DraftAccount).realCompanion.id,
+                        )
+                    }
+                    createStagedAccountStatement.setString(parameterIndex++, config.budgetName)
                     createStagedAccountStatement.executeUpdate()
                 }
             prepareStatement(
@@ -600,20 +570,12 @@ create table if not exists transaction_items
                             description = s.description,
                             balance = s.balance
                     when not matched then
-                        insert (id, name, description, balance, budget_name)
-                        values (s.id, s.name, s.description, s.balance, s.budget_name);
+                        insert (id, name, description, balance, ${if (tableName == DRAFT_ACCOUNT_TABLE_NAME) "real_account_id, " else ""}budget_name)
+                        values (s.id, s.name, s.description, s.balance, ${if (tableName == DRAFT_ACCOUNT_TABLE_NAME) "s.real_account_id, " else ""}s.budget_name);
                 """.trimIndent(),
             )
                 .use { createAccountStatement: PreparedStatement ->
                     createAccountStatement.executeUpdate()
-                }
-            // NOTE may have to do this later all at once at the end?
-            prepareStatement("delete from staged_$tableName where (id = ? or name = ?) and budget_name = ?")
-                .use { preparedStatement: PreparedStatement ->
-                    preparedStatement.setObject(1, account.id)
-                    preparedStatement.setString(2, account.name)
-                    preparedStatement.setString(3, config.budgetName)
-                    preparedStatement.executeUpdate()
                 }
         }
     }
@@ -621,6 +583,12 @@ create table if not exists transaction_items
     override fun close() {
         keepAliveSingleThreadScheduledExecutor.close()
         super.close()
+    }
+
+    companion object {
+        const val CATEGORY_ACCOUNT_TABLE_NAME = "category_accounts"
+        const val REAL_ACCOUNT_TABLE_NAME = "real_accounts"
+        const val DRAFT_ACCOUNT_TABLE_NAME = "draft_accounts"
     }
 
 }

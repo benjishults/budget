@@ -13,6 +13,9 @@ fun deleteTables(jdbcDao: JdbcDao, schema: String = "clean_after_test") {
                 .use { statement ->
                     statement.execute("drop table if exists transaction_items")
                     statement.execute("drop table if exists transactions")
+                    statement.execute("drop table if exists staged_draft_accounts")
+                    statement.execute("drop table if exists staged_real_accounts")
+                    statement.execute("drop table if exists staged_category_accounts")
                     statement.execute("drop table if exists draft_accounts")
                     statement.execute("drop table if exists real_accounts")
                     statement.execute("drop table if exists category_accounts")

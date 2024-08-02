@@ -38,6 +38,7 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                         ),
                     ),
                 )
+                budgetData.commit(income)
                 jdbcDao.commit(income)
             }
             "allocate to food" {
@@ -56,6 +57,7 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                         )
                     },
                 )
+                budgetData.commit(allocate)
                 jdbcDao.commit(allocate)
             }
             "write a check for food" {
@@ -77,6 +79,7 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                         ),
                     ),
                 )
+                budgetData.commit(writeCheck)
                 jdbcDao.commit(writeCheck)
             }
             "check balances" {
