@@ -29,10 +29,8 @@ const val defaultMedicalAccountDescription = "Medicine, supplies, insurance, etc
 const val defaultNecessitiesAccountName = "Necessities"
 const val defaultNecessitiesAccountDescription = "Soap, light bulbs, etc."
 const val defaultCheckingDraftsAccountName = "Checking Drafts"
-const val defaultCheckingDraftsAccountDescription =
-    "Records checks being written or clearing."
+const val defaultCheckingDraftsAccountDescription = "Records checks being written or clearing."
 
-// TODO consider whether it makes sense for this to inherit from AccountConfig
 sealed interface Account : AccountData {
     fun commit(item: TransactionItem)
 }
@@ -55,6 +53,8 @@ abstract class BaseAccount(
     }
 
 }
+
+// TODO consider merging these into a single class.
 
 class CategoryAccount(
     name: String,

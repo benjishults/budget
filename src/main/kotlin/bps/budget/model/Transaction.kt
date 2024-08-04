@@ -40,6 +40,7 @@ interface Transaction {
             realItems: List<TransactionItem> = emptyList(),
             draftItems: List<TransactionItem> = emptyList(),
         ): Transaction = object : Transaction {
+
             override val id: UUID = UUID.randomUUID()
             override val description: String = description
             override val amount: BigDecimal = amount.setScale(2, RoundingMode.HALF_UP)
@@ -47,6 +48,7 @@ interface Transaction {
             override val categoryItems: List<TransactionItem> = categoryItems
             override val realItems: List<TransactionItem> = realItems
             override val draftItems: List<TransactionItem> = draftItems
+
             override fun toString(): String =
                 buildString {
                     append("Transaction('$description', $amount")
@@ -56,40 +58,8 @@ interface Transaction {
                     append(")")
                 }
 
-
         }
 
     }
 }
 
-interface TransactionItem {
-    val description: String?
-    val amount: BigDecimal
-    val categoryAccount: CategoryAccount?
-    val realAccount: RealAccount?
-    val draftAccount: DraftAccount?
-
-    companion object {
-        operator fun invoke(
-            amount: BigDecimal,
-            description: String? = null,
-            categoryAccount: CategoryAccount? = null,
-            realAccount: RealAccount? = null,
-            draftAccount: DraftAccount? = null,
-        ): TransactionItem = object : TransactionItem {
-            override val description: String? = description
-            override val amount: BigDecimal = amount
-            override val categoryAccount: CategoryAccount? = categoryAccount
-            override val realAccount: RealAccount? = realAccount
-            override val draftAccount: DraftAccount? = draftAccount
-            override fun toString(): String =
-                "TransactionItem(${categoryAccount ?: realAccount ?: draftAccount}, $amount${
-                    if (description?.isNotBlank() == true)
-                        ", '$description'"
-                    else
-                        ""
-                })"
-        }
-    }
-
-}

@@ -7,8 +7,8 @@ import bps.budget.model.BudgetData
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.budgetDaoBuilder
-import bps.budget.ui.ConsoleUiFunctions
-import bps.budget.ui.UiFunctions
+import bps.budget.ui.ConsoleUiFacade
+import bps.budget.ui.UiFacade
 import bps.console.MenuApplicationWithQuit
 import bps.console.inputs.RecursivePrompt
 import bps.console.inputs.SimplePrompt
@@ -29,7 +29,7 @@ import java.time.ZoneOffset
 
 fun main(args: Array<String>) {
     val configurations = BudgetConfigurations(sequenceOf("budget.yml", "~/.config/bps-budget/budget.yml"))
-    val uiFunctions = ConsoleUiFunctions()
+    val uiFunctions = ConsoleUiFacade()
 
     BudgetApplication(
         uiFunctions,
@@ -45,23 +45,23 @@ fun main(args: Array<String>) {
 class BudgetApplication private constructor(
     inputReader: InputReader,
     outPrinter: OutPrinter,
-    uiFunctions: UiFunctions,
+    uiFacade: UiFacade,
     val budgetDao: BudgetDao<*>,
 ) : AutoCloseable {
 
     constructor(
-        uiFunctions: UiFunctions,
+        uiFacade: UiFacade,
         configurations: BudgetConfigurations,
         inputReader: InputReader = DefaultInputReader,
         outPrinter: OutPrinter = DefaultOutPrinter,
     ) : this(
         inputReader,
         outPrinter,
-        uiFunctions,
+        uiFacade,
         budgetDaoBuilder(configurations.persistence),
     )
 
-    val budgetData: BudgetData = BudgetData(uiFunctions, budgetDao)
+    val budgetData: BudgetData = BudgetData(uiFacade, budgetDao)
     private val menuApplicationWithQuit =
         MenuApplicationWithQuit(AllMenus().budgetMenu(budgetData, budgetDao), inputReader, outPrinter)
 

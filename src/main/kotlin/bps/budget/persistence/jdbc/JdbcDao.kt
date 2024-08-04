@@ -287,30 +287,23 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                         throw DataConfigurationException(ex.message, ex)
                 },
             ) {
-                val generalAccount =
+                val generalAccountId: UUID =
                     prepareStatement(
                         """
-                select * from category_accounts c
-                join budgets b
-                on c.budget_name = b.budget_name
-                and c.id = b.general_account_id
-                where b.budget_name = ?""".trimIndent(),
+                            select general_account_id from budgets b
+                            where b.budget_name = ?
+                        """.trimIndent(),
                     )
                         .use { getBudget: PreparedStatement ->
                             getBudget.setString(1, config.budgetName)
                             getBudget.executeQuery()
                                 .use { result: ResultSet ->
                                     result.next()
-                                        .also {
-                                            if (!it)
+                                        .also { hadNext ->
+                                            if (!hadNext)
                                                 throw DataConfigurationException("Budget data not found for name: ${config.budgetName}")
                                         }
-                                    CategoryAccount(
-                                        result.getString("name"),
-                                        result.getString("description"),
-                                        result.getObject("id", UUID::class.java),
-                                        result.getCurrencyAmount("balance"),
-                                    )
+                                    result.getObject("general_account_id", UUID::class.java)
                                 }
                         }
                 val categoryAccounts: List<CategoryAccount> =
@@ -333,6 +326,10 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                                     }
                                 }
                         }
+                val generalAccount: CategoryAccount =
+                    categoryAccounts.find {
+                        it.id == generalAccountId
+                    }!!
                 val realAccounts: List<RealAccount> =
                     prepareStatement("select * from real_accounts where budget_name = ?")
                         .use { getRealAccounts ->

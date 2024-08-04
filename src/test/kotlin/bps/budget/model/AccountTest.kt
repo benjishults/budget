@@ -2,7 +2,7 @@ package bps.budget.model
 
 import bps.budget.BudgetConfigurations
 import bps.budget.persistence.budgetDaoBuilder
-import bps.budget.ui.ConsoleUiFunctions
+import bps.budget.ui.ConsoleUiFacade
 import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldHaveSize
@@ -13,7 +13,7 @@ class AccountTest : FreeSpec() {
     init {
         "load a few accounts" - {
             val configurations = BudgetConfigurations(sequenceOf("hasGeneralWalletAndFood.yml"))
-            val uiFunctions = ConsoleUiFunctions()
+            val uiFunctions = ConsoleUiFacade()
             budgetDaoBuilder(configurations.persistence).use { budgetDao ->
 
                 val budgetData = BudgetData(uiFunctions, budgetDao)

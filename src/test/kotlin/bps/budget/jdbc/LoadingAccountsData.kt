@@ -3,7 +3,7 @@ package bps.budget.jdbc
 import bps.budget.BudgetConfigurations
 import bps.budget.model.BudgetData
 import bps.budget.persistence.jdbc.JdbcDao
-import bps.budget.ui.ConsoleUiFunctions
+import bps.budget.ui.ConsoleUiFacade
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.equals.shouldBeEqual
@@ -17,11 +17,11 @@ class LoadingAccountsData : FreeSpec(), BasicAccountsTestFixture {
         useBasicAccounts()
 
         "budget with general food and wallet" {
-            val uiFunctions = ConsoleUiFunctions()
+            val uiFunctions = ConsoleUiFacade()
             val budgetData = BudgetData(uiFunctions, jdbcDao)
             budgetData.generalAccount.id.toString() shouldBeEqual "dfa8a21c-f0ad-434d-bcb5-9e37749fa81e"
             budgetData.realAccounts shouldHaveSize 2
-            budgetData.categoryAccounts shouldHaveSize 3
+            budgetData.categoryAccounts shouldHaveSize 10
             budgetData.draftAccounts shouldHaveSize 1
         }
 

@@ -4,7 +4,7 @@ import bps.budget.BudgetApplication
 import bps.budget.BudgetConfigurations
 import bps.budget.persistence.jdbc.JdbcDao
 import bps.budget.spendMoneyItemLabel
-import bps.budget.ui.ConsoleUiFunctions
+import bps.budget.ui.ConsoleUiFacade
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
 import io.kotest.core.spec.style.FreeSpec
@@ -35,7 +35,7 @@ class NoOrLowDataScenariosBudgetTest : FreeSpec() {
             inputs.addAll(
                 listOf("", "", "8"),
             )
-            val uiFunctions = ConsoleUiFunctions(inputReader, outPrinter)
+            val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
             BudgetApplication(
                 uiFunctions,
                 configurations,

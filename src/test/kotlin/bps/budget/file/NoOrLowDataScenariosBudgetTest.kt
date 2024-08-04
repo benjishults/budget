@@ -7,7 +7,7 @@ import bps.budget.budgetMenu
 import bps.budget.model.BudgetData
 import bps.budget.persistence.files.FilesDao
 import bps.budget.spendMoneyItemLabel
-import bps.budget.ui.ConsoleUiFunctions
+import bps.budget.ui.ConsoleUiFacade
 import bps.config.convertToPath
 import bps.console.MenuApplicationWithQuit
 import bps.console.io.InputReader
@@ -42,7 +42,7 @@ class NoOrLowDataScenariosBudgetTest : FreeSpec() {
                 listOf("", "", "8"),
             )
             val configurations = BudgetConfigurations(sequenceOf("noData.yml"))
-            val uiFunctions = ConsoleUiFunctions(inputReader, outPrinter)
+            val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
             BudgetApplication(
                 uiFunctions,
                 configurations,
@@ -81,7 +81,7 @@ Enter the name for your "General" account [General] """,
             )
             val configurations = BudgetConfigurations(sequenceOf("noData.yml"))
             val budgetDao = FilesDao(configurations.persistence.file!!)
-            val uiFunctions = ConsoleUiFunctions(inputReader, outPrinter)
+            val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
             val budgetMenu = menus.budgetMenu(
                 BudgetData(uiFunctions, budgetDao),
                 budgetDao,
@@ -116,7 +116,7 @@ Enter the name for your "General" account [General] """,
             inputs.addAll(listOf("7", "5"))
             val configurations = BudgetConfigurations(sequenceOf("hasGeneralAccount.yml"))
             val budgetDao = FilesDao(configurations.persistence.file!!)
-            val uiFunctions = ConsoleUiFunctions(inputReader, outPrinter)
+            val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
             val budgetMenu = menus.budgetMenu(
                 BudgetData(uiFunctions, budgetDao),
                 budgetDao,

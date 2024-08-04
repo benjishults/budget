@@ -2,7 +2,7 @@ package bps.budget.model
 
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.DataConfigurationException
-import bps.budget.ui.UiFunctions
+import bps.budget.ui.UiFacade
 import java.math.BigDecimal
 import java.util.UUID
 
@@ -102,9 +102,27 @@ class BudgetData(
     companion object {
 
         @JvmStatic
-        fun withBasicAccounts(): BudgetData {
-            val generalAccount = CategoryAccount(defaultGeneralAccountName, defaultGeneralAccountDescription)
-            val checkingAccount = RealAccount(defaultCheckingAccountName, defaultCheckingAccountDescription)
+        fun withBasicAccounts(
+            checkingBalance: BigDecimal = BigDecimal.ZERO.setScale(2),
+            walletBalance: BigDecimal = BigDecimal.ZERO.setScale(2),
+            generalAccountId: UUID? = null,
+        ): BudgetData {
+            val checkingAccount = RealAccount(
+                name = defaultCheckingAccountName,
+                description = defaultCheckingAccountDescription,
+                balance = checkingBalance,
+            )
+            val generalAccount = CategoryAccount(
+                name = defaultGeneralAccountName,
+                description = defaultGeneralAccountDescription,
+                id = generalAccountId ?: UUID.randomUUID(),
+                balance = checkingBalance + walletBalance,
+            )
+            val wallet = RealAccount(
+                name = defaultWalletAccountName,
+                description = defaultWalletAccountDescription,
+                balance = walletBalance,
+            )
             return BudgetData(
                 generalAccount,
                 listOf(
@@ -120,7 +138,7 @@ class BudgetData(
                     CategoryAccount(defaultWorkAccountName, defaultWorkAccountDescription),
                 ),
                 listOf(
-                    RealAccount(defaultWalletAccountName, defaultWalletAccountDescription),
+                    wallet,
                     checkingAccount,
                 ),
                 listOf(
@@ -134,10 +152,10 @@ class BudgetData(
         }
 
         /**
-         * Will build basic data if there is an error getting it from a file.
+         * Will build basic data if there is an error getting it from persisted data.
          */
         operator fun invoke(
-            uiFunctions: UiFunctions,
+            uiFacade: UiFacade,
             budgetDao: BudgetDao<*>,
         ): BudgetData =
             try {
@@ -146,13 +164,36 @@ class BudgetData(
                     load()
                 }
             } catch (ex: DataConfigurationException) {
-                if (uiFunctions.createBasicAccounts()) {
-                    withBasicAccounts()
+                if (uiFacade.userWantsBasicAccounts()) {
+                    uiFacade.info(
+                        """You'll be able to rename these accounts and create new accounts later,
+                        |but please answer a couple of questions as we get started.""".trimMargin(),
+                    )
+                    withBasicAccounts(
+                        checkingBalance = uiFacade.getInitialBalance(
+                            "Checking",
+                            "this is any account on which you are able to write checks",
+                        ),
+                        walletBalance = uiFacade.getInitialBalance(
+                            "Wallet",
+                            "this is cash you might carry on your person",
+                        ),
+                    )
                         .also { budgetData: BudgetData ->
+                            uiFacade.info("saving that data...")
                             budgetDao.save(budgetData)
+                            uiFacade.info(
+                                """
+                                    |Saved
+                                    |Next, you'll probably want to
+                                    |1) create more accounts (Savings, Credit Cards, etc.)
+                                    |2) rename the 'Checking' account to specify your bank name
+                                    |3) allocate money from your 'General' account into your category accounts
+                            """.trimMargin(),
+                            )
                         }
                 } else {
-                    uiFunctions.createGeneralAccount(budgetDao)
+                    uiFacade.createGeneralAccount(budgetDao)
                         .let { generalAccount: CategoryAccount ->
                             BudgetData(generalAccount, listOf(generalAccount))
                                 .also { budgetData: BudgetData ->
