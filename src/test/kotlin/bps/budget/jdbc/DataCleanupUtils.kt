@@ -2,12 +2,13 @@
 
 package bps.budget.jdbc
 
-import bps.budget.persistence.jdbc.JdbcDao
 import bps.jdbc.JdbcFixture
+import java.math.BigDecimal
+import java.sql.Connection
 
-fun deleteTables(jdbcDao: JdbcDao, schema: String = "clean_after_test") {
-    require(jdbcDao.config.schema == schema)
-    with(JdbcFixture(jdbcDao.connection)) {
+fun dropTables(connection: Connection, schema: String) {
+    require(schema == "clean_after_test")
+    with(JdbcFixture(connection)) {
         transaction {
             createStatement()
                 .use { statement ->
@@ -25,55 +26,67 @@ fun deleteTables(jdbcDao: JdbcDao, schema: String = "clean_after_test") {
     }
 }
 
-fun cleanupBudget(jdbcDao: JdbcDao) {
-    cleanupAccounts(jdbcDao)
-    with(JdbcFixture(jdbcDao.connection)) {
+fun deleteBudget(budgetName: String, connection: Connection) {
+    deleteAccounts(budgetName, connection)
+    with(JdbcFixture(connection)) {
         transaction {
             prepareStatement("delete from budgets where budget_name = ?")
                 .use {
-                    it.setString(1, jdbcDao.config.budgetName)
+                    it.setString(1, budgetName)
                     it.executeUpdate()
                 }
         }
     }
 }
 
-fun cleanupAccounts(jdbcDao: JdbcDao) {
-    cleanupTransactions(jdbcDao)
-    with(JdbcFixture(jdbcDao.connection)) {
+fun deleteAccounts(budgetName: String, connection: Connection) {
+    cleanupTransactions(budgetName, connection)
+    with(JdbcFixture(connection)) {
         transaction {
             prepareStatement("delete from draft_accounts where budget_name = ?")
                 .use {
-                    it.setString(1, jdbcDao.config.budgetName)
+                    it.setString(1, budgetName)
                     it.executeUpdate()
                 }
             prepareStatement("delete from real_accounts where budget_name = ?")
                 .use {
-                    it.setString(1, jdbcDao.config.budgetName)
+                    it.setString(1, budgetName)
                     it.executeUpdate()
                 }
             prepareStatement("delete from category_accounts where budget_name = ?")
                 .use {
-                    it.setString(1, jdbcDao.config.budgetName)
+                    it.setString(1, budgetName)
                     it.executeUpdate()
                 }
         }
     }
 }
 
-fun cleanupTransactions(jdbcDao: JdbcDao) {
-    with(JdbcFixture(jdbcDao.connection)) {
+fun cleanupTransactions(budgetName: String, connection: Connection) {
+    with(JdbcFixture(connection)) {
         transaction {
+            zeroBalance(budgetName, "category_accounts")
+            zeroBalance(budgetName, "real_accounts")
+            zeroBalance(budgetName, "draft_accounts")
             prepareStatement("delete from transaction_items where budget_name = ?")
                 .use {
-                    it.setString(1, jdbcDao.config.budgetName)
-                    it.execute()
+                    it.setString(1, budgetName)
+                    it.executeUpdate()
                 }
             prepareStatement("delete from transactions where budget_name = ?")
                 .use {
-                    it.setString(1, jdbcDao.config.budgetName)
-                    it.execute()
+                    it.setString(1, budgetName)
+                    it.executeUpdate()
                 }
         }
     }
+}
+
+private fun Connection.zeroBalance(budgetName: String, tableName: String) {
+    prepareStatement("update $tableName set balance = ? where budget_name = ?")
+        .use {
+            it.setBigDecimal(1, BigDecimal.ZERO.setScale(2))
+            it.setString(2, budgetName)
+            it.executeUpdate()
+        }
 }

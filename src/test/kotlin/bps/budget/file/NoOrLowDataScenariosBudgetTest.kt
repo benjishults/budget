@@ -4,7 +4,7 @@ import bps.budget.AllMenus
 import bps.budget.BudgetApplication
 import bps.budget.BudgetConfigurations
 import bps.budget.budgetMenu
-import bps.budget.model.BudgetData
+import bps.budget.persistence.budgetDataFactory
 import bps.budget.persistence.files.FilesDao
 import bps.budget.spendMoneyItemLabel
 import bps.budget.ui.ConsoleUiFacade
@@ -83,7 +83,7 @@ Enter the name for your "General" account [General] """,
             val budgetDao = FilesDao(configurations.persistence.file!!)
             val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
             val budgetMenu = menus.budgetMenu(
-                BudgetData(uiFunctions, budgetDao),
+                budgetDataFactory(uiFunctions, budgetDao),
                 budgetDao,
             )
             MenuApplicationWithQuit(budgetMenu, inputReader, outPrinter)
@@ -118,7 +118,7 @@ Enter the name for your "General" account [General] """,
             val budgetDao = FilesDao(configurations.persistence.file!!)
             val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
             val budgetMenu = menus.budgetMenu(
-                BudgetData(uiFunctions, budgetDao),
+                budgetDataFactory(uiFunctions, budgetDao),
                 budgetDao,
             )
             MenuApplicationWithQuit(budgetMenu, inputReader, outPrinter)

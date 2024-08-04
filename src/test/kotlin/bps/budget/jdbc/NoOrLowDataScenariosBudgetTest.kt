@@ -153,7 +153,7 @@ Enter the name for your "General" account [General] """,
         afterEach {
             JdbcDao(configurations.persistence.jdbc!!)
                 .use {
-                    deleteTables(jdbcDao = it)
+                    dropTables(it.connection, it.config.schema)
                 }
         }
 

@@ -29,13 +29,15 @@ interface NoDataJdbcTestFixture : BasicJdbcTestFixture {
 
     fun Spec.dropAllAfterEach() {
         afterEach {
-            deleteTables(jdbcDao)
+            dropTables(jdbcDao.connection, jdbcDao.config.schema)
         }
     }
 
 }
 
 interface BasicAccountsTestFixture : BasicJdbcTestFixture {
+    override val configurations: BudgetConfigurations
+        get() = BudgetConfigurations(sequenceOf("hasBasicAccountsJdbc.yml"))
 
     /**
      * Ensure that basic accounts are in place with zero balances in the DB before the test starts and deletes
@@ -44,8 +46,20 @@ interface BasicAccountsTestFixture : BasicJdbcTestFixture {
     fun Spec.useBasicAccounts() {
         closeJdbcAfterSpec()
         beforeSpec {
-            cleanupAccounts(jdbcDao)
+            deleteAccounts(jdbcDao.config.budgetName, jdbcDao.connection)
             upsertBasicAccounts()
+        }
+    }
+
+    fun Spec.resetAfterEach() {
+        afterEach {
+            cleanupTransactions(jdbcDao.config.budgetName, jdbcDao.connection)
+        }
+    }
+
+    fun Spec.resetBalancesAndTransactionAfterSpec() {
+        afterSpec {
+            cleanupTransactions(jdbcDao.config.budgetName, jdbcDao.connection)
         }
     }
 

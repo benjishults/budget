@@ -1,6 +1,5 @@
 package bps.budget.jdbc
 
-import bps.budget.BudgetConfigurations
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftAccount
@@ -20,6 +19,7 @@ import bps.budget.model.defaultTransportationAccountName
 import bps.budget.model.defaultTravelAccountName
 import bps.budget.model.defaultWalletAccountName
 import bps.budget.model.defaultWorkAccountName
+import bps.budget.persistence.budgetDataFactory
 import bps.budget.persistence.jdbc.JdbcDao
 import bps.budget.ui.ConsoleUiFacade
 import io.kotest.assertions.fail
@@ -30,7 +30,6 @@ import java.time.OffsetDateTime
 
 class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
 
-    override val configurations = BudgetConfigurations(sequenceOf("hasGeneralWalletAndFoodJdbc.yml"))
     override val jdbcDao = JdbcDao(configurations.persistence.jdbc!!)
 
     init {
@@ -38,7 +37,7 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
 
         "with data from config" - {
             val uiFunctions = ConsoleUiFacade()
-            val budgetData = BudgetData(uiFunctions, jdbcDao)
+            val budgetData = budgetDataFactory(uiFunctions, jdbcDao)
             "record income" {
                 val amount = BigDecimal("1000.00")
                 val income = Transaction(

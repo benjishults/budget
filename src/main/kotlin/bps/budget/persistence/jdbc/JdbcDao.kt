@@ -280,11 +280,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         try {
             transaction(
                 onRollback = { ex ->
-                    if (ex.message?.contains(CATEGORY_ACCOUNT_TABLE_NAME) == true && ex.message?.contains("not exist") == true)
-                    // TODO fix it right now
-                        throw DataConfigurationException("tables do not exist", ex)
-                    else
-                        throw DataConfigurationException(ex.message, ex)
+                    throw DataConfigurationException(ex.message, ex)
                 },
             ) {
                 val generalAccountId: UUID =
@@ -335,7 +331,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                         .use { getRealAccounts ->
                             getRealAccounts.setString(1, config.budgetName)
                             getRealAccounts.executeQuery()
-                                .use { result ->
+                                .use { result: ResultSet ->
                                     buildList {
                                         while (result.next()) {
                                             add(
@@ -353,9 +349,9 @@ create index if not exists lookup_draft_account_transaction_items_by_account
 
                 val draftAccounts: List<DraftAccount> =
                     prepareStatement("select * from draft_accounts where budget_name = ?")
-                        .use { getDraftAccounts ->
-                            getDraftAccounts.setString(1, config.budgetName)
-                            getDraftAccounts.executeQuery()
+                        .use { getDraftAccountsStatement ->
+                            getDraftAccountsStatement.setString(1, config.budgetName)
+                            getDraftAccountsStatement.executeQuery()
                                 .use { result ->
                                     buildList {
                                         while (result.next()) {

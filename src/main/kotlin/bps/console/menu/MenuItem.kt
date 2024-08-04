@@ -76,7 +76,7 @@ fun takeAction(
 fun takeActionAndPush(
     label: String,
     to: Menu? = null,
-    intermediateAction: IntermediateMenuItemAction,
+    intermediateAction: IntermediateMenuItemAction = NoopIntermediateAction,
 ): MenuItem =
     item(label) { menuSession: MenuSession ->
         intermediateAction()

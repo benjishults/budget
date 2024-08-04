@@ -5,7 +5,6 @@ import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
 import bps.console.menu.Menu
-import bps.console.menu.MenuItem
 
 open class MenuApplicationWithQuit(
     topLevelMenu: Menu,
@@ -24,20 +23,7 @@ open class MenuApplicationWithQuit(
             try {
                 menuSession.current()
                     .let { currentMenu: Menu ->
-                        currentMenu.items
-                            .foldIndexed(
-                                currentMenu.header?.let { header: String -> StringBuilder("$header\n") }
-                                    ?: StringBuilder(),
-                            ) { index: Int, builder: StringBuilder, item: MenuItem ->
-                                // TODO consider doing this once in the MenuItem initializer so that it becomes part of the MenuItem
-                                //      converter.  Downside of that being that then MenuItems can't be shared between Menus.  Do I care?
-                                builder.append(String.format("% 2d. ${item.label}\n", index + 1))
-                            }
-                            .toString()
-                            .let { menuString: String ->
-                                outPrinter(menuString)
-                            }
-                        outPrinter(currentMenu.prompt ?: "Enter selection: ")
+                        currentMenu.print(outPrinter)
                         inputReader()
                             ?.toIntOrNull()
                             ?.let {

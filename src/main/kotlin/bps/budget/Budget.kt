@@ -5,13 +5,16 @@ package bps.budget
 import bps.budget.customize.customizeMenu
 import bps.budget.model.BudgetData
 import bps.budget.model.Transaction
+import bps.budget.model.TransactionItem
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.budgetDaoBuilder
+import bps.budget.persistence.budgetDataFactory
 import bps.budget.ui.ConsoleUiFacade
 import bps.budget.ui.UiFacade
 import bps.console.MenuApplicationWithQuit
-import bps.console.inputs.RecursivePrompt
+import bps.console.inputs.SelectionPrompt
 import bps.console.inputs.SimplePrompt
+import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.TimestampPrompt
 import bps.console.io.DefaultInputReader
 import bps.console.io.DefaultOutPrinter
@@ -23,9 +26,6 @@ import bps.console.menu.quitItem
 import bps.console.menu.takeAction
 import bps.console.menu.takeActionAndPush
 import java.math.BigDecimal
-import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 fun main(args: Array<String>) {
     val configurations = BudgetConfigurations(sequenceOf("budget.yml", "~/.config/bps-budget/budget.yml"))
@@ -61,9 +61,14 @@ class BudgetApplication private constructor(
         budgetDaoBuilder(configurations.persistence),
     )
 
-    val budgetData: BudgetData = BudgetData(uiFacade, budgetDao)
+    val budgetData: BudgetData = budgetDataFactory(uiFacade, budgetDao)
     private val menuApplicationWithQuit =
-        MenuApplicationWithQuit(AllMenus().budgetMenu(budgetData, budgetDao), inputReader, outPrinter)
+        MenuApplicationWithQuit(
+            AllMenus(inputReader, outPrinter)
+                .budgetMenu(budgetData, budgetDao),
+            inputReader,
+            outPrinter,
+        )
 
     fun run() {
         menuApplicationWithQuit.run()
@@ -86,8 +91,46 @@ fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
                 outPrinter(
                     """
             |The user should enter the real fund account into which the money is going (e.g., savings).
-            |The same amount of money should be automatically entered into the general category fund account.""".trimMargin(),
+            |The same amount of money should be automatically entered into the general category fund account.
+            |""".trimMargin(),
                 )
+                val realAccount =
+                    SelectionPrompt(
+                        header = "Select account receiving the income:",
+                        outPrinter = outPrinter,
+                        inputReader = inputReader,
+                        options = budgetData.realAccounts,
+                    )
+                        .getResult()
+                val amount =
+                    SimplePrompt(
+                        "Enter the amount of income: ",
+                        inputReader = inputReader,
+                        outPrinter = outPrinter,
+                    ) {
+                        it?.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2)
+                    }
+                        .getResult()
+                val description =
+                    SimplePromptWithDefault<String>(
+                        "Enter description of income: ",
+                        defaultValue = "income",
+                        inputReader = inputReader,
+                        outPrinter = outPrinter,
+                    )
+                        .getResult()
+                val timestamp =
+                    TimestampPrompt("Enter the time income was received: ", inputReader, outPrinter)
+                        .getResult()
+                val income = Transaction(
+                    amount = amount,
+                    description = description,
+                    timestamp = timestamp,
+                    categoryItems = listOf(TransactionItem(amount, categoryAccount = budgetData.generalAccount)),
+                    realItems = listOf(TransactionItem(amount, realAccount = realAccount)),
+                )
+                budgetData.commit(income)
+                budgetDao.commit(income)
             },
         )
         add(
@@ -110,44 +153,44 @@ fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
                 |For example, if I write a check at WalMart, some of that may have been for necessities, some for food, some for school (books), and some for entertainment.
                 |The user interface should allow for this.""".trimMargin(),
                 )
-                RecursivePrompt(
-                    listOf(
-                        SimplePrompt("Amount Spent: ", inputReader, outPrinter) { it!!.toCurrencyAmount() },
-                        SimplePrompt("Description: ", inputReader, outPrinter),
-                        TimestampPrompt(inputReader, outPrinter),
-                        SimplePrompt(
-                            // TODO need to show list
-                            "Select Real Account: ",
-                            inputReader,
-                            outPrinter,
-                        ) { name: String? ->
-                            budgetData.realAccounts.find { it.name == name }
-                        },
-                        // TODO allow more than one
-                        SimplePrompt(
-                            // TODO need to show list
-                            "Select Category Account: ",
-                            inputReader,
-                            outPrinter,
-                        ) { name: String? ->
-                            budgetData.categoryAccounts.find { it.name == name }
-                        },
-                    ),
-                ) { inputs: List<*> ->
-                    Transaction(
-                        inputs[0] as BigDecimal,
-                        inputs[1] as String,
-                        OffsetDateTime
-                            .of(inputs[2] as LocalDateTime, ZoneOffset.of(ZoneOffset.systemDefault().id)),
-                        // TODO postgres stores at UTC.  Not sure if I need to set that or if it will translate automatically
-//                            .atZoneSameInstant(ZoneId.of("UTC"))
-//                            .toOffsetDateTime(),
-//                        listOf(inputs[3] as )
-
-                    )
-                }
-                    .getResult()
-                    .also { budgetDao.commit(it) }
+//                RecursivePrompt(
+//                    listOf(
+//                        SimplePrompt("Amount Spent: ", inputReader, outPrinter) { it!!.toCurrencyAmount() },
+//                        SimplePrompt("Description: ", inputReader, outPrinter),
+//                        TimestampPrompt("Time: ", inputReader, outPrinter),
+//                        SimplePrompt(
+//                            // TODO need to show list
+//                            "Select Real Account: ",
+//                            inputReader,
+//                            outPrinter,
+//                        ) { name: String? ->
+//                            budgetData.getAccountById<>()realAccounts.find { it.name == name }
+//                        },
+//                        // TODO allow more than one
+//                        SimplePrompt(
+//                            // TODO need to show list
+//                            "Select Category Account: ",
+//                            inputReader,
+//                            outPrinter,
+//                        ) { name: String? ->
+//                            budgetData.categoryAccounts.find { it.name == name }
+//                        },
+//                    ),
+//                ) { inputs: List<*> ->
+//                    Transaction(
+//                        inputs[0] as BigDecimal,
+//                        inputs[1] as String,
+//                        OffsetDateTime
+//                            .of(inputs[2] as LocalDateTime, ZoneOffset.of(ZoneOffset.systemDefault().id)),
+//                        // TODO postgres stores at UTC.  Not sure if I need to set that or if it will translate automatically
+////                            .atZoneSameInstant(ZoneId.of("UTC"))
+////                            .toOffsetDateTime(),
+////                        listOf(inputs[3] as )
+//
+//                    )
+//                }
+//                    .getResult()
+//                    .also { budgetDao.commit(it) }
             },
         )
         add(

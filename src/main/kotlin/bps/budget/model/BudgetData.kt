@@ -1,11 +1,11 @@
 package bps.budget.model
 
-import bps.budget.persistence.BudgetDao
-import bps.budget.persistence.DataConfigurationException
-import bps.budget.ui.UiFacade
 import java.math.BigDecimal
 import java.util.UUID
 
+/**
+ * Currently not thread safe to add or delete accounts.
+ */
 class BudgetData(
     val generalAccount: CategoryAccount,
     categoryAccounts: List<CategoryAccount>,
@@ -13,60 +13,70 @@ class BudgetData(
     draftAccounts: List<DraftAccount> = emptyList(),
 ) {
 
-    private val _categoryAccounts: MutableList<CategoryAccount> = categoryAccounts.toMutableList()
-    val categoryAccounts: List<CategoryAccount> = _categoryAccounts
-    private val _realAccounts: MutableList<RealAccount> = realAccounts.toMutableList()
-    val realAccounts: List<RealAccount> = _realAccounts
-    private val _draftAccounts: MutableList<DraftAccount> = draftAccounts.toMutableList()
-    val draftAccounts: List<DraftAccount> = _draftAccounts
+    var categoryAccounts: List<CategoryAccount> = categoryAccounts.toList()
+        private set
 
-    private val byId: MutableMap<UUID, Account> = mutableMapOf()
+    var realAccounts: List<RealAccount> = realAccounts.toList()
+        private set
+
+    var draftAccounts: List<DraftAccount> = draftAccounts.toList()
+        private set
+
+    private val byId: MutableMap<UUID, Account> =
+        (categoryAccounts + realAccounts + draftAccounts)
+            .associateByTo(mutableMapOf()) {
+                it.id
+            }
 
     fun addCategoryAccount(account: CategoryAccount) {
-        _categoryAccounts.add(account)
+        categoryAccounts = categoryAccounts + account
         byId[account.id] = account
     }
 
     fun addRealAccount(account: RealAccount) {
-        _realAccounts.add(account)
+        realAccounts = realAccounts + account
         byId[account.id] = account
     }
 
     fun addDraftAccount(account: DraftAccount) {
-        _draftAccounts.add(account)
+        draftAccounts = draftAccounts + account
         byId[account.id] = account
     }
 
     fun deleteCategoryAccount(account: CategoryAccount) {
-        _categoryAccounts.remove(account)
+        categoryAccounts = categoryAccounts - account
         byId.remove(account.id)
     }
+
+    fun deleteRealAccount(account: RealAccount) {
+        realAccounts = realAccounts - account
+        byId.remove(account.id)
+    }
+
+    fun deleteDraftAccount(account: DraftAccount) {
+        draftAccounts = draftAccounts - account
+        byId.remove(account.id)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Account?> getAccountById(id: UUID): T =
+        byId[id] as T
 
     fun commit(transaction: Transaction) {
         require(transaction.validate())
         transaction.categoryItems
             .forEach { item: TransactionItem ->
-                _categoryAccounts
-                    .find { account: CategoryAccount ->
-                        account.id == item.categoryAccount!!.id
-                    }!!
+                getAccountById<CategoryAccount>(item.categoryAccount!!.id)
                     .commit(item)
             }
         transaction.realItems
             .forEach { item: TransactionItem ->
-                _realAccounts
-                    // TODO consider putting a map from ID to object in the BudgetData
-                    .find { account: RealAccount ->
-                        account.id == item.realAccount!!.id
-                    }!!
+                getAccountById<RealAccount>(item.realAccount!!.id)
                     .commit(item)
             }
         transaction.draftItems
             .forEach { item: TransactionItem ->
-                _draftAccounts
-                    .find { account: DraftAccount ->
-                        account.id == item.draftAccount!!.id
-                    }!!
+                getAccountById<DraftAccount>(item.draftAccount!!.id)
                     .commit(item)
             }
 
@@ -151,57 +161,6 @@ class BudgetData(
             )
         }
 
-        /**
-         * Will build basic data if there is an error getting it from persisted data.
-         */
-        operator fun invoke(
-            uiFacade: UiFacade,
-            budgetDao: BudgetDao<*>,
-        ): BudgetData =
-            try {
-                with(budgetDao) {
-                    prepForFirstLoad()
-                    load()
-                }
-            } catch (ex: DataConfigurationException) {
-                if (uiFacade.userWantsBasicAccounts()) {
-                    uiFacade.info(
-                        """You'll be able to rename these accounts and create new accounts later,
-                        |but please answer a couple of questions as we get started.""".trimMargin(),
-                    )
-                    withBasicAccounts(
-                        checkingBalance = uiFacade.getInitialBalance(
-                            "Checking",
-                            "this is any account on which you are able to write checks",
-                        ),
-                        walletBalance = uiFacade.getInitialBalance(
-                            "Wallet",
-                            "this is cash you might carry on your person",
-                        ),
-                    )
-                        .also { budgetData: BudgetData ->
-                            uiFacade.info("saving that data...")
-                            budgetDao.save(budgetData)
-                            uiFacade.info(
-                                """
-                                    |Saved
-                                    |Next, you'll probably want to
-                                    |1) create more accounts (Savings, Credit Cards, etc.)
-                                    |2) rename the 'Checking' account to specify your bank name
-                                    |3) allocate money from your 'General' account into your category accounts
-                            """.trimMargin(),
-                            )
-                        }
-                } else {
-                    uiFacade.createGeneralAccount(budgetDao)
-                        .let { generalAccount: CategoryAccount ->
-                            BudgetData(generalAccount, listOf(generalAccount))
-                                .also { budgetData: BudgetData ->
-                                    budgetDao.save(budgetData)
-                                }
-                        }
-                }
-            }
     }
 
 }
