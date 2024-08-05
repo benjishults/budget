@@ -32,107 +32,180 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
 import java.time.OffsetDateTime
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.concurrent.thread
 
 class BudgetApplicationTransactionsTest : FreeSpec(), BasicAccountsTestFixture {
 
     override val jdbcDao = JdbcDao(configurations.persistence.jdbc!!)
 
-    init {
-        resetBalancesAndTransactionAfterSpec()
-        useBasicAccounts()
+    val paused = AtomicBoolean(false)
+    val waitForUnPause = AtomicReference(CountDownLatch(0))
+    val waitForPause = AtomicReference(CountDownLatch(1))
 
-        val outputs: MutableList<String> = mutableListOf()
-        val outPrinter = OutPrinter {
-            outputs.add(it)
-        }
-        val inputs: MutableList<String> = mutableListOf()
+    private fun pause() {
+        check(!paused.get()) { "already paused" }
+        waitForUnPause.set(CountDownLatch(1))
+        paused.set(true)
+        waitForPause.get().countDown()
+    }
+
+    private fun unPause() {
+        check(paused.get()) { "not paused" }
+        waitForPause.set(CountDownLatch(1))
+        paused.set(false)
+        waitForUnPause.get().countDown()
+    }
+
+    init {
+        createBasicAccountsBeforeSpec()
+        resetBalancesAndTransactionAfterSpec()
+        closeJdbcAfterSpec()
+
+        // NOTE the thread clearing this is not the thread that adds to it
+        val inputs = CopyOnWriteArrayList<String>()
         val inputReader = InputReader {
             inputs.removeFirst()
+        }
+        // NOTE the thread clearing this is not the thread that adds to it
+        val outputs = CopyOnWriteArrayList<String>()
+        val outPrinter = OutPrinter {
+            if (inputs.isEmpty()) {
+                pause()
+            }
+            if (paused.get())
+                waitForUnPause.get().await()
+            outputs.add(it)
         }
         beforeEach {
             inputs.clear()
             outputs.clear()
         }
         val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
-        "with data from DB" - {
+        "run application with data from DB" - {
             val application = BudgetApplication(
                 uiFunctions,
                 configurations,
                 inputReader,
                 outPrinter,
             )
+            val appThread = thread {
+                application.run()
+            }
             "record income" {
+                // prepare inputs
                 inputs.addAll(
-                    listOf("1", "2", "5000", "", "", "8"),
+                    listOf("1", "1", "5000", "", ""),
                 )
-                application.use { application: BudgetApplication ->
-                    application.run()
-                    application.budgetData.asClue { budgetData: BudgetData ->
-                        budgetData.categoryAccounts shouldContain budgetData.generalAccount
-                        budgetData.generalAccount.balance shouldBe BigDecimal(5000).setScale(2)
-                        budgetData.categoryAccounts.size shouldBe 10
-                    }
-                    application.budgetDao.load().asClue { budgetData: BudgetData ->
-                        budgetData.categoryAccounts shouldContain budgetData.generalAccount
-                        budgetData.generalAccount.balance shouldBe BigDecimal(5000).setScale(2)
-                        budgetData.categoryAccounts.size shouldBe 10
-                    }
-                    outputs shouldContainExactly listOf(
-                        """Budget!
- 1. Record Income
- 2. Make Allowances
- 3. Record Transactions
- 4. Write Checks or Use Credit Cards
- 5. Clear Drafts
- 6. Transfer Money
- 7. Customize
- 8. Quit
-""",
-                        "Enter selection: ",
-                        """
+                unPause()
+                waitForPause.get().await()
+                application.budgetData.asClue { budgetData: BudgetData ->
+                    budgetData.categoryAccounts shouldContain budgetData.generalAccount
+                    budgetData.generalAccount.balance shouldBe BigDecimal(5000).setScale(2)
+                    budgetData.categoryAccounts.size shouldBe 10
+                }
+                application.budgetDao.load().asClue { budgetData: BudgetData ->
+                    budgetData.categoryAccounts shouldContain budgetData.generalAccount
+                    budgetData.generalAccount.balance shouldBe BigDecimal(5000).setScale(2)
+                    budgetData.categoryAccounts.size shouldBe 10
+                }
+                outputs shouldContainExactly listOf(
+                    """
+                            |Budget!
+                            | 1. $recordIncome
+                            | 2. $makeAllowances
+                            | 3. $recordSpending
+                            | 4. $recordDrafts
+                            | 5. $clearDrafts
+                            | 6. $transfer
+                            | 7. $setup
+                            | 8. Quit
+                            |""".trimMargin(),
+                    "Enter selection: ",
+                    """
             |The user should enter the real fund account into which the money is going (e.g., savings).
             |The same amount of money should be automatically entered into the general category fund account.
             |""".trimMargin(),
-                        """Select account receiving the income:
- 1. RealAccount('Wallet', 0.00)
- 2. RealAccount('Checking', 0.00)
+                    """Select account receiving the income:
+ 1. RealAccount('Checking', 0.00)
+ 2. RealAccount('Wallet', 0.00)
 Enter selection: """,
-                        "Enter the amount of income: ",
-                        "Enter description of income:  [income] ",
-                        "Enter the time income was received:  [now] ",
-                        """Budget!
- 1. Record Income
- 2. Make Allowances
- 3. Record Transactions
- 4. Write Checks or Use Credit Cards
- 5. Clear Drafts
- 6. Transfer Money
- 7. Customize
- 8. Quit
-""",
-                        "Enter selection: ",
-                        "Quitting\n",
-                    )
-                }
-            }
-            "!allocate to food" {
-                val amount = BigDecimal("300.00")
-                val allocate = Transaction(
-                    amount = amount,
-                    description = "allocate",
-                    timestamp = OffsetDateTime.now(),
-                    categoryItems = buildList {
-                        add(TransactionItem(-amount, categoryAccount = application.budgetData.generalAccount))
-                        add(
-                            TransactionItem(
-                                amount,
-                                categoryAccount = application.budgetData.categoryAccounts.find { it.name == defaultFoodAccountName }!!,
-                            ),
-                        )
-                    },
+                    "Enter the amount of income: ",
+                    "Enter description of income:  [income] ",
+                    "Enter the time income was received:  [now] ",
                 )
-                application.budgetData.commit(allocate)
-                jdbcDao.commit(allocate)
+            }
+            "allocate to food" {
+                inputs.addAll(
+                    listOf("2", "3", "300", "", "8"),
+                )
+                unPause()
+                waitForPause.get().await()
+                application.budgetData.asClue { budgetData: BudgetData ->
+                    budgetData.categoryAccounts shouldContain budgetData.generalAccount
+                    budgetData.generalAccount.balance shouldBe BigDecimal(5000 - 300).setScale(2)
+                    budgetData.categoryAccounts.size shouldBe 10
+                    budgetData.categoryAccounts
+                        .find { it.name == defaultFoodAccountName }!!
+                        .balance shouldBe BigDecimal(300).setScale(2)
+                }
+                application.budgetDao.load().asClue { budgetData: BudgetData ->
+                    budgetData.categoryAccounts shouldContain budgetData.generalAccount
+                    budgetData.generalAccount.balance shouldBe BigDecimal(5000 - 300).setScale(2)
+                    budgetData.categoryAccounts.size shouldBe 10
+                    budgetData.categoryAccounts
+                        .find { it.name == defaultFoodAccountName }!!
+                        .balance shouldBe BigDecimal(300).setScale(2)
+                }
+                unPause()
+                outputs shouldContainExactly listOf(
+                    """
+                            |Budget!
+                            | 1. $recordIncome
+                            | 2. $makeAllowances
+                            | 3. $recordSpending
+                            | 4. $recordDrafts
+                            | 5. $clearDrafts
+                            | 6. $transfer
+                            | 7. $setup
+                            | 8. Quit
+                            |""".trimMargin(),
+                    "Enter selection: ",
+                    """
+                |Every month or so, the user may want to distribute the income from the general category fund accounts into the other category fund accounts.
+                |Optional: You may want to add options to automate this procedure for the user.
+                |I.e., let the user decide on a predetermined amount that will be transferred to each category fund account each month.
+                |For some category fund accounts the user may prefer to bring the balance up to a certain amount each month.""".trimMargin(),
+                    "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
+ 1. CategoryAccount('Education', 0.00)
+ 2. CategoryAccount('Entertainment', 0.00)
+ 3. CategoryAccount('Food', 0.00)
+ 4. CategoryAccount('Medical', 0.00)
+ 5. CategoryAccount('Necessities', 0.00)
+ 6. CategoryAccount('Network', 0.00)
+ 7. CategoryAccount('Transportation', 0.00)
+ 8. CategoryAccount('Travel', 0.00)
+ 9. CategoryAccount('Work', 0.00)
+Enter selection: """,
+                    "Enter the amount to allocate into ${application.budgetData.categoryAccounts[2].name} (0.00 - 5000.00]: ",
+                    "Enter description of transaction:  [allowance] ",
+                    """
+                            |Budget!
+                            | 1. $recordIncome
+                            | 2. $makeAllowances
+                            | 3. $recordSpending
+                            | 4. $recordDrafts
+                            | 5. $clearDrafts
+                            | 6. $transfer
+                            | 7. $setup
+                            | 8. Quit
+                            |""".trimMargin(),
+                    "Enter selection: ",
+                    "Quitting\n",
+                )
             }
             "!write a check for food" {
                 val amount = BigDecimal("100.00")

@@ -13,13 +13,13 @@ class BudgetData(
     draftAccounts: List<DraftAccount> = emptyList(),
 ) {
 
-    var categoryAccounts: List<CategoryAccount> = categoryAccounts.toList()
+    var categoryAccounts: List<CategoryAccount> = categoryAccounts.sortedBy { it.name }
         private set
 
-    var realAccounts: List<RealAccount> = realAccounts.toList()
+    var realAccounts: List<RealAccount> = realAccounts.sortedBy { it.name }
         private set
 
-    var draftAccounts: List<DraftAccount> = draftAccounts.toList()
+    var draftAccounts: List<DraftAccount> = draftAccounts.sortedBy { it.name }
         private set
 
     private val byId: MutableMap<UUID, Account> =

@@ -2,8 +2,14 @@ package bps.budget.jdbc
 
 import bps.budget.BudgetApplication
 import bps.budget.BudgetConfigurations
+import bps.budget.clearDrafts
+import bps.budget.makeAllowances
 import bps.budget.persistence.jdbc.JdbcDao
-import bps.budget.spendMoneyItemLabel
+import bps.budget.recordDrafts
+import bps.budget.recordIncome
+import bps.budget.recordSpending
+import bps.budget.setup
+import bps.budget.transfer
 import bps.budget.ui.ConsoleUiFacade
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
@@ -13,8 +19,6 @@ import io.kotest.matchers.collections.shouldHaveSize
 
 class NoOrLowDataScenariosBudgetTest : FreeSpec() {
 
-
-//    override fun isolationMode(): IsolationMode = IsolationMode.InstancePerTest
 
     init {
         val outputs: MutableList<String> = mutableListOf()
@@ -50,16 +54,16 @@ class NoOrLowDataScenariosBudgetTest : FreeSpec() {
 Enter the name for your "General" account [General] """,
                 "Enter the description for your \"General\" account [Income is automatically deposited here and allowances are made from here.] ",
                 """
-                        |Budget!
-                        | 1. Record Income
-                        | 2. Make Allowances
-                        | 3. $spendMoneyItemLabel
-                        | 4. Write Checks or Use Credit Cards
-                        | 5. Clear Drafts
-                        | 6. Transfer Money
-                        | 7. Customize
-                        | 8. Quit
-                        |""".trimMargin(),
+                            |Budget!
+                            | 1. $recordIncome
+                            | 2. $makeAllowances
+                            | 3. $recordSpending
+                            | 4. $recordDrafts
+                            | 5. $clearDrafts
+                            | 6. $transfer
+                            | 7. $setup
+                            | 8. Quit
+                            |""".trimMargin(),
                 "Enter selection: ",
                 "Quitting\n",
             )

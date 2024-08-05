@@ -43,8 +43,7 @@ interface BasicAccountsTestFixture : BasicJdbcTestFixture {
      * Ensure that basic accounts are in place with zero balances in the DB before the test starts and deletes
      * transactions once the test is done.
      */
-    fun Spec.useBasicAccounts() {
-        closeJdbcAfterSpec()
+    fun Spec.createBasicAccountsBeforeSpec() {
         beforeSpec {
             deleteAccounts(jdbcDao.config.budgetName, jdbcDao.connection)
             upsertBasicAccounts()
@@ -64,10 +63,10 @@ interface BasicAccountsTestFixture : BasicJdbcTestFixture {
     }
 
     /**
-     * This will be called automatically before a spec starts if you've called [useBasicAccounts].
+     * This will be called automatically before a spec starts if you've called [createBasicAccountsBeforeSpec].
      * This ensures the DB contains the basic accounts with zero balances.
      */
-    fun upsertBasicAccounts(generalAccountId: UUID = UUID.fromString("dfa8a21c-f0ad-434d-bcb5-9e37749fa81e")) {
+    private fun upsertBasicAccounts(generalAccountId: UUID = UUID.fromString("dfa8a21c-f0ad-434d-bcb5-9e37749fa81e")) {
         jdbcDao.save(BudgetData.withBasicAccounts(generalAccountId = generalAccountId))
     }
 

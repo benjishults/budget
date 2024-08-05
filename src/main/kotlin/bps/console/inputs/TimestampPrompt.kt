@@ -19,10 +19,10 @@ class TimestampPrompt(
     "now",
     inputReader,
     outPrinter,
-    {
+    transformer = {
         when (it) {
-            "now" -> {
-                OffsetDateTime.now()
+            "now", "" -> {
+                now.toOffsetDateTime()
             }
             else -> {
                 RecursivePrompt<OffsetDateTime>(

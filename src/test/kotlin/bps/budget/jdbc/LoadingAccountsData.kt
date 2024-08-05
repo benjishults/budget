@@ -12,7 +12,8 @@ class LoadingAccountsData : FreeSpec(), BasicAccountsTestFixture {
     override val jdbcDao = JdbcDao(configurations.persistence.jdbc!!)
 
     init {
-        useBasicAccounts()
+        createBasicAccountsBeforeSpec()
+        closeJdbcAfterSpec()
 
         "budget with basic accounts" {
             val uiFunctions = ConsoleUiFacade()

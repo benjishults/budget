@@ -33,7 +33,8 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
     override val jdbcDao = JdbcDao(configurations.persistence.jdbc!!)
 
     init {
-        useBasicAccounts()
+        createBasicAccountsBeforeSpec()
+        closeJdbcAfterSpec()
 
         "with data from config" - {
             val uiFunctions = ConsoleUiFacade()

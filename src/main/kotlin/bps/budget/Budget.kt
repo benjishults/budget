@@ -26,6 +26,7 @@ import bps.console.menu.quitItem
 import bps.console.menu.takeAction
 import bps.console.menu.takeActionAndPush
 import java.math.BigDecimal
+import java.time.OffsetDateTime
 
 fun main(args: Array<String>) {
     val configurations = BudgetConfigurations(sequenceOf("budget.yml", "~/.config/bps-budget/budget.yml"))
@@ -82,12 +83,10 @@ class BudgetApplication private constructor(
 
 }
 
-const val spendMoneyItemLabel = "Record Transactions"
-
 fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
     menuBuilder("Budget!") {
         add(
-            takeAction("Record Income") {
+            takeAction(recordIncome) {
                 outPrinter(
                     """
             |The user should enter the real fund account into which the money is going (e.g., savings).
@@ -134,7 +133,7 @@ fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
             },
         )
         add(
-            takeAction("Make Allowances") {
+            takeAction(makeAllowances) {
                 outPrinter(
                     """
                 |Every month or so, the user may want to distribute the income from the general category fund accounts into the other category fund accounts.
@@ -142,10 +141,61 @@ fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
                 |I.e., let the user decide on a predetermined amount that will be transferred to each category fund account each month.
                 |For some category fund accounts the user may prefer to bring the balance up to a certain amount each month.""".trimMargin(),
                 )
+                val categoryAccount =
+                    SelectionPrompt(
+                        header = "Select account to allocate money into from ${budgetData.generalAccount.name}: ",
+                        outPrinter = outPrinter,
+                        inputReader = inputReader,
+                        options = budgetData.categoryAccounts - budgetData.generalAccount,
+                    )
+                        .getResult()
+                val max = budgetData.generalAccount.balance
+                val min = BigDecimal.ZERO.setScale(2)
+                val amount: BigDecimal =
+                    SimplePrompt<BigDecimal>(
+                        "Enter the amount to allocate into ${categoryAccount.name} ($min - $max]: ",
+                        inputReader = inputReader,
+                        outPrinter = outPrinter,
+                        validate = { input: String ->
+                            input
+                                .toCurrencyAmount()
+                                ?.let {
+                                    min < it && it <= max
+                                }
+                                ?: false
+                        },
+                    ) {
+                        it.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2)
+                    }
+                        .getResult()
+                val description =
+                    SimplePromptWithDefault<String>(
+                        "Enter description of transaction: ",
+                        defaultValue = "allowance",
+                        inputReader = inputReader,
+                        outPrinter = outPrinter,
+                    )
+                        .getResult()
+                val allocate = Transaction(
+                    amount = amount,
+                    description = description,
+                    timestamp = OffsetDateTime.now(),
+                    categoryItems = buildList {
+                        add(TransactionItem(-amount, categoryAccount = budgetData.generalAccount))
+                        add(
+                            TransactionItem(
+                                amount,
+                                categoryAccount = categoryAccount,
+                            ),
+                        )
+                    },
+                )
+                budgetData.commit(allocate)
+                budgetDao.commit(allocate)
             },
         )
         add(
-            takeAction(spendMoneyItemLabel) {
+            takeAction(recordSpending) {
                 outPrinter(
                     """
                 |Optional but recommended:
@@ -194,7 +244,7 @@ fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
             },
         )
         add(
-            takeAction("Write Checks or Use Credit Cards") {
+            takeAction(recordDrafts) {
                 outPrinter(
                     """
             |Writing a check or using a credit card is slightly different from paying cash or using a debit card.
@@ -206,7 +256,7 @@ fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
             },
         )
         add(
-            takeAction("Clear Drafts") {
+            takeAction(clearDrafts) {
                 outPrinter(
                     """
                 |When the user gets a report from the bank telling which checks have cleared, the user needs to update the records in the budget program.
@@ -217,7 +267,7 @@ fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
             },
         )
         add(
-            takeAction("Transfer Money") {
+            takeAction(transfer) {
                 outPrinter(
                     """
             |The user should be able to record transfers between read fund accounts
@@ -227,7 +277,7 @@ fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
             },
         )
         add(
-            takeActionAndPush("Customize", customizeMenu) {
+            takeActionAndPush(setup, customizeMenu) {
                 outPrinter(
                     """
             |The user must be able to add/remove accounts and categorize accounts (category fund account, real fund account, etc.)
@@ -239,5 +289,9 @@ fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
         add(quitItem)
     }
 
-fun String.toCurrencyAmount(): BigDecimal =
-    BigDecimal(this).setScale(2)
+fun String.toCurrencyAmount(): BigDecimal? =
+    try {
+        BigDecimal(this).setScale(2)
+    } catch (e: NumberFormatException) {
+        null
+    }

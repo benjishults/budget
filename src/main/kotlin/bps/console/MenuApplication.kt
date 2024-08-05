@@ -25,7 +25,7 @@ open class MenuApplicationWithQuit(
                     .let { currentMenu: Menu ->
                         currentMenu.print(outPrinter)
                         inputReader()
-                            ?.toIntOrNull()
+                            .toIntOrNull()
                             ?.let {
                                 currentMenu.items.getOrNull(it - 1)
                                     ?.action

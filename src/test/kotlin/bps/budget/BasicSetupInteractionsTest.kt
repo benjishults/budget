@@ -75,16 +75,16 @@ class BasicSetupInteractionsTest : FreeSpec(), NoDataJdbcTestFixture {
                     |
                 """.trimMargin(),
                 """
-                        |Budget!
-                        | 1. Record Income
-                        | 2. Make Allowances
-                        | 3. $spendMoneyItemLabel
-                        | 4. Write Checks or Use Credit Cards
-                        | 5. Clear Drafts
-                        | 6. Transfer Money
-                        | 7. Customize
-                        | 8. Quit
-                        |""".trimMargin(),
+                            |Budget!
+                            | 1. $recordIncome
+                            | 2. $makeAllowances
+                            | 3. $recordSpending
+                            | 4. $recordDrafts
+                            | 5. $clearDrafts
+                            | 6. $transfer
+                            | 7. $setup
+                            | 8. Quit
+                            |""".trimMargin(),
                 "Enter selection: ",
                 "Quitting\n",
             )

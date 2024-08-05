@@ -11,16 +11,21 @@ open class SimplePromptWithDefault<T>(
     val defaultValue: String,
     override val inputReader: InputReader = DefaultInputReader,
     override val outPrinter: OutPrinter = DefaultOutPrinter,
-    override val transformer: (String?) -> T = { it as T },
+    override val validate: (String) -> Boolean = { true },
+    override val transformer: (String) -> T = { it as T },
 ) : SimplePrompt<T> {
-    override fun readInput(): String =
-        super.readInput()
-            .let {
-                if (it.isNullOrBlank())
-                    defaultValue
-                else
-                    it
-            }
+
+    override fun actionOnInvalid(input: String): T =
+        if (input.isBlank())
+            transformer(defaultValue)
+        else
+            super.actionOnInvalid(input)
+
+//    override fun readInput(): String =
+//        super.readInput()
+//            .let {
+//                it.ifBlank { defaultValue }
+//            }
 
     override fun outputPrompt() =
         outPrinter("$basicPrompt [$defaultValue] ")
