@@ -1,6 +1,5 @@
 package bps.console.menu
 
-import bps.console.MenuSession
 import bps.console.QuitException
 
 fun interface MenuItemAction : (MenuSession) -> Unit
@@ -11,7 +10,6 @@ object NoopIntermediateAction : IntermediateMenuItemAction {
     }
 }
 
-@MenuDslElement
 interface MenuItem {
     val label: String
 

@@ -27,8 +27,8 @@ interface NoDataJdbcTestFixture : BasicJdbcTestFixture {
     override val configurations: BudgetConfigurations
         get() = BudgetConfigurations(sequenceOf("noDataJdbc.yml"))
 
-    fun Spec.dropAllAfterEach() {
-        afterEach {
+    fun Spec.dropAllBeforeEach() {
+        beforeEach {
             dropTables(jdbcDao.connection, jdbcDao.config.schema)
         }
     }

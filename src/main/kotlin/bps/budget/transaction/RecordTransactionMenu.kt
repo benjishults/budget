@@ -7,13 +7,12 @@ import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.menu.Menu
 import bps.console.menu.backItem
-import bps.console.menu.menuBuilder
 import bps.console.menu.quitItem
 import bps.console.menu.takeAction
 
 val AllMenus.recordTransactionMenu: Menu
     get() =
-        menuBuilder("Re") {
+        Menu("Re") {
             add(
                 takeAction("Create Category Fund") {
                     val categoryAccount: CategoryAccountConfig =

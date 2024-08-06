@@ -31,20 +31,17 @@ const val defaultNecessitiesAccountDescription = "Soap, light bulbs, etc."
 const val defaultCheckingDraftsAccountName = "Checking Drafts"
 const val defaultCheckingDraftsAccountDescription = "Records checks being written or clearing."
 
-sealed interface Account : AccountData {
-    fun commit(item: TransactionItem)
-}
 
-abstract class BaseAccount(
+sealed class Account(
     override var name: String,
     override var description: String = "",
     override var id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
-) : Account {
+) : AccountData {
     override var balance: BigDecimal = balance
         protected set
 
-    override fun commit(item: TransactionItem) {
+    fun commit(item: Transaction.Item) {
         balance += item.amount
     }
 
@@ -61,7 +58,7 @@ class CategoryAccount(
     description: String = "",
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
-) : BaseAccount(name, description, id, balance) {
+) : Account(name, description, id, balance) {
     override fun toString(): String {
         return "Category${super.toString()}"
     }
@@ -72,7 +69,7 @@ class RealAccount(
     description: String = "",
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
-) : BaseAccount(name, description, id, balance) {
+) : Account(name, description, id, balance) {
     override fun toString(): String {
         return "Real${super.toString()}"
     }
@@ -85,7 +82,7 @@ class DraftAccount(
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
     val realCompanion: RealAccount,
-) : BaseAccount(name, description, id, balance) {
+) : Account(name, description, id, balance) {
     override fun toString(): String {
         return "Draft${super.toString()}"
     }

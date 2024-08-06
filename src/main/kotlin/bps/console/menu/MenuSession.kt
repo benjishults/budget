@@ -1,6 +1,4 @@
-package bps.console
-
-import bps.console.menu.Menu
+package bps.console.menu
 
 class MenuSession(val topLevelMenu: Menu) {
 

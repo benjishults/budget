@@ -17,9 +17,9 @@ interface JdbcFixture : AutoCloseable {
     /**
      * commits after running [block].
      * @returns the value of executing [onRollback] if the transaction was rolled back otherwise the result of [block]
-     * @param onRollback defaults to throwing the exception
+     * @param onRollback defaults to throwing the exception but could do something like returning `null`.
      */
-    fun <T : Any> transaction(
+    fun <T : Any> transactOrNull(
         onRollback: (Exception) -> T? = { throw it },
         block: Connection.() -> T,
     ): T? =
@@ -39,6 +39,17 @@ interface JdbcFixture : AutoCloseable {
                 }
             }
         }
+
+    /**
+     * commits after running [block].
+     * @returns the value of executing [onRollback] if the transaction was rolled back otherwise the result of [block]
+     * @param onRollback defaults to throwing the exception
+     */
+    fun <T : Any> transactOrThrow(
+        onRollback: (Exception) -> T = { throw it },
+        block: Connection.() -> T,
+    ): T =
+        transactOrNull(onRollback, block)!!
 
     fun ResultSet.getCurrencyAmount(name: String): BigDecimal =
         getBigDecimal(name).setScale(2)

@@ -30,11 +30,11 @@ class BasicSetupInteractionsTest : FreeSpec(), NoDataJdbcTestFixture {
             inputs.clear()
             outputs.clear()
         }
-        dropAllAfterEach()
+        dropAllBeforeEach()
         closeJdbcAfterSpec()
         "setup basic data through console ui" {
             inputs.addAll(
-                listOf("y", "2000", "100", "8"),
+                listOf("y", "2000", "100", "9"),
             )
             val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
             BudgetApplication(
@@ -79,11 +79,12 @@ class BasicSetupInteractionsTest : FreeSpec(), NoDataJdbcTestFixture {
                             | 1. $recordIncome
                             | 2. $makeAllowances
                             | 3. $recordSpending
-                            | 4. $recordDrafts
-                            | 5. $clearDrafts
-                            | 6. $transfer
-                            | 7. $setup
-                            | 8. Quit
+                            | 4. View History
+                            | 5. $recordDrafts
+                            | 6. $clearDrafts
+                            | 7. $transfer
+                            | 8. $setup
+                            | 9. Quit
                             |""".trimMargin(),
                 "Enter selection: ",
                 "Quitting\n",

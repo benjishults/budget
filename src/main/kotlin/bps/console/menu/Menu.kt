@@ -2,10 +2,6 @@ package bps.console.menu
 
 import bps.console.io.OutPrinter
 
-@DslMarker
-annotation class MenuDslElement
-
-@MenuDslElement
 interface Menu {
 
     val header: String? get() = null
@@ -29,20 +25,53 @@ interface Menu {
         outPrinter(prompt)
     }
 
+    companion object {
+        operator fun invoke(
+            header: String? = null,
+            prompt: String = "Enter selection: ",
+            items: MutableList<MenuItem>.() -> Unit,
+        ): Menu =
+            object : Menu {
+                override val header: String? =
+                    header
+                override val prompt: String =
+                    prompt
+                override val items: List<MenuItem> =
+                    mutableListOf<MenuItem>()
+                        .apply { items() }
+                        .toList()
+            }
+
+    }
+
 }
 
-fun menuBuilder(
-    header: String? = null,
-    prompt: String = "Enter selection: ",
-    items: MutableList<MenuItem>.() -> Unit,
-): Menu =
-    object : Menu {
-        override val header: String? =
-            header
-        override val prompt: String =
-            prompt
-        override val items: List<MenuItem> =
-            mutableListOf<MenuItem>()
-                .apply { items() }
-                .toList()
-    }
+open class SelectionMenu<T>(
+    override val header: String? = null,
+    override val prompt: String = "Enter selection: ",
+    items: List<T>,
+    withBack: Boolean = true,
+    withQuit: Boolean = true,
+    next: (MenuSession, T) -> Unit,
+) : Menu {
+    override val items: List<MenuItem> =
+        items.map { item ->
+            item(
+                item.toString(),
+            ) { session ->
+                next(session, item)
+            }
+        }
+            .let { menuItems ->
+                if (withBack)
+                    menuItems + backItem
+                else
+                    menuItems
+            }
+            .let { menuItems ->
+                if (withQuit)
+                    menuItems + quitItem
+                else
+                    menuItems
+            }
+}

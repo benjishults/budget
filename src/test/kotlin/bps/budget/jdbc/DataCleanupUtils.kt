@@ -9,7 +9,7 @@ import java.sql.Connection
 fun dropTables(connection: Connection, schema: String) {
     require(schema == "clean_after_test")
     with(JdbcFixture(connection)) {
-        transaction {
+        transactOrNull {
             createStatement()
                 .use { statement ->
                     statement.execute("drop table if exists transaction_items")
@@ -29,7 +29,7 @@ fun dropTables(connection: Connection, schema: String) {
 fun deleteBudget(budgetName: String, connection: Connection) {
     deleteAccounts(budgetName, connection)
     with(JdbcFixture(connection)) {
-        transaction {
+        transactOrNull {
             prepareStatement("delete from budgets where budget_name = ?")
                 .use {
                     it.setString(1, budgetName)
@@ -42,7 +42,7 @@ fun deleteBudget(budgetName: String, connection: Connection) {
 fun deleteAccounts(budgetName: String, connection: Connection) {
     cleanupTransactions(budgetName, connection)
     with(JdbcFixture(connection)) {
-        transaction {
+        transactOrNull {
             prepareStatement("delete from draft_accounts where budget_name = ?")
                 .use {
                     it.setString(1, budgetName)
@@ -64,7 +64,7 @@ fun deleteAccounts(budgetName: String, connection: Connection) {
 
 fun cleanupTransactions(budgetName: String, connection: Connection) {
     with(JdbcFixture(connection)) {
-        transaction {
+        transactOrNull {
             zeroBalance(budgetName, "category_accounts")
             zeroBalance(budgetName, "real_accounts")
             zeroBalance(budgetName, "draft_accounts")

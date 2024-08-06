@@ -3,15 +3,15 @@
 package bps.budget
 
 import bps.budget.customize.customizeMenu
+import bps.budget.model.Account
 import bps.budget.model.BudgetData
+import bps.budget.model.CategoryAccount
 import bps.budget.model.Transaction
-import bps.budget.model.TransactionItem
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.budgetDaoBuilder
 import bps.budget.persistence.budgetDataFactory
 import bps.budget.ui.ConsoleUiFacade
 import bps.budget.ui.UiFacade
-import bps.console.MenuApplicationWithQuit
 import bps.console.inputs.SelectionPrompt
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
@@ -21,7 +21,9 @@ import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
 import bps.console.menu.Menu
-import bps.console.menu.menuBuilder
+import bps.console.menu.MenuApplicationWithQuit
+import bps.console.menu.MenuSession
+import bps.console.menu.SelectionMenu
 import bps.console.menu.quitItem
 import bps.console.menu.takeAction
 import bps.console.menu.takeActionAndPush
@@ -84,7 +86,7 @@ class BudgetApplication private constructor(
 }
 
 fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
-    menuBuilder("Budget!") {
+    Menu("Budget!") {
         add(
             takeAction(recordIncome) {
                 outPrinter(
@@ -121,19 +123,70 @@ fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
                 val timestamp =
                     TimestampPrompt("Enter the time income was received: ", inputReader, outPrinter)
                         .getResult()
-                val income = Transaction(
-                    amount = amount,
-                    description = description,
-                    timestamp = timestamp,
-                    categoryItems = listOf(TransactionItem(amount, categoryAccount = budgetData.generalAccount)),
-                    realItems = listOf(TransactionItem(amount, realAccount = realAccount)),
-                )
+                val income: Transaction = Transaction.Builder(description, timestamp)
+                    .apply {
+                        categoryItems.add(Transaction.ItemBuilder(amount, categoryAccount = budgetData.generalAccount))
+                        realItems.add(Transaction.ItemBuilder(amount, realAccount = realAccount))
+                    }
+                    .build()
                 budgetData.commit(income)
                 budgetDao.commit(income)
             },
         )
         add(
-            takeAction(makeAllowances) {
+            takeActionAndPush(
+                makeAllowances,
+                SelectionMenu(
+                    header = "Select account to allocate money into from ${budgetData.generalAccount.name}: ",
+                    items = budgetData.categoryAccounts - budgetData.generalAccount,
+                ) { _: MenuSession, selectedCategoryAccount: CategoryAccount ->
+                    val max = budgetData.generalAccount.balance
+                    val min = BigDecimal.ZERO.setScale(2)
+                    val amount: BigDecimal =
+                        SimplePrompt<BigDecimal>(
+                            "Enter the amount to allocate into ${selectedCategoryAccount.name} ($min - $max]: ",
+                            inputReader = inputReader,
+                            outPrinter = outPrinter,
+                            validate = { input: String ->
+                                input
+                                    .toCurrencyAmount()
+                                    ?.let {
+                                        min < it && it <= max
+                                    }
+                                    ?: false
+                            },
+                        ) {
+                            it.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2)
+                        }
+                            .getResult()
+                    val description =
+                        SimplePromptWithDefault<String>(
+                            "Enter description of transaction: ",
+                            defaultValue = "allowance",
+                            inputReader = inputReader,
+                            outPrinter = outPrinter,
+                        )
+                            .getResult()
+                    val allocate = Transaction.Builder(description, OffsetDateTime.now())
+                        .apply {
+                            categoryItems.add(
+                                Transaction.ItemBuilder(
+                                    -amount,
+                                    categoryAccount = budgetData.generalAccount,
+                                ),
+                            )
+                            categoryItems.add(
+                                Transaction.ItemBuilder(
+                                    amount,
+                                    categoryAccount = selectedCategoryAccount,
+                                ),
+                            )
+                        }
+                        .build()
+                    budgetData.commit(allocate)
+                    budgetDao.commit(allocate)
+                },
+            ) {
                 outPrinter(
                     """
                 |Every month or so, the user may want to distribute the income from the general category fund accounts into the other category fund accounts.
@@ -141,57 +194,6 @@ fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
                 |I.e., let the user decide on a predetermined amount that will be transferred to each category fund account each month.
                 |For some category fund accounts the user may prefer to bring the balance up to a certain amount each month.""".trimMargin(),
                 )
-                val categoryAccount =
-                    SelectionPrompt(
-                        header = "Select account to allocate money into from ${budgetData.generalAccount.name}: ",
-                        outPrinter = outPrinter,
-                        inputReader = inputReader,
-                        options = budgetData.categoryAccounts - budgetData.generalAccount,
-                    )
-                        .getResult()
-                val max = budgetData.generalAccount.balance
-                val min = BigDecimal.ZERO.setScale(2)
-                val amount: BigDecimal =
-                    SimplePrompt<BigDecimal>(
-                        "Enter the amount to allocate into ${categoryAccount.name} ($min - $max]: ",
-                        inputReader = inputReader,
-                        outPrinter = outPrinter,
-                        validate = { input: String ->
-                            input
-                                .toCurrencyAmount()
-                                ?.let {
-                                    min < it && it <= max
-                                }
-                                ?: false
-                        },
-                    ) {
-                        it.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2)
-                    }
-                        .getResult()
-                val description =
-                    SimplePromptWithDefault<String>(
-                        "Enter description of transaction: ",
-                        defaultValue = "allowance",
-                        inputReader = inputReader,
-                        outPrinter = outPrinter,
-                    )
-                        .getResult()
-                val allocate = Transaction(
-                    amount = amount,
-                    description = description,
-                    timestamp = OffsetDateTime.now(),
-                    categoryItems = buildList {
-                        add(TransactionItem(-amount, categoryAccount = budgetData.generalAccount))
-                        add(
-                            TransactionItem(
-                                amount,
-                                categoryAccount = categoryAccount,
-                            ),
-                        )
-                    },
-                )
-                budgetData.commit(allocate)
-                budgetDao.commit(allocate)
             },
         )
         add(
@@ -241,6 +243,24 @@ fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
 //                }
 //                    .getResult()
 //                    .also { budgetDao.commit(it) }
+            },
+        )
+        add(
+            takeActionAndPush(
+                "View History",
+                SelectionMenu(
+                    header = "Select account to view history",
+                    items = buildList {
+                        add(budgetData.generalAccount)
+                        addAll(budgetData.categoryAccounts - budgetData.generalAccount)
+                        addAll(budgetData.realAccounts)
+                        addAll(budgetData.draftAccounts)
+                    },
+                ) { _: MenuSession, selectedAccount: Account ->
+                    budgetDao.latestTransactions(selectedAccount, budgetData)
+                },
+            ) {
+
             },
         )
         add(

@@ -37,7 +37,7 @@ class NoOrLowDataScenariosBudgetTest : FreeSpec() {
         val configurations = BudgetConfigurations(sequenceOf("noDataJdbc.yml"))
         "!budget with no starting data saves general account to db" {
             inputs.addAll(
-                listOf("", "", "8"),
+                listOf("", "", "9"),
             )
             val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
             BudgetApplication(
@@ -58,11 +58,12 @@ Enter the name for your "General" account [General] """,
                             | 1. $recordIncome
                             | 2. $makeAllowances
                             | 3. $recordSpending
-                            | 4. $recordDrafts
-                            | 5. $clearDrafts
-                            | 6. $transfer
-                            | 7. $setup
-                            | 8. Quit
+                            | 4. View History
+                            | 5. $recordDrafts
+                            | 6. $clearDrafts
+                            | 7. $transfer
+                            | 8. $setup
+                            | 9. Quit
                             |""".trimMargin(),
                 "Enter selection: ",
                 "Quitting\n",

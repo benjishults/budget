@@ -6,10 +6,10 @@ import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftAccount
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
-import bps.budget.model.TransactionItem
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.DataConfigurationException
 import bps.budget.persistence.JdbcConfig
+import bps.console.inputs.toOffsetDateTimeSystemDefault
 import bps.jdbc.JdbcFixture
 import java.math.BigDecimal
 import java.net.URLEncoder
@@ -18,7 +18,10 @@ import java.sql.DriverManager
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
+import java.sql.Timestamp
 import java.sql.Types
+import java.util.Calendar
+import java.util.TimeZone
 import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -72,7 +75,7 @@ class JdbcDao(
             }
 
     override fun prepForFirstLoad() {
-        transaction {
+        transactOrNull {
             createStatement().use { createTablesStatement: Statement ->
                 createTablesStatement.executeUpdate(
                     """
@@ -214,6 +217,128 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         }
     }
 
+    override fun latestTransactions(account: Account, data: BudgetData): List<Transaction> =
+        transactOrThrow {
+            prepareStatement(
+                """
+                    |select t.*,
+                    |       i.amount      as item_amount,
+                    |       i.description as item_description,
+                    |       i.category_account_id,
+                    |       i.draft_account_id,
+                    |       i.real_account_id
+                    |from transactions t
+                    |         join transaction_items i on i.transaction_id = t.id
+                    |where t.id in (select id
+                    |               from transactions
+                    |                        join transaction_items ti
+                    |                             on transactions.id = ti.transaction_id
+                    |                                 and ti.budget_name = 'scratch budget'
+                    |                                 and transactions.budget_name = 'scratch budget'
+                    |               where ti.${
+                    when (account) {
+                        is CategoryAccount -> "category_account_id"
+                        is RealAccount -> "real_account_id"
+                        is DraftAccount -> "draft_account_id"
+                    }
+                } = ?
+                    |               order by transactions.timestamp desc
+                    |               limit 30)
+            """.trimMargin(),
+            )
+                .use { statement: PreparedStatement ->
+                    statement.executeQuery().use { result: ResultSet ->
+                        val returnValue: MutableList<Transaction> = mutableListOf()
+                        var transactionId: UUID? = null
+                        var transactionBuilder: Transaction.Builder? = null
+                        while (result.next()) {
+                            result.getObject("id", UUID::class.java)
+                                .let { uuid: UUID ->
+                                    if (uuid != transactionId) {
+                                        conditionallyAddCompleteTransactionToList(
+                                            transactionId,
+                                            returnValue,
+                                            transactionBuilder,
+                                        )
+                                        transactionId = uuid
+                                        transactionBuilder = startNewTransaction(result, uuid)
+                                    }
+                                }
+                            val itemAmount = result.getCurrencyAmount("item_amount")
+                            val itemDescription: String? = result.getString("item_description")
+                            result.maybeAddItemBuilder(
+                                transactionBuilder!!.categoryItems,
+                                itemAmount,
+                                itemDescription,
+                                data,
+                                "category",
+                            )
+                            result.maybeAddItemBuilder(
+                                transactionBuilder!!.realItems,
+                                itemAmount,
+                                itemDescription,
+                                data,
+                                "real",
+                            )
+                            result.maybeAddItemBuilder(
+                                transactionBuilder!!.draftItems,
+                                itemAmount,
+                                itemDescription,
+                                data,
+                                "draft",
+                            )
+                        }
+                        conditionallyAddCompleteTransactionToList(transactionId, returnValue, transactionBuilder)
+                        returnValue.toList()
+                    }
+                }
+        }
+
+    private fun ResultSet.maybeAddItemBuilder(
+        items: MutableList<Transaction.ItemBuilder>,
+        itemAmount: BigDecimal,
+        itemDescription: String?,
+        data: BudgetData,
+        type: String,
+    ) {
+        getObject("${type}_account_id", UUID::class.java)
+            ?.let { id ->
+                items.add(
+                    Transaction.ItemBuilder(
+                        amount = itemAmount,
+                        description = itemDescription,
+                        categoryAccount = data.getAccountById(id),
+                    ),
+                )
+            }
+    }
+
+    private fun startNewTransaction(
+        result: ResultSet,
+        uuid: UUID,
+    ): Transaction.Builder {
+        val transactionBuilder: Transaction.Builder = Transaction.Builder()
+        val description = result.getString("description")
+        val time: Timestamp = result.getTimestamp(
+            "timestamp",
+            Calendar.Builder().setTimeZone(TimeZone.getDefault()).build(),
+        )
+        transactionBuilder.id = uuid
+        transactionBuilder.description = description
+        transactionBuilder.timestamp = time.toLocalDateTime().toOffsetDateTimeSystemDefault()
+        return transactionBuilder
+    }
+
+    private fun conditionallyAddCompleteTransactionToList(
+        transactionId: UUID?,
+        returnValue: MutableList<Transaction>,
+        transactionBuilder: Transaction.Builder?,
+    ) {
+        if (transactionId != null) {
+            returnValue.add(transactionBuilder!!.build())
+        }
+    }
+
     private fun Connection.createStagingDraftAccountsTable() {
         createStatement().use { createTablesStatement: Statement ->
             createTablesStatement.executeUpdate(
@@ -278,7 +403,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
      */
     override fun load(): BudgetData =
         try {
-            transaction(
+            transactOrNull(
                 onRollback = { ex ->
                     throw DataConfigurationException(ex.message, ex)
                 },
@@ -392,7 +517,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
      */
     override fun commit(transaction: Transaction) {
         check(transaction.validate())
-        transaction {
+        transactOrNull {
             insertTransactionPreparedStatement(transaction)
                 .use { insertTransaction: PreparedStatement ->
                     insertTransaction.executeUpdate()
@@ -422,7 +547,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
             put(
                 categoryAccountUpdateStatement,
                 buildList {
-                    transaction.categoryItems.forEach { transactionItem: TransactionItem ->
+                    transaction.categoryItems.forEach { transactionItem: Transaction.Item ->
                         add(
                             transactionItem.categoryAccount!!.id to
                                     transactionItem.amount,
@@ -433,7 +558,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
             put(
                 realAccountUpdateStatement,
                 buildList {
-                    transaction.realItems.forEach { transactionItem: TransactionItem ->
+                    transaction.realItems.forEach { transactionItem: Transaction.Item ->
                         add(
                             transactionItem.realAccount!!.id to
                                     transactionItem.amount,
@@ -444,7 +569,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
             put(
                 draftAccountUpdateStatement,
                 buildList {
-                    transaction.draftItems.forEach { transactionItem: TransactionItem ->
+                    transaction.draftItems.forEach { transactionItem: Transaction.Item ->
                         add(
                             transactionItem.draftAccount!!.id to
                                     transactionItem.amount,
@@ -480,19 +605,19 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         }
         var parameterIndex = 1
         val transactionItemInsert = prepareStatement(statement)
-        transaction.categoryItems.forEach { transactionItem: TransactionItem ->
+        transaction.categoryItems.forEach { transactionItem: Transaction.Item ->
             parameterIndex += setStandardProperties(transactionItemInsert, parameterIndex, transaction, transactionItem)
             transactionItemInsert.setObject(parameterIndex++, transactionItem.categoryAccount!!.id)
             transactionItemInsert.setNull(parameterIndex++, Types.OTHER)
             transactionItemInsert.setNull(parameterIndex++, Types.OTHER)
         }
-        transaction.realItems.forEach { transactionItem: TransactionItem ->
+        transaction.realItems.forEach { transactionItem: Transaction.Item ->
             parameterIndex += setStandardProperties(transactionItemInsert, parameterIndex, transaction, transactionItem)
             transactionItemInsert.setNull(parameterIndex++, Types.OTHER)
             transactionItemInsert.setObject(parameterIndex++, transactionItem.realAccount!!.id)
             transactionItemInsert.setNull(parameterIndex++, Types.OTHER)
         }
-        transaction.draftItems.forEach { transactionItem: TransactionItem ->
+        transaction.draftItems.forEach { transactionItem: Transaction.Item ->
             parameterIndex += setStandardProperties(transactionItemInsert, parameterIndex, transaction, transactionItem)
             transactionItemInsert.setNull(parameterIndex++, Types.OTHER)
             transactionItemInsert.setNull(parameterIndex++, Types.OTHER)
@@ -509,7 +634,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         transactionItemInsert: PreparedStatement,
         parameterIndex: Int,
         transaction: Transaction,
-        transactionItem: TransactionItem,
+        transactionItem: Transaction.Item,
     ): Int {
         transactionItemInsert.setObject(parameterIndex, transaction.id)
         transactionItemInsert.setString(parameterIndex + 1, transactionItem.description)
@@ -535,7 +660,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
     override fun save(data: BudgetData) {
         check(data.validate())
         // create budget if it isn't there
-        transaction {
+        transactOrNull {
             val generalAccountId = data.generalAccount.id
             prepareStatement(
                 """

@@ -1,10 +1,10 @@
-package bps.console
+package bps.console.menu
 
+import bps.console.QuitException
 import bps.console.io.DefaultInputReader
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
-import bps.console.menu.Menu
 
 open class MenuApplicationWithQuit(
     topLevelMenu: Menu,
@@ -46,8 +46,4 @@ open class MenuApplicationWithQuit(
     override fun close() {
     }
 
-}
-
-interface MenuApplication {
-    fun run()
 }

@@ -65,17 +65,17 @@ class BudgetData(
     fun commit(transaction: Transaction) {
         require(transaction.validate())
         transaction.categoryItems
-            .forEach { item: TransactionItem ->
+            .forEach { item: Transaction.Item ->
                 getAccountById<CategoryAccount>(item.categoryAccount!!.id)
                     .commit(item)
             }
         transaction.realItems
-            .forEach { item: TransactionItem ->
+            .forEach { item: Transaction.Item ->
                 getAccountById<RealAccount>(item.realAccount!!.id)
                     .commit(item)
             }
         transaction.draftItems
-            .forEach { item: TransactionItem ->
+            .forEach { item: Transaction.Item ->
                 getAccountById<DraftAccount>(item.draftAccount!!.id)
                     .commit(item)
             }

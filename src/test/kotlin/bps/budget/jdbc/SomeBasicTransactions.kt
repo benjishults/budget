@@ -5,7 +5,6 @@ import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftAccount
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
-import bps.budget.model.TransactionItem
 import bps.budget.model.defaultCheckingAccountName
 import bps.budget.model.defaultCheckingDraftsAccountName
 import bps.budget.model.defaultEducationAccountName
@@ -41,59 +40,86 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
             val budgetData = budgetDataFactory(uiFunctions, jdbcDao)
             "record income" {
                 val amount = BigDecimal("1000.00")
-                val income = Transaction(
-                    amount = amount,
-                    description = "income",
-                    timestamp = OffsetDateTime.now(),
-                    categoryItems = listOf(TransactionItem(amount, categoryAccount = budgetData.generalAccount)),
-                    realItems = listOf(
-                        TransactionItem(
-                            amount,
-                            realAccount = budgetData.realAccounts.find { it.name == defaultCheckingAccountName }!!,
-                        ),
-                    ),
-                )
+                val income: Transaction =
+                    Transaction
+                        .Builder(
+                            description = "income",
+                            timestamp = OffsetDateTime.now(),
+                        )
+                        .apply {
+                            categoryItems.add(
+                                Transaction.ItemBuilder(
+                                    amount,
+                                    categoryAccount = budgetData.generalAccount,
+                                ),
+                            )
+                            realItems.add(
+                                Transaction.ItemBuilder(
+                                    amount,
+                                    realAccount = budgetData.realAccounts.find {
+                                        it.name == defaultCheckingAccountName
+                                    }!!,
+                                ),
+                            )
+
+                        }
+                        .build()
                 budgetData.commit(income)
                 jdbcDao.commit(income)
             }
             "allocate to food" {
                 val amount = BigDecimal("300.00")
-                val allocate = Transaction(
-                    amount = amount,
-                    description = "allocate",
-                    timestamp = OffsetDateTime.now(),
-                    categoryItems = buildList {
-                        add(TransactionItem(-amount, categoryAccount = budgetData.generalAccount))
-                        add(
-                            TransactionItem(
-                                amount,
-                                categoryAccount = budgetData.categoryAccounts.find { it.name == defaultFoodAccountName }!!,
-                            ),
+                val allocate: Transaction =
+                    Transaction
+                        .Builder(
+                            description = "allocate",
+                            timestamp = OffsetDateTime.now(),
                         )
-                    },
-                )
+                        .apply {
+                            categoryItems.addAll(
+                                buildList {
+                                    add(Transaction.ItemBuilder(-amount, categoryAccount = budgetData.generalAccount))
+                                    add(
+                                        Transaction.ItemBuilder(
+                                            amount,
+                                            categoryAccount = budgetData.categoryAccounts.find {
+                                                it.name == defaultFoodAccountName
+                                            }!!,
+                                        ),
+                                    )
+                                },
+                            )
+
+                        }
+                        .build()
                 budgetData.commit(allocate)
                 jdbcDao.commit(allocate)
             }
             "write a check for food" {
                 val amount = BigDecimal("100.00")
-                val writeCheck = Transaction(
-                    amount = amount,
+                val writeCheck: Transaction = Transaction.Builder(
                     description = "groceries",
                     timestamp = OffsetDateTime.now(),
-                    categoryItems = listOf(
-                        TransactionItem(
-                            -amount,
-                            categoryAccount = budgetData.categoryAccounts.find { it.name == defaultFoodAccountName }!!,
-                        ),
-                    ),
-                    draftItems = listOf(
-                        TransactionItem(
-                            amount,
-                            draftAccount = budgetData.draftAccounts.find { it.name == defaultCheckingDraftsAccountName }!!,
-                        ),
-                    ),
                 )
+                    .apply {
+                        categoryItems.add(
+                            Transaction.ItemBuilder(
+                                -amount,
+                                categoryAccount = budgetData.categoryAccounts.find {
+                                    it.name == defaultFoodAccountName
+                                }!!,
+                            ),
+                        )
+                        draftItems.add(
+                            Transaction.ItemBuilder(
+                                amount,
+                                draftAccount = budgetData.draftAccounts.find {
+                                    it.name == defaultCheckingDraftsAccountName
+                                }!!,
+                            ),
+                        )
+                    }
+                    .build()
                 budgetData.commit(writeCheck)
                 jdbcDao.commit(writeCheck)
             }
@@ -133,23 +159,30 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
             }
             "check clears" {
                 val amount = BigDecimal("100.00")
-                val writeCheck = Transaction(
-                    amount = amount,
+                val writeCheck: Transaction = Transaction.Builder(
                     description = "groceries",
                     timestamp = OffsetDateTime.now(),
-                    realItems = listOf(
-                        TransactionItem(
-                            -amount,
-                            realAccount = budgetData.realAccounts.find { it.name == defaultCheckingAccountName }!!,
-                        ),
-                    ),
-                    draftItems = listOf(
-                        TransactionItem(
-                            -amount,
-                            draftAccount = budgetData.draftAccounts.find { it.name == defaultCheckingDraftsAccountName }!!,
-                        ),
-                    ),
                 )
+                    .apply {
+                        realItems.add(
+                            Transaction.ItemBuilder(
+                                -amount,
+                                realAccount = budgetData.realAccounts.find {
+                                    it.name == defaultCheckingAccountName
+                                }!!,
+                            ),
+                        )
+                        draftItems.add(
+                            Transaction.ItemBuilder(
+                                -amount,
+                                draftAccount = budgetData.draftAccounts.find {
+                                    it.name == defaultCheckingDraftsAccountName
+                                }!!,
+                            ),
+                        )
+
+                    }
+                    .build()
                 budgetData.commit(writeCheck)
                 jdbcDao.commit(writeCheck)
             }

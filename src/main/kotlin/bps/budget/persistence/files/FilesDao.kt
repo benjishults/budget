@@ -1,6 +1,8 @@
 package bps.budget.persistence.files
 
+import bps.budget.model.Account
 import bps.budget.model.BudgetData
+import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.DataConfigurationException
 import bps.budget.persistence.FileConfig
@@ -51,6 +53,10 @@ class FilesDao(
             ),
             data.toAccountsConfig(),
         )
+    }
+
+    override fun latestTransactions(account: Account, data: BudgetData): List<Transaction> {
+        TODO("Not yet implemented")
     }
 
     override fun close() {

@@ -19,5 +19,6 @@ interface BudgetDao<out C : BudgetConfigLookup> : AutoCloseable {
     fun deleteAccount(account: Account) {}
     fun prepForFirstSave() {}
     fun prepForFirstLoad() {}
+    fun latestTransactions(account: Account, data: BudgetData): List<Transaction>
 
 }

@@ -15,9 +15,9 @@ import bps.budget.setup
 import bps.budget.transfer
 import bps.budget.ui.ConsoleUiFacade
 import bps.config.convertToPath
-import bps.console.MenuApplicationWithQuit
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
+import bps.console.menu.MenuApplicationWithQuit
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
@@ -25,9 +25,6 @@ import io.kotest.matchers.shouldBe
 import java.io.File
 
 class NoOrLowDataScenariosBudgetTest : FreeSpec() {
-
-
-//    override fun isolationMode(): IsolationMode = IsolationMode.InstancePerTest
 
     init {
         val outputs: MutableList<String> = mutableListOf()
@@ -45,7 +42,7 @@ class NoOrLowDataScenariosBudgetTest : FreeSpec() {
 
         "!budget with no starting data saves account.yml" {
             inputs.addAll(
-                listOf("", "", "8"),
+                listOf("", "", "9"),
             )
             val configurations = BudgetConfigurations(sequenceOf("noData.yml"))
             val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
@@ -67,11 +64,12 @@ Enter the name for your "General" account [General] """,
                             | 1. $recordIncome
                             | 2. $makeAllowances
                             | 3. $recordSpending
-                            | 4. $recordDrafts
-                            | 5. $clearDrafts
-                            | 6. $transfer
-                            | 7. $setup
-                            | 8. Quit
+                            | 4. View History
+                            | 5. $recordDrafts
+                            | 6. $clearDrafts
+                            | 7. $transfer
+                            | 8. $setup
+                            | 9. Quit
                             |""".trimMargin(),
                 "Enter selection: ",
                 "Quitting\n",
@@ -83,7 +81,7 @@ Enter the name for your "General" account [General] """,
         val menus = AllMenus(inputReader, outPrinter)
         "!budget with no starting data" {
             inputs.addAll(
-                listOf("", "", "8"),
+                listOf("", "", "9"),
             )
             val configurations = BudgetConfigurations(sequenceOf("noData.yml"))
             val budgetDao = FilesDao(configurations.persistence.file!!)
@@ -105,11 +103,12 @@ Enter the name for your "General" account [General] """,
                             | 1. $recordIncome
                             | 2. $makeAllowances
                             | 3. $recordSpending
-                            | 4. $recordDrafts
-                            | 5. $clearDrafts
-                            | 6. $transfer
-                            | 7. $setup
-                            | 8. Quit
+                            | 4. View History
+                            | 5. $recordDrafts
+                            | 6. $clearDrafts
+                            | 7. $transfer
+                            | 8. $setup
+                            | 9. Quit
                             |""".trimMargin(),
                 "Enter selection: ",
                 "Quitting\n",
@@ -118,7 +117,7 @@ Enter the name for your "General" account [General] """,
             File(convertToPath(configurations.persistence.file!!.dataDirectory)).deleteContentsOfNonEmptyFolder() shouldBe true
         }
 
-        "budget with starting account.yml" {
+        "!budget with starting account.yml" {
             inputs.addAll(listOf("7", "5"))
             val configurations = BudgetConfigurations(sequenceOf("hasGeneralAccount.yml"))
             val budgetDao = FilesDao(configurations.persistence.file!!)
@@ -137,11 +136,12 @@ Enter the name for your "General" account [General] """,
                             | 1. $recordIncome
                             | 2. $makeAllowances
                             | 3. $recordSpending
-                            | 4. $recordDrafts
-                            | 5. $clearDrafts
-                            | 6. $transfer
-                            | 7. $setup
-                            | 8. Quit
+                            | 4. View History
+                            | 5. $recordDrafts
+                            | 6. $clearDrafts
+                            | 7. $transfer
+                            | 8. $setup
+                            | 9. Quit
                             |""".trimMargin(),
                 "Enter selection: ",
                 """The user must be able to add/remove accounts and categorize accounts (category fund account, real fund account, etc.)

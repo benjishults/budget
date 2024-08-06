@@ -3,7 +3,7 @@ package bps.console
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
 import bps.console.menu.Menu
-import bps.console.menu.menuBuilder
+import bps.console.menu.MenuApplicationWithQuit
 import bps.console.menu.popMenuItem
 import bps.console.menu.quitItem
 import bps.console.menu.takeAction
@@ -22,7 +22,7 @@ class MenuTest : FreeSpec() {
         val inputReader: InputReader = InputReader { inputs.removeFirst() }
         "basic" {
             val bottomMenu: Menu =
-                menuBuilder("bottom") {
+                Menu("bottom") {
                     add(
                         takeAction("something else") {
                             outPrinter("doing the thing\n")
@@ -36,7 +36,7 @@ class MenuTest : FreeSpec() {
                     add(quitItem)
                 }
             val topMenu: Menu =
-                menuBuilder("top") {
+                Menu("top") {
                     add(
                         takeActionAndPush("something", bottomMenu) {
                             outPrinter("taking some action\n")
