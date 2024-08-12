@@ -39,7 +39,7 @@ class TimeZoneTest : FreeSpec(), BasicJdbcTestFixture, JdbcFixture {
                     )
                 }
             }
-            "insert timestamps" - {
+            "insert timestamps with bps.jdbc.JdbcFixture.setTimestamp" - {
                 val now = Instant.parse("2024-08-09T00:00:00.00Z")
                 val nowAmericaChicago = "2024-08-08T19:00"
                 val label2 = "basic test"
@@ -57,7 +57,7 @@ class TimeZoneTest : FreeSpec(), BasicJdbcTestFixture, JdbcFixture {
                             statement.executeUpdate()
                         }
                 }
-                "read timestamps and validate" {
+                "read timestamps with bps.budget.persistence.jdbc.JdbcDaoKt.toLocalDateTime(java.sql.Timestamp, java.util.TimeZone) and validate" {
                     connection.transactOrNull {
                         prepareStatement("select timestamp_utc, timestamp_with_timezone from timestamps where label = ?")
                             .use { statement ->

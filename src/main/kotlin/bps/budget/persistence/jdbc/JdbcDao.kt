@@ -335,7 +335,6 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         val time: Timestamp = result.getTimestamp("timestamp_utc")
         transactionBuilder.id = uuid
         transactionBuilder.description = description
-        // TODO test this
         transactionBuilder.timestamp = time.toInstant()
         return transactionBuilder
     }

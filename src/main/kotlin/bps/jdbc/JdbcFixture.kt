@@ -42,7 +42,6 @@ interface JdbcFixture : AutoCloseable {
                 override fun close() {
                     connection.close()
                 }
-
             }
     }
 

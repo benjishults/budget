@@ -14,47 +14,63 @@ class TimestampPrompt(
     timeZone: TimeZone,
     inputReader: InputReader = DefaultInputReader,
     outPrinter: OutPrinter = DefaultOutPrinter,
-    now: ZonedDateTime = ZonedDateTime.now(),
+    now: ZonedDateTime = ZonedDateTime.now(timeZone.toZoneId()),
 ) : SimplePromptWithDefault<Instant>(
     basicPrompt,
     "now",
     inputReader,
     outPrinter,
-    transformer = {
-        when (it) {
+    transformer = { acceptDefault ->
+        when (acceptDefault) {
             "now", "" -> {
                 now.toInstant()
             }
             else -> {
-                LocalDateTime.now()
-                RecursivePrompt<Instant>(
+//                LocalDateTime.now(timeZone.toZoneId())
+                RecursivePrompt(
                     listOf(
-                        SimplePromptWithDefault("           year: ", now.year.toString(), inputReader, outPrinter),
                         SimplePromptWithDefault(
-                            "          month: ",
+                            "         year: ",
+                            now.year.toString(),
+                            inputReader,
+                            outPrinter,
+                        ) { it.toInt() },
+                        SimplePromptWithDefault(
+                            "   month (1-12): ",
                             now.month.value.toString(),
                             inputReader,
                             outPrinter,
-                        ),
+                        ) { it.toInt() },
                         SimplePromptWithDefault(
                             "   day of month: ",
                             now.dayOfMonth.toString(),
                             inputReader,
                             outPrinter,
-                        ),
-                        SimplePromptWithDefault("hour (24-clock): ", now.hour.toString(), inputReader, outPrinter),
-                        SimplePromptWithDefault(" minute of hour: ", now.minute.toString(), inputReader, outPrinter),
-                        SimplePromptWithDefault<String>(
+                        ) { it.toInt() },
+                        SimplePromptWithDefault(
+                            "hour (24-clock): ",
+                            now.hour.toString(),
+                            inputReader,
+                            outPrinter,
+                        ) { it.toInt() },
+                        SimplePromptWithDefault(
+                            " minute of hour: ",
+                            now.minute.toString(),
+                            inputReader,
+                            outPrinter,
+                        ) { it.toInt() },
+                        SimplePromptWithDefault(
                             "         second: ",
                             now.second.toString(),
                             inputReader,
                             outPrinter,
-                        ),
+                        ) { it.toInt() },
                     ),
-                ) { entries ->
+                ) { entries: List<*> ->
                     LocalDateTime.parse(
                         String.format(
-                            "${entries[0]}-%02d-%02dT%02d:%02d:%02d",
+                            "%04d-%02d-%02dT%02d:%02d:%02d",
+                            entries[0],
                             entries[1],
                             entries[2],
                             entries[3],
