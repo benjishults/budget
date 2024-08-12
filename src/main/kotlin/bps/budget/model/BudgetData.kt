@@ -1,12 +1,14 @@
 package bps.budget.model
 
 import java.math.BigDecimal
+import java.util.TimeZone
 import java.util.UUID
 
 /**
  * Currently not thread safe to add or delete accounts.
  */
 class BudgetData(
+    val timeZone: TimeZone,
     val generalAccount: CategoryAccount,
     categoryAccounts: List<CategoryAccount>,
     realAccounts: List<RealAccount> = emptyList(),
@@ -113,6 +115,7 @@ class BudgetData(
 
         @JvmStatic
         fun withBasicAccounts(
+            timeZone: TimeZone = TimeZone.getDefault(),
             checkingBalance: BigDecimal = BigDecimal.ZERO.setScale(2),
             walletBalance: BigDecimal = BigDecimal.ZERO.setScale(2),
             generalAccountId: UUID? = null,
@@ -134,6 +137,7 @@ class BudgetData(
                 balance = walletBalance,
             )
             return BudgetData(
+                timeZone,
                 generalAccount,
                 listOf(
                     generalAccount,

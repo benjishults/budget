@@ -16,7 +16,7 @@ interface Menu {
             ) { index: Int, builder: StringBuilder, item: MenuItem ->
                 // TODO consider doing this once in the MenuItem initializer so that it becomes part of the MenuItem
                 //      converter.  Downside of that being that then MenuItems can't be shared between Menus.  Do I care?
-                builder.append(String.format("% 2d. ${item.label}\n", index + 1))
+                builder.append(String.format("%2d. ${item.label}\n", index + 1))
             }
             .toString()
             .let { menuString: String ->
@@ -44,34 +44,4 @@ interface Menu {
 
     }
 
-}
-
-open class SelectionMenu<T>(
-    override val header: String? = null,
-    override val prompt: String = "Enter selection: ",
-    items: List<T>,
-    withBack: Boolean = true,
-    withQuit: Boolean = true,
-    next: (MenuSession, T) -> Unit,
-) : Menu {
-    override val items: List<MenuItem> =
-        items.map { item ->
-            item(
-                item.toString(),
-            ) { session ->
-                next(session, item)
-            }
-        }
-            .let { menuItems ->
-                if (withBack)
-                    menuItems + backItem
-                else
-                    menuItems
-            }
-            .let { menuItems ->
-                if (withQuit)
-                    menuItems + quitItem
-                else
-                    menuItems
-            }
 }

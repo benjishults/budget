@@ -10,20 +10,6 @@ data class AccountsConfig(
     val draft: List<DraftAccountConfig>,
 ) {
 
-    fun toBudgetData(): BudgetData {
-        val categoryAccounts = category.map(CategoryAccountConfig::toCategoryAccount)
-        val realAccounts = real.map(RealAccountConfig::toRealAccount)
-        return BudgetData(
-            generalAccount = categoryAccounts.find { it.id == generalAccountId }!!,
-            categoryAccounts = categoryAccounts,
-            realAccounts = realAccounts,
-            draftAccounts = draft.map { draftAccountConfig: DraftAccountConfig ->
-                draftAccountConfig.toDraftAccount(
-                    realAccounts.find { it.id == draftAccountConfig.realCompanionId }!!,
-                )
-            },
-        )
-    }
 }
 
 fun BudgetData.toAccountsConfig(): AccountsConfig =

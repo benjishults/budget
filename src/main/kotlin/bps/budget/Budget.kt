@@ -6,13 +6,14 @@ import bps.budget.customize.customizeMenu
 import bps.budget.model.Account
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
+import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.budgetDaoBuilder
 import bps.budget.persistence.budgetDataFactory
+import bps.budget.transaction.ViewTransactionsMenu
 import bps.budget.ui.ConsoleUiFacade
 import bps.budget.ui.UiFacade
-import bps.console.inputs.SelectionPrompt
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.TimestampPrompt
@@ -24,11 +25,12 @@ import bps.console.menu.Menu
 import bps.console.menu.MenuApplicationWithQuit
 import bps.console.menu.MenuSession
 import bps.console.menu.SelectionMenu
+import bps.console.menu.pushMenu
 import bps.console.menu.quitItem
 import bps.console.menu.takeAction
 import bps.console.menu.takeActionAndPush
 import java.math.BigDecimal
-import java.time.OffsetDateTime
+import java.time.Instant
 
 fun main(args: Array<String>) {
     val configurations = BudgetConfigurations(sequenceOf("budget.yml", "~/.config/bps-budget/budget.yml"))
@@ -49,7 +51,7 @@ class BudgetApplication private constructor(
     inputReader: InputReader,
     outPrinter: OutPrinter,
     uiFacade: UiFacade,
-    val budgetDao: BudgetDao<*>,
+    val budgetDao: BudgetDao,
 ) : AutoCloseable {
 
     constructor(
@@ -85,107 +87,25 @@ class BudgetApplication private constructor(
 
 }
 
-fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
-    Menu("Budget!") {
+fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao): Menu {
+    return Menu("Budget!") {
         add(
-            takeAction(recordIncome) {
+            takeActionAndPush(
+                recordIncome,
+                recordIncomeSelectionMenu(budgetData, budgetDao),
+            ) {
                 outPrinter(
                     """
-            |The user should enter the real fund account into which the money is going (e.g., savings).
-            |The same amount of money should be automatically entered into the general category fund account.
+            |Enter the real fund account into which the money is going (e.g., savings).
+            |The same amount of money will be automatically entered into the '${budgetData.generalAccount.name}' account.
             |""".trimMargin(),
                 )
-                val realAccount =
-                    SelectionPrompt(
-                        header = "Select account receiving the income:",
-                        outPrinter = outPrinter,
-                        inputReader = inputReader,
-                        options = budgetData.realAccounts,
-                    )
-                        .getResult()
-                val amount =
-                    SimplePrompt(
-                        "Enter the amount of income: ",
-                        inputReader = inputReader,
-                        outPrinter = outPrinter,
-                    ) {
-                        it?.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2)
-                    }
-                        .getResult()
-                val description =
-                    SimplePromptWithDefault<String>(
-                        "Enter description of income: ",
-                        defaultValue = "income",
-                        inputReader = inputReader,
-                        outPrinter = outPrinter,
-                    )
-                        .getResult()
-                val timestamp =
-                    TimestampPrompt("Enter the time income was received: ", inputReader, outPrinter)
-                        .getResult()
-                val income: Transaction = Transaction.Builder(description, timestamp)
-                    .apply {
-                        categoryItems.add(Transaction.ItemBuilder(amount, categoryAccount = budgetData.generalAccount))
-                        realItems.add(Transaction.ItemBuilder(amount, realAccount = realAccount))
-                    }
-                    .build()
-                budgetData.commit(income)
-                budgetDao.commit(income)
             },
         )
         add(
             takeActionAndPush(
                 makeAllowances,
-                SelectionMenu(
-                    header = "Select account to allocate money into from ${budgetData.generalAccount.name}: ",
-                    items = budgetData.categoryAccounts - budgetData.generalAccount,
-                ) { _: MenuSession, selectedCategoryAccount: CategoryAccount ->
-                    val max = budgetData.generalAccount.balance
-                    val min = BigDecimal.ZERO.setScale(2)
-                    val amount: BigDecimal =
-                        SimplePrompt<BigDecimal>(
-                            "Enter the amount to allocate into ${selectedCategoryAccount.name} ($min - $max]: ",
-                            inputReader = inputReader,
-                            outPrinter = outPrinter,
-                            validate = { input: String ->
-                                input
-                                    .toCurrencyAmount()
-                                    ?.let {
-                                        min < it && it <= max
-                                    }
-                                    ?: false
-                            },
-                        ) {
-                            it.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2)
-                        }
-                            .getResult()
-                    val description =
-                        SimplePromptWithDefault<String>(
-                            "Enter description of transaction: ",
-                            defaultValue = "allowance",
-                            inputReader = inputReader,
-                            outPrinter = outPrinter,
-                        )
-                            .getResult()
-                    val allocate = Transaction.Builder(description, OffsetDateTime.now())
-                        .apply {
-                            categoryItems.add(
-                                Transaction.ItemBuilder(
-                                    -amount,
-                                    categoryAccount = budgetData.generalAccount,
-                                ),
-                            )
-                            categoryItems.add(
-                                Transaction.ItemBuilder(
-                                    amount,
-                                    categoryAccount = selectedCategoryAccount,
-                                ),
-                            )
-                        }
-                        .build()
-                    budgetData.commit(allocate)
-                    budgetDao.commit(allocate)
-                },
+                makeAllowancesSelectionMenu(budgetData, budgetDao),
             ) {
                 outPrinter(
                     """
@@ -246,8 +166,8 @@ fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
             },
         )
         add(
-            takeActionAndPush(
-                "View History",
+            pushMenu(
+                viewHistory,
                 SelectionMenu(
                     header = "Select account to view history",
                     items = buildList {
@@ -256,12 +176,19 @@ fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
                         addAll(budgetData.realAccounts)
                         addAll(budgetData.draftAccounts)
                     },
-                ) { _: MenuSession, selectedAccount: Account ->
-                    budgetDao.latestTransactions(selectedAccount, budgetData)
+                    labelSelector = { String.format("%,10.2f | %s", balance, name) },
+                ) { menuSession: MenuSession, selectedAccount: Account ->
+                    menuSession.push(
+                        ViewTransactionsMenu(
+                            transactions = budgetDao.fetchTransactions(selectedAccount, budgetData),
+                            account = selectedAccount,
+                            budgetDao = budgetDao,
+                            budgetData = budgetData,
+                            outPrinter = outPrinter,
+                        ),
+                    )
                 },
-            ) {
-
-            },
+            ),
         )
         add(
             takeAction(recordDrafts) {
@@ -308,6 +235,111 @@ fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao<*>): Menu =
         )
         add(quitItem)
     }
+}
+
+private fun AllMenus.recordIncomeSelectionMenu(
+    budgetData: BudgetData,
+    budgetDao: BudgetDao,
+): Menu = SelectionMenu(
+    header = "Select account receiving the income:",
+    items = budgetData.realAccounts,
+    labelSelector = { String.format("%,10.2f | %s", balance, name) },
+) { menuSession: MenuSession, realAccount: RealAccount ->
+    val amount =
+        SimplePrompt(
+            "Enter the amount of income: ",
+            inputReader = inputReader,
+            outPrinter = outPrinter,
+        ) {
+            it.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2)
+        }
+            .getResult()
+    val description =
+        SimplePromptWithDefault<String>(
+            "Enter description of income: ",
+            defaultValue = "income",
+            inputReader = inputReader,
+            outPrinter = outPrinter,
+        )
+            .getResult()
+    val timestamp: Instant =
+        TimestampPrompt("Enter the time income was received: ", budgetData.timeZone, inputReader, outPrinter)
+            .getResult()
+    val income: Transaction = Transaction.Builder(description, timestamp)
+        .apply {
+            categoryItemBuilders.add(
+                Transaction.ItemBuilder(
+                    amount,
+                    categoryAccount = budgetData.generalAccount,
+                ),
+            )
+            realItemBuilders.add(Transaction.ItemBuilder(amount, realAccount = realAccount))
+        }
+        .build()
+    budgetData.commit(income)
+    budgetDao.commit(income)
+    // refresh menu with new data
+    menuSession.popOrNull()
+    menuSession.push(recordIncomeSelectionMenu(budgetData, budgetDao))
+}
+
+private fun AllMenus.makeAllowancesSelectionMenu(
+    budgetData: BudgetData,
+    budgetDao: BudgetDao,
+): Menu = SelectionMenu(
+    header = "Select account to allocate money into from ${budgetData.generalAccount.name}: ",
+    items = budgetData.categoryAccounts - budgetData.generalAccount,
+    labelSelector = { String.format("%,10.2f | %s", balance, name) },
+) { menuSession: MenuSession, selectedCategoryAccount: CategoryAccount ->
+    val max = budgetData.generalAccount.balance
+    val min = BigDecimal.ZERO.setScale(2)
+    val amount: BigDecimal =
+        SimplePrompt<BigDecimal>(
+            "Enter the amount to allocate into ${selectedCategoryAccount.name} ($min - $max]: ",
+            inputReader = inputReader,
+            outPrinter = outPrinter,
+            validate = { input: String ->
+                input
+                    .toCurrencyAmount()
+                    ?.let {
+                        min < it && it <= max
+                    }
+                    ?: false
+            },
+        ) {
+            it.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2)
+        }
+            .getResult()
+    val description =
+        SimplePromptWithDefault<String>(
+            "Enter description of transaction: ",
+            defaultValue = "allowance",
+            inputReader = inputReader,
+            outPrinter = outPrinter,
+        )
+            .getResult()
+    val allocate = Transaction.Builder(description, Instant.now())
+        .apply {
+            categoryItemBuilders.add(
+                Transaction.ItemBuilder(
+                    -amount,
+                    categoryAccount = budgetData.generalAccount,
+                ),
+            )
+            categoryItemBuilders.add(
+                Transaction.ItemBuilder(
+                    amount,
+                    categoryAccount = selectedCategoryAccount,
+                ),
+            )
+        }
+        .build()
+    budgetData.commit(allocate)
+    budgetDao.commit(allocate)
+    // refresh menu items with new balances
+    menuSession.popOrNull()
+    menuSession.push(makeAllowancesSelectionMenu(budgetData, budgetDao))
+}
 
 fun String.toCurrencyAmount(): BigDecimal? =
     try {

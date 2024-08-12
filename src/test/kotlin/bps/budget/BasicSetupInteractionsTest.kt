@@ -12,6 +12,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import java.util.TimeZone
 
 class BasicSetupInteractionsTest : FreeSpec(), NoDataJdbcTestFixture {
 
@@ -34,7 +35,7 @@ class BasicSetupInteractionsTest : FreeSpec(), NoDataJdbcTestFixture {
         closeJdbcAfterSpec()
         "setup basic data through console ui" {
             inputs.addAll(
-                listOf("y", "2000", "100", "9"),
+                listOf("", "y", "2000", "100", "9"),
             )
             val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
             BudgetApplication(
@@ -55,10 +56,9 @@ class BasicSetupInteractionsTest : FreeSpec(), NoDataJdbcTestFixture {
                     }
                 }
             outputs shouldContainExactly listOf(
-                buildString {
-                    append("Looks like this is your first time running Budget.\n")
-                    append("Would you like me to set up some standard accounts?  You can always change them later.  [Y] ")
-                },
+                "Looks like this is your first time running Budget.\n",
+                "Select the time-zone you want dates to appear in:  [${TimeZone.getDefault().id}] ",
+                "Would you like me to set up some standard accounts?  You can always change them later.  [Y] ",
                 """
                     |You'll be able to rename these accounts and create new accounts later,
                     |but please answer a couple of questions as we get started.

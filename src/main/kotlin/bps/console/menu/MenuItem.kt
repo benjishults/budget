@@ -83,6 +83,18 @@ fun takeActionAndPush(
         }
     }
 
+/**
+ * @param to will be pushed onto the menu session
+ * @param label the display of the menu item
+ */
+fun pushMenu(
+    label: String,
+    to: Menu,
+): MenuItem =
+    item(label) { menuSession: MenuSession ->
+        menuSession.push(to)
+    }
+
 val quitItem: MenuItem =
     BaseMenuItem("Quit") { throw QuitException() }
 

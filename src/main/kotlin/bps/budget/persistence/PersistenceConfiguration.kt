@@ -29,13 +29,13 @@ data class JdbcConfig(
 
 fun interface ConfigFetcher : (PersistenceConfiguration) -> BudgetConfigLookup
 
-fun budgetDaoBuilder(configurations: PersistenceConfiguration): BudgetDao<*> =
+fun budgetDaoBuilder(configurations: PersistenceConfiguration): BudgetDao =
     BudgetDataBuilderMap[configurations.type]!!
-        .let { (configFetcher: ConfigFetcher, builder: (BudgetConfigLookup) -> BudgetDao<*>) ->
+        .let { (configFetcher: ConfigFetcher, builder: (BudgetConfigLookup) -> BudgetDao) ->
             builder(configFetcher(configurations))
         }
 
-val BudgetDataBuilderMap: Map<String, Pair<ConfigFetcher, (BudgetConfigLookup) -> BudgetDao<*>>> =
+val BudgetDataBuilderMap: Map<String, Pair<ConfigFetcher, (BudgetConfigLookup) -> BudgetDao>> =
     mapOf(
         "JDBC" to (ConfigFetcher { it.jdbc!! } to { JdbcDao(it as JdbcConfig) }),
         "FILE" to (ConfigFetcher { it.file!! } to { FilesDao(it as FileConfig) }),

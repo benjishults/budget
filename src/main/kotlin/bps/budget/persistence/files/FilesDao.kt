@@ -14,15 +14,16 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import io.github.nhubbard.konf.source.LoadException
 import io.github.nhubbard.konf.toValue
 import java.io.FileWriter
+import java.util.TimeZone
 import kotlin.io.path.Path
 
 /**
  * Loads data from files to produce an instance of [BudgetData]
  */
 class FilesDao(
-    override val config: FileConfig,
+    val config: FileConfig,
     val accountsFileName: String = "accounts.yml",
-) : BudgetDao<FileConfig> {
+) : BudgetDao {
     /**
      * @throws DataConfigurationException if the files aren't set up properly
      */
@@ -55,11 +56,27 @@ class FilesDao(
         )
     }
 
-    override fun latestTransactions(account: Account, data: BudgetData): List<Transaction> {
+    override fun fetchTransactions(account: Account, data: BudgetData, limit: Int, offset: Long): List<Transaction> {
         TODO("Not yet implemented")
     }
 
     override fun close() {
+    }
+
+    private fun AccountsConfig.toBudgetData(): BudgetData {
+        val categoryAccounts = category.map(CategoryAccountConfig::toCategoryAccount)
+        val realAccounts = real.map(RealAccountConfig::toRealAccount)
+        return BudgetData(
+            timeZone = TimeZone.getDefault(),  // NOTE fix this
+            generalAccount = categoryAccounts.find { it.id == generalAccountId }!!,
+            categoryAccounts = categoryAccounts,
+            realAccounts = realAccounts,
+            draftAccounts = draft.map { draftAccountConfig: DraftAccountConfig ->
+                draftAccountConfig.toDraftAccount(
+                    realAccounts.find { it.id == draftAccountConfig.realCompanionId }!!,
+                )
+            },
+        )
     }
 
 }

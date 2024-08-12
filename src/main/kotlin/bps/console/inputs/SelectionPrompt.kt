@@ -18,7 +18,7 @@ interface SelectionPrompt<T> : Prompt<T> {
                 .foldIndexed(
                     StringBuilder("$header\n"),
                 ) { index: Int, builder: StringBuilder, item: T ->
-                    builder.append(String.format("% 2d. $item\n", index + 1))
+                    builder.append(String.format("%2d. $item\n", index + 1))
                 }
                 .append(prompt)
                 .toString(),

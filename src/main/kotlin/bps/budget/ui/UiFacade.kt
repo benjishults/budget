@@ -11,11 +11,14 @@ import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
 import java.math.BigDecimal
+import java.util.TimeZone
 
 interface UiFacade {
-    fun createGeneralAccount(budgetDao: BudgetDao<*>): CategoryAccount
+    fun createGeneralAccount(budgetDao: BudgetDao): CategoryAccount
     fun userWantsBasicAccounts(): Boolean
+    fun announceFirstTime(): Unit
     fun getInitialBalance(account: String, description: String): BigDecimal
+    fun getDesiredTimeZone(): TimeZone
     fun info(infoMessage: String)
 }
 
@@ -24,7 +27,7 @@ class ConsoleUiFacade(
     val outPrinter: OutPrinter = DefaultOutPrinter,
 ) : UiFacade {
 
-    override fun createGeneralAccount(budgetDao: BudgetDao<*>): CategoryAccount {
+    override fun createGeneralAccount(budgetDao: BudgetDao): CategoryAccount {
         budgetDao.prepForFirstSave()
         return RecursivePrompt(
             listOf(
@@ -51,12 +54,15 @@ class ConsoleUiFacade(
     override fun userWantsBasicAccounts(): Boolean =
         SimplePromptWithDefault(
             """
-            |Looks like this is your first time running Budget.
             |Would you like me to set up some standard accounts?  You can always change them later. """.trimMargin(),
             "Y", inputReader, outPrinter,
         )
-        { it == "Y" || it == "y" || it.isNullOrBlank() }
+        { it == "Y" || it == "y" || it.isBlank() }
             .getResult()
+
+    override fun announceFirstTime() {
+        outPrinter("Looks like this is your first time running Budget.\n")
+    }
 
     override fun getInitialBalance(account: String, description: String): BigDecimal =
         SimplePromptWithDefault(
@@ -65,6 +71,15 @@ class ConsoleUiFacade(
             inputReader,
             outPrinter,
         ) { BigDecimal(it).setScale(2) }
+            .getResult()
+
+    override fun getDesiredTimeZone(): TimeZone =
+        SimplePromptWithDefault(
+            "Select the time-zone you want dates to appear in: ",
+            TimeZone.getDefault().id,
+            inputReader,
+            outPrinter,
+        ) { TimeZone.getTimeZone(it) }
             .getResult()
 
     override fun info(infoMessage: String) {

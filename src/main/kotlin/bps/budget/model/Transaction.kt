@@ -1,13 +1,13 @@
 package bps.budget.model
 
 import java.math.BigDecimal
-import java.time.OffsetDateTime
+import java.time.Instant
 import java.util.UUID
 
 class Transaction private constructor(
     val id: UUID,
     val description: String,
-    val timestamp: OffsetDateTime,
+    val timestamp: Instant,
 ) {
 
     lateinit var categoryItems: List<Item>
@@ -82,12 +82,12 @@ class Transaction private constructor(
 
     class Builder(
         var description: String? = null,
-        var timestamp: OffsetDateTime? = null,
+        var timestamp: Instant? = null,
         var id: UUID? = null,
     ) {
-        val categoryItems: MutableList<ItemBuilder> = mutableListOf()
-        val realItems: MutableList<ItemBuilder> = mutableListOf()
-        val draftItems: MutableList<ItemBuilder> = mutableListOf()
+        val categoryItemBuilders: MutableList<ItemBuilder> = mutableListOf()
+        val realItemBuilders: MutableList<ItemBuilder> = mutableListOf()
+        val draftItemBuilders: MutableList<ItemBuilder> = mutableListOf()
 
         fun build(): Transaction = Transaction(
             this@Builder.id ?: UUID.randomUUID(),
@@ -96,9 +96,9 @@ class Transaction private constructor(
         )
             .apply {
                 populate(
-                    this@Builder.categoryItems.map { it.build(this) },
-                    this@Builder.realItems.map { it.build(this) },
-                    this@Builder.draftItems.map { it.build(this) },
+                    this@Builder.categoryItemBuilders.map { it.build(this) },
+                    this@Builder.realItemBuilders.map { it.build(this) },
+                    this@Builder.draftItemBuilders.map { it.build(this) },
                 )
             }
 

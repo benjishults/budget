@@ -25,7 +25,7 @@ import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
-import java.time.OffsetDateTime
+import java.time.Instant
 
 class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
 
@@ -44,16 +44,16 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                     Transaction
                         .Builder(
                             description = "income",
-                            timestamp = OffsetDateTime.now(),
+                            timestamp = Instant.now(),
                         )
                         .apply {
-                            categoryItems.add(
+                            categoryItemBuilders.add(
                                 Transaction.ItemBuilder(
                                     amount,
                                     categoryAccount = budgetData.generalAccount,
                                 ),
                             )
-                            realItems.add(
+                            realItemBuilders.add(
                                 Transaction.ItemBuilder(
                                     amount,
                                     realAccount = budgetData.realAccounts.find {
@@ -73,10 +73,10 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                     Transaction
                         .Builder(
                             description = "allocate",
-                            timestamp = OffsetDateTime.now(),
+                            timestamp = Instant.now(),
                         )
                         .apply {
-                            categoryItems.addAll(
+                            categoryItemBuilders.addAll(
                                 buildList {
                                     add(Transaction.ItemBuilder(-amount, categoryAccount = budgetData.generalAccount))
                                     add(
@@ -99,10 +99,10 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                 val amount = BigDecimal("100.00")
                 val writeCheck: Transaction = Transaction.Builder(
                     description = "groceries",
-                    timestamp = OffsetDateTime.now(),
+                    timestamp = Instant.now(),
                 )
                     .apply {
-                        categoryItems.add(
+                        categoryItemBuilders.add(
                             Transaction.ItemBuilder(
                                 -amount,
                                 categoryAccount = budgetData.categoryAccounts.find {
@@ -110,7 +110,7 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                                 }!!,
                             ),
                         )
-                        draftItems.add(
+                        draftItemBuilders.add(
                             Transaction.ItemBuilder(
                                 amount,
                                 draftAccount = budgetData.draftAccounts.find {
@@ -161,10 +161,10 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                 val amount = BigDecimal("100.00")
                 val writeCheck: Transaction = Transaction.Builder(
                     description = "groceries",
-                    timestamp = OffsetDateTime.now(),
+                    timestamp = Instant.now(),
                 )
                     .apply {
-                        realItems.add(
+                        realItemBuilders.add(
                             Transaction.ItemBuilder(
                                 -amount,
                                 realAccount = budgetData.realAccounts.find {
@@ -172,7 +172,7 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                                 }!!,
                             ),
                         )
-                        draftItems.add(
+                        draftItemBuilders.add(
                             Transaction.ItemBuilder(
                                 -amount,
                                 draftAccount = budgetData.draftAccounts.find {

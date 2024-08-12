@@ -4,13 +4,14 @@ import bps.budget.model.BudgetData
 import bps.budget.model.BudgetData.Companion.withBasicAccounts
 import bps.budget.model.CategoryAccount
 import bps.budget.ui.UiFacade
+import java.util.TimeZone
 
 /**
  * Loads or data from the DAO.  If there is an error getting it from the DAO, offers to create fresh data.
  */
 fun budgetDataFactory(
     uiFacade: UiFacade,
-    budgetDao: BudgetDao<*>,
+    budgetDao: BudgetDao,
 ): BudgetData =
     try {
         with(budgetDao) {
@@ -18,12 +19,15 @@ fun budgetDataFactory(
             load()
         }
     } catch (ex: DataConfigurationException) {
+        uiFacade.announceFirstTime()
+        val timeZone: TimeZone = uiFacade.getDesiredTimeZone()
         if (uiFacade.userWantsBasicAccounts()) {
             uiFacade.info(
                 """You'll be able to rename these accounts and create new accounts later,
                         |but please answer a couple of questions as we get started.""".trimMargin(),
             )
             withBasicAccounts(
+                timeZone = timeZone,
                 checkingBalance = uiFacade.getInitialBalance(
                     "Checking",
                     "this is any account on which you are able to write checks",
@@ -49,7 +53,11 @@ fun budgetDataFactory(
         } else {
             uiFacade.createGeneralAccount(budgetDao)
                 .let { generalAccount: CategoryAccount ->
-                    BudgetData(generalAccount, listOf(generalAccount))
+                    BudgetData(
+                        timeZone,
+                        generalAccount,
+                        listOf(generalAccount),
+                    )
                         .also { budgetData: BudgetData ->
                             budgetDao.save(budgetData)
                         }

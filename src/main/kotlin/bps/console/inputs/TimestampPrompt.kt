@@ -4,17 +4,18 @@ import bps.console.io.DefaultInputReader
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
+import java.time.Instant
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import java.util.TimeZone
 
 class TimestampPrompt(
     basicPrompt: String,
+    timeZone: TimeZone,
     inputReader: InputReader = DefaultInputReader,
     outPrinter: OutPrinter = DefaultOutPrinter,
     now: ZonedDateTime = ZonedDateTime.now(),
-) : SimplePromptWithDefault<OffsetDateTime>(
+) : SimplePromptWithDefault<Instant>(
     basicPrompt,
     "now",
     inputReader,
@@ -22,10 +23,11 @@ class TimestampPrompt(
     transformer = {
         when (it) {
             "now", "" -> {
-                now.toOffsetDateTime()
+                now.toInstant()
             }
             else -> {
-                RecursivePrompt<OffsetDateTime>(
+                LocalDateTime.now()
+                RecursivePrompt<Instant>(
                     listOf(
                         SimplePromptWithDefault("           year: ", now.year.toString(), inputReader, outPrinter),
                         SimplePromptWithDefault(
@@ -60,7 +62,7 @@ class TimestampPrompt(
                             entries[5],
                         ),
                     )
-                        .toOffsetDateTimeSystemDefault()
+                        .toInstantForTimeZone(timeZone)
                 }
                     .getResult()
             }
@@ -68,11 +70,7 @@ class TimestampPrompt(
     },
 )
 
-fun LocalDateTime.toOffsetDateTimeSystemDefault(): OffsetDateTime =
-    OffsetDateTime.of(
-        this,
-        ZoneOffset
-            .systemDefault()
-            .rules
-            .getOffset(this),
-    )
+fun LocalDateTime.toInstantForTimeZone(timeZone: TimeZone): Instant =
+    ZonedDateTime
+        .of(this, timeZone.toZoneId())
+        .toInstant()

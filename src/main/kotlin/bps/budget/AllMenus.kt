@@ -12,6 +12,7 @@ const val clearDrafts = "Clear Drafts"
 const val transfer = "Transfer Money"
 const val setup = "Manage Accounts"
 const val recordSpending = "Record Spending"
+const val viewHistory = "View History"
 
 class AllMenus(
     val inputReader: InputReader = DefaultInputReader,

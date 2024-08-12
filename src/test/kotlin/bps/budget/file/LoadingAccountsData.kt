@@ -16,7 +16,7 @@ class LoadingAccountsData : FreeSpec() {
         "budget with general food and wallet" {
             val configurations = BudgetConfigurations(sequenceOf("hasGeneralWalletAndFood.yml"))
             val uiFunctions = ConsoleUiFacade()
-            budgetDaoBuilder(configurations.persistence).use { budgetDao: BudgetDao<*> ->
+            budgetDaoBuilder(configurations.persistence).use { budgetDao: BudgetDao ->
                 val budgetData = budgetDataFactory(uiFunctions, budgetDao)
                 budgetData.generalAccount.id.toString() shouldBeEqual "dfa8a21c-f0ad-434d-bcb5-9e37749fa81e"
                 budgetData.realAccounts shouldHaveSize 1

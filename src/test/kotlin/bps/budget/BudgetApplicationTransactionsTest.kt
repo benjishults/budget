@@ -30,7 +30,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
-import java.time.OffsetDateTime
+import java.time.Instant
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
@@ -107,18 +107,18 @@ class BudgetApplicationTransactionsTest : FreeSpec(), BasicAccountsTestFixture {
             "record income" {
                 // prepare inputs
                 inputs.addAll(
-                    listOf("1", "1", "5000", "", ""),
+                    listOf("1", "1", "5000", "", "", "2", "200", "", "", "3"),
                 )
                 unPause()
                 waitForPause.get().await()
                 application.budgetData.asClue { budgetData: BudgetData ->
                     budgetData.categoryAccounts shouldContain budgetData.generalAccount
-                    budgetData.generalAccount.balance shouldBe BigDecimal(5000).setScale(2)
+                    budgetData.generalAccount.balance shouldBe BigDecimal(5200).setScale(2)
                     budgetData.categoryAccounts.size shouldBe 10
                 }
                 application.budgetDao.load().asClue { budgetData: BudgetData ->
                     budgetData.categoryAccounts shouldContain budgetData.generalAccount
-                    budgetData.generalAccount.balance shouldBe BigDecimal(5000).setScale(2)
+                    budgetData.generalAccount.balance shouldBe BigDecimal(5200).setScale(2)
                     budgetData.categoryAccounts.size shouldBe 10
                 }
                 outputs shouldContainExactly listOf(
@@ -136,16 +136,39 @@ class BudgetApplicationTransactionsTest : FreeSpec(), BasicAccountsTestFixture {
                             |""".trimMargin(),
                     "Enter selection: ",
                     """
-            |The user should enter the real fund account into which the money is going (e.g., savings).
-            |The same amount of money should be automatically entered into the general category fund account.
-            |""".trimMargin(),
-                    """Select account receiving the income:
- 1. RealAccount('Checking', 0.00)
- 2. RealAccount('Wallet', 0.00)
-Enter selection: """,
+                        |Enter the real fund account into which the money is going (e.g., savings).
+                        |The same amount of money will be automatically entered into the 'General' account.
+                        |""".trimMargin(),
+                    """
+                        |Select account receiving the income:
+                        | 1.       0.00 | Checking
+                        | 2.       0.00 | Wallet
+                        | 3. Back
+                        | 4. Quit
+                        |""".trimMargin(),
+                    "Enter selection: ",
                     "Enter the amount of income: ",
                     "Enter description of income:  [income] ",
                     "Enter the time income was received:  [now] ",
+                    """
+                        |Select account receiving the income:
+                        | 1.   5,000.00 | Checking
+                        | 2.       0.00 | Wallet
+                        | 3. Back
+                        | 4. Quit
+                        |""".trimMargin(),
+                    "Enter selection: ",
+                    "Enter the amount of income: ",
+                    "Enter description of income:  [income] ",
+                    "Enter the time income was received:  [now] ",
+                    """
+                        |Select account receiving the income:
+                        | 1.   5,000.00 | Checking
+                        | 2.     200.00 | Wallet
+                        | 3. Back
+                        | 4. Quit
+                        |""".trimMargin(),
+                    "Enter selection: ",
                 )
             }
             "allocate to food and necessities" {
@@ -156,7 +179,7 @@ Enter selection: """,
                 waitForPause.get().await()
                 application.budgetData.asClue { budgetData: BudgetData ->
                     budgetData.categoryAccounts shouldContain budgetData.generalAccount
-                    budgetData.generalAccount.balance shouldBe BigDecimal(5000 - 400).setScale(2)
+                    budgetData.generalAccount.balance shouldBe BigDecimal(5200 - 400).setScale(2)
                     budgetData.categoryAccounts.size shouldBe 10
                     budgetData.categoryAccounts
                         .find { it.name == defaultFoodAccountName }!!
@@ -164,7 +187,7 @@ Enter selection: """,
                 }
                 application.budgetDao.load().asClue { budgetData: BudgetData ->
                     budgetData.categoryAccounts shouldContain budgetData.generalAccount
-                    budgetData.generalAccount.balance shouldBe BigDecimal(5000 - 400).setScale(2)
+                    budgetData.generalAccount.balance shouldBe BigDecimal(5200 - 400).setScale(2)
                     budgetData.categoryAccounts.size shouldBe 10
                     budgetData.categoryAccounts
                         .find { it.name == defaultFoodAccountName }!!
@@ -190,49 +213,49 @@ Enter selection: """,
                 |I.e., let the user decide on a predetermined amount that will be transferred to each category fund account each month.
                 |For some category fund accounts the user may prefer to bring the balance up to a certain amount each month.""".trimMargin(),
                     "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
- 1. CategoryAccount('Education', 0.00)
- 2. CategoryAccount('Entertainment', 0.00)
- 3. CategoryAccount('Food', 0.00)
- 4. CategoryAccount('Medical', 0.00)
- 5. CategoryAccount('Necessities', 0.00)
- 6. CategoryAccount('Network', 0.00)
- 7. CategoryAccount('Transportation', 0.00)
- 8. CategoryAccount('Travel', 0.00)
- 9. CategoryAccount('Work', 0.00)
- 10. Back
- 11. Quit
+ 1.       0.00 | Education
+ 2.       0.00 | Entertainment
+ 3.       0.00 | Food
+ 4.       0.00 | Medical
+ 5.       0.00 | Necessities
+ 6.       0.00 | Network
+ 7.       0.00 | Transportation
+ 8.       0.00 | Travel
+ 9.       0.00 | Work
+10. Back
+11. Quit
 """,
                     "Enter selection: ",
-                    "Enter the amount to allocate into ${application.budgetData.categoryAccounts[2].name} (0.00 - 5000.00]: ",
+                    "Enter the amount to allocate into ${application.budgetData.categoryAccounts[2].name} (0.00 - 5200.00]: ",
                     "Enter description of transaction:  [allowance] ",
                     "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
- 1. CategoryAccount('Education', 0.00)
- 2. CategoryAccount('Entertainment', 0.00)
- 3. CategoryAccount('Food', 0.00)
- 4. CategoryAccount('Medical', 0.00)
- 5. CategoryAccount('Necessities', 0.00)
- 6. CategoryAccount('Network', 0.00)
- 7. CategoryAccount('Transportation', 0.00)
- 8. CategoryAccount('Travel', 0.00)
- 9. CategoryAccount('Work', 0.00)
- 10. Back
- 11. Quit
+ 1.       0.00 | Education
+ 2.       0.00 | Entertainment
+ 3.     300.00 | Food
+ 4.       0.00 | Medical
+ 5.       0.00 | Necessities
+ 6.       0.00 | Network
+ 7.       0.00 | Transportation
+ 8.       0.00 | Travel
+ 9.       0.00 | Work
+10. Back
+11. Quit
 """,
                     "Enter selection: ",
-                    "Enter the amount to allocate into ${application.budgetData.categoryAccounts[5].name} (0.00 - 4700.00]: ",
+                    "Enter the amount to allocate into ${application.budgetData.categoryAccounts[5].name} (0.00 - 4900.00]: ",
                     "Enter description of transaction:  [allowance] ",
                     "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
- 1. CategoryAccount('Education', 0.00)
- 2. CategoryAccount('Entertainment', 0.00)
- 3. CategoryAccount('Food', 0.00)
- 4. CategoryAccount('Medical', 0.00)
- 5. CategoryAccount('Necessities', 0.00)
- 6. CategoryAccount('Network', 0.00)
- 7. CategoryAccount('Transportation', 0.00)
- 8. CategoryAccount('Travel', 0.00)
- 9. CategoryAccount('Work', 0.00)
- 10. Back
- 11. Quit
+ 1.       0.00 | Education
+ 2.       0.00 | Entertainment
+ 3.     300.00 | Food
+ 4.       0.00 | Medical
+ 5.     100.00 | Necessities
+ 6.       0.00 | Network
+ 7.       0.00 | Transportation
+ 8.       0.00 | Travel
+ 9.       0.00 | Work
+10. Back
+11. Quit
 """,
                     "Enter selection: ",
                 )
@@ -312,16 +335,16 @@ Enter selection: """,
                     Transaction
                         .Builder(
                             description = "groceries",
-                            timestamp = OffsetDateTime.now(),
+                            timestamp = Instant.now(),
                         )
                         .apply {
-                            categoryItems.add(
+                            categoryItemBuilders.add(
                                 Transaction.ItemBuilder(
                                     -amount,
                                     categoryAccount = application.budgetData.categoryAccounts.find { it.name == defaultFoodAccountName }!!,
                                 ),
                             )
-                            draftItems.add(
+                            draftItemBuilders.add(
                                 Transaction.ItemBuilder(
                                     amount,
                                     draftAccount = application.budgetData.draftAccounts.find { it.name == defaultCheckingDraftsAccountName }!!,
@@ -370,16 +393,16 @@ Enter selection: """,
                 val amount = BigDecimal("100.00")
                 val writeCheck: Transaction = Transaction.Builder(
                     description = "groceries",
-                    timestamp = OffsetDateTime.now(),
+                    timestamp = Instant.now(),
                 )
                     .apply {
-                        realItems.add(
+                        realItemBuilders.add(
                             Transaction.ItemBuilder(
                                 -amount,
                                 realAccount = application.budgetData.realAccounts.find { it.name == defaultCheckingAccountName }!!,
                             ),
                         )
-                        draftItems.add(
+                        draftItemBuilders.add(
                             Transaction.ItemBuilder(
                                 -amount,
                                 draftAccount = application.budgetData.draftAccounts.find { it.name == defaultCheckingDraftsAccountName }!!,
