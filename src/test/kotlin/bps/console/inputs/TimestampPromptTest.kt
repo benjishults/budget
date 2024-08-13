@@ -30,7 +30,7 @@ class TimestampPromptTest : FreeSpec() {
             ZonedDateTime.of(LocalDateTime.parse("2024-08-09T00:00:00"), ZoneId.of("America/Chicago"))
 
         var subject = TimestampPrompt(
-            "Enter the time income was received: ",
+            "Use current time (Y/n)? ",
             TimeZone.getTimeZone("America/Chicago"),
             inputReader,
             outPrinter,
@@ -39,13 +39,13 @@ class TimestampPromptTest : FreeSpec() {
         "run prompt accepting default in America/Chicago" {
             inputs.add("")
             subject.getResult() shouldBe now.toInstant()
-            outputs shouldContainExactly listOf("Enter the time income was received:  [now] ")
+            outputs shouldContainExactly listOf("Use current time (Y/n)?  [Y] ")
         }
         "run prompt with inputs America/Chicago" {
             inputs.addAll(listOf("n", "2024", "8", "9", "0", "0", "0"))
             subject.getResult() shouldBe now.toInstant()
             outputs shouldContainExactly listOf(
-                "Enter the time income was received:  [now] ",
+                "Use current time (Y/n)?  [Y] ",
                 "         year:  [2024] ",
                 "   month (1-12):  [8] ",
                 "   day of month:  [9] ",
@@ -57,7 +57,7 @@ class TimestampPromptTest : FreeSpec() {
         now =
             ZonedDateTime.of(LocalDateTime.parse("2024-08-09T00:00:00"), ZoneId.of("America/Los_Angeles"))
         subject = TimestampPrompt(
-            "Enter the time income was received: ",
+            "Use current time (Y/n)? ",
             TimeZone.getTimeZone("America/Los_Angeles"),
             inputReader,
             outPrinter,
@@ -66,13 +66,13 @@ class TimestampPromptTest : FreeSpec() {
         "run prompt accepting default in America/Los_Angeles" {
             inputs.add("")
             subject.getResult() shouldBe now.toInstant()
-            outputs shouldContainExactly listOf("Enter the time income was received:  [now] ")
+            outputs shouldContainExactly listOf("Use current time (Y/n)?  [Y] ")
         }
         "run prompt with inputs in America/Los_Angeles" {
             inputs.addAll(listOf("n", "2024", "8", "9", "0", "0", "0"))
             subject.getResult() shouldBe now.toInstant()
             outputs shouldContainExactly listOf(
-                "Enter the time income was received:  [now] ",
+                "Use current time (Y/n)?  [Y] ",
                 "         year:  [2024] ",
                 "   month (1-12):  [8] ",
                 "   day of month:  [9] ",

@@ -6,11 +6,20 @@ import bps.console.io.InputReader
 import bps.console.io.OutPrinter
 
 interface SimplePrompt<T> : Prompt<T> {
+    // TODO specify that this shouldn't contain ending spaces or punctuation and make it so
     val basicPrompt: String
     val inputReader: InputReader
     val outPrinter: OutPrinter
+
+    /**
+     * returns `true` if the input is acceptable
+     */
     val validate: (String) -> Boolean
         get() = { it.isNotBlank() }
+
+    /**
+     * transforms valid input into an instance of [T].
+     */
     val transformer: (String) -> T
 
     fun outputPrompt() =
@@ -24,13 +33,14 @@ interface SimplePrompt<T> : Prompt<T> {
     override fun getResult(): T {
         outputPrompt()
         return transformer(
-            inputReader().let {
-                if (validate(it))
-                    it
-                else {
-                    return actionOnInvalid(it)
-                }
-            },
+            inputReader()
+                .let { input: String ->
+                    if (validate(input))
+                        input
+                    else {
+                        return actionOnInvalid(input)
+                    }
+                },
         )
     }
 

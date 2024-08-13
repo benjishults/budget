@@ -149,7 +149,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(), BasicAccountsTestFixture {
                     "Enter selection: ",
                     "Enter the amount of income: ",
                     "Enter description of income:  [income] ",
-                    "Enter the time income was received:  [now] ",
+                    "Use current time (Y/n)?  [Y] ",
                     """
                         |Select account receiving the income:
                         | 1.   5,000.00 | Checking
@@ -160,7 +160,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(), BasicAccountsTestFixture {
                     "Enter selection: ",
                     "Enter the amount of income: ",
                     "Enter description of income:  [income] ",
-                    "Enter the time income was received:  [now] ",
+                    "Use current time (Y/n)?  [Y] ",
                     """
                         |Select account receiving the income:
                         | 1.   5,000.00 | Checking

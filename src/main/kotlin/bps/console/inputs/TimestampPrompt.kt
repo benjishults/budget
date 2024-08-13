@@ -17,16 +17,15 @@ class TimestampPrompt(
     now: ZonedDateTime = ZonedDateTime.now(timeZone.toZoneId()),
 ) : SimplePromptWithDefault<Instant>(
     basicPrompt,
-    "now",
+    "Y",
     inputReader,
     outPrinter,
-    transformer = { acceptDefault ->
+    transformer = { acceptDefault: String ->
         when (acceptDefault) {
-            "now", "" -> {
+            "Y", "y", "" -> {
                 now.toInstant()
             }
             else -> {
-//                LocalDateTime.now(timeZone.toZoneId())
                 RecursivePrompt(
                     listOf(
                         SimplePromptWithDefault(

@@ -263,7 +263,7 @@ private fun AllMenus.recordIncomeSelectionMenu(
         )
             .getResult()
     val timestamp: Instant =
-        TimestampPrompt("Enter the time income was received: ", budgetData.timeZone, inputReader, outPrinter)
+        TimestampPrompt("Use current time (Y/n)? ", budgetData.timeZone, inputReader, outPrinter)
             .getResult()
     val income: Transaction = Transaction.Builder(description, timestamp)
         .apply {
