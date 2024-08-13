@@ -6,17 +6,17 @@ import bps.budget.model.CategoryAccount
 import bps.budget.model.Transaction
 import bps.budget.model.defaultGeneralAccountName
 import bps.budget.persistence.BudgetDao
-import bps.console.io.InputReader
-import bps.console.io.OutPrinter
+import bps.console.SimpleConsoleIoTestFixture
 import io.kotest.core.spec.style.FreeSpec
 
-class TransactionsMenuTest : FreeSpec() {
+class TransactionsMenuTest : FreeSpec(),
+    SimpleConsoleIoTestFixture {
+
+    override val inputs: MutableList<String> = mutableListOf()
+    override val outputs: MutableList<String> = mutableListOf()
 
     init {
-        val outputs: MutableList<String> = mutableListOf()
-        val outPrinter = OutPrinter { outputs.add(it) }
-        val inputs: MutableList<String> = mutableListOf()
-        val inputReader = InputReader { inputs.removeFirst() }
+        clearInputsAndOutputsBeforeEach()
 
         val fetchTransactionsCallsExpected = mutableMapOf<Pair<Int, Long>, List<Transaction>>()
         val fetchTransactionsCallsMade = mutableListOf<Pair<Int, Long>>()

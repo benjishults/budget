@@ -1,7 +1,5 @@
 package bps.console
 
-import bps.console.io.InputReader
-import bps.console.io.OutPrinter
 import bps.console.menu.Menu
 import bps.console.menu.MenuApplicationWithQuit
 import bps.console.menu.popMenuItem
@@ -12,14 +10,14 @@ import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 
-class MenuTest : FreeSpec() {
+class MenuTest : FreeSpec(),
+    SimpleConsoleIoTestFixture {
 
+    override val inputs: MutableList<String> = mutableListOf()
+    override val outputs: MutableList<String> = mutableListOf()
 
     init {
-        val outputs: MutableList<String> = mutableListOf()
-        val outPrinter: OutPrinter = OutPrinter { outputs.add(it) }
-        val inputs: MutableList<String> = mutableListOf()
-        val inputReader: InputReader = InputReader { inputs.removeFirst() }
+        clearInputsAndOutputsBeforeEach()
         "basic" {
             val bottomMenu: Menu =
                 Menu("bottom") {

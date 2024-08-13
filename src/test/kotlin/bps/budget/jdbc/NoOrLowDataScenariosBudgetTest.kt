@@ -11,29 +11,19 @@ import bps.budget.recordSpending
 import bps.budget.setup
 import bps.budget.transfer
 import bps.budget.ui.ConsoleUiFacade
-import bps.console.io.InputReader
-import bps.console.io.OutPrinter
+import bps.console.SimpleConsoleIoTestFixture
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 
-class NoOrLowDataScenariosBudgetTest : FreeSpec() {
+class NoOrLowDataScenariosBudgetTest : FreeSpec(),
+    SimpleConsoleIoTestFixture {
 
+    override val inputs: MutableList<String> = mutableListOf()
+    override val outputs: MutableList<String> = mutableListOf()
 
     init {
-        val outputs: MutableList<String> = mutableListOf()
-        val outPrinter = OutPrinter {
-            outputs.add(it)
-        }
-        val inputs: MutableList<String> = mutableListOf()
-        val inputReader = InputReader {
-            inputs.removeFirst()
-        }
-        beforeEach {
-            inputs.clear()
-            outputs.clear()
-        }
-
+        clearInputsAndOutputsBeforeEach()
         val configurations = BudgetConfigurations(sequenceOf("noDataJdbc.yml"))
         "!budget with no starting data saves general account to db" {
             inputs.addAll(

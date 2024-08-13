@@ -1,20 +1,19 @@
 package bps.console
 
 import bps.console.inputs.SelectionPrompt
-import bps.console.io.InputReader
-import bps.console.io.OutPrinter
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 
-class SelectionPromptTest : FreeSpec() {
+class SelectionPromptTest : FreeSpec(),
+    SimpleConsoleIoTestFixture {
+
+    override val inputs: MutableList<String> = mutableListOf()
+    override val outputs: MutableList<String> = mutableListOf()
 
     init {
-        val outputs: MutableList<String> = mutableListOf()
-        val outPrinter = OutPrinter { outputs.add(it) }
-        val inputs: MutableList<String> = mutableListOf()
-        val inputReader = InputReader { inputs.removeFirst() }
+        clearInputsAndOutputsBeforeEach()
         "basic" {
             inputs.add("3")
             val selectionPrompt = SelectionPrompt(

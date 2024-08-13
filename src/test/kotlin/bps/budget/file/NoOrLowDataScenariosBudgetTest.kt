@@ -15,8 +15,7 @@ import bps.budget.setup
 import bps.budget.transfer
 import bps.budget.ui.ConsoleUiFacade
 import bps.config.convertToPath
-import bps.console.io.InputReader
-import bps.console.io.OutPrinter
+import bps.console.SimpleConsoleIoTestFixture
 import bps.console.menu.MenuApplicationWithQuit
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContainExactly
@@ -24,22 +23,14 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import java.io.File
 
-class NoOrLowDataScenariosBudgetTest : FreeSpec() {
+class NoOrLowDataScenariosBudgetTest : FreeSpec(),
+    SimpleConsoleIoTestFixture {
+
+    override val outputs: MutableList<String> = mutableListOf()
+    override val inputs: MutableList<String> = mutableListOf()
 
     init {
-        val outputs: MutableList<String> = mutableListOf()
-        val outPrinter = OutPrinter {
-            outputs.add(it)
-        }
-        val inputs: MutableList<String> = mutableListOf()
-        val inputReader = InputReader {
-            inputs.removeFirst()
-        }
-        beforeEach {
-            inputs.clear()
-            outputs.clear()
-        }
-
+        clearInputsAndOutputsBeforeEach()
         "!budget with no starting data saves account.yml" {
             inputs.addAll(
                 listOf("", "", "9"),

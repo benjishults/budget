@@ -21,8 +21,7 @@ import bps.budget.model.defaultWalletAccountName
 import bps.budget.model.defaultWorkAccountName
 import bps.budget.persistence.jdbc.JdbcDao
 import bps.budget.ui.ConsoleUiFacade
-import bps.console.io.InputReader
-import bps.console.io.OutPrinter
+import bps.console.ComplexConsoleIoTestFixture
 import io.kotest.assertions.asClue
 import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FreeSpec
@@ -31,68 +30,21 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicReference
 import kotlin.concurrent.thread
 
-class BudgetApplicationTransactionsTest : FreeSpec(), BasicAccountsTestFixture {
+class BudgetApplicationTransactionsTest : FreeSpec(),
+    BasicAccountsTestFixture,
+    ComplexConsoleIoTestFixture {
 
     override val jdbcDao = JdbcDao(configurations.persistence.jdbc!!)
-
-    // NOTE these allow to pause the application between tests.  This was needed so that I wouldn't have to
-    //      quit the application (closing the JDBC connection) between tests.
-    //      When the application is paused, it will stop before printing any more input.
-    val paused = AtomicBoolean(false)
-    val waitForUnPause = AtomicReference(CountDownLatch(0))
-
-    // NOTE waitForPause before validation to allow the application to finish processing and get to the point of making
-    //      more output so that validation happens after processing.
-    val waitForPause = AtomicReference(CountDownLatch(1))
-
-    private fun pause() {
-        check(!paused.get()) { "already paused" }
-        waitForUnPause.set(CountDownLatch(1))
-        paused.set(true)
-        waitForPause.get().countDown()
-    }
-
-    private fun unPause() {
-        check(paused.get()) { "not paused" }
-        waitForPause.set(CountDownLatch(1))
-        paused.set(false)
-        waitForUnPause.get().countDown()
-    }
-
-    // NOTE the thread clearing this is not the thread that adds to it
-    val inputs = CopyOnWriteArrayList<String>()
-    val inputReader = InputReader {
-        inputs.removeFirst()
-    }
-
-    // NOTE the thread clearing this is not the thread that adds to it
-    val outputs = CopyOnWriteArrayList<String>()
-
-    // NOTE when the inputs is empty, the application will pause itself
-    val outPrinter = OutPrinter {
-        if (inputs.isEmpty()) {
-            pause()
-        }
-        if (paused.get())
-            waitForUnPause.get().await()
-        outputs.add(it)
-    }
+    override val helper: ComplexConsoleIoTestFixture.Helper = ComplexConsoleIoTestFixture.Helper()
 
     init {
+        clearInputsAndOutputsBeforeEach()
         createBasicAccountsBeforeSpec()
         resetBalancesAndTransactionAfterSpec()
         closeJdbcAfterSpec()
 
-        beforeEach {
-            inputs.clear()
-            outputs.clear()
-        }
         val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
         "run application with data from DB" - {
             val application = BudgetApplication(
@@ -110,7 +62,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(), BasicAccountsTestFixture {
                     listOf("1", "1", "5000", "", "", "2", "200", "", "", "3"),
                 )
                 unPause()
-                waitForPause.get().await()
+                waitForPause()
                 application.budgetData.asClue { budgetData: BudgetData ->
                     budgetData.categoryAccounts shouldContain budgetData.generalAccount
                     budgetData.generalAccount.balance shouldBe BigDecimal(5200).setScale(2)
@@ -176,7 +128,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(), BasicAccountsTestFixture {
                     listOf("2", "3", "300", "", "5", "100", "", "10"),
                 )
                 unPause()
-                waitForPause.get().await()
+                waitForPause()
                 application.budgetData.asClue { budgetData: BudgetData ->
                     budgetData.categoryAccounts shouldContain budgetData.generalAccount
                     budgetData.generalAccount.balance shouldBe BigDecimal(5200 - 400).setScale(2)
@@ -265,7 +217,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(), BasicAccountsTestFixture {
                     listOf("4", "1", "300", "", "9"),
                 )
                 unPause()
-                waitForPause.get().await()
+                waitForPause()
                 application.budgetData.asClue { budgetData: BudgetData ->
                     budgetData.categoryAccounts shouldContain budgetData.generalAccount
                     budgetData.generalAccount.balance shouldBe BigDecimal(5000 - 300).setScale(2)
@@ -422,6 +374,7 @@ Enter selection: """,
             }
         }
     }
+
 
 }
 

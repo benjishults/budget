@@ -4,8 +4,7 @@ import bps.budget.jdbc.NoDataJdbcTestFixture
 import bps.budget.model.BudgetData
 import bps.budget.persistence.jdbc.JdbcDao
 import bps.budget.ui.ConsoleUiFacade
-import bps.console.io.InputReader
-import bps.console.io.OutPrinter
+import bps.console.SimpleConsoleIoTestFixture
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContain
@@ -14,23 +13,16 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import java.util.TimeZone
 
-class BasicSetupInteractionsTest : FreeSpec(), NoDataJdbcTestFixture {
+class BasicSetupInteractionsTest : FreeSpec(),
+    NoDataJdbcTestFixture,
+    SimpleConsoleIoTestFixture {
 
     override val jdbcDao = JdbcDao(configurations.persistence.jdbc!!)
+    override val inputs: MutableList<String> = mutableListOf()
+    override val outputs: MutableList<String> = mutableListOf()
 
     init {
-        val outputs: MutableList<String> = mutableListOf()
-        val outPrinter = OutPrinter {
-            outputs.add(it)
-        }
-        val inputs: MutableList<String> = mutableListOf()
-        val inputReader = InputReader {
-            inputs.removeFirst()
-        }
-        beforeEach {
-            inputs.clear()
-            outputs.clear()
-        }
+        clearInputsAndOutputsBeforeEach()
         dropAllBeforeEach()
         closeJdbcAfterSpec()
         "setup basic data through console ui" {
