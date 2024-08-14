@@ -20,14 +20,14 @@ open class MenuApplicationWithQuit(
 
     override fun run() {
         while (true) {
-            try {
+            try { // TODO move this out of while
                 menuSession.current()
                     .let { currentMenu: Menu ->
-                        currentMenu.print(outPrinter)
+                        val items = currentMenu.print(outPrinter)
                         inputReader()
                             .toIntOrNull()
                             ?.let {
-                                currentMenu.items.getOrNull(it - 1)
+                                items.getOrNull(it - 1)
                                     ?.action
                                     ?.invoke(menuSession)
                                 // TODO add an optional error message

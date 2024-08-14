@@ -1,7 +1,7 @@
 package bps.budget.model
 
+import kotlinx.datetime.Instant
 import java.math.BigDecimal
-import java.time.Instant
 import java.util.UUID
 
 class Transaction private constructor(

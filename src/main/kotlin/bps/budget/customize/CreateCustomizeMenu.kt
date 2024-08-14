@@ -4,7 +4,6 @@ import bps.budget.AllMenus
 import bps.budget.persistence.files.CategoryAccountConfig
 import bps.console.inputs.RecursivePrompt
 import bps.console.inputs.SimplePrompt
-import bps.console.inputs.SimplePromptWithDefault
 import bps.console.menu.Menu
 import bps.console.menu.backItem
 import bps.console.menu.quitItem
@@ -19,7 +18,7 @@ val AllMenus.customizeMenu: Menu
                         RecursivePrompt(
                             listOf(
                                 SimplePrompt<String>("Name of category: ", inputReader, outPrinter),
-                                SimplePromptWithDefault("Description", "\"\"", inputReader, outPrinter),
+                                SimplePrompt("Description: ", inputReader, outPrinter),
                             ),
                         ) { inputs: List<*> ->
                             CategoryAccountConfig(inputs[0] as String, inputs[1] as String)

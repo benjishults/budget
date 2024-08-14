@@ -21,6 +21,8 @@ import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import java.io.File
 
 class NoOrLowDataScenariosBudgetTest : FreeSpec(),
@@ -31,6 +33,11 @@ class NoOrLowDataScenariosBudgetTest : FreeSpec(),
 
     init {
         clearInputsAndOutputsBeforeEach()
+        val clock = object : Clock {
+            var secondCount = 0
+            override fun now(): Instant =
+                Instant.parse(String.format("2024-08-09T00:00:%02dZ", secondCount++))
+        }
         "!budget with no starting data saves account.yml" {
             inputs.addAll(
                 listOf("", "", "9"),
@@ -80,6 +87,7 @@ Enter the name for your "General" account [General] """,
             val budgetMenu = menus.budgetMenu(
                 budgetDataFactory(uiFunctions, budgetDao),
                 budgetDao,
+                clock,
             )
             MenuApplicationWithQuit(budgetMenu, inputReader, outPrinter)
                 .use {
@@ -116,6 +124,7 @@ Enter the name for your "General" account [General] """,
             val budgetMenu = menus.budgetMenu(
                 budgetDataFactory(uiFunctions, budgetDao),
                 budgetDao,
+                clock,
             )
             MenuApplicationWithQuit(budgetMenu, inputReader, outPrinter)
                 .use {

@@ -18,8 +18,8 @@ class TransactionsMenuTest : FreeSpec(),
     init {
         clearInputsAndOutputsBeforeEach()
 
-        val fetchTransactionsCallsExpected = mutableMapOf<Pair<Int, Long>, List<Transaction>>()
-        val fetchTransactionsCallsMade = mutableListOf<Pair<Int, Long>>()
+        val fetchTransactionsCallsExpected = mutableMapOf<Pair<Int, Int>, List<Transaction>>()
+        val fetchTransactionsCallsMade = mutableListOf<Pair<Int, Int>>()
 
         val selectedAccount = CategoryAccount(
             name = "Test Category Account",
@@ -33,7 +33,7 @@ class TransactionsMenuTest : FreeSpec(),
                 account: Account,
                 data: BudgetData,
                 limit: Int,
-                offset: Long,
+                offset: Int,
             ): List<Transaction> {
                 fetchTransactionsCallsMade.add(limit to offset)
                 return fetchTransactionsCallsExpected[limit to offset] ?: emptyList()

@@ -8,9 +8,10 @@ import bps.jdbc.transactOrNull
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import java.sql.Timestamp
-import java.time.Instant
-import java.util.TimeZone
 
 class TimeZoneTest : FreeSpec(), BasicJdbcTestFixture, JdbcFixture {
 
@@ -71,8 +72,8 @@ class TimeZoneTest : FreeSpec(), BasicJdbcTestFixture, JdbcFixture {
                                         timestampUtc.toString() shouldBe timestampWithTimezone.toString()
                                         println("$label2: $timestampUtc")
                                         val localDateTime = timestampUtc
-                                            .toLocalDateTime(TimeZone.getTimeZone("America/Chicago"))
-                                        localDateTime shouldBe now.toLocalDateTime(TimeZone.getTimeZone("America/Chicago"))
+                                            .toLocalDateTime(TimeZone.of("America/Chicago"))
+                                        localDateTime shouldBe now.toLocalDateTime(TimeZone.of("America/Chicago"))
                                         localDateTime.toString() shouldStartWith nowAmericaChicago
                                     }
                             }

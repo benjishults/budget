@@ -31,7 +31,6 @@ const val defaultNecessitiesAccountDescription = "Soap, light bulbs, etc."
 const val defaultCheckingDraftsAccountName = "Checking Drafts"
 const val defaultCheckingDraftsAccountDescription = "Records checks being written or clearing."
 
-
 sealed class Account(
     override var name: String,
     override var description: String = "",
@@ -47,6 +46,20 @@ sealed class Account(
 
     override fun toString(): String {
         return "Account('$name', $balance)"
+    }
+
+    override fun equals(other: Any?): Boolean =
+        if (this === other)
+            true
+        else if (other !is Account)
+            false
+        else if (id != other.id)
+            false
+        else
+            true
+
+    override fun hashCode(): Int {
+        return id.hashCode()
     }
 
 }

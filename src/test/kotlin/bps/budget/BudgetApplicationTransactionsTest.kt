@@ -28,16 +28,16 @@ import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import java.math.BigDecimal
-import java.time.Instant
 import kotlin.concurrent.thread
 
 class BudgetApplicationTransactionsTest : FreeSpec(),
     BasicAccountsTestFixture,
-    ComplexConsoleIoTestFixture {
+    ComplexConsoleIoTestFixture by ComplexConsoleIoTestFixture() {
 
     override val jdbcDao = JdbcDao(configurations.persistence.jdbc!!)
-    override val helper: ComplexConsoleIoTestFixture.Helper = ComplexConsoleIoTestFixture.Helper()
 
     init {
         clearInputsAndOutputsBeforeEach()
@@ -46,14 +46,23 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
         closeJdbcAfterSpec()
 
         val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
+
+        val clock = object : Clock {
+            var secondCount = 0
+            override fun now(): Instant =
+                Instant.parse(String.format("2024-08-09T00:00:%02d.500Z", secondCount++))
+        }
+
         "run application with data from DB" - {
+            Thread.currentThread().name = "Main Test Thread"
             val application = BudgetApplication(
                 uiFunctions,
                 configurations,
                 inputReader,
                 outPrinter,
+                clock,
             )
-            thread {
+            thread(name = "Test Application Thread") {
                 application.run()
             }
             "record income" {
@@ -100,8 +109,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |""".trimMargin(),
                     "Enter selection: ",
                     "Enter the amount of income: ",
-                    "Enter description of income:  [income] ",
-                    "Use current time (Y/n)?  [Y] ",
+                    "Enter description of income [income]: ",
+                    "Use current time [Y]? ",
                     """
                         |Select account receiving the income:
                         | 1.   5,000.00 | Checking
@@ -111,8 +120,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |""".trimMargin(),
                     "Enter selection: ",
                     "Enter the amount of income: ",
-                    "Enter description of income:  [income] ",
-                    "Use current time (Y/n)?  [Y] ",
+                    "Enter description of income [income]: ",
+                    "Use current time [Y]? ",
                     """
                         |Select account receiving the income:
                         | 1.   5,000.00 | Checking
@@ -179,7 +188,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 """,
                     "Enter selection: ",
                     "Enter the amount to allocate into ${application.budgetData.categoryAccounts[2].name} (0.00 - 5200.00]: ",
-                    "Enter description of transaction:  [allowance] ",
+                    "Enter description of transaction [allowance]: ",
                     "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
  1.       0.00 | Education
  2.       0.00 | Entertainment
@@ -195,7 +204,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 """,
                     "Enter selection: ",
                     "Enter the amount to allocate into ${application.budgetData.categoryAccounts[5].name} (0.00 - 4900.00]: ",
-                    "Enter description of transaction:  [allowance] ",
+                    "Enter description of transaction [allowance]: ",
                     "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
  1.       0.00 | Education
  2.       0.00 | Entertainment
@@ -210,6 +219,56 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 11. Quit
 """,
                     "Enter selection: ",
+                )
+            }
+            "view transactions" {
+                inputs.addAll(listOf("4", "1", ""))
+                unPause()
+                waitForPause()
+                outputs shouldContainExactly listOf(
+                    """
+                            |Budget!
+                            | 1. $recordIncome
+                            | 2. $makeAllowances
+                            | 3. $recordSpending
+                            | 4. $viewHistory
+                            | 5. $recordDrafts
+                            | 6. $clearDrafts
+                            | 7. $transfer
+                            | 8. $setup
+                            | 9. Quit
+                            |""".trimMargin(),
+                    "Enter selection: ",
+                    """Select account to view history
+ 1.   4,800.00 | General
+ 2.       0.00 | Education
+ 3.       0.00 | Entertainment
+ 4.     300.00 | Food
+ 5.       0.00 | Medical
+ 6.     100.00 | Necessities
+ 7.       0.00 | Network
+ 8.       0.00 | Transportation
+ 9.       0.00 | Travel
+10.       0.00 | Work
+11.   5,000.00 | Checking
+12.     200.00 | Wallet
+13.       0.00 | Checking Drafts
+14. Back
+15. Quit
+""",
+                    "Enter selection: ",
+                    """
+                        |CategoryAccount('General', 4800.00) Transactions
+                        |    Time Stamp          | Balance    | Description
+                        | 1. 2024-08-08 19:00:00 |   5,000.00 | income
+                        | 2. 2024-08-08 19:00:01 |     200.00 | income
+                        | 3. 2024-08-08 19:00:02 |    -300.00 | allowance
+                        | 4. 2024-08-08 19:00:03 |    -100.00 | allowance
+                        | 5. Next Items
+                        | 6. Back
+                        | 7. Quit
+                        |""".trimMargin(),
+                    "Select transaction for details: ",
                 )
             }
             "!write a check to SuperMarket" {
@@ -266,7 +325,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
  9. CategoryAccount('Work', 0.00)
 Enter selection: """,
                     "Enter the amount to allocate into ${application.budgetData.categoryAccounts[2].name} (0.00 - 5000.00]: ",
-                    "Enter description of transaction:  [allowance] ",
+                    "Enter description of transaction [allowance]: ",
                     """
                             |Budget!
                             | 1. $recordIncome
@@ -287,7 +346,7 @@ Enter selection: """,
                     Transaction
                         .Builder(
                             description = "groceries",
-                            timestamp = Instant.now(),
+                            timestamp = clock.now(),
                         )
                         .apply {
                             categoryItemBuilders.add(
@@ -345,7 +404,7 @@ Enter selection: """,
                 val amount = BigDecimal("100.00")
                 val writeCheck: Transaction = Transaction.Builder(
                     description = "groceries",
-                    timestamp = Instant.now(),
+                    timestamp = clock.now(),
                 )
                     .apply {
                         realItemBuilders.add(

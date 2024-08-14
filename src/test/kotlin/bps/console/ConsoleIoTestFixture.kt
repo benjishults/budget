@@ -41,10 +41,10 @@ interface SimpleConsoleIoTestFixture {
 }
 
 /**
- * This fixture allows the application to pause between tests.  This allows the JDBC connection to remain
- * open between tests.
+ * This fixture allows the application to pause between tests (allowing the JDBC connection to remain
+ * open between tests).
  * The application will pause automatically
- * * after [inputs] is empty
+ * * when [inputs] is empty
  * * just prior to printing the next output
  * After re-populating the [inputs]
  * list, you can unpause the application by calling [unPause].
@@ -52,6 +52,23 @@ interface SimpleConsoleIoTestFixture {
  * After calling [unPause], the application will resume and run through the new inputs.
  * You will want to immediately call [waitForPause] so that the application will run through your inputs
  * prior to validating the results.
+ *
+ * Usage:
+ *
+ * ```kotlin
+ *             // beginning of each test looks something like this:
+ *                 // populate list of inputs for test
+ *                 inputs.addAll(
+ *                     listOf("2", "3", "300", "", "5", "100", "", "10"),
+ *                 )
+ *                 // unpause to allow the application to run through these inputs
+ *                 unPause()
+ *                 // wait for the application to run through those inputs before beginning validation of results
+ *                 waitForPause()
+ *                 // validations...
+ *                 outputs shouldContainExactly listOf( /* ... */ )
+ *
+ * ```
  */
 interface ComplexConsoleIoTestFixture : SimpleConsoleIoTestFixture {
 
@@ -60,9 +77,14 @@ interface ComplexConsoleIoTestFixture : SimpleConsoleIoTestFixture {
     /** Call [waitForPause] before validation to allow the application to finish processing.  The application will
      * pause automatically when the [inputs] list is emptied.
      */
-    fun waitForPause() = helper.waitForPause.get().await()
+    fun waitForPause() =
+        helper
+            .waitForPause
+            .get()
+            .await()
 
-    fun unPause() = helper.unPause()
+    fun unPause() =
+        helper.unPause()
 
     override val outputs: MutableList<String>
         get() = helper.outputs
@@ -73,9 +95,17 @@ interface ComplexConsoleIoTestFixture : SimpleConsoleIoTestFixture {
     override val outPrinter: OutPrinter
         get() = helper.outPrinter
 
+    companion object {
+        operator fun invoke(): ComplexConsoleIoTestFixture {
+            return object : ComplexConsoleIoTestFixture {
+                override val helper: Helper = Helper()
+            }
+        }
+    }
+
     class Helper {
 
-        private val paused = AtomicBoolean(false)
+        private val paused = AtomicBoolean(true)
         private val waitForUnPause = AtomicReference(CountDownLatch(0))
 
         // NOTE waitForPause before validation to allow the application to finish processing and get to the point of making
@@ -83,7 +113,6 @@ interface ComplexConsoleIoTestFixture : SimpleConsoleIoTestFixture {
         val waitForPause = AtomicReference(CountDownLatch(1))
 
         private fun pause() {
-            check(!paused.get()) { "already paused" }
             waitForUnPause.set(CountDownLatch(1))
             paused.set(true)
             waitForPause.get().countDown()

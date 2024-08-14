@@ -11,7 +11,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import java.util.TimeZone
+import kotlinx.datetime.TimeZone
 
 class BasicSetupInteractionsTest : FreeSpec(),
     NoDataJdbcTestFixture,
@@ -49,14 +49,14 @@ class BasicSetupInteractionsTest : FreeSpec(),
                 }
             outputs shouldContainExactly listOf(
                 "Looks like this is your first time running Budget.\n",
-                "Select the time-zone you want dates to appear in:  [${TimeZone.getDefault().id}] ",
-                "Would you like me to set up some standard accounts?  You can always change them later.  [Y] ",
+                "Select the time-zone you want dates to appear in [${TimeZone.currentSystemDefault().id}]: ",
+                "Would you like me to set up some standard accounts?  You can always change and rename them later. [Y] ",
                 """
                     |You'll be able to rename these accounts and create new accounts later,
                     |but please answer a couple of questions as we get started.
                     |""".trimMargin(),
-                "How much do you currently have in account 'Checking'? (this is any account on which you are able to write checks)  [0.00] ",
-                "How much do you currently have in account 'Wallet'? (this is cash you might carry on your person)  [0.00] ",
+                "How much do you currently have in account 'Checking' [0.00]? ",
+                "How much do you currently have in account 'Wallet' [0.00]? ",
                 "saving that data...\n",
                 """
                     |Saved

@@ -7,27 +7,24 @@ import bps.console.io.OutPrinter
 
 open class SimplePromptWithDefault<T>(
     override val basicPrompt: String,
-    val defaultValue: String,
+    val defaultValue: T,
     override val inputReader: InputReader = DefaultInputReader,
     override val outPrinter: OutPrinter = DefaultOutPrinter,
-    override val validate: (String) -> Boolean = { true },
+    override val validate: (String) -> Boolean =
+        {
+            false
+        },
     @Suppress("UNCHECKED_CAST")
-    override val transformer: (String) -> T = { it as T },
+    override val transformer: (String) -> T =
+        {
+            it as T
+        },
 ) : SimplePrompt<T> {
 
     override fun actionOnInvalid(input: String): T =
         if (input.isBlank())
-            transformer(defaultValue)
+            defaultValue
         else
-            super.actionOnInvalid(input)
-
-//    override fun readInput(): String =
-//        super.readInput()
-//            .let {
-//                it.ifBlank { defaultValue }
-//            }
-
-    override fun outputPrompt() =
-        outPrinter("$basicPrompt [$defaultValue] ")
+            transformer(input)
 
 }

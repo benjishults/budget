@@ -23,7 +23,7 @@ interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
         account: Account,
         data: BudgetData,
         limit: Int = 30,
-        offset: Long = 0L,
+        offset: Int = 0,
     ): List<Transaction> =
         emptyList()
 

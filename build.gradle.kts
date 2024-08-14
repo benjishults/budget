@@ -40,6 +40,7 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql:42.7.3")
     implementation("io.github.nhubbard:konf:$konfVersion")
     implementation("org.apache.commons:commons-csv:1.11.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")

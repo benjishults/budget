@@ -10,8 +10,8 @@ import bps.console.io.DefaultInputReader
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
+import kotlinx.datetime.TimeZone
 import java.math.BigDecimal
-import java.util.TimeZone
 
 interface UiFacade {
     fun createGeneralAccount(budgetDao: BudgetDao): CategoryAccount
@@ -31,14 +31,14 @@ class ConsoleUiFacade(
         budgetDao.prepForFirstSave()
         return RecursivePrompt(
             listOf(
-                SimplePromptWithDefault<String>(
-                    "Enter the name for your \"General\" account",
+                SimplePromptWithDefault(
+                    "Enter the name for your \"General\" account [$defaultGeneralAccountName]: ",
                     defaultGeneralAccountName,
                     inputReader,
                     outPrinter,
                 ),
                 SimplePromptWithDefault(
-                    """Enter the description for your "General" account""".trimMargin(),
+                    "Enter the description for your \"General\" account [$defaultGeneralAccountDescription]: ",
                     defaultGeneralAccountDescription,
                     inputReader,
                     outPrinter,
@@ -53,9 +53,10 @@ class ConsoleUiFacade(
 
     override fun userWantsBasicAccounts(): Boolean =
         SimplePromptWithDefault(
-            """
-            |Would you like me to set up some standard accounts?  You can always change them later. """.trimMargin(),
-            "Y", inputReader, outPrinter,
+            "Would you like me to set up some standard accounts?  You can always change and rename them later. [Y] ",
+            true,
+            inputReader,
+            outPrinter,
         )
         { it == "Y" || it == "y" || it.isBlank() }
             .getResult()
@@ -66,8 +67,8 @@ class ConsoleUiFacade(
 
     override fun getInitialBalance(account: String, description: String): BigDecimal =
         SimplePromptWithDefault(
-            "How much do you currently have in account '$account'? ($description) ",
-            "0.00",
+            "How much do you currently have in account '$account' [0.00]? ",
+            BigDecimal.ZERO.setScale(2),
             inputReader,
             outPrinter,
         ) { BigDecimal(it).setScale(2) }
@@ -75,11 +76,11 @@ class ConsoleUiFacade(
 
     override fun getDesiredTimeZone(): TimeZone =
         SimplePromptWithDefault(
-            "Select the time-zone you want dates to appear in: ",
-            TimeZone.getDefault().id,
+            "Select the time-zone you want dates to appear in [${TimeZone.currentSystemDefault().id}]: ",
+            TimeZone.currentSystemDefault(),
             inputReader,
             outPrinter,
-        ) { TimeZone.getTimeZone(it) }
+        ) { TimeZone.of(it) }
             .getResult()
 
     override fun info(infoMessage: String) {

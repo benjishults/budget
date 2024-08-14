@@ -1,14 +1,14 @@
 package bps.jdbc
 
 import bps.budget.persistence.jdbc.toLocalDateTime
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
 import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Timestamp
-import java.time.Instant
-import java.time.LocalDateTime
-import java.util.TimeZone
 
 // TODO since I want to use an inline function here, probably better if this isn't an interface
 interface JdbcFixture : AutoCloseable {
@@ -22,7 +22,7 @@ interface JdbcFixture : AutoCloseable {
     }
 
     fun PreparedStatement.setTimestamp(parameterIndex: Int, timestamp: Instant) {
-        setTimestamp(parameterIndex, Timestamp(timestamp.toEpochMilli()))
+        setTimestamp(parameterIndex, Timestamp(timestamp.toEpochMilliseconds()))
     }
 
     fun ResultSet.getLocalDateTimeForTimeZone(timeZone: TimeZone): LocalDateTime =

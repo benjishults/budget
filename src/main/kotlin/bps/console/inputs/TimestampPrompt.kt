@@ -4,63 +4,64 @@ import bps.console.io.DefaultInputReader
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZonedDateTime
-import java.util.TimeZone
+import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 class TimestampPrompt(
     basicPrompt: String,
     timeZone: TimeZone,
+    clock: Clock = Clock.System,
     inputReader: InputReader = DefaultInputReader,
     outPrinter: OutPrinter = DefaultOutPrinter,
-    now: ZonedDateTime = ZonedDateTime.now(timeZone.toZoneId()),
-) : SimplePromptWithDefault<Instant>(
-    basicPrompt,
-    "Y",
-    inputReader,
-    outPrinter,
+    now: LocalDateTime = clock.now().toLocalDateTime(timeZone),
+) : SimplePromptWithDefault<LocalDateTime>(
+    basicPrompt = basicPrompt,
+    defaultValue = now,
+    inputReader = inputReader,
+    outPrinter = outPrinter,
     transformer = { acceptDefault: String ->
         when (acceptDefault) {
             "Y", "y", "" -> {
-                now.toInstant()
+                now
             }
             else -> {
                 RecursivePrompt(
                     listOf(
                         SimplePromptWithDefault(
-                            "         year: ",
-                            now.year.toString(),
+                            "         year [${now.year}]: ",
+                            now.year,
                             inputReader,
                             outPrinter,
                         ) { it.toInt() },
                         SimplePromptWithDefault(
-                            "   month (1-12): ",
-                            now.month.value.toString(),
+                            "   month (1-12) [${now.month.value}]: ",
+                            now.month.value,
                             inputReader,
                             outPrinter,
                         ) { it.toInt() },
                         SimplePromptWithDefault(
-                            "   day of month: ",
-                            now.dayOfMonth.toString(),
+                            "   day of month [${now.dayOfMonth}]: ",
+                            now.dayOfMonth,
                             inputReader,
                             outPrinter,
                         ) { it.toInt() },
                         SimplePromptWithDefault(
-                            "hour (24-clock): ",
-                            now.hour.toString(),
+                            "hour (24-clock) [${now.hour}]: ",
+                            now.hour,
                             inputReader,
                             outPrinter,
                         ) { it.toInt() },
                         SimplePromptWithDefault(
-                            " minute of hour: ",
-                            now.minute.toString(),
+                            " minute of hour [${now.minute}]: ",
+                            now.minute,
                             inputReader,
                             outPrinter,
                         ) { it.toInt() },
                         SimplePromptWithDefault(
-                            "         second: ",
-                            now.second.toString(),
+                            "         second [${now.second}]: ",
+                            now.second,
                             inputReader,
                             outPrinter,
                         ) { it.toInt() },
@@ -77,7 +78,6 @@ class TimestampPrompt(
                             entries[5],
                         ),
                     )
-                        .toInstantForTimeZone(timeZone)
                 }
                     .getResult()
             }
@@ -85,7 +85,7 @@ class TimestampPrompt(
     },
 )
 
-fun LocalDateTime.toInstantForTimeZone(timeZone: TimeZone): Instant =
-    ZonedDateTime
-        .of(this, timeZone.toZoneId())
-        .toInstant()
+//fun LocalDateTime.toInstantForTimeZone(timeZone: TimeZone): Instant =
+//    ZonedDateTime
+//        .of(this, timeZone.toZoneId())
+//        .toInstant()

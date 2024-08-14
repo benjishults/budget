@@ -24,8 +24,8 @@ import bps.budget.ui.ConsoleUiFacade
 import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
+import kotlinx.datetime.Clock
 import java.math.BigDecimal
-import java.time.Instant
 
 class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
 
@@ -35,6 +35,11 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
         createBasicAccountsBeforeSpec()
         closeJdbcAfterSpec()
 
+        val clock = object : Clock {
+            var secondCount = 0
+            override fun now(): kotlinx.datetime.Instant =
+                kotlinx.datetime.Instant.parse(String.format("2024-08-09T00:00:%02dZ", secondCount++))
+        }
         "with data from config" - {
             val uiFunctions = ConsoleUiFacade()
             val budgetData = budgetDataFactory(uiFunctions, jdbcDao)
@@ -44,7 +49,7 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                     Transaction
                         .Builder(
                             description = "income",
-                            timestamp = Instant.now(),
+                            timestamp = clock.now(),
                         )
                         .apply {
                             categoryItemBuilders.add(
@@ -73,7 +78,7 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                     Transaction
                         .Builder(
                             description = "allocate",
-                            timestamp = Instant.now(),
+                            timestamp = clock.now(),
                         )
                         .apply {
                             categoryItemBuilders.addAll(
@@ -99,7 +104,7 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                 val amount = BigDecimal("100.00")
                 val writeCheck: Transaction = Transaction.Builder(
                     description = "groceries",
-                    timestamp = Instant.now(),
+                    timestamp = clock.now(),
                 )
                     .apply {
                         categoryItemBuilders.add(
@@ -161,7 +166,7 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                 val amount = BigDecimal("100.00")
                 val writeCheck: Transaction = Transaction.Builder(
                     description = "groceries",
-                    timestamp = Instant.now(),
+                    timestamp = clock.now(),
                 )
                     .apply {
                         realItemBuilders.add(

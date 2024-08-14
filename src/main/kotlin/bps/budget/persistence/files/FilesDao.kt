@@ -13,8 +13,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import io.github.nhubbard.konf.source.LoadException
 import io.github.nhubbard.konf.toValue
+import kotlinx.datetime.TimeZone
 import java.io.FileWriter
-import java.util.TimeZone
 import kotlin.io.path.Path
 
 /**
@@ -56,7 +56,7 @@ class FilesDao(
         )
     }
 
-    override fun fetchTransactions(account: Account, data: BudgetData, limit: Int, offset: Long): List<Transaction> {
+    override fun fetchTransactions(account: Account, data: BudgetData, limit: Int, offset: Int): List<Transaction> {
         TODO("Not yet implemented")
     }
 
@@ -67,7 +67,7 @@ class FilesDao(
         val categoryAccounts = category.map(CategoryAccountConfig::toCategoryAccount)
         val realAccounts = real.map(RealAccountConfig::toRealAccount)
         return BudgetData(
-            timeZone = TimeZone.getDefault(),  // NOTE fix this
+            timeZone = TimeZone.currentSystemDefault(),  // NOTE fix this
             generalAccount = categoryAccounts.find { it.id == generalAccountId }!!,
             categoryAccounts = categoryAccounts,
             realAccounts = realAccounts,

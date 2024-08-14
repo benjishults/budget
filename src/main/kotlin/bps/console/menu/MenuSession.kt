@@ -2,13 +2,19 @@ package bps.console.menu
 
 class MenuSession(val topLevelMenu: Menu) {
 
-    private val stack: MutableList<Menu> = mutableListOf()
+    private val stack: MutableList<Menu> =
+        mutableListOf()
 
-    fun push(menu: Menu) = stack.add(menu)
+    fun push(menu: Menu) =
+        stack.add(menu)
 
-    fun popOrNull(): Menu? = stack.removeFirstOrNull()
+    fun popOrNull(): Menu? =
+        stack.removeLastOrNull()
 
-    fun current(): Menu = stack.firstOrNull() ?: topLevelMenu
+    fun current(): Menu =
+        stack
+            .lastOrNull()
+            ?: topLevelMenu
 
 //    class Builder {
 //        var topLevelMenu: Menu? = null

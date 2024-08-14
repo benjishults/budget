@@ -1,7 +1,7 @@
 package bps.budget.model
 
+import kotlinx.datetime.TimeZone
 import java.math.BigDecimal
-import java.util.TimeZone
 import java.util.UUID
 
 /**
@@ -115,7 +115,7 @@ class BudgetData(
 
         @JvmStatic
         fun withBasicAccounts(
-            timeZone: TimeZone = TimeZone.getDefault(),
+            timeZone: TimeZone = TimeZone.currentSystemDefault(),
             checkingBalance: BigDecimal = BigDecimal.ZERO.setScale(2),
             walletBalance: BigDecimal = BigDecimal.ZERO.setScale(2),
             generalAccountId: UUID? = null,

@@ -15,7 +15,6 @@ interface SimplePrompt<T> : Prompt<T> {
      * returns `true` if the input is acceptable
      */
     val validate: (String) -> Boolean
-        get() = { it.isNotBlank() }
 
     /**
      * transforms valid input into an instance of [T].
@@ -47,14 +46,18 @@ interface SimplePrompt<T> : Prompt<T> {
     @Suppress("UNCHECKED_CAST")
     companion object {
         operator fun <T> invoke(
-            prompt: String,
+            basicPrompt: String,
             inputReader: InputReader = DefaultInputReader,
             outPrinter: OutPrinter = DefaultOutPrinter,
-            validate: (String) -> Boolean = { it.isNotBlank() },
-            transformer: (String) -> T = { it as T },
+            validate: (String) -> Boolean = {
+                it.isNotBlank()
+            },
+            transformer: (String) -> T = {
+                it as T
+            },
         ) =
             object : SimplePrompt<T> {
-                override val basicPrompt: String = prompt
+                override val basicPrompt: String = basicPrompt
                 override val inputReader: InputReader = inputReader
                 override val outPrinter: OutPrinter = outPrinter
                 override val transformer: (String) -> T = transformer
