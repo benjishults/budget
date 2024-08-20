@@ -1,6 +1,7 @@
 package bps.budget
 
-import bps.budget.jdbc.BasicAccountsTestFixture
+import bps.budget.auth.User
+import bps.budget.jdbc.BasicAccountsJdbcTestFixture
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftAccount
@@ -19,6 +20,7 @@ import bps.budget.model.defaultTransportationAccountName
 import bps.budget.model.defaultTravelAccountName
 import bps.budget.model.defaultWalletAccountName
 import bps.budget.model.defaultWorkAccountName
+import bps.budget.persistence.getBudgetNameFromPersistenceConfig
 import bps.budget.persistence.jdbc.JdbcDao
 import bps.budget.ui.ConsoleUiFacade
 import bps.console.ComplexConsoleIoTestFixture
@@ -31,18 +33,25 @@ import io.kotest.matchers.shouldBe
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
+import java.util.UUID
 import kotlin.concurrent.thread
 
 class BudgetApplicationTransactionsTest : FreeSpec(),
-    BasicAccountsTestFixture,
+    BasicAccountsJdbcTestFixture,
     ComplexConsoleIoTestFixture by ComplexConsoleIoTestFixture() {
 
     override val jdbcDao = JdbcDao(configurations.persistence.jdbc!!)
 
     init {
+        val budgetId: UUID = UUID.fromString("89bc165a-ee70-43a4-b637-2774bcfc3ea4")
         clearInputsAndOutputsBeforeEach()
-        createBasicAccountsBeforeSpec()
-        resetBalancesAndTransactionAfterSpec()
+        val userId = UUID.fromString("f0f209c8-1b1e-43b3-8799-2dba58524d02")
+        createBasicAccountsBeforeSpec(
+            budgetId = budgetId,
+            budgetName = getBudgetNameFromPersistenceConfig(configurations.persistence)!!,
+            user = User(userId, configurations.user.defaultLogin!!),
+        )
+        resetBalancesAndTransactionAfterSpec(budgetId)
         closeJdbcAfterSpec()
 
         val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
@@ -54,7 +63,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
         }
 
         "run application with data from DB" - {
-            Thread.currentThread().name = "Main Test Thread"
+//            Thread.currentThread().name = "Test Thread"
             val application = BudgetApplication(
                 uiFunctions,
                 configurations,
@@ -77,7 +86,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     budgetData.generalAccount.balance shouldBe BigDecimal(5200).setScale(2)
                     budgetData.categoryAccounts.size shouldBe 10
                 }
-                application.budgetDao.load().asClue { budgetData: BudgetData ->
+                application.budgetDao.load(application.budgetData.id, userId).asClue { budgetData: BudgetData ->
                     budgetData.categoryAccounts shouldContain budgetData.generalAccount
                     budgetData.generalAccount.balance shouldBe BigDecimal(5200).setScale(2)
                     budgetData.categoryAccounts.size shouldBe 10
@@ -109,7 +118,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |""".trimMargin(),
                     "Enter selection: ",
                     "Enter the amount of income: ",
-                    "Enter description of income [income]: ",
+                    "Enter description of income [income into $defaultCheckingAccountName]: ",
                     "Use current time [Y]? ",
                     """
                         |Select account receiving the income:
@@ -120,7 +129,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |""".trimMargin(),
                     "Enter selection: ",
                     "Enter the amount of income: ",
-                    "Enter description of income [income]: ",
+                    "Enter description of income [income into $defaultWalletAccountName]: ",
                     "Use current time [Y]? ",
                     """
                         |Select account receiving the income:
@@ -146,7 +155,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         .find { it.name == defaultFoodAccountName }!!
                         .balance shouldBe BigDecimal(300).setScale(2)
                 }
-                application.budgetDao.load().asClue { budgetData: BudgetData ->
+                application.budgetDao.load(application.budgetData.id, userId).asClue { budgetData: BudgetData ->
                     budgetData.categoryAccounts shouldContain budgetData.generalAccount
                     budgetData.generalAccount.balance shouldBe BigDecimal(5200 - 400).setScale(2)
                     budgetData.categoryAccounts.size shouldBe 10
@@ -188,7 +197,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 """,
                     "Enter selection: ",
                     "Enter the amount to allocate into ${application.budgetData.categoryAccounts[2].name} (0.00 - 5200.00]: ",
-                    "Enter description of transaction [allowance]: ",
+                    "Enter description of transaction [allowance into $defaultFoodAccountName]: ",
                     "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
  1.       0.00 | Education
  2.       0.00 | Entertainment
@@ -204,7 +213,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 """,
                     "Enter selection: ",
                     "Enter the amount to allocate into ${application.budgetData.categoryAccounts[5].name} (0.00 - 4900.00]: ",
-                    "Enter description of transaction [allowance]: ",
+                    "Enter description of transaction [allowance into $defaultNecessitiesAccountName]: ",
                     "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
  1.       0.00 | Education
  2.       0.00 | Entertainment
@@ -260,10 +269,10 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     """
                         |CategoryAccount('General', 4800.00) Transactions
                         |    Time Stamp          | Balance    | Description
-                        | 1. 2024-08-08 19:00:00 |   5,000.00 | income
-                        | 2. 2024-08-08 19:00:01 |     200.00 | income
-                        | 3. 2024-08-08 19:00:02 |    -300.00 | allowance
-                        | 4. 2024-08-08 19:00:03 |    -100.00 | allowance
+                        | 1. 2024-08-08 19:00:00 |   5,000.00 | income into $defaultCheckingAccountName
+                        | 2. 2024-08-08 19:00:01 |     200.00 | income into $defaultWalletAccountName
+                        | 3. 2024-08-08 19:00:02 |    -300.00 | allowance into $defaultFoodAccountName
+                        | 4. 2024-08-08 19:00:03 |    -100.00 | allowance into $defaultNecessitiesAccountName
                         | 5. Next Items
                         | 6. Back
                         | 7. Quit
@@ -285,7 +294,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         .find { it.name == defaultFoodAccountName }!!
                         .balance shouldBe BigDecimal(300).setScale(2)
                 }
-                application.budgetDao.load().asClue { budgetData: BudgetData ->
+                application.budgetDao.load(application.budgetData.id, userId).asClue { budgetData: BudgetData ->
                     budgetData.categoryAccounts shouldContain budgetData.generalAccount
                     budgetData.generalAccount.balance shouldBe BigDecimal(5000 - 300).setScale(2)
                     budgetData.categoryAccounts.size shouldBe 10
@@ -325,7 +334,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
  9. CategoryAccount('Work', 0.00)
 Enter selection: """,
                     "Enter the amount to allocate into ${application.budgetData.categoryAccounts[2].name} (0.00 - 5000.00]: ",
-                    "Enter description of transaction [allowance]: ",
+                    "Enter description of transaction [allowance into $defaultFoodAccountName]: ",
                     """
                             |Budget!
                             | 1. $recordIncome
@@ -364,7 +373,7 @@ Enter selection: """,
                         }
                         .build()
                 application.budgetData.commit(writeCheck)
-                jdbcDao.commit(writeCheck)
+                jdbcDao.commit(writeCheck, application.budgetData.id)
             }
             "!check balances after writing check" {
                 application.budgetData.realAccounts.forEach { realAccount: RealAccount ->
@@ -423,13 +432,13 @@ Enter selection: """,
                     }
                     .build()
                 application.budgetData.commit(writeCheck)
-                jdbcDao.commit(writeCheck)
+                jdbcDao.commit(writeCheck, application.budgetData.id)
             }
             "!check balances after check clears" {
                 checkBalancesAfterCheckClears(application.budgetData)
             }
             "!check balances in DB" {
-                checkBalancesAfterCheckClears(jdbcDao.load())
+                checkBalancesAfterCheckClears(jdbcDao.load(application.budgetData.id, userId))
             }
         }
     }

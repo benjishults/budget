@@ -10,9 +10,9 @@ open class SimplePromptWithDefault<T>(
     val defaultValue: T,
     override val inputReader: InputReader = DefaultInputReader,
     override val outPrinter: OutPrinter = DefaultOutPrinter,
-    override val validate: (String) -> Boolean =
+    final override val validate: (String) -> Boolean =
         {
-            false
+            it.isNotBlank()
         },
     @Suppress("UNCHECKED_CAST")
     override val transformer: (String) -> T =

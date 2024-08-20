@@ -9,17 +9,19 @@ import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Timestamp
+import java.sql.Types.OTHER
+import java.util.UUID
 
 // TODO since I want to use an inline function here, probably better if this isn't an interface
-interface JdbcFixture : AutoCloseable {
-    val connection: Connection
-
-    /**
-     * Closes the connection.
-     */
-    override fun close() {
-        connection.close()
-    }
+interface JdbcFixture {
+//    val connection: Connection
+//
+//    /**
+//     * Closes the connection.
+//     */
+//    override fun close() {
+//        connection.close()
+//    }
 
     fun PreparedStatement.setTimestamp(parameterIndex: Int, timestamp: Instant) {
         setTimestamp(parameterIndex, Timestamp(timestamp.toEpochMilliseconds()))
@@ -35,15 +37,13 @@ interface JdbcFixture : AutoCloseable {
     fun ResultSet.getCurrencyAmount(name: String): BigDecimal =
         getBigDecimal(name).setScale(2)
 
-    companion object {
-        operator fun invoke(connection: Connection) =
-            object : JdbcFixture {
-                override val connection: Connection = connection
-                override fun close() {
-                    connection.close()
-                }
-            }
-    }
+    fun ResultSet.getUuid(name: String): UUID =
+        getObject(name, UUID::class.java)
+
+    fun PreparedStatement.setUuid(parameterIndex: Int, uuid: UUID) =
+        setObject(parameterIndex, uuid, OTHER)
+
+    companion object : JdbcFixture
 
 }
 
@@ -65,7 +65,7 @@ inline fun <T : Any> Connection.transactOrThrow(
  */
 inline fun <T : Any> Connection.transactOrNull(
     onRollback: (Exception) -> T? = { throw it },
-    block: Connection.() -> T,
+    block: Connection.() -> T?,
 ): T? =
     try {
         block()

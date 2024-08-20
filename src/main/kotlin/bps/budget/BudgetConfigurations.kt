@@ -1,12 +1,14 @@
 package bps.budget
 
 import bps.budget.persistence.PersistenceConfiguration
+import bps.budget.persistence.UserConfiguration
 import bps.config.ConfigurationHelper
 import io.github.nhubbard.konf.Config
 import io.github.nhubbard.konf.toValue
 
 interface BudgetConfigurations {
     val persistence: PersistenceConfiguration
+    val user: UserConfiguration
     val config: Config
 
     companion object {
@@ -22,6 +24,10 @@ interface BudgetConfigurations {
                 override val persistence: PersistenceConfiguration =
                     config
                         .at("persistence")
+                        .toValue()
+                override val user: UserConfiguration =
+                    config
+                        .at("budgetUser")
                         .toValue()
 
                 override fun toString(): String =

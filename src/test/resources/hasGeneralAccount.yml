@@ -2,3 +2,8 @@ persistence:
   type: FILE
   file:
     dataDirectory: hasGeneralAccount
+    budgetName: File-Configured General Account Test
+
+budgetUser:
+  defaultLogin: test@test.com
+#  defaultBudgetName: General Account Test

@@ -1,24 +1,34 @@
 package bps.budget.persistence
 
+import bps.budget.auth.User
 import bps.budget.model.Account
 import bps.budget.model.BudgetData
 import bps.budget.model.Transaction
+import java.util.UUID
 
 /**
- * @param C the [BudgetConfigLookup] type determining how the data is found in the first place.
+ * @param C the [BudgetConfig] type determining how the data is found in the first place.
  */
 interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
 //    val config: C
 
+    fun getUserByLogin(login: String): User? = null
+    fun createUser(login: String, password: String): UUID =
+        UUID.randomUUID()
+
+    fun prepForFirstLoad() {}
+
     /**
      * @throws DataConfigurationException if data isn't found.
      */
-    fun load(): BudgetData = TODO()
-    fun commit(transaction: Transaction) {}
-    fun save(data: BudgetData) {}
-    fun deleteAccount(account: Account) {}
+    fun load(budgetId: UUID, userId: UUID): BudgetData = TODO()
     fun prepForFirstSave() {}
-    fun prepForFirstLoad() {}
+    fun save(data: BudgetData, user: User) {}
+    fun commit(transaction: Transaction, budgetId: UUID) {}
+    fun deleteAccount(account: Account) {}
+    fun deleteBudget(budgetId: UUID) {}
+    fun deleteUser(userId: UUID) {}
+    fun deleteUserByLogin(login: String) {}
     fun fetchTransactions(
         account: Account,
         data: BudgetData,

@@ -13,7 +13,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import java.sql.Timestamp
 
-class TimeZoneTest : FreeSpec(), BasicJdbcTestFixture, JdbcFixture {
+class TimeZoneTest : FreeSpec(), BaseJdbcTestFixture, JdbcFixture {
 
     override val configurations: BudgetConfigurations = BudgetConfigurations(sequenceOf("noDataJdbc.yml"))
     override val jdbcDao = JdbcDao(configurations.persistence.jdbc!!)

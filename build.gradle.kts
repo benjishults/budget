@@ -37,6 +37,10 @@ dependencies {
 //    implementation("io.github.config4k:config4k:0.7.0")
 //    implementation("io.github.nhubbard:konf-core:$konfVersion")
 //    implementation("io.github.nhubbard:konf-yaml:$konfVersion")
+    // password hashing https://javadoc.io/doc/de.mkammerer/argon2-jvm/2.6/de/mkammerer/argon2/Argon2.html
+    //   https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#argon2id
+//    implementation("de.mkammerer:argon2-jvm:2.11")
+    implementation("commons-validator:commons-validator:1.9.0")
     runtimeOnly("org.postgresql:postgresql:42.7.3")
     implementation("io.github.nhubbard:konf:$konfVersion")
     implementation("org.apache.commons:commons-csv:1.11.0")

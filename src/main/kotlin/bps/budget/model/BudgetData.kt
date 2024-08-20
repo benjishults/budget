@@ -5,9 +5,11 @@ import java.math.BigDecimal
 import java.util.UUID
 
 /**
- * Currently not thread safe to add or delete accounts.
+ * Currently not thread safe to add or delete accounts.  So, just be sure to use only a "main" thread.
  */
 class BudgetData(
+    val id: UUID,
+    val name: String,
     val timeZone: TimeZone,
     val generalAccount: CategoryAccount,
     categoryAccounts: List<CategoryAccount>,
@@ -23,6 +25,10 @@ class BudgetData(
 
     var draftAccounts: List<DraftAccount> = draftAccounts.sortedBy { it.name }
         private set
+
+    init {
+        require(generalAccount in categoryAccounts) { "general account must be among category accounts" }
+    }
 
     private val byId: MutableMap<UUID, Account> =
         (categoryAccounts + realAccounts + draftAccounts)
@@ -115,10 +121,12 @@ class BudgetData(
 
         @JvmStatic
         fun withBasicAccounts(
+            budgetName: String,
             timeZone: TimeZone = TimeZone.currentSystemDefault(),
             checkingBalance: BigDecimal = BigDecimal.ZERO.setScale(2),
             walletBalance: BigDecimal = BigDecimal.ZERO.setScale(2),
             generalAccountId: UUID? = null,
+            budgetId: UUID? = null,
         ): BudgetData {
             val checkingAccount = RealAccount(
                 name = defaultCheckingAccountName,
@@ -137,9 +145,11 @@ class BudgetData(
                 balance = walletBalance,
             )
             return BudgetData(
-                timeZone,
-                generalAccount,
-                listOf(
+                id = budgetId ?: UUID.randomUUID(),
+                name = budgetName,
+                timeZone = timeZone,
+                generalAccount = generalAccount,
+                categoryAccounts = listOf(
                     generalAccount,
                     CategoryAccount(defaultNecessitiesAccountName, defaultNecessitiesAccountDescription),
                     CategoryAccount(defaultFoodAccountName, defaultFoodAccountDescription),
@@ -151,11 +161,11 @@ class BudgetData(
                     CategoryAccount(defaultTravelAccountName, defaultTravelAccountDescription),
                     CategoryAccount(defaultWorkAccountName, defaultWorkAccountDescription),
                 ),
-                listOf(
+                realAccounts = listOf(
                     wallet,
                     checkingAccount,
                 ),
-                listOf(
+                draftAccounts = listOf(
                     DraftAccount(
                         name = defaultCheckingDraftsAccountName,
                         description = defaultCheckingDraftsAccountDescription,

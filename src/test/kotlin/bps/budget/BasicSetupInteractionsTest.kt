@@ -27,7 +27,7 @@ class BasicSetupInteractionsTest : FreeSpec(),
         closeJdbcAfterSpec()
         "setup basic data through console ui" {
             inputs.addAll(
-                listOf("", "y", "2000", "100", "9"),
+                listOf("test@test.com", "", "y", "2000", "100", "9"),
             )
             val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
             BudgetApplication(
@@ -42,12 +42,15 @@ class BasicSetupInteractionsTest : FreeSpec(),
                         budgetData.categoryAccounts shouldContain budgetData.generalAccount
                         budgetData.categoryAccounts.size shouldBe 10
                     }
-                    application.budgetDao.load().asClue { budgetData: BudgetData ->
-                        budgetData.categoryAccounts shouldContain budgetData.generalAccount
-                        budgetData.categoryAccounts.size shouldBe 10
-                    }
+                    application.budgetDao.load(application.budgetData.id, application.user.id)
+                        .asClue { budgetData: BudgetData ->
+                            budgetData.categoryAccounts shouldContain budgetData.generalAccount
+                            budgetData.categoryAccounts.size shouldBe 10
+                        }
                 }
             outputs shouldContainExactly listOf(
+                "username: ",
+                "Unknown user.  Creating new account.",
                 "Looks like this is your first time running Budget.\n",
                 "Select the time-zone you want dates to appear in [${TimeZone.currentSystemDefault().id}]: ",
                 "Would you like me to set up some standard accounts?  You can always change and rename them later. [Y] ",

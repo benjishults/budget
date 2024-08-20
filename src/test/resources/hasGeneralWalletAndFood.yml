@@ -2,3 +2,7 @@ persistence:
   type: FILE
   file:
     dataDirectory: hasGeneralWalletAndFood
+    budgetName: File-Configured Basic Accounts Test
+budgetUser:
+  defaultLogin: test@test.com
+#  defaultBudgetName: Basic Accounts Test

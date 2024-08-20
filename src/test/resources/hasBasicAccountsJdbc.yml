@@ -5,7 +5,8 @@ persistence:
     schema: test
     user: test
     password: test
-    budgetName: test with basic accounts
+    budgetName: Basic Accounts Test
     host: localhost
-  file:
-    dataDirectory: hasGeneralWalletAndFood
+budgetUser:
+  defaultLogin: test@test.com
+#  defaultBudgetName: Basic Accounts Test

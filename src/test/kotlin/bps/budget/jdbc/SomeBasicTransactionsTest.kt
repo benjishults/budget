@@ -1,5 +1,6 @@
 package bps.budget.jdbc
 
+import bps.budget.auth.User
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftAccount
@@ -18,21 +19,28 @@ import bps.budget.model.defaultTransportationAccountName
 import bps.budget.model.defaultTravelAccountName
 import bps.budget.model.defaultWalletAccountName
 import bps.budget.model.defaultWorkAccountName
-import bps.budget.persistence.budgetDataFactory
+import bps.budget.persistence.getBudgetNameFromPersistenceConfig
 import bps.budget.persistence.jdbc.JdbcDao
-import bps.budget.ui.ConsoleUiFacade
+import bps.budget.persistence.loadBudgetData
 import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.Clock
 import java.math.BigDecimal
+import java.util.UUID
 
-class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
+class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
 
     override val jdbcDao = JdbcDao(configurations.persistence.jdbc!!)
 
     init {
-        createBasicAccountsBeforeSpec()
+        val budgetId: UUID = UUID.fromString("89bc165a-ee70-43a4-b637-2774bcfc3ea4")
+        val userId: UUID = UUID.fromString("f0f209c8-1b1e-43b3-8799-2dba58524d02")
+        createBasicAccountsBeforeSpec(
+            budgetId,
+            getBudgetNameFromPersistenceConfig(configurations.persistence)!!,
+            User(userId, configurations.user.defaultLogin!!),
+        )
         closeJdbcAfterSpec()
 
         val clock = object : Clock {
@@ -41,14 +49,18 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                 kotlinx.datetime.Instant.parse(String.format("2024-08-09T00:00:%02dZ", secondCount++))
         }
         "with data from config" - {
-            val uiFunctions = ConsoleUiFacade()
-            val budgetData = budgetDataFactory(uiFunctions, jdbcDao)
+//            val uiFunctions = ConsoleUiFacade()
+            val budgetData = loadBudgetData(
+                user = jdbcDao.getUserByLogin(configurations.user.defaultLogin!!)!!,
+                budgetDao = jdbcDao,
+                budgetName = getBudgetNameFromPersistenceConfig(configurations.persistence)!!,
+            )
             "record income" {
                 val amount = BigDecimal("1000.00")
                 val income: Transaction =
                     Transaction
                         .Builder(
-                            description = "income",
+                            description = "income into $defaultCheckingAccountName",
                             timestamp = clock.now(),
                         )
                         .apply {
@@ -70,14 +82,14 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                         }
                         .build()
                 budgetData.commit(income)
-                jdbcDao.commit(income)
+                jdbcDao.commit(income, budgetData.id)
             }
             "allocate to food" {
                 val amount = BigDecimal("300.00")
                 val allocate: Transaction =
                     Transaction
                         .Builder(
-                            description = "allocate",
+                            description = "allocate into $defaultFoodAccountName",
                             timestamp = clock.now(),
                         )
                         .apply {
@@ -98,7 +110,7 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                         }
                         .build()
                 budgetData.commit(allocate)
-                jdbcDao.commit(allocate)
+                jdbcDao.commit(allocate, budgetData.id)
             }
             "write a check for food" {
                 val amount = BigDecimal("100.00")
@@ -126,7 +138,7 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                     }
                     .build()
                 budgetData.commit(writeCheck)
-                jdbcDao.commit(writeCheck)
+                jdbcDao.commit(writeCheck, budgetData.id)
             }
             "check balances after writing check" {
                 budgetData.realAccounts.forEach { realAccount: RealAccount ->
@@ -189,13 +201,13 @@ class SomeBasicTransactions : FreeSpec(), BasicAccountsTestFixture {
                     }
                     .build()
                 budgetData.commit(writeCheck)
-                jdbcDao.commit(writeCheck)
+                jdbcDao.commit(writeCheck, budgetData.id)
             }
             "check balances after check clears" {
                 checkBalancesAfterCheckClears(budgetData)
             }
             "check balances in DB" {
-                checkBalancesAfterCheckClears(jdbcDao.load())
+                checkBalancesAfterCheckClears(jdbcDao.load(budgetData.id, userId))
             }
         }
 

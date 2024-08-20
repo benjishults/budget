@@ -6,7 +6,7 @@ import bps.console.io.InputReader
 import bps.console.io.OutPrinter
 
 interface SelectionPrompt<T> : Prompt<T> {
-    val header: String
+    val header: String?
     val prompt: String
     val inputReader: InputReader
     val outPrinter: OutPrinter
@@ -16,7 +16,9 @@ interface SelectionPrompt<T> : Prompt<T> {
         outPrinter(
             options
                 .foldIndexed(
-                    StringBuilder("$header\n"),
+                    header
+                        ?.let { StringBuilder("$header\n") }
+                        ?: StringBuilder(""),
                 ) { index: Int, builder: StringBuilder, item: T ->
                     builder.append(String.format("%2d. $item\n", index + 1))
                 }
@@ -41,14 +43,14 @@ interface SelectionPrompt<T> : Prompt<T> {
 
     companion object {
         operator fun <T> invoke(
-            header: String,
+            header: String?,
             options: List<T>,
             prompt: String = "Enter selection: ",
             inputReader: InputReader = DefaultInputReader,
             outPrinter: OutPrinter = DefaultOutPrinter,
         ) =
             object : SelectionPrompt<T> {
-                override val header: String = header
+                override val header: String? = header
                 override val prompt: String = prompt
                 override val inputReader: InputReader = inputReader
                 override val outPrinter: OutPrinter = outPrinter

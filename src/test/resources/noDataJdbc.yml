@@ -9,3 +9,6 @@ persistence:
     host: localhost
   file:
     dataDirectory: src/test/resources/noDataJdbc
+
+#budgetUser: {}
+#  defaultLogin: test@test.com

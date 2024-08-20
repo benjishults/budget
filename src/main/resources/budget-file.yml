@@ -2,3 +2,4 @@ persistence:
   type: FILE
   file:
     dataDirectory: ~/.data/bps-budget
+    budgetName: Default File-Configured Budget

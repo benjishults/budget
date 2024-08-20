@@ -2,6 +2,7 @@
 
 package bps.budget
 
+import bps.budget.auth.User
 import bps.budget.customize.customizeMenu
 import bps.budget.model.Account
 import bps.budget.model.BudgetData
@@ -9,8 +10,9 @@ import bps.budget.model.CategoryAccount
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
-import bps.budget.persistence.budgetDaoBuilder
-import bps.budget.persistence.budgetDataFactory
+import bps.budget.persistence.buildBudgetDao
+import bps.budget.persistence.getBudgetNameFromPersistenceConfig
+import bps.budget.persistence.loadOrBuildBudgetData
 import bps.budget.transaction.ViewTransactionsMenu
 import bps.budget.ui.ConsoleUiFacade
 import bps.budget.ui.UiFacade
@@ -54,7 +56,8 @@ class BudgetApplication private constructor(
     outPrinter: OutPrinter,
     uiFacade: UiFacade,
     val budgetDao: BudgetDao,
-    val clock: Clock,
+    clock: Clock,
+    configurations: BudgetConfigurations,
 ) : AutoCloseable {
 
     constructor(
@@ -67,11 +70,23 @@ class BudgetApplication private constructor(
         inputReader,
         outPrinter,
         uiFacade,
-        budgetDaoBuilder(configurations.persistence),
+        buildBudgetDao(configurations.persistence),
         clock,
+        configurations,
     )
 
-    val budgetData: BudgetData = budgetDataFactory(uiFacade, budgetDao)
+    init {
+        budgetDao.prepForFirstLoad()
+    }
+
+    val user: User = uiFacade.login(budgetDao, configurations.user)
+    val budgetData: BudgetData = loadOrBuildBudgetData(
+        user = user,
+        uiFacade = uiFacade,
+        budgetDao = budgetDao,
+        budgetName = getBudgetNameFromPersistenceConfig(configurations.persistence) ?: uiFacade.getBudgetName(),
+    )
+
     private val menuApplicationWithQuit =
         MenuApplicationWithQuit(
             AllMenus(inputReader, outPrinter)
@@ -85,7 +100,7 @@ class BudgetApplication private constructor(
     }
 
     override fun close() {
-        budgetDao.save(budgetData)
+        budgetDao.save(budgetData, user)
         budgetDao.close()
         menuApplicationWithQuit.close()
     }
@@ -216,7 +231,7 @@ fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao, clock: Clo
                     menuSession.popOrNull()
                     val transaction = transactionBuilder.build()
                     budgetData.commit(transaction)
-                    budgetDao.commit(transaction)
+                    budgetDao.commit(transaction, budgetData.id)
                 },
             ) {
                 outPrinter(
@@ -364,8 +379,8 @@ private fun AllMenus.recordIncomeSelectionMenu(
             .getResult()
     val description =
         SimplePromptWithDefault(
-            "Enter description of income [income]: ",
-            defaultValue = "income",
+            "Enter description of income [income into ${realAccount.name}]: ",
+            defaultValue = "income into ${realAccount.name}",
             inputReader = inputReader,
             outPrinter = outPrinter,
         )
@@ -386,7 +401,7 @@ private fun AllMenus.recordIncomeSelectionMenu(
         }
         .build()
     budgetData.commit(income)
-    budgetDao.commit(income)
+    budgetDao.commit(income, budgetData.id)
 }
 
 private fun AllMenus.makeAllowancesSelectionMenu(
@@ -419,8 +434,8 @@ private fun AllMenus.makeAllowancesSelectionMenu(
             .getResult()
     val description =
         SimplePromptWithDefault(
-            "Enter description of transaction [allowance]: ",
-            defaultValue = "allowance",
+            "Enter description of transaction [allowance into ${selectedCategoryAccount.name}]: ",
+            defaultValue = "allowance into ${selectedCategoryAccount.name}",
             inputReader = inputReader,
             outPrinter = outPrinter,
         )
@@ -442,7 +457,7 @@ private fun AllMenus.makeAllowancesSelectionMenu(
         }
         .build()
     budgetData.commit(allocate)
-    budgetDao.commit(allocate)
+    budgetDao.commit(allocate, budgetData.id)
 }
 
 fun String.toCurrencyAmount(): BigDecimal? =

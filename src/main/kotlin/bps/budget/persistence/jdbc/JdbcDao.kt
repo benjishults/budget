@@ -1,5 +1,8 @@
 package bps.budget.persistence.jdbc
 
+import bps.budget.auth.BudgetAccess
+import bps.budget.auth.CoarseAccess
+import bps.budget.auth.User
 import bps.budget.model.Account
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
@@ -42,7 +45,7 @@ class JdbcDao(
         }?currentSchema=${URLEncoder.encode(config.schema, "utf-8")}"
 
     @Volatile
-    override var connection: Connection = startConnection()
+    var connection: Connection = startConnection()
         private set
     private val keepAliveSingleThreadScheduledExecutor = Executors
         .newSingleThreadScheduledExecutor()
@@ -77,17 +80,123 @@ class JdbcDao(
                 autoCommit = false
             }
 
+    override fun getUserByLogin(login: String): User? =
+        connection.transactOrNull {
+            prepareStatement(
+                """
+                |select *
+                |from users u
+                |         left join budget_access ba on u.id = ba.user_id
+                |where u.login = ?
+                """.trimMargin(),
+            )
+                .use { preparedStatement: PreparedStatement ->
+                    preparedStatement.setString(1, login)
+                    preparedStatement.executeQuery()
+                        .use { resultSet: ResultSet ->
+                            if (resultSet.next()) {
+                                val budgets = mutableListOf<BudgetAccess>()
+                                val id = resultSet.getObject("id", UUID::class.java)
+                                do {
+                                    val budgetName: String? = resultSet.getString("budget_name")
+                                    if (budgetName !== null)
+                                        budgets.add(
+                                            BudgetAccess(
+                                                budgetId = resultSet.getObject("budget_id", UUID::class.java),
+                                                budgetName = budgetName,
+                                                timeZone = resultSet.getString("time_zone")
+                                                    ?.let { timeZone -> TimeZone.of(timeZone) }
+                                                    ?: TimeZone.currentSystemDefault(),
+                                                coarseAccess = resultSet.getString("coarse_access")
+                                                    ?.let(CoarseAccess::valueOf),
+                                            ),
+                                        )
+                                } while (resultSet.next())
+                                User(id, login, budgets)
+                            } else
+                                null
+                        }
+                }
+        }
+
+    override fun createUser(login: String, password: String): UUID =
+        UUID.randomUUID()
+            .also { uuid: UUID ->
+                connection.transactOrNull {
+                    prepareStatement("insert into users (login, id) values(?, ?)")
+                        .use {
+                            it.setString(1, login)
+                            it.setUuid(2, uuid)
+                            it.executeUpdate()
+                        }
+                }
+            }
+
     override fun prepForFirstLoad() {
         connection.transactOrNull {
             createStatement().use { createTablesStatement: Statement ->
                 createTablesStatement.executeUpdate(
                     """
+create table if not exists users
+(
+    id    uuid         not null primary key,
+    login varchar(110) not null unique
+)
+                    """.trimIndent(),
+                )
+            }
+            createStatement().use { createTablesStatement: Statement ->
+                createTablesStatement.executeUpdate(
+                    """
 create table if not exists budgets
 (
-    general_account_id uuid         not null unique,
-    time_zone          varchar(110) not null,
-    budget_name        varchar(110) not null primary key
+    id                 uuid not null primary key,
+    general_account_id uuid not null unique
 )
+                    """.trimIndent(),
+                )
+            }
+            createStatement().use { createTablesStatement: Statement ->
+                createTablesStatement.executeUpdate(
+                    """
+create table if not exists budget_access
+(
+    id            uuid         not null primary key,
+    user_id       uuid         not null references users (id),
+    budget_id     uuid         not null references budgets (id),
+    budget_name   varchar(110) not null,
+    time_zone     varchar(110) not null,
+    -- if null, check fine_access
+    coarse_access varchar,
+    unique (user_id, budget_id)
+)
+                    """.trimIndent(),
+                )
+            }
+            createStatement().use { createTablesStatement: Statement ->
+                createTablesStatement.executeUpdate(
+                    """
+create index if not exists lookup_budget_access_by_user
+    on budget_access (user_id)
+                    """.trimIndent(),
+                )
+            }
+            createStatement().use { createTablesStatement: Statement ->
+                createTablesStatement.executeUpdate(
+                    """
+create table if not exists access_details
+(
+    budget_access_id uuid    not null references budget_access (id),
+    fine_access      varchar not null
+)
+                    """.trimIndent(),
+                )
+            }
+            createStatement().use { createTablesStatement: Statement ->
+                createTablesStatement.executeUpdate(
+                    """
+create index if not exists lookup_access_details_by_budget_access
+    on access_details (budget_access_id)
                     """.trimIndent(),
                 )
             }
@@ -100,9 +209,9 @@ create table if not exists category_accounts
     name        varchar(50)    not null,
     description varchar(110)   not null default '',
     balance     numeric(30, 2) not null default 0.0,
-    budget_name varchar(110)   not null references budgets (budget_name),
-    primary key (id, budget_name),
-    unique (name, budget_name)
+    budget_id   uuid           not null references budgets (id),
+    primary key (id, budget_id),
+    unique (name, budget_id)
 )
                     """.trimIndent(),
                 )
@@ -116,9 +225,9 @@ create table if not exists real_accounts
     name        varchar(50)    not null,
     description varchar(110)   not null default '',
     balance     numeric(30, 2) not null default 0.0,
-    budget_name varchar(110)   not null references budgets (budget_name),
-    primary key (id, budget_name),
-    unique (name, budget_name)
+    budget_id   uuid           not null references budgets (id),
+    primary key (id, budget_id),
+    unique (name, budget_id)
 )
                     """.trimIndent(),
                 )
@@ -133,10 +242,10 @@ create table if not exists draft_accounts
     description     varchar(110)   not null default '',
     balance         numeric(30, 2) not null default 0.0,
     real_account_id uuid           not null references real_accounts (id),
-    budget_name     varchar(110)   not null references budgets (budget_name),
-    primary key (id, budget_name),
-    unique (name, budget_name),
-    unique (real_account_id, budget_name)
+    budget_id       uuid           not null references budgets (id),
+    primary key (id, budget_id),
+    unique (name, budget_id),
+    unique (real_account_id, budget_id)
 )
                     """.trimIndent(),
                 )
@@ -149,8 +258,8 @@ create table if not exists transactions
     id            uuid         not null unique,
     description   varchar(110) not null default '',
     timestamp_utc timestamp    not null default now(),
-    budget_name   varchar(110) not null references budgets (budget_name),
-    primary key (id, budget_name)
+    budget_id     uuid         not null references budgets (id),
+    primary key (id, budget_id)
 )
                     """.trimIndent(),
                 )
@@ -161,7 +270,7 @@ create table if not exists transactions
 create index if not exists lookup_transaction_by_date
     on transactions
         (timestamp_utc desc,
-         budget_name)
+         budget_id)
                     """.trimIndent(),
                 )
             }
@@ -176,7 +285,7 @@ create table if not exists transaction_items
     category_account_id uuid           null references category_accounts (id),
     real_account_id     uuid           null references real_accounts (id),
     draft_account_id    uuid           null references draft_accounts (id),
-    budget_name         varchar(110)   not null references budgets (budget_name),
+    budget_id           uuid           not null references budgets (id),
     constraint only_one_account_per_transaction_item check
         ((real_account_id is not null and (category_account_id is null and draft_account_id is null)) or
          (category_account_id is not null and (real_account_id is null and draft_account_id is null)) or
@@ -191,7 +300,7 @@ create table if not exists transaction_items
 create index if not exists lookup_category_account_transaction_items_by_account
     on transaction_items
         (category_account_id,
-         budget_name)
+         budget_id)
     where category_account_id is not null
                     """.trimIndent(),
                 )
@@ -202,7 +311,7 @@ create index if not exists lookup_category_account_transaction_items_by_account
 create index if not exists lookup_real_account_transaction_items_by_account
     on transaction_items
         (real_account_id,
-         budget_name)
+         budget_id)
     where real_account_id is not null
                     """.trimIndent(),
                 )
@@ -213,7 +322,7 @@ create index if not exists lookup_real_account_transaction_items_by_account
 create index if not exists lookup_draft_account_transaction_items_by_account
     on transaction_items
         (draft_account_id,
-         budget_name)
+         budget_id)
     where draft_account_id is not null
                     """.trimIndent(),
                 )
@@ -230,7 +339,9 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         connection.transactOrThrow {
             prepareStatement(
                 """
-                    |select t.*,
+                    |select t.timestamp_utc as timestamp_utc,
+                    |       t.id as transaction_id,
+                    |       t.description as description,
                     |       i.amount      as item_amount,
                     |       i.description as item_description,
                     |       i.category_account_id,
@@ -238,12 +349,11 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                     |       i.real_account_id
                     |from transactions t
                     |         join transaction_items i on i.transaction_id = t.id
-                    |where t.id in (select tr.id
+                    |where t.budget_id = ?
+                    |  and t.id in (select tr.id
                     |               from transactions tr
                     |                        join transaction_items ti
                     |                             on tr.id = ti.transaction_id
-                    |                                 and ti.budget_name = ?
-                    |                                 and tr.budget_name = ?
                     |               where ti.${
                     when (account) {
                         is CategoryAccount -> "category_account_id"
@@ -257,18 +367,17 @@ create index if not exists lookup_draft_account_transaction_items_by_account
             """.trimMargin(),
             )
                 .use { statement: PreparedStatement ->
-                    statement.setString(1, config.budgetName)
-                    statement.setString(2, config.budgetName)
-                    statement.setObject(3, account.id, OTHER)
-                    statement.setInt(4, limit)
-                    statement.setInt(5, offset)
+                    statement.setUuid(1, data.id)
+                    statement.setUuid(2, account.id)
+                    statement.setInt(3, limit)
+                    statement.setInt(4, offset)
                     statement.executeQuery()
                         .use { result: ResultSet ->
                             val returnValue: MutableList<Transaction> = mutableListOf()
                             var transactionId: UUID? = null
                             var transactionBuilder: Transaction.Builder? = null
                             while (result.next()) {
-                                result.getObject("id", UUID::class.java)
+                                result.getUuid("transaction_id")
                                     .let { uuid: UUID ->
                                         if (uuid != transactionId) {
                                             conditionallyAddCompleteTransactionToList(
@@ -330,8 +439,8 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                     Transaction.ItemBuilder(
                         amount = itemAmount,
                         description = itemDescription,
-//                        categoryAccount = data.getAccountById(id),
-                    ).apply { setter(data.getAccountById(id)) },
+                    )
+                        .apply { setter(data.getAccountById(id)) },
                 )
             }
     }
@@ -371,7 +480,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         description     varchar(110)   not null default '',
         balance         numeric(30, 2) not null default 0.0,
         real_account_id uuid           not null,
-        budget_name     varchar(110)   not null
+        budget_id       uuid           not null
     )
         on commit drop
                         """.trimIndent(),
@@ -390,7 +499,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         name        varchar(50)    not null,
         description varchar(110)   not null default '',
         balance     numeric(30, 2) not null default 0.0,
-        budget_name varchar(110)   not null
+        budget_id   uuid           not null
     )
         on commit drop
                         """.trimIndent(),
@@ -409,7 +518,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         name        varchar(50)    not null,
         description varchar(110)   not null default '',
         balance     numeric(30, 2) not null default 0.0,
-        budget_name varchar(110)   not null
+        budget_id   uuid           not null
     )
         on commit drop
                         """.trimIndent(),
@@ -417,26 +526,37 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         }
     }
 
+    data class BudgetDataInfo(
+        val generalAccountId: UUID,
+        val timeZone: TimeZone,
+        val budgetName: String,
+    )
+
     /**
      * Just loads top-level account info.  Details of transactions are loaded on-demand.
      * @throws DataConfigurationException if data isn't found.
      */
-    override fun load(): BudgetData =
+    override fun load(budgetId: UUID, userId: UUID): BudgetData =
         try {
             connection.transactOrNull(
                 onRollback = { ex ->
                     throw DataConfigurationException(ex.message, ex)
                 },
             ) {
-                val (generalAccountId: UUID, timeZone: TimeZone) =
+                val (generalAccountId: UUID, timeZone: TimeZone, budgetName: String) =
                     prepareStatement(
                         """
-                            select general_account_id, time_zone from budgets b
-                            where b.budget_name = ?
+                            select b.general_account_id, ba.time_zone, ba.budget_name
+                            from budgets b
+                                join budget_access ba on b.id = ba.budget_id
+                                join users u on u.id = ba.user_id
+                            where b.id = ?
+                                and u.id = ?
                         """.trimIndent(),
                     )
                         .use { getBudget: PreparedStatement ->
-                            getBudget.setString(1, config.budgetName)
+                            getBudget.setUuid(1, budgetId)
+                            getBudget.setUuid(2, userId)
                             getBudget.executeQuery()
                                 .use { result: ResultSet ->
                                     result.next()
@@ -444,14 +564,19 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                                             if (!hadNext)
                                                 throw DataConfigurationException("Budget data not found for name: ${config.budgetName}")
                                         }
-                                    result.getObject("general_account_id", UUID::class.java) to
-                                            TimeZone.of(result.getString("time_zone"))
+                                    BudgetDataInfo(
+                                        result.getObject("general_account_id", UUID::class.java),
+                                        result.getString("time_zone")
+                                            ?.let { timeZone -> TimeZone.of(timeZone) }
+                                            ?: TimeZone.currentSystemDefault(),
+                                        result.getString("budget_name"),
+                                    )
                                 }
                         }
                 val categoryAccounts: List<CategoryAccount> =
-                    prepareStatement("select * from category_accounts where budget_name = ?")
+                    prepareStatement("select * from category_accounts where budget_id = ?")
                         .use { getCategoryAccounts: PreparedStatement ->
-                            getCategoryAccounts.setString(1, config.budgetName)
+                            getCategoryAccounts.setUuid(1, budgetId)
                             getCategoryAccounts.executeQuery()
                                 .use { result ->
                                     buildList {
@@ -473,9 +598,9 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                         it.id == generalAccountId
                     }!!
                 val realAccounts: List<RealAccount> =
-                    prepareStatement("select * from real_accounts where budget_name = ?")
+                    prepareStatement("select * from real_accounts where budget_id = ?")
                         .use { getRealAccounts ->
-                            getRealAccounts.setString(1, config.budgetName)
+                            getRealAccounts.setUuid(1, budgetId)
                             getRealAccounts.executeQuery()
                                 .use { result: ResultSet ->
                                     buildList {
@@ -494,9 +619,9 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                         }
 
                 val draftAccounts: List<DraftAccount> =
-                    prepareStatement("select * from draft_accounts where budget_name = ?")
+                    prepareStatement("select * from draft_accounts where budget_id = ?")
                         .use { getDraftAccountsStatement ->
-                            getDraftAccountsStatement.setString(1, config.budgetName)
+                            getDraftAccountsStatement.setUuid(1, budgetId)
                             getDraftAccountsStatement.executeQuery()
                                 .use { result ->
                                     buildList {
@@ -519,6 +644,8 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                                 }
                         }
                 BudgetData(
+                    budgetId,
+                    budgetName,
                     timeZone,
                     generalAccount,
                     categoryAccounts,
@@ -537,34 +664,34 @@ create index if not exists lookup_draft_account_transaction_items_by_account
     /**
      * Inserts the transaction records and updates the account balances in the DB.
      */
-    override fun commit(transaction: Transaction) {
+    override fun commit(transaction: Transaction, budgetId: UUID) {
         check(transaction.validate())
         connection.transactOrNull {
-            insertTransactionPreparedStatement(transaction)
+            insertTransactionPreparedStatement(transaction, budgetId)
                 .use { insertTransaction: PreparedStatement ->
                     insertTransaction.executeUpdate()
                 }
-            insertTransactionItemsPreparedStatement(transaction)
+            insertTransactionItemsPreparedStatement(transaction, budgetId)
                 .use { insertTransactionItem: PreparedStatement ->
                     insertTransactionItem.executeUpdate()
                 }
-            updateBalances(transaction)
+            updateBalances(transaction, budgetId)
         }
     }
 
-    private fun Connection.updateBalances(transaction: Transaction) {
+    private fun Connection.updateBalances(transaction: Transaction, budgetId: UUID) {
         val categoryAccountUpdateStatement = """
             update category_accounts
             set balance = balance + ?
-            where id = ? and budget_name = ?""".trimIndent()
+            where id = ? and budget_id = ?""".trimIndent()
         val realAccountUpdateStatement = """
             update real_accounts
             set balance = balance + ?
-            where id = ? and budget_name = ?""".trimIndent()
+            where id = ? and budget_id = ?""".trimIndent()
         val draftAccountUpdateStatement = """
             update draft_accounts
             set balance = balance + ?
-            where id = ? and budget_name = ?""".trimIndent()
+            where id = ? and budget_id = ?""".trimIndent()
         buildMap {
             put(
                 categoryAccountUpdateStatement,
@@ -604,20 +731,23 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                 prepareStatement(statement).use { preparedStatement: PreparedStatement ->
                     accountIdAmountPair.forEach { (id, amount) ->
                         preparedStatement.setBigDecimal(1, amount)
-                        preparedStatement.setObject(2, id, OTHER)
-                        preparedStatement.setString(3, config.budgetName)
+                        preparedStatement.setUuid(2, id)
+                        preparedStatement.setUuid(3, budgetId)
                         preparedStatement.executeUpdate()
                     }
                 }
             }
     }
 
-    private fun Connection.insertTransactionItemsPreparedStatement(transaction: Transaction): PreparedStatement {
+    private fun Connection.insertTransactionItemsPreparedStatement(
+        transaction: Transaction,
+        budgetId: UUID,
+    ): PreparedStatement {
         val transactionItemCounter =
             transaction.categoryItems.size + transaction.realItems.size + transaction.draftItems.size
         val statement = buildString {
             var counter = transactionItemCounter
-            append("insert into transaction_items (transaction_id, description, amount, budget_name, category_account_id, real_account_id, draft_account_id) values ")
+            append("insert into transaction_items (transaction_id, description, amount, budget_id, category_account_id, real_account_id, draft_account_id) values ")
             if (counter-- > 0) {
                 append("(?, ?, ?, ?, ?, ?, ?)")
                 while (counter-- > 0) {
@@ -628,22 +758,40 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         var parameterIndex = 1
         val transactionItemInsert = prepareStatement(statement)
         transaction.categoryItems.forEach { transactionItem: Transaction.Item ->
-            parameterIndex += setStandardProperties(transactionItemInsert, parameterIndex, transaction, transactionItem)
-            transactionItemInsert.setObject(parameterIndex++, transactionItem.categoryAccount!!.id, OTHER)
+            parameterIndex += setStandardProperties(
+                transactionItemInsert,
+                parameterIndex,
+                transaction,
+                transactionItem,
+                budgetId,
+            )
+            transactionItemInsert.setUuid(parameterIndex++, transactionItem.categoryAccount!!.id)
             transactionItemInsert.setNull(parameterIndex++, OTHER)
             transactionItemInsert.setNull(parameterIndex++, OTHER)
         }
         transaction.realItems.forEach { transactionItem: Transaction.Item ->
-            parameterIndex += setStandardProperties(transactionItemInsert, parameterIndex, transaction, transactionItem)
+            parameterIndex += setStandardProperties(
+                transactionItemInsert,
+                parameterIndex,
+                transaction,
+                transactionItem,
+                budgetId,
+            )
             transactionItemInsert.setNull(parameterIndex++, OTHER)
-            transactionItemInsert.setObject(parameterIndex++, transactionItem.realAccount!!.id, OTHER)
+            transactionItemInsert.setUuid(parameterIndex++, transactionItem.realAccount!!.id)
             transactionItemInsert.setNull(parameterIndex++, OTHER)
         }
         transaction.draftItems.forEach { transactionItem: Transaction.Item ->
-            parameterIndex += setStandardProperties(transactionItemInsert, parameterIndex, transaction, transactionItem)
+            parameterIndex += setStandardProperties(
+                transactionItemInsert,
+                parameterIndex,
+                transaction,
+                transactionItem,
+                budgetId,
+            )
             transactionItemInsert.setNull(parameterIndex++, OTHER)
             transactionItemInsert.setNull(parameterIndex++, OTHER)
-            transactionItemInsert.setObject(parameterIndex++, transactionItem.draftAccount!!.id, OTHER)
+            transactionItemInsert.setUuid(parameterIndex++, transactionItem.draftAccount!!.id)
         }
         return transactionItemInsert
     }
@@ -657,99 +805,190 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         parameterIndex: Int,
         transaction: Transaction,
         transactionItem: Transaction.Item,
+        budgetId: UUID,
     ): Int {
-        transactionItemInsert.setObject(parameterIndex, transaction.id, OTHER)
+        transactionItemInsert.setUuid(parameterIndex, transaction.id)
         transactionItemInsert.setString(parameterIndex + 1, transactionItem.description)
         transactionItemInsert.setBigDecimal(parameterIndex + 2, transactionItem.amount)
-        transactionItemInsert.setString(parameterIndex + 3, config.budgetName)
+        transactionItemInsert.setUuid(parameterIndex + 3, budgetId)
         return 4
     }
 
-    private fun Connection.insertTransactionPreparedStatement(transaction: Transaction): PreparedStatement {
+    private fun Connection.insertTransactionPreparedStatement(
+        transaction: Transaction,
+        budgetId: UUID,
+    ): PreparedStatement {
         val insertTransaction: PreparedStatement = prepareStatement(
             """
-                insert into transactions (id, description, timestamp_utc, budget_name) VALUES
+                insert into transactions (id, description, timestamp_utc, budget_id) VALUES
                 (?, ?, ?, ?)
             """.trimIndent(),
         )
-        insertTransaction.setObject(1, transaction.id, OTHER)
+        insertTransaction.setUuid(1, transaction.id)
         insertTransaction.setString(2, transaction.description)
         insertTransaction.setTimestamp(3, transaction.timestamp)
-        insertTransaction.setString(4, config.budgetName)
+        insertTransaction.setUuid(4, budgetId)
         return insertTransaction
     }
 
-    override fun save(data: BudgetData) {
+    override fun save(data: BudgetData, user: User) {
         check(data.validate())
         // create budget if it isn't there
         connection.transactOrNull {
             val generalAccountId: UUID = data.generalAccount.id
             prepareStatement(
                 """
-                insert into budgets (general_account_id, time_zone, budget_name)
-                values (?, ?, ?) on conflict do nothing """,
+                insert into users (id, login)
+                values (?, ?) on conflict do nothing""",
             )
                 .use { createBudgetStatement: PreparedStatement ->
-                    createBudgetStatement.setObject(1, generalAccountId, OTHER)
-                    createBudgetStatement.setString(2, data.timeZone.id)
-                    createBudgetStatement.setString(3, config.budgetName)
+                    createBudgetStatement.setUuid(1, user.id)
+                    createBudgetStatement.setString(2, user.login)
+                    createBudgetStatement.executeUpdate()
+                    // TODO set up logging to a file and have the file printed to console on quit
+//                        .also { if (it == 0)  }
+                }
+            prepareStatement(
+                """
+                insert into budgets (id, general_account_id)
+                values (?, ?) on conflict do nothing""",
+            )
+                .use { createBudgetStatement: PreparedStatement ->
+                    createBudgetStatement.setUuid(1, data.id)
+                    createBudgetStatement.setUuid(2, generalAccountId)
+                    createBudgetStatement.executeUpdate()
+                    // TODO set up logging to a file and have the file printed to console on quit
+//                        .also { if (it == 0)  }
+                }
+            prepareStatement(
+                """
+                insert into budget_access (id, budget_id, user_id, time_zone, budget_name)
+                values (?, ?, ?, ?, ?) on conflict do nothing""".trimIndent(),
+            )
+                .use { createBudgetStatement: PreparedStatement ->
+                    createBudgetStatement.setUuid(1, UUID.randomUUID())
+                    createBudgetStatement.setUuid(2, data.id)
+                    createBudgetStatement.setUuid(3, user.id)
+                    createBudgetStatement.setString(4, data.timeZone.id)
+                    createBudgetStatement.setString(5, config.budgetName)
                     createBudgetStatement.executeUpdate()
                     // TODO set up logging to a file and have the file printed to console on quit
 //                        .also { if (it == 0)  }
                 }
             // create accounts that aren't there and update those that are
             createStagingCategoryAccountsTable()
-            upsertAccountData(data.categoryAccounts, CATEGORY_ACCOUNT_TABLE_NAME)
+            upsertAccountData(data.categoryAccounts, CATEGORY_ACCOUNT_TABLE_NAME, data.id)
             createStagingRealAccountsTable()
-            upsertAccountData(data.realAccounts, REAL_ACCOUNT_TABLE_NAME)
+            upsertAccountData(data.realAccounts, REAL_ACCOUNT_TABLE_NAME, data.id)
             createStagingDraftAccountsTable()
-            upsertAccountData(data.draftAccounts, DRAFT_ACCOUNT_TABLE_NAME)
+            upsertAccountData(data.draftAccounts, DRAFT_ACCOUNT_TABLE_NAME, data.id)
             // TODO mark deleted accounts as in-active
             //      see account_active_periods which is currently unused
+        }
+    }
+
+    override fun deleteUser(userId: UUID) {
+        connection.transactOrNull {
+            prepareStatement("delete from budget_access where user_id = ?")
+                .use { statement: PreparedStatement ->
+                    statement.setUuid(1, userId)
+                    statement.executeUpdate()
+                }
+            prepareStatement("delete from users where id = ?")
+                .use { statement: PreparedStatement ->
+                    statement.setUuid(1, userId)
+                    statement.executeUpdate()
+                }
+        }
+    }
+
+
+    override fun deleteUserByLogin(login: String) {
+        connection.transactOrNull {
+            getUserIdByLogin(login)
+                ?.let { userId: UUID ->
+                    prepareStatement("delete from budget_access where user_id = ?")
+                        .use { statement: PreparedStatement ->
+                            statement.setUuid(1, userId)
+                            statement.executeUpdate()
+                        }
+                    prepareStatement("delete from users where login = ?")
+                        .use { statement: PreparedStatement ->
+                            statement.setString(1, login)
+                            statement.executeUpdate()
+                        }
+                }
+        }
+    }
+
+    private fun Connection.getUserIdByLogin(login: String): UUID? =
+        prepareStatement("select id from users where login = ?")
+            .use { statement: PreparedStatement ->
+                statement.setString(1, login)
+                statement.executeQuery()
+                    .use { resultSet: ResultSet ->
+                        if (resultSet.next()) {
+                            resultSet.getObject("id", UUID::class.java)
+                        } else
+                            null
+                    }
+            }
+
+    override fun deleteBudget(budgetId: UUID) {
+        connection.transactOrNull {
+            prepareStatement("delete from budget_access where budget_id = ?")
+                .use { statement: PreparedStatement ->
+                    statement.setUuid(1, budgetId)
+                    statement.executeUpdate()
+                }
+            prepareStatement("delete from budgets where id = ?")
+                .use { statement: PreparedStatement ->
+                    statement.setUuid(1, budgetId)
+                    statement.executeUpdate()
+                }
         }
     }
 
     /**
      * Must be called within a transaction with manual commits
      */
-    private fun Connection.upsertAccountData(accounts: List<Account>, tableName: String) {
+    private fun Connection.upsertAccountData(accounts: List<Account>, tableName: String, budgetId: UUID) {
         accounts.forEach { account ->
             prepareStatement(
                 """
-                insert into staged_$tableName (id, name, description, balance, ${if (tableName == DRAFT_ACCOUNT_TABLE_NAME) "real_account_id, " else ""}budget_name)
+                insert into staged_$tableName (id, name, description, balance,${if (tableName == DRAFT_ACCOUNT_TABLE_NAME) "real_account_id, " else ""} budget_id)
                 VALUES (?, ?, ?, ?,${if (tableName == DRAFT_ACCOUNT_TABLE_NAME) " ?," else ""} ?)
                 on conflict do nothing
             """.trimIndent(),
             )
                 .use { createStagedAccountStatement: PreparedStatement ->
                     var parameterIndex = 1
-                    createStagedAccountStatement.setObject(parameterIndex++, account.id, OTHER)
+                    createStagedAccountStatement.setUuid(parameterIndex++, account.id)
                     createStagedAccountStatement.setString(parameterIndex++, account.name)
                     createStagedAccountStatement.setString(parameterIndex++, account.description)
                     createStagedAccountStatement.setBigDecimal(parameterIndex++, account.balance)
                     if (tableName == DRAFT_ACCOUNT_TABLE_NAME) {
-                        createStagedAccountStatement.setObject(
+                        createStagedAccountStatement.setUuid(
                             parameterIndex++,
                             (account as DraftAccount).realCompanion.id,
-                            OTHER,
                         )
                     }
-                    createStagedAccountStatement.setString(parameterIndex++, config.budgetName)
+                    createStagedAccountStatement.setUuid(parameterIndex++, budgetId)
                     createStagedAccountStatement.executeUpdate()
                 }
             prepareStatement(
                 """
                 merge into $tableName as t
                     using staged_$tableName as s
-                    on (t.id = s.id or t.name = s.name) and t.budget_name = s.budget_name
+                    on (t.id = s.id or t.name = s.name) and t.budget_id = s.budget_id
                     when matched then
                         update
                         set name = s.name,
                             description = s.description,
                             balance = s.balance
                     when not matched then
-                        insert (id, name, description, balance, ${if (tableName == DRAFT_ACCOUNT_TABLE_NAME) "real_account_id, " else ""}budget_name)
-                        values (s.id, s.name, s.description, s.balance, ${if (tableName == DRAFT_ACCOUNT_TABLE_NAME) "s.real_account_id, " else ""}s.budget_name);
+                        insert (id, name, description, balance, ${if (tableName == DRAFT_ACCOUNT_TABLE_NAME) "real_account_id, " else ""} budget_id)
+                        values (s.id, s.name, s.description, s.balance, ${if (tableName == DRAFT_ACCOUNT_TABLE_NAME) "s.real_account_id, " else ""} s.budget_id);
                 """.trimIndent(),
             )
                 .use { createAccountStatement: PreparedStatement ->
@@ -760,7 +999,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
 
     override fun close() {
         keepAliveSingleThreadScheduledExecutor.close()
-        super.close()
+        connection.close()
     }
 
     companion object {

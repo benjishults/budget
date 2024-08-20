@@ -2,9 +2,12 @@
 
 package bps.budget.jdbc
 
+import bps.jdbc.JdbcFixture
+import bps.jdbc.JdbcFixture.Companion.setUuid
 import bps.jdbc.transactOrNull
 import java.math.BigDecimal
 import java.sql.Connection
+import java.util.UUID
 
 fun dropTables(connection: Connection, schema: String) {
     require(schema == "clean_after_test")
@@ -19,67 +22,79 @@ fun dropTables(connection: Connection, schema: String) {
                 statement.execute("drop table if exists draft_accounts")
                 statement.execute("drop table if exists real_accounts")
                 statement.execute("drop table if exists category_accounts")
+                statement.execute("drop table if exists access_details")
+                statement.execute("drop table if exists budget_access")
+                statement.execute("drop type if exists coarse_access")
+                statement.execute("drop type if exists fine_access")
                 statement.execute("drop table if exists budgets")
+                statement.execute("drop table if exists users")
                 statement.execute("drop table if exists timestamps")
             }
     }
 }
 
-fun deleteBudget(budgetName: String, connection: Connection) {
-    deleteAccounts(budgetName, connection)
-    connection.transactOrNull {
-        prepareStatement("delete from budgets where budget_name = ?")
-            .use {
-                it.setString(1, budgetName)
-                it.executeUpdate()
-            }
-    }
-}
+//fun deleteBudget(budgetName: String, connection: Connection) {
+//    deleteAccounts(budgetName, connection)
+//    connection.transactOrNull {
+//        prepareStatement("delete from budget_access where budget_name = ?")
+//            .use {
+//                it.setString(1, budgetName)
+//                it.executeUpdate()
+//            }
+//        prepareStatement("delete from budgets where budget_name = ?")
+//            .use {
+//                it.setString(1, budgetName)
+//                it.executeUpdate()
+//            }
+//    }
+//}
 
-fun deleteAccounts(budgetName: String, connection: Connection) {
-    cleanupTransactions(budgetName, connection)
-    connection.transactOrNull {
-        prepareStatement("delete from draft_accounts where budget_name = ?")
-            .use {
-                it.setString(1, budgetName)
-                it.executeUpdate()
-            }
-        prepareStatement("delete from real_accounts where budget_name = ?")
-            .use {
-                it.setString(1, budgetName)
-                it.executeUpdate()
-            }
-        prepareStatement("delete from category_accounts where budget_name = ?")
-            .use {
-                it.setString(1, budgetName)
-                it.executeUpdate()
-            }
+fun deleteAccounts(budgetId: UUID, connection: Connection) =
+    with(JdbcFixture) {
+        cleanupTransactions(budgetId, connection)
+        connection.transactOrNull {
+            prepareStatement("delete from draft_accounts where budget_id = ?")
+                .use {
+                    it.setUuid(1, budgetId)
+                    it.executeUpdate()
+                }
+            prepareStatement("delete from real_accounts where budget_id = ?")
+                .use {
+                    it.setUuid(1, budgetId)
+                    it.executeUpdate()
+                }
+            prepareStatement("delete from category_accounts where budget_id = ?")
+                .use {
+                    it.setUuid(1, budgetId)
+                    it.executeUpdate()
+                }
+        }
     }
-}
 
-fun cleanupTransactions(budgetName: String, connection: Connection) {
-    connection.transactOrNull {
-        zeroBalance(budgetName, "category_accounts")
-        zeroBalance(budgetName, "real_accounts")
-        zeroBalance(budgetName, "draft_accounts")
-        prepareStatement("delete from transaction_items where budget_name = ?")
-            .use {
-                it.setString(1, budgetName)
-                it.executeUpdate()
-            }
-        prepareStatement("delete from transactions where budget_name = ?")
-            .use {
-                it.setString(1, budgetName)
-                it.executeUpdate()
-            }
+fun cleanupTransactions(budgetId: UUID, connection: Connection) =
+    with(JdbcFixture) {
+        connection.transactOrNull {
+            zeroBalance(budgetId, "category_accounts")
+            zeroBalance(budgetId, "real_accounts")
+            zeroBalance(budgetId, "draft_accounts")
+            prepareStatement("delete from transaction_items where budget_id = ?")
+                .use {
+                    it.setUuid(1, budgetId)
+                    it.executeUpdate()
+                }
+            prepareStatement("delete from transactions where budget_id = ?")
+                .use {
+                    it.setUuid(1, budgetId)
+                    it.executeUpdate()
+                }
+        }
     }
-}
 
-private fun Connection.zeroBalance(budgetName: String, tableName: String) {
-    prepareStatement("update $tableName set balance = ? where budget_name = ?")
+private fun Connection.zeroBalance(budgetId: UUID, tableName: String) {
+    prepareStatement("update $tableName set balance = ? where budget_id = ?")
         .use {
             it.setBigDecimal(1, BigDecimal.ZERO.setScale(2))
-            it.setString(2, budgetName)
+            it.setUuid(2, budgetId)
             it.executeUpdate()
         }
 }
