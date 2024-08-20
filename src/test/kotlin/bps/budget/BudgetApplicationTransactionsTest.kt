@@ -446,7 +446,7 @@ Enter selection: """,
 
 }
 
-private fun checkBalancesAfterCheckClears(budgetData: BudgetData) {
+fun checkBalancesAfterCheckClears(budgetData: BudgetData) {
     budgetData.realAccounts.size shouldBe 2
     budgetData.realAccounts.forEach { realAccount: RealAccount ->
         when (realAccount.name) {

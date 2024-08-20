@@ -37,4 +37,6 @@ interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
     ): List<Transaction> =
         emptyList()
 
+    override fun close() {}
+
 }

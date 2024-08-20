@@ -1,6 +1,6 @@
 package bps.console.menu
 
-import kotlin.math.min
+import kotlin.math.max
 
 open class ScrollingSelectionMenu<T>(
     override val header: String?,
@@ -11,33 +11,42 @@ open class ScrollingSelectionMenu<T>(
     labelSelector: T.() -> String = { toString() },
     next: (MenuSession, T) -> Unit,
 ) : Menu {
+    init {
+        require(limit > 0) { "limit must be > 0" }
+    }
+
     override var itemsGenerator: () -> List<MenuItem> =
         {
             itemListGenerator(limit, offset)
+//                .let {
+//                    if (it.isEmpty() && offset>0) {it} else {
+////                        itemListGenerator(limit, max(limit, 0))
+//                    }
+//                     }
                 .mapTo(mutableListOf()) { item ->
-                    item(
-                        item.labelSelector(),
-                    ) { session ->
+                    item(item.labelSelector()) { session ->
                         next(session, item)
                     }
                 }
                 .also { menuItems ->
-                    menuItems.add(
-                        item("Next Items") { menuSession ->
-                            menuSession.popOrNull()
-                            menuSession.push(
-                                ScrollingSelectionMenu(
-                                    header,
-                                    prompt,
-                                    limit,
-                                    offset + limit,
-                                    itemListGenerator,
-                                    labelSelector,
-                                    next,
-                                ),
-                            )
-                        },
-                    )
+                    if (menuItems.isNotEmpty()) {
+                        menuItems.add(
+                            item("Next Items") { menuSession ->
+                                menuSession.popOrNull()
+                                menuSession.push(
+                                    ScrollingSelectionMenu(
+                                        header,
+                                        prompt,
+                                        limit,
+                                        offset + limit,
+                                        itemListGenerator,
+                                        labelSelector,
+                                        next,
+                                    ),
+                                )
+                            },
+                        )
+                    }
                     if (offset > 0) {
                         menuItems.add(
                             item("Previous Items") { menuSession ->
@@ -47,7 +56,7 @@ open class ScrollingSelectionMenu<T>(
                                         header,
                                         prompt,
                                         limit,
-                                        min(offset - limit, 0),
+                                        max(offset - limit, 0),
                                         itemListGenerator,
                                         labelSelector,
                                         next,
