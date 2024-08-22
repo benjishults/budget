@@ -16,6 +16,31 @@ import java.util.concurrent.atomic.AtomicReference
  * 3. Populate the [inputs] list with the [String]s you want to use as inputs
  * 4. At the end of each test, validate that the [outputs] contains the outputs you expected
  *
+ * Example:
+ *
+ * ```kotlin
+ * class ScrollingSelectionMenuTest : FreeSpec(),
+ *     SimpleConsoleIoTestFixture {
+ *
+ *     override val inputs: MutableList<String> = mutableListOf()
+ *     override val outputs: MutableList<String> = mutableListOf()
+ *
+ *     init {
+ *         clearInputsAndOutputsBeforeEach()
+ *         "test ..." {
+ *
+ *             // set up application or menus omitted
+ *
+ *             inputs.addAll(listOf("2", "4", "2", "7"))
+ *             MenuApplicationWithQuit(subject, inputReader, outPrinter)
+ *                 .use {
+ *                     it.run()
+ *                 }
+ *             outputs shouldContainExactly listOf(/* ... */)
+ *         }
+ *     }
+ * }
+ * ```
  */
 interface SimpleConsoleIoTestFixture {
 

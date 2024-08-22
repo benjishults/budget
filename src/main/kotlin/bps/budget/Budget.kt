@@ -10,6 +10,7 @@ import bps.budget.model.CategoryAccount
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.UserConfiguration
 import bps.budget.persistence.buildBudgetDao
 import bps.budget.persistence.getBudgetNameFromPersistenceConfig
 import bps.budget.persistence.loadOrBuildBudgetData
@@ -26,7 +27,7 @@ import bps.console.io.OutPrinter
 import bps.console.menu.Menu
 import bps.console.menu.MenuApplicationWithQuit
 import bps.console.menu.MenuSession
-import bps.console.menu.SelectionMenu
+import bps.console.menu.ScrollingSelectionMenu
 import bps.console.menu.pushMenu
 import bps.console.menu.quitItem
 import bps.console.menu.takeAction
@@ -90,7 +91,7 @@ class BudgetApplication private constructor(
     private val menuApplicationWithQuit =
         MenuApplicationWithQuit(
             AllMenus(inputReader, outPrinter)
-                .budgetMenu(budgetData, budgetDao, clock),
+                .budgetMenu(budgetData, budgetDao, clock, configurations.user),
             inputReader,
             outPrinter,
         )
@@ -107,12 +108,17 @@ class BudgetApplication private constructor(
 
 }
 
-fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao, clock: Clock): Menu {
+fun AllMenus.budgetMenu(
+    budgetData: BudgetData,
+    budgetDao: BudgetDao,
+    clock: Clock,
+    userConfig: UserConfiguration,
+): Menu {
     return Menu("Budget!") {
         add(
             takeActionAndPush(
                 recordIncome,
-                recordIncomeSelectionMenu(budgetData, budgetDao, clock),
+                recordIncomeSelectionMenu(budgetData, budgetDao, clock, userConfig),
             ) {
                 outPrinter(
                     """
@@ -125,76 +131,23 @@ fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao, clock: Clo
         add(
             takeActionAndPush(
                 makeAllowances,
-                makeAllowancesSelectionMenu(budgetData, budgetDao, clock),
+                makeAllowancesSelectionMenu(budgetData, budgetDao, clock, userConfig),
             ) {
                 outPrinter(
-                    """
-                |Every month or so, the user may want to distribute the income from the general category fund accounts into the other category fund accounts.
-                |Optional: You may want to add options to automate this procedure for the user.
-                |I.e., let the user decide on a predetermined amount that will be transferred to each category fund account each month.
-                |For some category fund accounts the user may prefer to bring the balance up to a certain amount each month.""".trimMargin(),
+                    "Every month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n",
                 )
             },
         )
         add(
-            takeActionAndPush(
+            pushMenu(
                 recordSpending,
-                recordSpendingMenu(budgetData, clock, budgetDao),
-            ) {
-                outPrinter(
-                    """
-                |Optional but recommended:
-                |Sometimes one expenditure from a real fund account will have several category funds account associated with it.
-                |For example, if I write a check at WalMart, some of that may have been for necessities, some for food, some for school (books), and some for entertainment.
-                |The user interface should allow for this.""".trimMargin(),
-                )
-            },
+                recordSpendingMenu(budgetData, clock, budgetDao, userConfig),
+            ),
         )
-//                RecursivePrompt(
-//                    listOf(
-//                        SimplePrompt("Amount Spent: ", inputReader, outPrinter) { it!!.toCurrencyAmount() },
-//                        SimplePrompt("Description: ", inputReader, outPrinter),
-//                        TimestampPrompt("Time: ", inputReader, outPrinter),
-//                        SimplePrompt(
-//                            // TODO need to show list
-//                            "Select Real Account: ",
-//                            inputReader,
-//                            outPrinter,
-//                        ) { name: String? ->
-//                            budgetData.getAccountById<>()realAccounts.find { it.name == name }
-//                        },
-//                        // TODO allow more than one
-//                        SimplePrompt(
-//                            // TODO need to show list
-//                            "Select Category Account: ",
-//                            inputReader,
-//                            outPrinter,
-//                        ) { name: String? ->
-//                            budgetData.categoryAccounts.find { it.name == name }
-//                        },
-//                    ),
-//                ) { inputs: List<*> ->
-//                    Transaction(
-//                        inputs[0] as BigDecimal,
-//                        inputs[1] as String,
-//                        OffsetDateTime
-//                            .of(inputs[2] as LocalDateTime, ZoneOffset.of(ZoneOffset.systemDefault().id)),
-//                        // TODO postgres stores at UTC.  Not sure if I need to set that or if it will translate automatically
-////                            .atZoneSameInstant(ZoneId.of("UTC"))
-////                            .toOffsetDateTime(),
-////                        listOf(inputs[3] as )
-//
-//                    )
-//                }
-//                    .getResult()
-//                    .also { budgetDao.commit(it) }
-//            },
-//        )
         add(
             pushMenu(
                 viewHistory,
-                // TODO make this scrolling before things get out of hand
-                viewHistoryMenu(budgetData, budgetDao),
+                viewHistoryMenu(budgetData, budgetDao, userConfig),
             ),
         )
         add(
@@ -247,23 +200,24 @@ fun AllMenus.budgetMenu(budgetData: BudgetData, budgetDao: BudgetDao, clock: Clo
 private fun AllMenus.viewHistoryMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
-) = SelectionMenu(
+    userConfig: UserConfiguration,
+) = ScrollingSelectionMenu(
     header = "Select account to view history",
-    itemListGenerator = {
-        buildList {
-            add(budgetData.generalAccount)
-            addAll(budgetData.categoryAccounts - budgetData.generalAccount)
-            addAll(budgetData.realAccounts)
-            addAll(budgetData.draftAccounts)
-        }
+    limit = userConfig.numberOfItemsInScrollingList,
+    baseList = buildList {
+        add(budgetData.generalAccount)
+        addAll(budgetData.categoryAccounts - budgetData.generalAccount)
+        addAll(budgetData.realAccounts)
+        addAll(budgetData.draftAccounts)
     },
-    labelSelector = {
+    labelGenerator = {
         String.format("%,10.2f | %s", balance, name)
     },
 ) { menuSession: MenuSession, selectedAccount: Account ->
     menuSession.push(
         ViewTransactionsMenu(
             account = selectedAccount,
+            limit = userConfig.numberOfItemsInScrollingList,
             budgetDao = budgetDao,
             budgetData = budgetData,
             outPrinter = outPrinter,
@@ -275,10 +229,12 @@ private fun AllMenus.recordSpendingMenu(
     budgetData: BudgetData,
     clock: Clock,
     budgetDao: BudgetDao,
-) = SelectionMenu(
+    userConfig: UserConfiguration,
+) = ScrollingSelectionMenu(
     header = "Select real account money was spent from.",
-    itemListGenerator = { budgetData.realAccounts },
-    labelSelector = { String.format("%,10.2f | %s", balance, name) },
+    limit = userConfig.numberOfItemsInScrollingList,
+    baseList = budgetData.realAccounts,
+    labelGenerator = { String.format("%,10.2f | %s", balance, name) },
 ) { menuSession: MenuSession, selectedRealAccount: RealAccount ->
     val max = selectedRealAccount.balance
     val min = BigDecimal.ZERO.setScale(2)
@@ -322,10 +278,11 @@ private fun AllMenus.recordSpendingMenu(
     var runningTotal = amount
     while (runningTotal > BigDecimal.ZERO) {
         menuSession.push(
-            SelectionMenu(
+            ScrollingSelectionMenu(
                 header = "Select a category that some of that money was spent on.  Left to cover: $runningTotal",
-                itemListGenerator = { budgetData.categoryAccounts },
-                labelSelector = { String.format("%,10.2f | %s", balance, name) },
+                limit = userConfig.numberOfItemsInScrollingList,
+                baseList = budgetData.categoryAccounts,
+                labelGenerator = { String.format("%,10.2f | %s", balance, name) },
             ) { _: MenuSession, selectedCategoryAccount: CategoryAccount ->
                 val categoryAmount: BigDecimal =
                     SimplePrompt<BigDecimal>(
@@ -360,7 +317,6 @@ private fun AllMenus.recordSpendingMenu(
                         categoryAccount = selectedCategoryAccount,
                     ),
                 )
-
             },
         )
     }
@@ -374,10 +330,12 @@ private fun AllMenus.recordIncomeSelectionMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     clock: Clock,
-): Menu = SelectionMenu(
+    userConfig: UserConfiguration,
+): Menu = ScrollingSelectionMenu(
     header = "Select account receiving the income:",
-    itemListGenerator = { budgetData.realAccounts },
-    labelSelector = { String.format("%,10.2f | %s", balance, name) },
+    limit = userConfig.numberOfItemsInScrollingList,
+    baseList = budgetData.realAccounts,
+    labelGenerator = { String.format("%,10.2f | %s", balance, name) },
 ) { menuSession: MenuSession, realAccount: RealAccount ->
     val amount =
         SimplePrompt(
@@ -419,10 +377,12 @@ private fun AllMenus.makeAllowancesSelectionMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     clock: Clock,
-): Menu = SelectionMenu(
+    userConfig: UserConfiguration,
+): Menu = ScrollingSelectionMenu(
     header = "Select account to allocate money into from ${budgetData.generalAccount.name}: ",
-    itemListGenerator = { budgetData.categoryAccounts - budgetData.generalAccount },
-    labelSelector = { String.format("%,10.2f | %s", balance, name) },
+    limit = userConfig.numberOfItemsInScrollingList,
+    baseList = budgetData.categoryAccounts - budgetData.generalAccount,
+    labelGenerator = { String.format("%,10.2f | %s", balance, name) },
 ) { menuSession: MenuSession, selectedCategoryAccount: CategoryAccount ->
     val max = budgetData.generalAccount.balance
     val min = BigDecimal.ZERO.setScale(2)

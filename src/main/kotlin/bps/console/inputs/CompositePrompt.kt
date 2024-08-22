@@ -1,6 +1,6 @@
 package bps.console.inputs
 
-interface RecursivePrompt<T> : Prompt<T> {
+interface CompositePrompt<T> : Prompt<T> {
     val prompts: List<Prompt<*>>
     val transformer: (List<*>) -> T
     val onError: (Throwable) -> T
@@ -27,8 +27,8 @@ interface RecursivePrompt<T> : Prompt<T> {
         operator fun <T> invoke(
             prompts: List<Prompt<*>>,
             transformer: (List<*>) -> T,
-        ): RecursivePrompt<T> =
-            object : RecursivePrompt<T> {
+        ): CompositePrompt<T> =
+            object : CompositePrompt<T> {
                 override val prompts: List<Prompt<*>> = prompts
                 override val transformer: (List<*>) -> T = transformer
             }

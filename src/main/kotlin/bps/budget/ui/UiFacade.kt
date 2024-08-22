@@ -9,7 +9,7 @@ import bps.budget.model.defaultGeneralAccountDescription
 import bps.budget.model.defaultGeneralAccountName
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
-import bps.console.inputs.RecursivePrompt
+import bps.console.inputs.CompositePrompt
 import bps.console.inputs.SelectionPrompt
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
@@ -98,7 +98,7 @@ class ConsoleUiFacade(
 
     override fun createGeneralAccount(budgetDao: BudgetDao): CategoryAccount {
         budgetDao.prepForFirstSave()
-        return RecursivePrompt(
+        return CompositePrompt(
             listOf(
                 SimplePromptWithDefault(
                     "Enter the name for your \"General\" account [$defaultGeneralAccountName]: ",

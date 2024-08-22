@@ -14,8 +14,40 @@ class ScrollingSelectionMenuTest : FreeSpec(),
         clearInputsAndOutputsBeforeEach()
         System.setProperty("kotest.assertions.collection.print.size", "1000")
         System.setProperty("kotest.assertions.collection.enumerate.size", "1000")
-        // TODO write a test where an empty list is possible
-        // TODO write a test where something is selected
+        "test selection" {
+            val subject: ScrollingSelectionMenu<String> = ScrollingSelectionMenu(
+                header = null,
+                limit = 3,
+                itemListGenerator = { limit, offset ->
+                    buildList {
+                        repeat(limit) {
+                            if (it + offset < 9)
+                                add("item ${it + offset}")
+                        }
+                    }
+                },
+            ) { _: MenuSession, selection: String ->
+                outPrinter("You chose: '$selection'\n")
+            }
+            inputs.addAll(listOf("2", "4", "2", "7"))
+            MenuApplicationWithQuit(subject, inputReader, outPrinter)
+                .use {
+                    it.run()
+                }
+            outputs shouldContainExactly listOf(
+                firstGroup,
+                "Enter selection: ",
+                "You chose: 'item 1'\n",
+                firstGroup,
+                "Enter selection: ",
+                secondGroup,
+                "Enter selection: ",
+                "You chose: 'item 4'\n",
+                secondGroup,
+                "Enter selection: ",
+                "Quitting\n",
+            )
+        }
         "test with even division of items" {
             val subject: ScrollingSelectionMenu<String> = ScrollingSelectionMenu(
                 header = null,
@@ -29,7 +61,7 @@ class ScrollingSelectionMenuTest : FreeSpec(),
                     }
                 },
             ) { _: MenuSession, selection: String ->
-                outPrinter("You chose: '$selection'")
+                outPrinter("You chose: '$selection'\n")
             }
             inputs.addAll(listOf("4", "4", "4", "1", "5", "5", "4", "5", "5", "4", "7"))
             MenuApplicationWithQuit(subject, inputReader, outPrinter)
@@ -75,7 +107,7 @@ class ScrollingSelectionMenuTest : FreeSpec(),
                     }
                 },
             ) { _: MenuSession, selection: String ->
-                outPrinter("You chose: '$selection'")
+                outPrinter("You chose: '$selection'\n")
             }
             inputs.addAll(listOf("4", "4", "4", "2", "5", "5", "4", "5", "6"))
             MenuApplicationWithQuit(subject, inputReader, outPrinter)

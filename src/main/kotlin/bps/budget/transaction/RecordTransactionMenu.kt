@@ -2,7 +2,7 @@ package bps.budget.transaction
 
 import bps.budget.AllMenus
 import bps.budget.persistence.files.CategoryAccountConfig
-import bps.console.inputs.RecursivePrompt
+import bps.console.inputs.CompositePrompt
 import bps.console.inputs.SimplePrompt
 import bps.console.menu.Menu
 import bps.console.menu.backItem
@@ -15,7 +15,7 @@ val AllMenus.recordTransactionMenu: Menu
             add(
                 takeAction("Create Category Fund") {
                     val categoryAccount: CategoryAccountConfig =
-                        RecursivePrompt(
+                        CompositePrompt(
                             listOf(
                                 SimplePrompt("Name of category: ", inputReader, outPrinter),
                                 SimplePrompt<String>("Description", inputReader, outPrinter),

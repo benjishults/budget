@@ -28,7 +28,7 @@ open class ViewTransactionsMenu(
     prompt,
     limit,
     offset,
-    labelSelector = {
+    labelGenerator = {
         val (transaction: Transaction, item: Transaction.Item) = this
         String.format(
             "%s | %,10.2f | %s",

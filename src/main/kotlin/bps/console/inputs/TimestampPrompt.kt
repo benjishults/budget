@@ -27,7 +27,7 @@ class TimestampPrompt(
                 now
             }
             else -> {
-                RecursivePrompt(
+                CompositePrompt(
                     listOf(
                         SimplePromptWithDefault(
                             "         year [${now.year}]: ",

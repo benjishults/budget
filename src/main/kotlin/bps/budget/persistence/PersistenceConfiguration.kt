@@ -13,6 +13,7 @@ data class PersistenceConfiguration(
 data class UserConfiguration(
     val defaultLogin: String? = null,
     val defaultTimeZone: String? = null,
+    val numberOfItemsInScrollingList: Int = 30,
 //    val defaultBudgetName: String?,
 ) {
     init {

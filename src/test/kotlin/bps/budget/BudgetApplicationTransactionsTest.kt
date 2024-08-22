@@ -177,11 +177,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 9. Quit
                             |""".trimMargin(),
                     "Enter selection: ",
-                    """
-                |Every month or so, the user may want to distribute the income from the general category fund accounts into the other category fund accounts.
-                |Optional: You may want to add options to automate this procedure for the user.
-                |I.e., let the user decide on a predetermined amount that will be transferred to each category fund account each month.
-                |For some category fund accounts the user may prefer to bring the balance up to a certain amount each month.""".trimMargin(),
+                    "Every month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n",
                     "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
  1.       0.00 | Education
  2.       0.00 | Entertainment
@@ -316,11 +312,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 9. Quit
                             |""".trimMargin(),
                     "Enter selection: ",
-                    """
-                |Every month or so, the user may want to distribute the income from the general category fund accounts into the other category fund accounts.
-                |Optional: You may want to add options to automate this procedure for the user.
-                |I.e., let the user decide on a predetermined amount that will be transferred to each category fund account each month.
-                |For some category fund accounts the user may prefer to bring the balance up to a certain amount each month.""".trimMargin(),
+                    "Every month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n",
                     "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
  1. CategoryAccount('Education', 0.00)
  2. CategoryAccount('Entertainment', 0.00)
@@ -441,8 +433,6 @@ Enter selection: """,
             }
         }
     }
-
-
 }
 
 fun checkBalancesAfterCheckClears(budgetData: BudgetData) {

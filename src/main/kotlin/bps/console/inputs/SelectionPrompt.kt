@@ -5,6 +5,7 @@ import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
 
+// FIXME replace this with ScrollingSelectionMenu
 interface SelectionPrompt<T> : Prompt<T> {
     val header: String?
     val prompt: String
