@@ -2,6 +2,9 @@ package bps.console.menu
 
 import kotlin.math.max
 
+/**
+ * When [limit] is `0`
+ */
 open class ScrollingSelectionMenu<T>(
     override val header: String?,
     override val prompt: String = "Enter selection: ",
@@ -29,10 +32,10 @@ open class ScrollingSelectionMenu<T>(
                     }
                 }
                 .also { menuItems ->
-                    if (menuItems.isNotEmpty()) {
+                    if (menuItems.size == limit) {
                         menuItems.add(
                             item("Next Items") { menuSession ->
-                                menuSession.popOrNull()
+                                menuSession.pop()
                                 menuSession.push(
                                     ScrollingSelectionMenu(
                                         header,
@@ -50,7 +53,7 @@ open class ScrollingSelectionMenu<T>(
                     if (offset > 0) {
                         menuItems.add(
                             item("Previous Items") { menuSession ->
-                                menuSession.popOrNull()
+                                menuSession.pop()
                                 menuSession.push(
                                     ScrollingSelectionMenu(
                                         header,

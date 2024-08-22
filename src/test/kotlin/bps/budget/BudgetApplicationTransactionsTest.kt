@@ -273,9 +273,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 2. 2024-08-08 19:00:01 |     200.00 | income into $defaultWalletAccountName
                         | 3. 2024-08-08 19:00:02 |    -300.00 | allowance into $defaultFoodAccountName
                         | 4. 2024-08-08 19:00:03 |    -100.00 | allowance into $defaultNecessitiesAccountName
-                        | 5. Next Items
-                        | 6. Back
-                        | 7. Quit
+                        | 5. Back
+                        | 6. Quit
                         |""".trimMargin(),
                     "Select transaction for details: ",
                 )

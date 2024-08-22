@@ -364,7 +364,7 @@ private fun AllMenus.recordSpendingMenu(
             },
         )
     }
-    menuSession.popOrNull()
+    menuSession.pop()
     val transaction = transactionBuilder.build()
     budgetData.commit(transaction)
     budgetDao.commit(transaction, budgetData.id)

@@ -52,7 +52,7 @@ fun popMenuItem(
     intermediateAction: IntermediateMenuItemAction = NoopIntermediateAction,
 ): MenuItem =
     item(label) { menuSession: MenuSession ->
-        menuSession.popOrNull()
+        menuSession.pop()
         intermediateAction()
     }
 
@@ -99,4 +99,4 @@ val quitItem: MenuItem =
     BaseMenuItem("Quit") { throw QuitException() }
 
 val backItem: MenuItem =
-    BaseMenuItem("Back") { it.popOrNull() }
+    BaseMenuItem("Back") { it.pop() }

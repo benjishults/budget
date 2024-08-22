@@ -1,6 +1,9 @@
 package bps.console.menu
 
-class MenuSession(val topLevelMenu: Menu) {
+class MenuSession(val topLevelMenu: Menu) : AutoCloseable {
+
+    @Volatile
+    private var closed: Boolean = false
 
     private val stack: MutableList<Menu> =
         mutableListOf()
@@ -8,17 +11,21 @@ class MenuSession(val topLevelMenu: Menu) {
     fun push(menu: Menu) =
         stack.add(menu)
 
-    fun popOrNull(): Menu? =
-        stack.removeLastOrNull()
+    /**
+     * Pops the top of the stack of menus unless we are on the [topLevelMenu].  Returns the item that was on top.
+     */
+    fun pop(): Menu =
+        stack.removeLastOrNull() ?: topLevelMenu
 
-    fun current(): Menu =
-        stack
+    fun current(): Menu {
+        check(!closed) { "attempt to use menu after closing" }
+        return stack
             .lastOrNull()
             ?: topLevelMenu
+    }
 
-//    class Builder {
-//        var topLevelMenu: Menu? = null
-//        fun build(): MenuSession = MenuSession(topLevelMenu!!)
-//    }
+    override fun close() {
+        closed = true
+    }
 
 }

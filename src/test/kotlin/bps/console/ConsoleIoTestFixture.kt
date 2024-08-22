@@ -56,18 +56,39 @@ interface SimpleConsoleIoTestFixture {
  * Usage:
  *
  * ```kotlin
- *             // beginning of each test looks something like this:
- *                 // populate list of inputs for test
- *                 inputs.addAll(
- *                     listOf("2", "3", "300", "", "5", "100", "", "10"),
- *                 )
- *                 // unpause to allow the application to run through these inputs
- *                 unPause()
- *                 // wait for the application to run through those inputs before beginning validation of results
- *                 waitForPause()
- *                 // validations...
- *                 outputs shouldContainExactly listOf( /* ... */ )
+ *            // beginning of each test looks something like this:
+ *            // populate list of inputs for test
+ *            inputs.addAll(
+ *                listOf("2", "3", "300", "", "5", "100", "", "10"),
+ *            )
+ *            // unpause to allow the application to run through these inputs
+ *            unPause()
+ *            // wait for the application to run through those inputs before beginning validation of results
+ *            waitForPause()
+ *            // validations...
+ *            outputs shouldContainExactly listOf( /* ... */ )
  *
+ * ```
+ *
+ * If you want to capture the Quitting output and ensure that the application thread ends before you go on to the
+ * next test, then you might ought to be using the [SimpleConsoleIoTestFixture] instead.  However, if you need to
+ * use this in that way for some reason, here's how:
+ *
+ * ```kotlin
+ *             val applicationThread = thread(name = "Application Thread 1") {
+ *                 application
+ *                     .use {
+ *                         it.run()
+ *                     }
+ *             }
+ *             inputs.addAll(listOf("4", "4", "4", "1", "5", "5", "4", "5", "5", "4", "7"))
+ *             unPause()
+ *             waitForPause()
+ *             // unpause so that the process can end by printing the Quit message
+ *             unPause()
+ *             // make sure this thread dies so as not to interfere with later tests
+ *             applicationThread.join(Duration.ofMillis(20)).shouldBeTrue()
+ *             outputs shouldContainExactly listOf( /* ...*/ )
  * ```
  */
 interface ComplexConsoleIoTestFixture : SimpleConsoleIoTestFixture {
