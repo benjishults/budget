@@ -227,7 +227,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
             }
             "view transactions" {
-                inputs.addAll(listOf("4", "1", ""))
+                inputs.addAll(listOf("4", "1", "3", ""))
                 unPause()
                 waitForPause()
                 outputs shouldContainExactly listOf(
@@ -263,8 +263,26 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 """,
                     "Enter selection: ",
                     """
-                        |CategoryAccount('General', 4800.00) Transactions
-                        |    Time Stamp          | Balance    | Description
+                        |'General' Account Transactions
+                        |    Time Stamp          | Amount     | Description
+                        | 1. 2024-08-08 19:00:00 |   5,000.00 | income into $defaultCheckingAccountName
+                        | 2. 2024-08-08 19:00:01 |     200.00 | income into $defaultWalletAccountName
+                        | 3. 2024-08-08 19:00:02 |    -300.00 | allowance into $defaultFoodAccountName
+                        | 4. 2024-08-08 19:00:03 |    -100.00 | allowance into $defaultNecessitiesAccountName
+                        | 5. Back
+                        | 6. Quit
+                        |""".trimMargin(),
+                    "Select transaction for details: ",
+                    """
+                        |2024-08-08 19:00:02
+                        |allowance into Food
+                        |Category Account | Amount     | Description
+                        |General          |    -300.00 |
+                        |Food             |     300.00 |
+                        |""".trimMargin(),
+                    """
+                        |'General' Account Transactions
+                        |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:00 |   5,000.00 | income into $defaultCheckingAccountName
                         | 2. 2024-08-08 19:00:01 |     200.00 | income into $defaultWalletAccountName
                         | 3. 2024-08-08 19:00:02 |    -300.00 | allowance into $defaultFoodAccountName

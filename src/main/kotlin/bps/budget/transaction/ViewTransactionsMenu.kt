@@ -10,6 +10,11 @@ import bps.budget.persistence.BudgetDao
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.OutPrinter
 import bps.console.menu.ScrollingSelectionMenu
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.format
+import kotlinx.datetime.format.char
 import kotlinx.datetime.toLocalDateTime
 
 open class ViewTransactionsMenu(
@@ -19,8 +24,8 @@ open class ViewTransactionsMenu(
     limit: Int = 30,
     offset: Int = 0,
     header: String? = """
-        |$account Transactions
-        |    Time Stamp          | Balance    | Description""".trimMargin(),
+        |'${account.name}' Account Transactions
+        |    Time Stamp          | Amount     | Description""".trimMargin(),
     prompt: String = "Select transaction for details: ",
     val outPrinter: OutPrinter = DefaultOutPrinter,
 ) : ScrollingSelectionMenu<Pair<Transaction, Transaction.Item>>(
@@ -35,17 +40,29 @@ open class ViewTransactionsMenu(
             transaction
                 .timestamp
                 .toLocalDateTime(budgetData.timeZone)
-                .toString()
-                .replace('T', ' ')
-                .let { timestampString ->
-
-                    timestampString.lastIndexOf('.')
-                        .takeIf { it != -1 }
-                        ?.let { index ->
-                            timestampString.substring(0, index)
-                        }
-                        ?: timestampString
-                },
+                .format(
+                    LocalDateTime.Format {
+                        date(
+                            LocalDate.Format {
+                                year()
+                                char('-')
+                                monthNumber()
+                                char('-')
+                                dayOfMonth()
+                            },
+                        )
+                        char(' ')
+                        time(
+                            LocalTime.Format {
+                                hour()
+                                char(':')
+                                minute()
+                                char(':')
+                                second()
+                            },
+                        )
+                    },
+                ),
             item.amount,
             item.description ?: transaction.description,
         )
@@ -100,11 +117,38 @@ open class ViewTransactionsMenu(
 private fun OutPrinter.showTransactionDetailsAction(transaction: Transaction, budgetData: BudgetData) {
     invoke(
         buildString {
-            append(transaction.timestamp.toLocalDateTime(budgetData.timeZone))
+            append(
+                transaction.timestamp.toLocalDateTime(budgetData.timeZone).format(
+                    LocalDateTime.Format {
+                        date(
+                            LocalDate.Format {
+                                year()
+                                char('-')
+                                monthNumber()
+                                char('-')
+                                dayOfMonth()
+                            },
+                        )
+                        char(' ')
+                        time(
+                            LocalTime.Format {
+                                hour()
+                                char(':')
+                                minute()
+                                char(':')
+                                second()
+                            },
+                        )
+                    },
+                ),
+            )
             append("\n")
             append(transaction.description)
             append("\n")
-            appendItems("Category Items:", transaction.categoryItems) { categoryAccount!! }
+            appendItems(
+                "Category Account",
+                transaction.categoryItems,
+            ) { categoryAccount!! }
             appendItems("Real Items:", transaction.realItems) { realAccount!! }
             appendItems("Draft Items:", transaction.draftItems) { draftAccount!! }
         },
@@ -112,22 +156,24 @@ private fun OutPrinter.showTransactionDetailsAction(transaction: Transaction, bu
 }
 
 private fun StringBuilder.appendItems(
-    label: String,
+    accountColumnLabel: String,
     items: List<Transaction.Item>,
     accountGetter: Transaction.Item.() -> Account,
 ) {
     if (items.isNotEmpty()) {
-        append(label)
-        append("\n")
+        append(String.format("%16s | Amount     | Description\n", accountColumnLabel))
         items.forEach { transactionItem: Transaction.Item ->
-            append(transactionItem.accountGetter())
-            append("\n")
-            if (transactionItem.description !== null) {
-                append(transactionItem.description)
-                append("\n")
-            }
-            append(transactionItem.amount)
-            append("\n")
+            append(
+                String.format(
+                    "%-16s | %10.2f |%s",
+                    accountGetter(transactionItem).name,
+                    transactionItem.amount,
+                    transactionItem
+                        .description
+                        ?.let { " $it" }
+                        ?: "",
+                ),
+            )
             append("\n")
         }
     }
