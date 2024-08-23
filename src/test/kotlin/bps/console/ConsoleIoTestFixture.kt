@@ -3,8 +3,10 @@ package bps.console
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
 import io.kotest.core.spec.Spec
+import io.kotest.matchers.booleans.shouldBeTrue
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
@@ -65,6 +67,9 @@ interface SimpleConsoleIoTestFixture {
 
 }
 
+const val ONE_SECOND_IN_MILLIS_FOR_WAITING_FOR_PAUSE = 1_000L
+const val MAX_LONG_MILLIS_FOR_WAITING_FOR_PAUSE_DURING_DEBUGGING = Long.MAX_VALUE
+
 /**
  * This fixture allows the application to pause between tests (allowing the JDBC connection to remain
  * open between tests).
@@ -120,14 +125,15 @@ interface ComplexConsoleIoTestFixture : SimpleConsoleIoTestFixture {
 
     val helper: Helper
 
+
     /** Call [waitForPause] before validation to allow the application to finish processing.  The application will
      * pause automatically when the [inputs] list is emptied.
      */
-    fun waitForPause() =
+    fun waitForPause(milliSeconds: Long): Boolean =
         helper
             .waitForPause
             .get()
-            .await()
+            .await(helper.awaitMillis, TimeUnit.MILLISECONDS)
 
     fun unPause() =
         helper.unPause()
@@ -142,16 +148,17 @@ interface ComplexConsoleIoTestFixture : SimpleConsoleIoTestFixture {
         get() = helper.outPrinter
 
     companion object {
-        operator fun invoke(): ComplexConsoleIoTestFixture {
+        operator fun invoke(debugging: Boolean = false): ComplexConsoleIoTestFixture {
             return object : ComplexConsoleIoTestFixture {
-                override val helper: Helper = Helper()
+                override val helper: Helper =
+                    Helper(if (debugging) MAX_LONG_MILLIS_FOR_WAITING_FOR_PAUSE_DURING_DEBUGGING else ONE_SECOND_IN_MILLIS_FOR_WAITING_FOR_PAUSE)
             }
         }
     }
 
-    class Helper {
+    class Helper(val awaitMillis: Long) {
 
-        private val paused = AtomicBoolean(true)
+        private val paused = AtomicBoolean(false)
         private val waitForUnPause = AtomicReference(CountDownLatch(0))
 
         // NOTE waitForPause before validation to allow the application to finish processing and get to the point of making
@@ -159,13 +166,14 @@ interface ComplexConsoleIoTestFixture : SimpleConsoleIoTestFixture {
         val waitForPause = AtomicReference(CountDownLatch(1))
 
         private fun pause() {
+            check(!paused.get()) { "Already paused" }
             waitForUnPause.set(CountDownLatch(1))
             paused.set(true)
             waitForPause.get().countDown()
         }
 
         fun unPause() {
-            check(paused.get()) { "not paused" }
+            check(paused.get()) { "Not paused" }
             waitForPause.set(CountDownLatch(1))
             paused.set(false)
             waitForUnPause.get().countDown()
@@ -186,7 +194,9 @@ interface ComplexConsoleIoTestFixture : SimpleConsoleIoTestFixture {
                 pause()
             }
             if (paused.get())
-                waitForUnPause.get().await()
+                waitForUnPause.get()
+                    .await(awaitMillis, TimeUnit.MILLISECONDS)
+                    .shouldBeTrue()
             outputs.add(it)
         }
 

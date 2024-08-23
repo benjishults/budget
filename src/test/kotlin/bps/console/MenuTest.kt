@@ -36,7 +36,7 @@ class MenuTest : FreeSpec(),
             val topMenu: Menu =
                 Menu("top") {
                     add(
-                        takeActionAndPush("something", bottomMenu) {
+                        takeActionAndPush("something", { bottomMenu }) {
                             outPrinter("taking some action\n")
                         },
                     )

@@ -73,13 +73,13 @@ fun takeAction(
  */
 fun takeActionAndPush(
     label: String,
-    to: Menu? = null,
+    to: (() -> Menu)? = null,
     intermediateAction: IntermediateMenuItemAction = NoopIntermediateAction,
 ): MenuItem =
     item(label) { menuSession: MenuSession ->
         intermediateAction()
         to?.let {
-            menuSession.push(it)
+            menuSession.push(it())
         }
     }
 
@@ -89,10 +89,10 @@ fun takeActionAndPush(
  */
 fun pushMenu(
     label: String,
-    to: Menu,
+    to: () -> Menu,
 ): MenuItem =
     item(label) { menuSession: MenuSession ->
-        menuSession.push(to)
+        menuSession.push(to())
     }
 
 val quitItem: MenuItem =

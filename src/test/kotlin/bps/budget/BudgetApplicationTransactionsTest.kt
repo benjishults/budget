@@ -27,6 +27,7 @@ import bps.console.ComplexConsoleIoTestFixture
 import io.kotest.assertions.asClue
 import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FreeSpec
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -38,7 +39,7 @@ import kotlin.concurrent.thread
 
 class BudgetApplicationTransactionsTest : FreeSpec(),
     BasicAccountsJdbcTestFixture,
-    ComplexConsoleIoTestFixture by ComplexConsoleIoTestFixture() {
+    ComplexConsoleIoTestFixture by ComplexConsoleIoTestFixture(true) {
 
     override val jdbcDao = JdbcDao(configurations.persistence.jdbc!!)
 
@@ -63,7 +64,6 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
         }
 
         "run application with data from DB" - {
-//            Thread.currentThread().name = "Test Thread"
             val application = BudgetApplication(
                 uiFunctions,
                 configurations,
@@ -75,12 +75,11 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 application.run()
             }
             "record income" {
-                // prepare inputs
                 inputs.addAll(
                     listOf("1", "1", "5000", "", "", "2", "200", "", "", "3"),
                 )
                 unPause()
-                waitForPause()
+                waitForPause(helper.awaitMillis).shouldBeTrue()
                 application.budgetData.asClue { budgetData: BudgetData ->
                     budgetData.categoryAccounts shouldContain budgetData.generalAccount
                     budgetData.generalAccount.balance shouldBe BigDecimal(5200).setScale(2)
@@ -146,7 +145,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     listOf("2", "3", "300", "", "5", "100", "", "10"),
                 )
                 unPause()
-                waitForPause()
+                waitForPause(helper.awaitMillis).shouldBeTrue()
                 application.budgetData.asClue { budgetData: BudgetData ->
                     budgetData.categoryAccounts shouldContain budgetData.generalAccount
                     budgetData.generalAccount.balance shouldBe BigDecimal(5200 - 400).setScale(2)
@@ -192,7 +191,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 11. Quit
 """,
                     "Enter selection: ",
-                    "Enter the amount to allocate into ${application.budgetData.categoryAccounts[2].name} (0.00 - 5200.00]: ",
+                    "Enter the amount to allocate into ${application.budgetData.categoryAccounts[2].name} (0.00, 5200.00]: ",
                     "Enter description of transaction [allowance into $defaultFoodAccountName]: ",
                     "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
  1.       0.00 | Education
@@ -208,7 +207,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 11. Quit
 """,
                     "Enter selection: ",
-                    "Enter the amount to allocate into ${application.budgetData.categoryAccounts[5].name} (0.00 - 4900.00]: ",
+                    "Enter the amount to allocate into ${application.budgetData.categoryAccounts[5].name} (0.00, 4900.00]: ",
                     "Enter description of transaction [allowance into $defaultNecessitiesAccountName]: ",
                     "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
  1.       0.00 | Education
@@ -227,9 +226,9 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
             }
             "view transactions" {
-                inputs.addAll(listOf("4", "1", "3", ""))
+                inputs.addAll(listOf("4", "1", "3", "5", "14"))
                 unPause()
-                waitForPause()
+                waitForPause(helper.awaitMillis).shouldBeTrue()
                 outputs shouldContainExactly listOf(
                     """
                             |Budget!
@@ -291,6 +290,83 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 6. Quit
                         |""".trimMargin(),
                     "Select transaction for details: ",
+                    """Select account to view history
+ 1.   4,800.00 | General
+ 2.       0.00 | Education
+ 3.       0.00 | Entertainment
+ 4.     300.00 | Food
+ 5.       0.00 | Medical
+ 6.     100.00 | Necessities
+ 7.       0.00 | Network
+ 8.       0.00 | Transportation
+ 9.       0.00 | Travel
+10.       0.00 | Work
+11.   5,000.00 | Checking
+12.     200.00 | Wallet
+13.       0.00 | Checking Drafts
+14. Back
+15. Quit
+""",
+                    "Enter selection: ",
+                )
+            }
+            "record spending" {
+                inputs.addAll(listOf("3", "2", "1.5", "Pepsi", "", "3", "", "", "3"))
+                unPause()
+                waitForPause(helper.awaitMillis).shouldBeTrue()
+                outputs shouldContainExactly listOf(
+                    """
+                            |Budget!
+                            | 1. $recordIncome
+                            | 2. $makeAllowances
+                            | 3. $recordSpending
+                            | 4. $viewHistory
+                            | 5. $recordDrafts
+                            | 6. $clearDrafts
+                            | 7. $transfer
+                            | 8. $setup
+                            | 9. Quit
+                            |""".trimMargin(),
+                    "Enter selection: ",
+                    """
+                        |Select real account money was spent from.
+                        | 1.   5,000.00 | Checking
+                        | 2.     200.00 | Wallet
+                        | 3. Back
+                        | 4. Quit
+                        |
+                    """.trimMargin(),
+                    "Enter selection: ",
+                    "Enter the amount spent from Wallet (0.00, 200.00]: ",
+                    "Enter description of transaction [spending]: ",
+                    "Use current time [Y]? ",
+                    """
+                        |Select a category that some of that money was spent on.  Left to cover: $1.50
+                        | 1.       0.00 | Education
+                        | 2.       0.00 | Entertainment
+                        | 3.     300.00 | Food
+                        | 4.   4,800.00 | General
+                        | 5.       0.00 | Medical
+                        | 6.     100.00 | Necessities
+                        | 7.       0.00 | Network
+                        | 8.       0.00 | Transportation
+                        | 9.       0.00 | Travel
+                        |10.       0.00 | Work
+                        |11. Back
+                        |12. Quit
+                        |""".trimMargin(),
+                    "Enter selection: ",
+                    "Enter the amount spent on Food (0.00, [1.50]]: ",
+                    "Enter description for Food spend [Pepsi]: ",
+                    """
+                        |Select real account money was spent from.
+                        | 1.   5,000.00 | Checking
+                        | 2.     198.50 | Wallet
+                        | 3. Back
+                        | 4. Quit
+                        |
+                    """.trimMargin(),
+                    "Enter selection: ",
                 )
             }
             "!write a check to SuperMarket" {
@@ -298,7 +374,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     listOf("4", "1", "300", "", "9"),
                 )
                 unPause()
-                waitForPause()
+                waitForPause(helper.awaitMillis).shouldBeTrue()
                 application.budgetData.asClue { budgetData: BudgetData ->
                     budgetData.categoryAccounts shouldContain budgetData.generalAccount
                     budgetData.generalAccount.balance shouldBe BigDecimal(5000 - 300).setScale(2)
@@ -342,7 +418,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
  8. CategoryAccount('Travel', 0.00)
  9. CategoryAccount('Work', 0.00)
 Enter selection: """,
-                    "Enter the amount to allocate into ${application.budgetData.categoryAccounts[2].name} (0.00 - 5000.00]: ",
+                    "Enter the amount to allocate into ${application.budgetData.categoryAccounts[2].name} (0.00, 5000.00]: ",
                     "Enter description of transaction [allowance into $defaultFoodAccountName]: ",
                     """
                             |Budget!
