@@ -244,14 +244,14 @@ private fun AllMenus.recordDraftsMenu(
     val min = BigDecimal.ZERO.setScale(2)
     val amount: BigDecimal =
         SimplePrompt<BigDecimal>(
-            "Enter the amount of check or charge on ${selectedAccount.name} ($min, $max]: ",
+            "Enter the amount of check or charge on ${selectedAccount.name} [$min, $max]: ",
             inputReader = inputReader,
             outPrinter = outPrinter,
             validate = { input: String ->
                 input
                     .toCurrencyAmount()
                     ?.let {
-                        min < it && it <= max
+                        it in min..max
                     }
                     ?: false
             },
@@ -259,38 +259,40 @@ private fun AllMenus.recordDraftsMenu(
             it.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2)
         }
             .getResult()
-    val description: String =
-        SimplePrompt<String>(
-            "Enter description of recipient of draft or charge: ",
-            inputReader = inputReader,
-            outPrinter = outPrinter,
+    if (amount > BigDecimal.ZERO) {
+        val description: String =
+            SimplePrompt<String>(
+                "Enter description of recipient of draft or charge: ",
+                inputReader = inputReader,
+                outPrinter = outPrinter,
+            )
+                .getResult()
+        val timestamp: Instant =
+            TimestampPrompt("Use current time [Y]? ", budgetData.timeZone, clock, inputReader, outPrinter)
+                .getResult()
+                .toInstant(budgetData.timeZone)
+        val transactionBuilder: Transaction.Builder =
+            Transaction.Builder(description, timestamp)
+                .apply {
+                    draftItemBuilders.add(
+                        Transaction.ItemBuilder(
+                            amount = amount,
+                            description = description,
+                            draftAccount = selectedAccount,
+                        ),
+                    )
+                }
+        menuSession.push(
+            createTransactionItemMenu(
+                amount,
+                transactionBuilder,
+                description,
+                budgetData,
+                budgetDao,
+                userConfig,
+            ),
         )
-            .getResult()
-    val timestamp: Instant =
-        TimestampPrompt("Use current time [Y]? ", budgetData.timeZone, clock, inputReader, outPrinter)
-            .getResult()
-            .toInstant(budgetData.timeZone)
-    val transactionBuilder: Transaction.Builder =
-        Transaction.Builder(description, timestamp)
-            .apply {
-                draftItemBuilders.add(
-                    Transaction.ItemBuilder(
-                        amount = amount,
-                        description = description,
-                        draftAccount = selectedAccount,
-                    ),
-                )
-            }
-    menuSession.push(
-        createTransactionItemMenu(
-            amount,
-            transactionBuilder,
-            description,
-            budgetData,
-            budgetDao,
-            userConfig,
-        ),
-    )
+    }
 }
 
 private fun AllMenus.recordSpendingMenu(
@@ -308,14 +310,14 @@ private fun AllMenus.recordSpendingMenu(
     val min = BigDecimal.ZERO.setScale(2)
     val amount: BigDecimal =
         SimplePrompt<BigDecimal>(
-            "Enter the amount spent from ${selectedRealAccount.name} ($min, $max]: ",
+            "Enter the amount spent from ${selectedRealAccount.name} [$min, $max]: ",
             inputReader = inputReader,
             outPrinter = outPrinter,
             validate = { input: String ->
                 input
                     .toCurrencyAmount()
                     ?.let {
-                        min < it && it <= max
+                        it in min..max
                     }
                     ?: false
             },
@@ -323,39 +325,41 @@ private fun AllMenus.recordSpendingMenu(
             it.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2)
         }
             .getResult()
-    val description: String =
-        SimplePromptWithDefault(
-            "Enter description of transaction [spending]: ",
-            defaultValue = "spending",
-            inputReader = inputReader,
-            outPrinter = outPrinter,
+    if (amount > BigDecimal.ZERO) {
+        val description: String =
+            SimplePromptWithDefault(
+                "Enter description of transaction [spending]: ",
+                defaultValue = "spending",
+                inputReader = inputReader,
+                outPrinter = outPrinter,
+            )
+                .getResult()
+        val timestamp: Instant =
+            TimestampPrompt("Use current time [Y]? ", budgetData.timeZone, clock, inputReader, outPrinter)
+                .getResult()
+                .toInstant(budgetData.timeZone)
+        val transactionBuilder: Transaction.Builder =
+            Transaction.Builder(description, timestamp)
+                .apply {
+                    realItemBuilders.add(
+                        Transaction.ItemBuilder(
+                            amount = -amount,
+                            description = description,
+                            realAccount = selectedRealAccount,
+                        ),
+                    )
+                }
+        menuSession.push(
+            createTransactionItemMenu(
+                amount,
+                transactionBuilder,
+                description,
+                budgetData,
+                budgetDao,
+                userConfig,
+            ),
         )
-            .getResult()
-    val timestamp: Instant =
-        TimestampPrompt("Use current time [Y]? ", budgetData.timeZone, clock, inputReader, outPrinter)
-            .getResult()
-            .toInstant(budgetData.timeZone)
-    val transactionBuilder: Transaction.Builder =
-        Transaction.Builder(description, timestamp)
-            .apply {
-                realItemBuilders.add(
-                    Transaction.ItemBuilder(
-                        amount = -amount,
-                        description = description,
-                        realAccount = selectedRealAccount,
-                    ),
-                )
-            }
-    menuSession.push(
-        createTransactionItemMenu(
-            amount,
-            transactionBuilder,
-            description,
-            budgetData,
-            budgetDao,
-            userConfig,
-        ),
-    )
+    }
 }
 
 private fun AllMenus.createTransactionItemMenu(
@@ -386,62 +390,69 @@ private fun AllMenus.createTransactionItemMenu(
             )
         },
     ) { menuSession: MenuSession, selectedCategoryAccount: CategoryAccount ->
+        val max = min(
+            runningTotal,
+            selectedCategoryAccount.balance +
+                    transactionBuilder
+                        .categoryItemBuilders
+                        .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
+                            if (selectedCategoryAccount == itemBuilder.categoryAccount)
+                                runningValue + itemBuilder.amount!!
+                            else
+                                runningValue
+                        },
+        )
         val categoryAmount: BigDecimal =
             SimplePromptWithDefault<BigDecimal>(
                 "Enter the amount spent on ${
                     selectedCategoryAccount.name
-                } (0.00, [${
-                    min(
-                        runningTotal,
-                        selectedCategoryAccount.balance +
-                                transactionBuilder
-                                    .categoryItemBuilders
-                                    .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
-                                        if (selectedCategoryAccount == itemBuilder.categoryAccount)
-                                            runningValue + itemBuilder.amount!!
-                                        else
-                                            runningValue
-                                    },
-                    )
-                }]]: ",
+                } [0.00, [$max]]: ",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
-                defaultValue = runningTotal,
+                defaultValue = max,
             ) {
-                it.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2)
+                (it.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2))
+                    .let { entry: BigDecimal ->
+                        if (entry < BigDecimal.ZERO || entry > max)
+                            BigDecimal.ZERO.setScale(2)
+                        else
+                            entry
+                    }
             }
                 .getResult()
-        val categoryDescription =
-            SimplePromptWithDefault(
-                "Enter description for ${selectedCategoryAccount.name} spend [$description]: ",
-                defaultValue = description,
-                inputReader = inputReader,
-                outPrinter = outPrinter,
-            )
-                .getResult()
-        transactionBuilder.categoryItemBuilders.add(
-            Transaction.ItemBuilder(
-                amount = -categoryAmount,
-                description = if (categoryDescription == description) null else categoryDescription,
-                categoryAccount = selectedCategoryAccount,
-            ),
-        )
-        menuSession.pop()
-        if (runningTotal - categoryAmount > BigDecimal.ZERO) {
-            menuSession.push(
-                createTransactionItemMenu(
-                    runningTotal - categoryAmount,
-                    transactionBuilder,
-                    description,
-                    budgetData,
-                    budgetDao,
-                    userConfig,
+        if (categoryAmount > BigDecimal.ZERO) {
+            val categoryDescription =
+                SimplePromptWithDefault(
+                    "Enter description for ${selectedCategoryAccount.name} spend [$description]: ",
+                    defaultValue = description,
+                    inputReader = inputReader,
+                    outPrinter = outPrinter,
+                )
+                    .getResult()
+            transactionBuilder.categoryItemBuilders.add(
+                Transaction.ItemBuilder(
+                    amount = -categoryAmount,
+                    description = if (categoryDescription == description) null else categoryDescription,
+                    categoryAccount = selectedCategoryAccount,
                 ),
             )
-        } else {
-            val transaction = transactionBuilder.build()
-            budgetData.commit(transaction)
-            budgetDao.commit(transaction, budgetData.id)
+            menuSession.pop()
+            if (runningTotal - categoryAmount > BigDecimal.ZERO) {
+                menuSession.push(
+                    createTransactionItemMenu(
+                        runningTotal - categoryAmount,
+                        transactionBuilder,
+                        description,
+                        budgetData,
+                        budgetDao,
+                        userConfig,
+                    ),
+                )
+            } else {
+                val transaction = transactionBuilder.build()
+                budgetData.commit(transaction)
+                budgetDao.commit(transaction, budgetData.id)
+            }
         }
     }
 
@@ -507,14 +518,14 @@ private fun AllMenus.makeAllowancesSelectionMenu(
     val min = BigDecimal.ZERO.setScale(2)
     val amount: BigDecimal =
         SimplePrompt<BigDecimal>(
-            "Enter the amount to allocate into ${selectedCategoryAccount.name} ($min, $max]: ",
+            "Enter the amount to allocate into ${selectedCategoryAccount.name} [$min, $max]: ",
             inputReader = inputReader,
             outPrinter = outPrinter,
             validate = { input: String ->
                 input
                     .toCurrencyAmount()
                     ?.let {
-                        min < it && it <= max
+                        it in min..max
                     }
                     ?: false
             },
@@ -522,32 +533,34 @@ private fun AllMenus.makeAllowancesSelectionMenu(
             it.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2)
         }
             .getResult()
-    val description =
-        SimplePromptWithDefault(
-            "Enter description of transaction [allowance into ${selectedCategoryAccount.name}]: ",
-            defaultValue = "allowance into ${selectedCategoryAccount.name}",
-            inputReader = inputReader,
-            outPrinter = outPrinter,
-        )
-            .getResult()
-    val allocate = Transaction.Builder(description, clock.now())
-        .apply {
-            categoryItemBuilders.add(
-                Transaction.ItemBuilder(
-                    -amount,
-                    categoryAccount = budgetData.generalAccount,
-                ),
+    if (amount > BigDecimal.ZERO) {
+        val description =
+            SimplePromptWithDefault(
+                "Enter description of transaction [allowance into ${selectedCategoryAccount.name}]: ",
+                defaultValue = "allowance into ${selectedCategoryAccount.name}",
+                inputReader = inputReader,
+                outPrinter = outPrinter,
             )
-            categoryItemBuilders.add(
-                Transaction.ItemBuilder(
-                    amount,
-                    categoryAccount = selectedCategoryAccount,
-                ),
-            )
-        }
-        .build()
-    budgetData.commit(allocate)
-    budgetDao.commit(allocate, budgetData.id)
+                .getResult()
+        val allocate = Transaction.Builder(description, clock.now())
+            .apply {
+                categoryItemBuilders.add(
+                    Transaction.ItemBuilder(
+                        -amount,
+                        categoryAccount = budgetData.generalAccount,
+                    ),
+                )
+                categoryItemBuilders.add(
+                    Transaction.ItemBuilder(
+                        amount,
+                        categoryAccount = selectedCategoryAccount,
+                    ),
+                )
+            }
+            .build()
+        budgetData.commit(allocate)
+        budgetDao.commit(allocate, budgetData.id)
+    }
 }
 
 fun String.toCurrencyAmount(): BigDecimal? =

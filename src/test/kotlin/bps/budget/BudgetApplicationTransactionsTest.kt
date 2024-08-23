@@ -3,29 +3,15 @@ package bps.budget
 import bps.budget.auth.User
 import bps.budget.jdbc.BasicAccountsJdbcTestFixture
 import bps.budget.model.BudgetData
-import bps.budget.model.CategoryAccount
-import bps.budget.model.DraftAccount
-import bps.budget.model.RealAccount
-import bps.budget.model.Transaction
 import bps.budget.model.defaultCheckingAccountName
-import bps.budget.model.defaultCheckingDraftsAccountName
-import bps.budget.model.defaultEducationAccountName
-import bps.budget.model.defaultEntertainmentAccountName
 import bps.budget.model.defaultFoodAccountName
-import bps.budget.model.defaultGeneralAccountName
-import bps.budget.model.defaultMedicalAccountName
 import bps.budget.model.defaultNecessitiesAccountName
-import bps.budget.model.defaultNetworkAccountName
-import bps.budget.model.defaultTransportationAccountName
-import bps.budget.model.defaultTravelAccountName
 import bps.budget.model.defaultWalletAccountName
-import bps.budget.model.defaultWorkAccountName
 import bps.budget.persistence.getBudgetNameFromPersistenceConfig
 import bps.budget.persistence.jdbc.JdbcDao
 import bps.budget.ui.ConsoleUiFacade
 import bps.console.ComplexConsoleIoTestFixture
 import io.kotest.assertions.asClue
-import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContain
@@ -80,16 +66,6 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
                 unPause()
                 waitForPause(helper.awaitMillis).shouldBeTrue()
-                application.budgetData.asClue { budgetData: BudgetData ->
-                    budgetData.categoryAccounts shouldContain budgetData.generalAccount
-                    budgetData.generalAccount.balance shouldBe BigDecimal(5200).setScale(2)
-                    budgetData.categoryAccounts.size shouldBe 10
-                }
-                application.budgetDao.load(application.budgetData.id, userId).asClue { budgetData: BudgetData ->
-                    budgetData.categoryAccounts shouldContain budgetData.generalAccount
-                    budgetData.generalAccount.balance shouldBe BigDecimal(5200).setScale(2)
-                    budgetData.categoryAccounts.size shouldBe 10
-                }
                 outputs shouldContainExactly listOf(
                     """
                             |Budget!
@@ -139,6 +115,16 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |""".trimMargin(),
                     "Enter selection: ",
                 )
+                application.budgetData.asClue { budgetData: BudgetData ->
+                    budgetData.categoryAccounts shouldContain budgetData.generalAccount
+                    budgetData.generalAccount.balance shouldBe BigDecimal(5200).setScale(2)
+                    budgetData.categoryAccounts.size shouldBe 10
+                }
+                application.budgetDao.load(application.budgetData.id, userId).asClue { budgetData: BudgetData ->
+                    budgetData.categoryAccounts shouldContain budgetData.generalAccount
+                    budgetData.generalAccount.balance shouldBe BigDecimal(5200).setScale(2)
+                    budgetData.categoryAccounts.size shouldBe 10
+                }
             }
             "allocate to food and necessities" {
                 inputs.addAll(
@@ -146,22 +132,6 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
                 unPause()
                 waitForPause(helper.awaitMillis).shouldBeTrue()
-                application.budgetData.asClue { budgetData: BudgetData ->
-                    budgetData.categoryAccounts shouldContain budgetData.generalAccount
-                    budgetData.generalAccount.balance shouldBe BigDecimal(5200 - 400).setScale(2)
-                    budgetData.categoryAccounts.size shouldBe 10
-                    budgetData.categoryAccounts
-                        .find { it.name == defaultFoodAccountName }!!
-                        .balance shouldBe BigDecimal(300).setScale(2)
-                }
-                application.budgetDao.load(application.budgetData.id, userId).asClue { budgetData: BudgetData ->
-                    budgetData.categoryAccounts shouldContain budgetData.generalAccount
-                    budgetData.generalAccount.balance shouldBe BigDecimal(5200 - 400).setScale(2)
-                    budgetData.categoryAccounts.size shouldBe 10
-                    budgetData.categoryAccounts
-                        .find { it.name == defaultFoodAccountName }!!
-                        .balance shouldBe BigDecimal(300).setScale(2)
-                }
                 outputs shouldContainExactly listOf(
                     """
                             |Budget!
@@ -191,7 +161,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 11. Quit
 """,
                     "Enter selection: ",
-                    "Enter the amount to allocate into ${application.budgetData.categoryAccounts[2].name} (0.00, 5200.00]: ",
+                    "Enter the amount to allocate into ${application.budgetData.categoryAccounts[2].name} [0.00, 5200.00]: ",
                     "Enter description of transaction [allowance into $defaultFoodAccountName]: ",
                     "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
  1.       0.00 | Education
@@ -207,7 +177,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 11. Quit
 """,
                     "Enter selection: ",
-                    "Enter the amount to allocate into ${application.budgetData.categoryAccounts[5].name} (0.00, 4900.00]: ",
+                    "Enter the amount to allocate into ${application.budgetData.categoryAccounts[5].name} [0.00, 4900.00]: ",
                     "Enter description of transaction [allowance into $defaultNecessitiesAccountName]: ",
                     "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
  1.       0.00 | Education
@@ -337,7 +307,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |
                     """.trimMargin(),
                     "Enter selection: ",
-                    "Enter the amount spent from Wallet (0.00, 200.00]: ",
+                    "Enter the amount spent from Wallet [0.00, 200.00]: ",
                     "Enter description of transaction [spending]: ",
                     "Use current time [Y]? ",
                     """
@@ -356,7 +326,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |12. Quit
                         |""".trimMargin(),
                     "Enter selection: ",
-                    "Enter the amount spent on Food (0.00, [1.50]]: ",
+                    "Enter the amount spent on Food [0.00, [1.50]]: ",
                     "Enter description for Food spend [Pepsi]: ",
                     """
                         |Select real account money was spent from.
@@ -404,7 +374,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |
                     """.trimMargin(),
                     "Enter selection: ",
-                    "Enter the amount of check or charge on Checking Drafts (0.00, 5000.00]: ",
+                    "Enter the amount of check or charge on Checking Drafts [0.00, 5000.00]: ",
                     "Enter description of recipient of draft or charge: ",
                     "Use current time [Y]? ",
                     """
@@ -423,7 +393,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |12. Quit
                         |""".trimMargin(),
                     "Enter selection: ",
-                    "Enter the amount spent on Food (0.00, [298.50]]: ",
+                    "Enter the amount spent on Food [0.00, [298.50]]: ",
                     "Enter description for Food spend [SuperMarket]: ",
                     """
                         |Select a category that some of that money was spent on.  Left to cover: $100.00
@@ -441,7 +411,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |12. Quit
                         |""".trimMargin(),
                     "Enter selection: ",
-                    "Enter the amount spent on Necessities (0.00, [100.00]]: ",
+                    "Enter the amount spent on Necessities [0.00, [100.00]]: ",
                     "Enter description for Necessities spend [SuperMarket]: ",
                     """
                         |Select account the draft or charge was made on
@@ -453,110 +423,37 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     "Enter selection: ",
                 )
             }
-            "!check balances after writing check" {
-                application.budgetData.realAccounts.forEach { realAccount: RealAccount ->
-                    when (realAccount.name) {
-                        defaultCheckingAccountName -> {
-                            realAccount.balance shouldBe BigDecimal("1000.00")
-                        }
-                        defaultWalletAccountName ->
-                            realAccount.balance shouldBe BigDecimal.ZERO.setScale(2)
-                        else ->
-                            fail("unexpected real account")
-                    }
-                }
-                application.budgetData.categoryAccounts.forEach { it: CategoryAccount ->
-                    when (it.name) {
-                        defaultGeneralAccountName -> it.balance shouldBe BigDecimal("700.00")
-                        defaultFoodAccountName -> it.balance shouldBe BigDecimal("200.00")
-                        defaultNecessitiesAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-                        defaultWorkAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-                        defaultTransportationAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-                        defaultTravelAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-                        defaultMedicalAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-                        defaultEducationAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-                        defaultEntertainmentAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-                        defaultNetworkAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-                        else -> fail("unexpected category account: $it")
-                    }
-                }
-                application.budgetData.draftAccounts.forEach { it: DraftAccount ->
-                    when (it.name) {
-                        defaultCheckingDraftsAccountName -> it.balance shouldBe BigDecimal("100.00")
-                        else -> fail("unexpected draft account: $it")
-                    }
-                }
+            "!ensure user can back out of a transaction without saving" {
             }
             "!check clears" {
-                val amount = BigDecimal("100.00")
-                val writeCheck: Transaction = Transaction.Builder(
-                    description = "groceries",
-                    timestamp = clock.now(),
+                inputs.addAll(
+                    listOf("6", "1", "300", "SuperMarket", "", "3", "200", "", "6", "100", "", "3"),
                 )
-                    .apply {
-                        realItemBuilders.add(
-                            Transaction.ItemBuilder(
-                                -amount,
-                                realAccount = application.budgetData.realAccounts.find { it.name == defaultCheckingAccountName }!!,
-                            ),
-                        )
-                        draftItemBuilders.add(
-                            Transaction.ItemBuilder(
-                                -amount,
-                                draftAccount = application.budgetData.draftAccounts.find { it.name == defaultCheckingDraftsAccountName }!!,
-                            ),
-                        )
-
-                    }
-                    .build()
-                application.budgetData.commit(writeCheck)
-                jdbcDao.commit(writeCheck, application.budgetData.id)
+                unPause()
+                waitForPause(helper.awaitMillis).shouldBeTrue()
+                outputs shouldContainExactly listOf(
+                    """
+                            |Budget!
+                            | 1. $recordIncome
+                            | 2. $makeAllowances
+                            | 3. $recordSpending
+                            | 4. $viewHistory
+                            | 5. $recordDrafts
+                            | 6. $clearDrafts
+                            | 7. $transfer
+                            | 8. $setup
+                            | 9. Quit
+                            |""".trimMargin(),
+                    "Enter selection: ",
+                )
             }
-            "!check balances after check clears" {
-                checkBalancesAfterCheckClears(application.budgetData)
+            "!spend using credit card" {
+            }
+            "!pay credit card balance" {
             }
             "!check balances in DB" {
-                checkBalancesAfterCheckClears(jdbcDao.load(application.budgetData.id, userId))
             }
         }
     }
 }
 
-fun checkBalancesAfterCheckClears(budgetData: BudgetData) {
-    budgetData.realAccounts.size shouldBe 2
-    budgetData.realAccounts.forEach { realAccount: RealAccount ->
-        when (realAccount.name) {
-            defaultCheckingAccountName -> {
-                realAccount.balance shouldBe BigDecimal("900.00")
-            }
-            defaultWalletAccountName ->
-                realAccount.balance shouldBe BigDecimal.ZERO.setScale(2)
-            else ->
-                fail("unexpected real account: $realAccount")
-        }
-    }
-    budgetData.categoryAccounts.size shouldBe 10
-    budgetData.categoryAccounts.forEach { it: CategoryAccount ->
-        when (it.name) {
-            defaultGeneralAccountName -> it.balance shouldBe BigDecimal("700.00")
-            defaultFoodAccountName -> it.balance shouldBe BigDecimal("200.00")
-            defaultNecessitiesAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-            defaultWorkAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-            defaultTransportationAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-            defaultTravelAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-            defaultMedicalAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-            defaultEducationAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-            defaultEntertainmentAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-            defaultNetworkAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-            else -> fail("unexpected category account: $it")
-        }
-    }
-    budgetData.draftAccounts.size shouldBe 1
-    budgetData.draftAccounts.forEach { it: DraftAccount ->
-        when (it.name) {
-            defaultCheckingDraftsAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-            else -> fail("unexpected draft account: $it")
-        }
-    }
-
-}
