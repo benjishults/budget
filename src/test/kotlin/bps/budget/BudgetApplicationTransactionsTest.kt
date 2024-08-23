@@ -369,36 +369,19 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     "Enter selection: ",
                 )
             }
-            "!write a check to SuperMarket" {
+            "write a check to SuperMarket" {
                 inputs.addAll(
-                    listOf("4", "1", "300", "", "9"),
+                    listOf("5", "1", "300", "SuperMarket", "", "3", "200", "", "6", "100", "", "3"),
                 )
                 unPause()
                 waitForPause(helper.awaitMillis).shouldBeTrue()
-                application.budgetData.asClue { budgetData: BudgetData ->
-                    budgetData.categoryAccounts shouldContain budgetData.generalAccount
-                    budgetData.generalAccount.balance shouldBe BigDecimal(5000 - 300).setScale(2)
-                    budgetData.categoryAccounts.size shouldBe 10
-                    budgetData.categoryAccounts
-                        .find { it.name == defaultFoodAccountName }!!
-                        .balance shouldBe BigDecimal(300).setScale(2)
-                }
-                application.budgetDao.load(application.budgetData.id, userId).asClue { budgetData: BudgetData ->
-                    budgetData.categoryAccounts shouldContain budgetData.generalAccount
-                    budgetData.generalAccount.balance shouldBe BigDecimal(5000 - 300).setScale(2)
-                    budgetData.categoryAccounts.size shouldBe 10
-                    budgetData.categoryAccounts
-                        .find { it.name == defaultFoodAccountName }!!
-                        .balance shouldBe BigDecimal(300).setScale(2)
-                }
-                unPause()
                 outputs shouldContainExactly listOf(
                     """
                             |Budget!
                             | 1. $recordIncome
                             | 2. $makeAllowances
                             | 3. $recordSpending
-                            | 4. View History
+                            | 4. $viewHistory
                             | 5. $recordDrafts
                             | 6. $clearDrafts
                             | 7. $transfer
@@ -406,59 +389,69 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 9. Quit
                             |""".trimMargin(),
                     "Enter selection: ",
-                    "Every month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n",
-                    "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
- 1. CategoryAccount('Education', 0.00)
- 2. CategoryAccount('Entertainment', 0.00)
- 3. CategoryAccount('Food', 0.00)
- 4. CategoryAccount('Medical', 0.00)
- 5. CategoryAccount('Necessities', 0.00)
- 6. CategoryAccount('Network', 0.00)
- 7. CategoryAccount('Transportation', 0.00)
- 8. CategoryAccount('Travel', 0.00)
- 9. CategoryAccount('Work', 0.00)
-Enter selection: """,
-                    "Enter the amount to allocate into ${application.budgetData.categoryAccounts[2].name} (0.00, 5000.00]: ",
-                    "Enter description of transaction [allowance into $defaultFoodAccountName]: ",
                     """
-                            |Budget!
-                            | 1. $recordIncome
-                            | 2. $makeAllowances
-                            | 3. $recordSpending
-                            | 4. View History
-                            | 5. $recordDrafts
-                            | 6. $clearDrafts
-                            | 7. $transfer
-                            | 8. $setup
-                            | 9. Quit
-                            |""".trimMargin(),
+            |Writing a check or using a credit card is slightly different from paying cash or using a debit card.
+            |You will have a "drafts" account associated with each checking account or credit card.
+            |When a check is written or credit card charged, the amount is transferred from the category accounts
+            |(such as food or rent) to the "draft" account.
+            |When the check clears or the credit card bill is paid, those transactions are cleared from the "draft" account.
+            |""".trimMargin(),
+                    """
+                        |Select account the draft or charge was made on
+                        | 1.   5,000.00 | Checking Drafts
+                        | 2. Back
+                        | 3. Quit
+                        |
+                    """.trimMargin(),
                     "Enter selection: ",
-                    "Quitting\n",
+                    "Enter the amount of check or charge on Checking Drafts (0.00, 5000.00]: ",
+                    "Enter description of recipient of draft or charge: ",
+                    "Use current time [Y]? ",
+                    """
+                        |Select a category that some of that money was spent on.  Left to cover: $300.00
+                        | 1.       0.00 | Education
+                        | 2.       0.00 | Entertainment
+                        | 3.     298.50 | Food
+                        | 4.   4,800.00 | General
+                        | 5.       0.00 | Medical
+                        | 6.     100.00 | Necessities
+                        | 7.       0.00 | Network
+                        | 8.       0.00 | Transportation
+                        | 9.       0.00 | Travel
+                        |10.       0.00 | Work
+                        |11. Back
+                        |12. Quit
+                        |""".trimMargin(),
+                    "Enter selection: ",
+                    "Enter the amount spent on Food (0.00, [298.50]]: ",
+                    "Enter description for Food spend [SuperMarket]: ",
+                    """
+                        |Select a category that some of that money was spent on.  Left to cover: $100.00
+                        | 1.       0.00 | Education
+                        | 2.       0.00 | Entertainment
+                        | 3.      98.50 | Food
+                        | 4.   4,800.00 | General
+                        | 5.       0.00 | Medical
+                        | 6.     100.00 | Necessities
+                        | 7.       0.00 | Network
+                        | 8.       0.00 | Transportation
+                        | 9.       0.00 | Travel
+                        |10.       0.00 | Work
+                        |11. Back
+                        |12. Quit
+                        |""".trimMargin(),
+                    "Enter selection: ",
+                    "Enter the amount spent on Necessities (0.00, [100.00]]: ",
+                    "Enter description for Necessities spend [SuperMarket]: ",
+                    """
+                        |Select account the draft or charge was made on
+                        | 1.   4,700.00 | Checking Drafts
+                        | 2. Back
+                        | 3. Quit
+                        |
+                    """.trimMargin(),
+                    "Enter selection: ",
                 )
-                val amount = BigDecimal("100.00")
-                val writeCheck: Transaction =
-                    Transaction
-                        .Builder(
-                            description = "groceries",
-                            timestamp = clock.now(),
-                        )
-                        .apply {
-                            categoryItemBuilders.add(
-                                Transaction.ItemBuilder(
-                                    -amount,
-                                    categoryAccount = application.budgetData.categoryAccounts.find { it.name == defaultFoodAccountName }!!,
-                                ),
-                            )
-                            draftItemBuilders.add(
-                                Transaction.ItemBuilder(
-                                    amount,
-                                    draftAccount = application.budgetData.draftAccounts.find { it.name == defaultCheckingDraftsAccountName }!!,
-                                ),
-                            )
-                        }
-                        .build()
-                application.budgetData.commit(writeCheck)
-                jdbcDao.commit(writeCheck, application.budgetData.id)
             }
             "!check balances after writing check" {
                 application.budgetData.realAccounts.forEach { realAccount: RealAccount ->

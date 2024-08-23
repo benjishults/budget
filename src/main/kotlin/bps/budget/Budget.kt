@@ -157,10 +157,11 @@ fun AllMenus.budgetMenu(
                 outPrinter(
                     """
             |Writing a check or using a credit card is slightly different from paying cash or using a debit card.
-            |You will have a category fund account, called a drafts account, associated with each checking account and a category fund account associated with each credit card.
-            |When a check is written, the amount is transferred from one category fund account to another:
-            |the category account (such as food or rent) is debited and the draft or credit card account is credited with the same amount.
-            |This is because you have not actually lost the money until you pay the credit card bill or until the check clears.""".trimMargin(),
+            |You will have a "drafts" account associated with each checking account or credit card.
+            |When a check is written or credit card charged, the amount is transferred from the category accounts
+            |(such as food or rent) to the "draft" account.
+            |When the check clears or the credit card bill is paid, those transactions are cleared from the "draft" account.
+            |""".trimMargin(),
                 )
             },
         )
@@ -243,7 +244,7 @@ private fun AllMenus.recordDraftsMenu(
     val min = BigDecimal.ZERO.setScale(2)
     val amount: BigDecimal =
         SimplePrompt<BigDecimal>(
-            "Enter the amount of check or charge ${selectedAccount.name} ($min, $max]: ",
+            "Enter the amount of check or charge on ${selectedAccount.name} ($min, $max]: ",
             inputReader = inputReader,
             outPrinter = outPrinter,
             validate = { input: String ->
@@ -369,11 +370,40 @@ private fun AllMenus.createTransactionItemMenu(
         header = "Select a category that some of that money was spent on.  Left to cover: \$$runningTotal",
         limit = userConfig.numberOfItemsInScrollingList,
         baseList = budgetData.categoryAccounts,
-        labelGenerator = { String.format("%,10.2f | %s", balance, name) },
+        labelGenerator = {
+            String.format(
+                "%,10.2f | %s",
+                balance +
+                        transactionBuilder
+                            .categoryItemBuilders
+                            .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
+                                if (this == itemBuilder.categoryAccount)
+                                    runningValue + itemBuilder.amount!!
+                                else
+                                    runningValue
+                            },
+                name,
+            )
+        },
     ) { menuSession: MenuSession, selectedCategoryAccount: CategoryAccount ->
         val categoryAmount: BigDecimal =
             SimplePromptWithDefault<BigDecimal>(
-                "Enter the amount spent on ${selectedCategoryAccount.name} (0.00, [$runningTotal]]: ",
+                "Enter the amount spent on ${
+                    selectedCategoryAccount.name
+                } (0.00, [${
+                    min(
+                        runningTotal,
+                        selectedCategoryAccount.balance +
+                                transactionBuilder
+                                    .categoryItemBuilders
+                                    .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
+                                        if (selectedCategoryAccount == itemBuilder.categoryAccount)
+                                            runningValue + itemBuilder.amount!!
+                                        else
+                                            runningValue
+                                    },
+                    )
+                }]]: ",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
                 defaultValue = runningTotal,
@@ -381,7 +411,6 @@ private fun AllMenus.createTransactionItemMenu(
                 it.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2)
             }
                 .getResult()
-//        runningTotal -= categoryAmount
         val categoryDescription =
             SimplePromptWithDefault(
                 "Enter description for ${selectedCategoryAccount.name} spend [$description]: ",
@@ -527,3 +556,6 @@ fun String.toCurrencyAmount(): BigDecimal? =
     } catch (e: NumberFormatException) {
         null
     }
+
+fun min(a: BigDecimal, b: BigDecimal): BigDecimal =
+    if ((a <= b)) a else b
