@@ -14,7 +14,6 @@ data class UserConfiguration(
     val defaultLogin: String? = null,
     val defaultTimeZone: String? = null,
     val numberOfItemsInScrollingList: Int = 30,
-//    val defaultBudgetName: String?,
 ) {
     init {
         require(
@@ -34,7 +33,6 @@ data class FileConfig(
 ) : BudgetConfig
 
 data class JdbcConfig(
-    val driver: String,
     override val budgetName: String? = null,
     val database: String = "budget",
     val schema: String = "public",

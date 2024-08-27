@@ -9,6 +9,7 @@ import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.OutPrinter
+import bps.console.menu.MenuSession
 import bps.console.menu.ScrollingSelectionMenu
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -17,19 +18,24 @@ import kotlinx.datetime.format
 import kotlinx.datetime.format.char
 import kotlinx.datetime.toLocalDateTime
 
+const val TRANSACTIONS_TABLE_HEADER = """
+    Time Stamp          | Amount     | Description"""
+
 open class ViewTransactionsMenu(
     private val account: Account,
     private val budgetDao: BudgetDao,
     private val budgetData: BudgetData,
     limit: Int = 30,
     offset: Int = 0,
-    header: String? = """
-        |'${account.name}' Account Transactions
-        |    Time Stamp          | Amount     | Description""".trimMargin(),
+    private val filter: (Transaction.Item) -> Boolean = { true },
+    header: String? = "'${account.name}' Account Transactions",
     prompt: String = "Select transaction for details: ",
     val outPrinter: OutPrinter = DefaultOutPrinter,
+    next: (MenuSession, Pair<Transaction, Transaction.Item>) -> Unit = { _, (transaction: Transaction, _) ->
+        outPrinter.showTransactionDetailsAction(transaction, budgetData)
+    },
 ) : ScrollingSelectionMenu<Pair<Transaction, Transaction.Item>>(
-    header,
+    header + TRANSACTIONS_TABLE_HEADER,
     prompt,
     limit,
     offset,
@@ -100,12 +106,11 @@ open class ViewTransactionsMenu(
                             }
                         } == account
                     }
+                    .filter(filter)
                     .map { transaction to it }
             }
     },
-    next = { _, (transaction: Transaction, _) ->
-        outPrinter.showTransactionDetailsAction(transaction, budgetData)
-    },
+    next = next,
 ) {
 
     init {
@@ -118,29 +123,32 @@ private fun OutPrinter.showTransactionDetailsAction(transaction: Transaction, bu
     invoke(
         buildString {
             append(
-                transaction.timestamp.toLocalDateTime(budgetData.timeZone).format(
-                    LocalDateTime.Format {
-                        date(
-                            LocalDate.Format {
-                                year()
-                                char('-')
-                                monthNumber()
-                                char('-')
-                                dayOfMonth()
-                            },
-                        )
-                        char(' ')
-                        time(
-                            LocalTime.Format {
-                                hour()
-                                char(':')
-                                minute()
-                                char(':')
-                                second()
-                            },
-                        )
-                    },
-                ),
+                transaction
+                    .timestamp
+                    .toLocalDateTime(budgetData.timeZone)
+                    .format(
+                        LocalDateTime.Format {
+                            date(
+                                LocalDate.Format {
+                                    year()
+                                    char('-')
+                                    monthNumber()
+                                    char('-')
+                                    dayOfMonth()
+                                },
+                            )
+                            char(' ')
+                            time(
+                                LocalTime.Format {
+                                    hour()
+                                    char(':')
+                                    minute()
+                                    char(':')
+                                    second()
+                                },
+                            )
+                        },
+                    ),
             )
             append("\n")
             append(transaction.description)

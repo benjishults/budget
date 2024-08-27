@@ -14,9 +14,11 @@ data class BudgetAccess(
     val budgetName: String,
     val timeZone: TimeZone,
     val coarseAccess: CoarseAccess? = null,
+    // NOTE currently unused
     val fineAccess: List<FineAccess> = emptyList(),
 )
 
+// NOTE currently unused
 enum class FineAccess {
     read__transactions,
     create__transactions,
@@ -32,6 +34,7 @@ enum class FineAccess {
     edit__draft_accounts__balance,
 }
 
+// NOTE currently unused
 enum class CoarseAccess {
     view,
     transactions,

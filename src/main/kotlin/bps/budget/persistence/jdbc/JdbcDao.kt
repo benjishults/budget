@@ -7,6 +7,7 @@ import bps.budget.model.Account
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftAccount
+import bps.budget.model.DraftStatus
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
@@ -255,10 +256,12 @@ create table if not exists draft_accounts
                     """
 create table if not exists transactions
 (
-    id            uuid         not null unique,
-    description   varchar(110) not null default '',
-    timestamp_utc timestamp    not null default now(),
-    budget_id     uuid         not null references budgets (id),
+    id                        uuid         not null unique,
+    description               varchar(110) not null default '',
+    timestamp_utc             timestamp    not null default now(),
+    -- the transaction that clears this transaction
+    cleared_by_transaction_id uuid         null,
+    budget_id                 uuid         not null references budgets (id),
     primary key (id, budget_id)
 )
                     """.trimIndent(),
@@ -285,6 +288,7 @@ create table if not exists transaction_items
     category_account_id uuid           null references category_accounts (id),
     real_account_id     uuid           null references real_accounts (id),
     draft_account_id    uuid           null references draft_accounts (id),
+    draft_status        varchar        not null default 'none', -- 'none' 'outstanding' 'cleared'
     budget_id           uuid           not null references budgets (id),
     constraint only_one_account_per_transaction_item check
         ((real_account_id is not null and (category_account_id is null and draft_account_id is null)) or
@@ -330,6 +334,15 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         }
     }
 
+    /**
+     * if
+     * 1. [account] is real
+     * 2. there is a single other item in the transaction
+     * 3. that item has status 'clearing'
+     * then
+     * 1. pull the category items from the transactions cleared by this transaction
+     * 2. replace the 'clearing' item with those items
+     */
     override fun fetchTransactions(
         account: Account,
         data: BudgetData,
@@ -337,6 +350,8 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         offset: Int,
     ): List<Transaction> =
         connection.transactOrThrow {
+            // TODO if it is a clearing transaction, then create the full transaction by combining the cleared category items
+            //      with this.
             prepareStatement(
                 """
                     |select t.timestamp_utc as timestamp_utc,
@@ -346,7 +361,8 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                     |       i.description as item_description,
                     |       i.category_account_id,
                     |       i.draft_account_id,
-                    |       i.real_account_id
+                    |       i.real_account_id,
+                    |       i.draft_status
                     |from transactions t
                     |         join transaction_items i on i.transaction_id = t.id
                     |where t.budget_id = ?
@@ -389,34 +405,84 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                                             transactionBuilder = initializeTransactionBuilder(result, uuid)
                                         }
                                     }
-                                val itemAmount = result.getCurrencyAmount("item_amount")
-                                val itemDescription: String? = result.getString("item_description")
-                                transactionBuilder!!.categoryItemBuilders.maybeAddItemBuilder(
-                                    result,
-                                    itemAmount,
-                                    itemDescription,
-                                    data,
-                                    "category",
-                                ) { account: CategoryAccount ->
-                                    this.categoryAccount = account
-                                }
-                                transactionBuilder!!.realItemBuilders.maybeAddItemBuilder(
-                                    result,
-                                    itemAmount,
-                                    itemDescription,
-                                    data,
-                                    "real",
-                                ) { account: RealAccount ->
-                                    realAccount = account
-                                }
-                                transactionBuilder!!.draftItemBuilders.maybeAddItemBuilder(
-                                    result,
-                                    itemAmount,
-                                    itemDescription,
-                                    data,
-                                    "draft",
-                                ) { account: DraftAccount ->
-                                    draftAccount = account
+                                val draftStatus: DraftStatus =
+                                    DraftStatus.valueOf(result.getString("draft_status"))
+                                if (draftStatus == DraftStatus.clearing) {
+                                    prepareStatement(
+                                        """
+                                        |select t.*,
+                                        |       i.amount      as item_amount,
+                                        |       i.description as item_description,
+                                        |       i.category_account_id
+                                        |from transactions t
+                                        |         join transaction_items i on i.transaction_id = t.id
+                                        |where t.id in (select id
+                                        |               from transactions
+                                        |               where cleared_by_transaction_id = ?)
+                                        |  and i.category_account_id is not null
+                                    """.trimMargin(),
+                                    )
+                                        .use { preparedStatement: PreparedStatement ->
+                                            preparedStatement.setUuid(1, transactionId!!)
+                                            preparedStatement.executeQuery()
+                                                .use { result: ResultSet ->
+                                                    while (result.next()) {
+                                                        val itemAmount = result.getCurrencyAmount("item_amount")
+                                                        val itemDescription: String? =
+                                                            result.getString("item_description")
+                                                        transactionBuilder!!
+                                                            .categoryItemBuilders
+                                                            .maybeAddItemBuilder(
+                                                                result,
+                                                                itemAmount,
+                                                                itemDescription,
+                                                                data,
+                                                                "category",
+                                                                DraftStatus.none,
+                                                            ) { account: CategoryAccount ->
+                                                                this.categoryAccount = account
+                                                            }
+                                                    }
+                                                }
+                                        }
+                                } else {
+                                    val itemAmount = result.getCurrencyAmount("item_amount")
+                                    val itemDescription: String? = result.getString("item_description")
+                                    transactionBuilder!!
+                                        .categoryItemBuilders
+                                        .maybeAddItemBuilder(
+                                            result,
+                                            itemAmount,
+                                            itemDescription,
+                                            data,
+                                            "category",
+                                            draftStatus,
+                                        ) { account: CategoryAccount ->
+                                            this.categoryAccount = account
+                                        }
+                                    transactionBuilder!!
+                                        .realItemBuilders.maybeAddItemBuilder(
+                                            result,
+                                            itemAmount,
+                                            itemDescription,
+                                            data,
+                                            "real",
+                                            draftStatus,
+                                        ) { account: RealAccount ->
+                                            realAccount = account
+                                        }
+                                    transactionBuilder!!
+                                        .draftItemBuilders
+                                        .maybeAddItemBuilder(
+                                            result,
+                                            itemAmount,
+                                            itemDescription,
+                                            data,
+                                            "draft",
+                                            draftStatus,
+                                        ) { account: DraftAccount ->
+                                            draftAccount = account
+                                        }
                                 }
                             }
                             conditionallyAddCompleteTransactionToList(transactionId, returnValue, transactionBuilder)
@@ -431,14 +497,17 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         itemDescription: String?,
         data: BudgetData,
         type: String,
+        draftStatus: DraftStatus = DraftStatus.none,
         setter: Transaction.ItemBuilder.(T) -> Unit,
     ) {
-        result.getObject("${type}_account_id", UUID::class.java)
+        result
+            .getObject("${type}_account_id", UUID::class.java)
             ?.let { id: UUID ->
                 add(
                     Transaction.ItemBuilder(
                         amount = itemAmount,
                         description = itemDescription,
+                        draftStatus = draftStatus,
                     )
                         .apply { setter(data.getAccountById(id)) },
                 )
@@ -661,11 +730,108 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         }
             ?: throw DataConfigurationException("Transaction rolled back.")
 
+    // TODO if this function ends up working only for checks, the validation and signature could change
+    /**
+     * @throws IllegalArgumentException if either the [draftTransactionItems] or the [clearingTransaction] is not what
+     * we expect
+     */
+    override fun clearCheck(
+        draftTransactionItems: List<Transaction.Item>,
+        clearingTransaction: Transaction,
+        budgetId: UUID,
+    ) {
+        // require clearTransaction is a simple draft transaction(s) clearing transaction
+        require(clearingTransaction.draftItems.isNotEmpty())
+        require(clearingTransaction.categoryItems.isEmpty())
+        require(clearingTransaction.realItems.size == 1)
+        val realTransactionItem: Transaction.Item = clearingTransaction.realItems.first()
+        val realAccount: RealAccount = realTransactionItem.realAccount!!
+        require(
+            clearingTransaction
+                .draftItems
+                .first()
+                .draftAccount
+                ?.realCompanion == realAccount,
+        )
+        // require draftTransactionItems to be what we expect
+        require(draftTransactionItems.isNotEmpty())
+        require(
+            draftTransactionItems.all {
+                it.draftAccount
+                    ?.realCompanion == realAccount
+                        &&
+                        with(it.transaction) {
+                            realItems.isEmpty()
+                                    &&
+                                    draftItems.size == 1
+                        }
+            },
+        )
+        require(
+            draftTransactionItems
+                .mapTo(mutableSetOf()) { it.transaction }
+                .size ==
+                    draftTransactionItems.size,
+        )
+        require(
+            draftTransactionItems
+                .fold(BigDecimal.ZERO.setScale(2)) { sum, transactionItem ->
+                    sum + transactionItem.amount
+                } ==
+                    -realTransactionItem.amount,
+        )
+        connection.transactOrNull {
+            draftTransactionItems
+                .forEach { draftTransactionItem ->
+                    prepareStatement(
+                        """
+                            |update transaction_items ti
+                            |set draft_status = 'cleared'
+                            |where ti.budget_id = ?
+                            |and ti.transaction_id = ?
+                            |and ti.draft_account_id = ?
+                            |and ti.draft_status = 'outstanding'
+                        """.trimMargin(),
+                    )
+                        .use { statement ->
+                            statement.setUuid(1, budgetId)
+                            statement.setUuid(2, draftTransactionItem.transaction.id)
+                            statement.setUuid(3, draftTransactionItem.draftAccount!!.id)
+                            if (statement.executeUpdate() != 1)
+                                throw IllegalStateException("Check being cleared not found in DB")
+                        }
+                    prepareStatement(
+                        """
+                            |update transactions t
+                            |set cleared_by_transaction_id = ?
+                            |where t.id = ?
+                            |and t.budget_id = ?
+                        """.trimMargin(),
+                    )
+                        .use { statement ->
+                            statement.setUuid(1, clearingTransaction.id)
+                            statement.setUuid(2, draftTransactionItem.transaction.id)
+                            statement.setUuid(3, budgetId)
+                            statement.executeUpdate()
+                        }
+                }
+            insertTransactionPreparedStatement(clearingTransaction, budgetId)
+                .use { insertTransaction: PreparedStatement ->
+                    insertTransaction.executeUpdate()
+                }
+            insertTransactionItemsPreparedStatement(clearingTransaction, budgetId)
+                .use { insertTransactionItem: PreparedStatement ->
+                    insertTransactionItem.executeUpdate()
+                }
+            updateBalances(clearingTransaction, budgetId)
+        }
+
+    }
+
     /**
      * Inserts the transaction records and updates the account balances in the DB.
      */
     override fun commit(transaction: Transaction, budgetId: UUID) {
-        check(transaction.validate())
         connection.transactOrNull {
             insertTransactionPreparedStatement(transaction, budgetId)
                 .use { insertTransaction: PreparedStatement ->
@@ -745,18 +911,18 @@ create index if not exists lookup_draft_account_transaction_items_by_account
     ): PreparedStatement {
         val transactionItemCounter =
             transaction.categoryItems.size + transaction.realItems.size + transaction.draftItems.size
-        val statement = buildString {
+        val insertSql = buildString {
             var counter = transactionItemCounter
-            append("insert into transaction_items (transaction_id, description, amount, budget_id, category_account_id, real_account_id, draft_account_id) values ")
+            append("insert into transaction_items (transaction_id, description, amount, draft_status, budget_id, category_account_id, real_account_id, draft_account_id) values ")
             if (counter-- > 0) {
-                append("(?, ?, ?, ?, ?, ?, ?)")
+                append("(?, ?, ?, ?, ?, ?, ?, ?)")
                 while (counter-- > 0) {
-                    append(", (?, ?, ?, ?, ?, ?, ?)")
+                    append(", (?, ?, ?, ?, ?, ?, ?, ?)")
                 }
             }
         }
         var parameterIndex = 1
-        val transactionItemInsert = prepareStatement(statement)
+        val transactionItemInsert = prepareStatement(insertSql)
         transaction.categoryItems.forEach { transactionItem: Transaction.Item ->
             parameterIndex += setStandardProperties(
                 transactionItemInsert,
@@ -810,8 +976,9 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         transactionItemInsert.setUuid(parameterIndex, transaction.id)
         transactionItemInsert.setString(parameterIndex + 1, transactionItem.description)
         transactionItemInsert.setBigDecimal(parameterIndex + 2, transactionItem.amount)
-        transactionItemInsert.setUuid(parameterIndex + 3, budgetId)
-        return 4
+        transactionItemInsert.setString(parameterIndex + 3, transactionItem.draftStatus.name)
+        transactionItemInsert.setUuid(parameterIndex + 4, budgetId)
+        return 5
     }
 
     private fun Connection.insertTransactionPreparedStatement(
@@ -832,7 +999,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
     }
 
     override fun save(data: BudgetData, user: User) {
-        check(data.validate())
+        require(data.validate())
         // create budget if it isn't there
         connection.transactOrNull {
             val generalAccountId: UUID = data.generalAccount.id

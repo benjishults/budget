@@ -10,10 +10,7 @@ open class SimplePromptWithDefault<T>(
     val defaultValue: T,
     override val inputReader: InputReader = DefaultInputReader,
     override val outPrinter: OutPrinter = DefaultOutPrinter,
-    final override val validate: (String) -> Boolean =
-        {
-            it.isNotBlank()
-        },
+    val additionalValidation: (String) -> Boolean = { true },
     @Suppress("UNCHECKED_CAST")
     override val transformer: (String) -> T =
         {
@@ -21,10 +18,17 @@ open class SimplePromptWithDefault<T>(
         },
 ) : SimplePrompt<T> {
 
+    final override val validate: (String) -> Boolean =
+        {
+            it.isNotBlank()
+        }
+
     override fun actionOnInvalid(input: String): T =
         if (input.isBlank())
             defaultValue
-        else
+        else if (additionalValidation(input))
             transformer(input)
+        else
+            super.actionOnInvalid(input)
 
 }

@@ -25,6 +25,19 @@ interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
     fun prepForFirstSave() {}
     fun save(data: BudgetData, user: User) {}
     fun commit(transaction: Transaction, budgetId: UUID) {}
+    fun clearCheck(
+        draftTransactionItems: List<Transaction.Item>,
+        clearingTransaction: Transaction,
+        budgetId: UUID,
+    ) = Unit
+
+    fun clearCheck(
+        draftTransactionItem: Transaction.Item,
+        clearingTransaction: Transaction,
+        budgetId: UUID,
+    ) =
+        clearCheck(listOf(draftTransactionItem), clearingTransaction, budgetId)
+
     fun deleteAccount(account: Account) {}
     fun deleteBudget(budgetId: UUID) {}
     fun deleteUser(userId: UUID) {}

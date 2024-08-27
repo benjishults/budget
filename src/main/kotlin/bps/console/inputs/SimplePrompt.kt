@@ -21,26 +21,21 @@ interface SimplePrompt<T> : Prompt<T> {
      */
     val transformer: (String) -> T
 
-    fun outputPrompt() =
-        outPrinter(basicPrompt)
-
     fun actionOnInvalid(input: String): T {
         outPrinter("Invalid input: '$input\n")
         return this.getResult()
     }
 
     override fun getResult(): T {
-        outputPrompt()
-        return transformer(
-            inputReader()
-                .let { input: String ->
-                    if (validate(input))
-                        input
-                    else {
-                        return actionOnInvalid(input)
-                    }
-                },
-        )
+        outPrinter(basicPrompt)
+        return inputReader()
+            .let { input: String ->
+                if (validate(input))
+                    transformer(input)
+                else {
+                    actionOnInvalid(input)
+                }
+            }
     }
 
     @Suppress("UNCHECKED_CAST")

@@ -20,6 +20,8 @@ fun dropTables(connection: Connection, schema: String) {
                 statement.execute("drop table if exists staged_real_accounts")
                 statement.execute("drop table if exists staged_category_accounts")
                 statement.execute("drop table if exists draft_accounts")
+                statement.execute("drop table if exists charge_accounts")
+                statement.execute("drop table if exists checking_accounts")
                 statement.execute("drop table if exists real_accounts")
                 statement.execute("drop table if exists category_accounts")
                 statement.execute("drop table if exists access_details")
@@ -32,22 +34,6 @@ fun dropTables(connection: Connection, schema: String) {
             }
     }
 }
-
-//fun deleteBudget(budgetName: String, connection: Connection) {
-//    deleteAccounts(budgetName, connection)
-//    connection.transactOrNull {
-//        prepareStatement("delete from budget_access where budget_name = ?")
-//            .use {
-//                it.setString(1, budgetName)
-//                it.executeUpdate()
-//            }
-//        prepareStatement("delete from budgets where budget_name = ?")
-//            .use {
-//                it.setString(1, budgetName)
-//                it.executeUpdate()
-//            }
-//    }
-//}
 
 fun deleteAccounts(budgetId: UUID, connection: Connection) =
     with(JdbcFixture) {

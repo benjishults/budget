@@ -1,29 +1,16 @@
 package bps.budget.customize
 
-import bps.budget.AllMenus
-import bps.budget.persistence.files.CategoryAccountConfig
-import bps.console.inputs.CompositePrompt
-import bps.console.inputs.SimplePrompt
+import bps.budget.WithIo
 import bps.console.menu.Menu
 import bps.console.menu.backItem
 import bps.console.menu.quitItem
 import bps.console.menu.takeAction
 
-val AllMenus.customizeMenu: Menu
+val WithIo.customizeMenu: Menu
     get() =
         Menu("Customize!") {
             add(
                 takeAction("Create Category Fund") {
-                    val categoryAccount: CategoryAccountConfig =
-                        CompositePrompt(
-                            listOf(
-                                SimplePrompt<String>("Name of category: ", inputReader, outPrinter),
-                                SimplePrompt("Description: ", inputReader, outPrinter),
-                            ),
-                        ) { inputs: List<*> ->
-                            CategoryAccountConfig(inputs[0] as String, inputs[1] as String)
-                        }
-                            .getResult()
                 },
             )
             add(

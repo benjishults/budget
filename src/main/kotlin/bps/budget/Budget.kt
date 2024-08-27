@@ -8,6 +8,7 @@ import bps.budget.model.Account
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftAccount
+import bps.budget.model.DraftStatus
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
@@ -29,6 +30,7 @@ import bps.console.menu.Menu
 import bps.console.menu.MenuApplicationWithQuit
 import bps.console.menu.MenuSession
 import bps.console.menu.ScrollingSelectionMenu
+import bps.console.menu.backItem
 import bps.console.menu.pushMenu
 import bps.console.menu.quitItem
 import bps.console.menu.takeAction
@@ -91,7 +93,7 @@ class BudgetApplication private constructor(
 
     private val menuApplicationWithQuit =
         MenuApplicationWithQuit(
-            AllMenus(inputReader, outPrinter)
+            WithIo(inputReader, outPrinter)
                 .budgetMenu(budgetData, budgetDao, configurations.user, clock),
             inputReader,
             outPrinter,
@@ -109,7 +111,7 @@ class BudgetApplication private constructor(
 
 }
 
-fun AllMenus.budgetMenu(
+fun WithIo.budgetMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
@@ -150,20 +152,9 @@ fun AllMenus.budgetMenu(
             ) { viewHistoryMenu(budgetData, budgetDao, userConfig) },
         )
         add(
-            takeActionAndPush(
-                recordDrafts,
-                { recordDraftsMenu(budgetData, budgetDao, userConfig, clock) },
-            ) {
-                outPrinter(
-                    """
-            |Writing a check or using a credit card is slightly different from paying cash or using a debit card.
-            |You will have a "drafts" account associated with each checking account or credit card.
-            |When a check is written or credit card charged, the amount is transferred from the category accounts
-            |(such as food or rent) to the "draft" account.
-            |When the check clears or the credit card bill is paid, those transactions are cleared from the "draft" account.
-            |""".trimMargin(),
-                )
-            },
+            pushMenu(
+                writeOrClearChecks,
+            ) { checksMenu(budgetData, budgetDao, userConfig, clock) },
         )
         add(
             takeAction(clearDrafts) {
@@ -200,7 +191,7 @@ fun AllMenus.budgetMenu(
     }
 }
 
-private fun AllMenus.viewHistoryMenu(
+private fun WithIo.viewHistoryMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
@@ -211,7 +202,7 @@ private fun AllMenus.viewHistoryMenu(
         add(budgetData.generalAccount)
         addAll(budgetData.categoryAccounts - budgetData.generalAccount)
         addAll(budgetData.realAccounts)
-        addAll(budgetData.draftAccounts)
+//        addAll(budgetData.draftAccounts)
     },
     labelGenerator = {
         String.format("%,10.2f | %s", balance, name)
@@ -228,74 +219,147 @@ private fun AllMenus.viewHistoryMenu(
     )
 }
 
-private fun AllMenus.recordDraftsMenu(
+private fun WithIo.checksMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
     clock: Clock,
-) = ScrollingSelectionMenu(
-    header = "Select account the draft or charge was made on",
-    limit = userConfig.numberOfItemsInScrollingList,
-    baseList = budgetData.draftAccounts,
-    labelGenerator = { String.format("%,10.2f | %s", realCompanion.balance - balance, name) },
-) { menuSession, selectedAccount: DraftAccount ->
-    // TODO enter check number if checking account
-    val max = selectedAccount.realCompanion.balance - selectedAccount.balance
-    val min = BigDecimal.ZERO.setScale(2)
-    val amount: BigDecimal =
-        SimplePrompt<BigDecimal>(
-            "Enter the amount of check or charge on ${selectedAccount.name} [$min, $max]: ",
-            inputReader = inputReader,
-            outPrinter = outPrinter,
-            validate = { input: String ->
-                input
-                    .toCurrencyAmount()
-                    ?.let {
-                        it in min..max
+) =
+    Menu {
+        add(
+            pushMenu("Write a check") {
+                ScrollingSelectionMenu(
+                    header = "Select account the check was written on",
+                    limit = userConfig.numberOfItemsInScrollingList,
+                    baseList = budgetData.draftAccounts,
+                    labelGenerator = { String.format("%,10.2f | %s", realCompanion.balance - balance, name) },
+                ) { menuSession, selectedAccount: DraftAccount ->
+                    // TODO enter check number if checking account
+                    // NOTE this is why we have separate draft accounts -- to easily know the real vs draft balance
+                    val max = selectedAccount.realCompanion.balance - selectedAccount.balance
+                    val min = BigDecimal.ZERO.setScale(2)
+                    val amount: BigDecimal =
+                        SimplePromptWithDefault<BigDecimal>(
+                            "Enter the amount of check on ${selectedAccount.name} [$min, $max]: ",
+                            inputReader = inputReader,
+                            outPrinter = outPrinter,
+                            defaultValue = min,
+                            additionalValidation = { input: String ->
+                                input
+                                    .toCurrencyAmountOrNull()
+                                    ?.let {
+                                        it in min..max
+                                    }
+                                    ?: false
+                            },
+                        ) {
+                            it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
+                        }
+                            .getResult()
+                    if (amount > BigDecimal.ZERO) {
+                        val description: String =
+                            SimplePrompt<String>(
+                                "Enter the recipient of the check: ",
+                                inputReader = inputReader,
+                                outPrinter = outPrinter,
+                            )
+                                .getResult()
+                        val timestamp: Instant =
+                            TimestampPrompt(
+                                "Use current time [Y]? ",
+                                budgetData.timeZone,
+                                clock,
+                                inputReader,
+                                outPrinter,
+                            )
+                                .getResult()
+                                .toInstant(budgetData.timeZone)
+                        val transactionBuilder: Transaction.Builder =
+                            Transaction.Builder(description, timestamp)
+                                .apply {
+                                    draftItemBuilders.add(
+                                        Transaction.ItemBuilder(
+                                            amount = amount,
+                                            description = description,
+                                            draftAccount = selectedAccount,
+                                            draftStatus = DraftStatus.outstanding,
+                                        ),
+                                    )
+                                }
+                        menuSession.push(
+                            createTransactionItemMenu(
+                                amount,
+                                transactionBuilder,
+                                description,
+                                budgetData,
+                                budgetDao,
+                                userConfig,
+                            ),
+                        )
                     }
-                    ?: false
+                }
             },
-        ) {
-            it.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2)
-        }
-            .getResult()
-    if (amount > BigDecimal.ZERO) {
-        val description: String =
-            SimplePrompt<String>(
-                "Enter description of recipient of draft or charge: ",
-                inputReader = inputReader,
-                outPrinter = outPrinter,
-            )
-                .getResult()
-        val timestamp: Instant =
-            TimestampPrompt("Use current time [Y]? ", budgetData.timeZone, clock, inputReader, outPrinter)
-                .getResult()
-                .toInstant(budgetData.timeZone)
-        val transactionBuilder: Transaction.Builder =
-            Transaction.Builder(description, timestamp)
-                .apply {
-                    draftItemBuilders.add(
-                        Transaction.ItemBuilder(
-                            amount = amount,
-                            description = description,
-                            draftAccount = selectedAccount,
-                        ),
+        )
+        add(
+            pushMenu("Record check cleared") {
+                ScrollingSelectionMenu(
+                    header = "Select the checking account",
+                    limit = userConfig.numberOfItemsInScrollingList,
+                    baseList = budgetData.draftAccounts,
+                    labelGenerator = { String.format("%,10.2f | %s", realCompanion.balance - balance, name) },
+                ) { menuSession, selectedAccount: DraftAccount ->
+                    menuSession.push(
+                        ViewTransactionsMenu(
+                            filter = { it.draftStatus === DraftStatus.outstanding },
+                            header = "Select the check that cleared",
+                            prompt = "Select the check that cleared: ",
+                            account = selectedAccount,
+                            budgetDao = budgetDao,
+                            budgetData = budgetData,
+                            limit = userConfig.numberOfItemsInScrollingList,
+                            outPrinter = outPrinter,
+                        ) { _, (draftTransaction, draftTransactionItem) ->
+                            val timestamp: Instant =
+                                TimestampPrompt(
+                                    "Did the check clear just now [Y]? ",
+                                    budgetData.timeZone,
+                                    clock,
+                                    inputReader,
+                                    outPrinter,
+                                )
+                                    .getResult()
+                                    .toInstant(budgetData.timeZone)
+                            val clearingTransaction = Transaction.Builder(draftTransaction.description, timestamp)
+                                .apply {
+                                    draftItemBuilders.add(
+                                        Transaction.ItemBuilder(
+                                            amount = -draftTransactionItem.amount,
+                                            description = description,
+                                            draftAccount = selectedAccount,
+                                            draftStatus = DraftStatus.clearing,
+                                        ),
+                                    )
+                                    realItemBuilders.add(
+                                        Transaction.ItemBuilder(
+                                            amount = -draftTransactionItem.amount,
+                                            description = description,
+                                            realAccount = draftTransactionItem.draftAccount!!.realCompanion,
+                                        ),
+                                    )
+                                }
+                                .build()
+                            budgetData.commit(clearingTransaction)
+                            budgetDao.clearCheck(draftTransactionItem, clearingTransaction, budgetData.id)
+                        },
                     )
                 }
-        menuSession.push(
-            createTransactionItemMenu(
-                amount,
-                transactionBuilder,
-                description,
-                budgetData,
-                budgetDao,
-                userConfig,
-            ),
+            },
         )
+        add(backItem)
+        add(quitItem)
     }
-}
 
-private fun AllMenus.recordSpendingMenu(
+private fun WithIo.recordSpendingMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
@@ -315,14 +379,14 @@ private fun AllMenus.recordSpendingMenu(
             outPrinter = outPrinter,
             validate = { input: String ->
                 input
-                    .toCurrencyAmount()
+                    .toCurrencyAmountOrNull()
                     ?.let {
                         it in min..max
                     }
                     ?: false
             },
         ) {
-            it.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2)
+            it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
         }
             .getResult()
     if (amount > BigDecimal.ZERO) {
@@ -362,7 +426,7 @@ private fun AllMenus.recordSpendingMenu(
     }
 }
 
-private fun AllMenus.createTransactionItemMenu(
+private fun WithIo.createTransactionItemMenu(
     runningTotal: BigDecimal,
     transactionBuilder: Transaction.Builder,
     description: String,
@@ -411,7 +475,7 @@ private fun AllMenus.createTransactionItemMenu(
                 outPrinter = outPrinter,
                 defaultValue = max,
             ) {
-                (it.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2))
+                (it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2))
                     .let { entry: BigDecimal ->
                         if (entry < BigDecimal.ZERO || entry > max)
                             BigDecimal.ZERO.setScale(2)
@@ -456,7 +520,7 @@ private fun AllMenus.createTransactionItemMenu(
         }
     }
 
-private fun AllMenus.recordIncomeSelectionMenu(
+fun WithIo.recordIncomeSelectionMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
@@ -466,14 +530,14 @@ private fun AllMenus.recordIncomeSelectionMenu(
     limit = userConfig.numberOfItemsInScrollingList,
     baseList = budgetData.realAccounts,
     labelGenerator = { String.format("%,10.2f | %s", balance, name) },
-) { menuSession: MenuSession, realAccount: RealAccount ->
+) { _: MenuSession, realAccount: RealAccount ->
     val amount =
         SimplePrompt(
             "Enter the amount of income: ",
             inputReader = inputReader,
             outPrinter = outPrinter,
         ) {
-            it.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2)
+            it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
         }
             .getResult()
     val description =
@@ -503,7 +567,7 @@ private fun AllMenus.recordIncomeSelectionMenu(
     budgetDao.commit(income, budgetData.id)
 }
 
-private fun AllMenus.makeAllowancesSelectionMenu(
+private fun WithIo.makeAllowancesSelectionMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
@@ -523,14 +587,14 @@ private fun AllMenus.makeAllowancesSelectionMenu(
             outPrinter = outPrinter,
             validate = { input: String ->
                 input
-                    .toCurrencyAmount()
+                    .toCurrencyAmountOrNull()
                     ?.let {
                         it in min..max
                     }
                     ?: false
             },
         ) {
-            it.toCurrencyAmount() ?: BigDecimal.ZERO.setScale(2)
+            it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
         }
             .getResult()
     if (amount > BigDecimal.ZERO) {
@@ -563,7 +627,7 @@ private fun AllMenus.makeAllowancesSelectionMenu(
     }
 }
 
-fun String.toCurrencyAmount(): BigDecimal? =
+fun String.toCurrencyAmountOrNull(): BigDecimal? =
     try {
         BigDecimal(this).setScale(2)
     } catch (e: NumberFormatException) {

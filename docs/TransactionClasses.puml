@@ -1,0 +1,32 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+interface Account {
+    balance: Currency
+    name: String
+    description: String
+}
+entity Transaction {
+    dateTime: Instant
+    description: String
+}
+entity TransactionItem {
+    amount: Currency
+    cleared: Boolean
+}
+entity CategoryAccount
+entity RealAccount
+entity DraftAccount
+
+Account <|.. CategoryAccount
+Account <|.. RealAccount
+Account <|.. DraftAccount
+
+DraftAccount --> "1" RealAccount
+
+TransactionItem --> "0..1" CategoryAccount
+TransactionItem --> "0..1" RealAccount
+TransactionItem --> "0..1" DraftAccount
+Transaction *-- "1..*" TransactionItem
+
+@enduml

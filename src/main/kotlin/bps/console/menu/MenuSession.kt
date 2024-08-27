@@ -1,5 +1,8 @@
 package bps.console.menu
 
+/**
+ * Maintains the stack of menus active in an application.
+ */
 class MenuSession(val topLevelMenu: Menu) : AutoCloseable {
 
     @Volatile

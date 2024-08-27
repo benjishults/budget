@@ -3,6 +3,7 @@ package bps.budget.persistence.files
 import bps.budget.model.BudgetData
 import java.util.UUID
 
+@Deprecated(replaceWith = ReplaceWith("Use JDBC configuration"), message = "File configuration is no longer supported")
 data class AccountsConfig(
     val generalAccountId: UUID,
     val category: List<CategoryAccountConfig>,
@@ -12,6 +13,7 @@ data class AccountsConfig(
 
 }
 
+@Deprecated(replaceWith = ReplaceWith("Use JDBC configuration"), message = "File configuration is no longer supported")
 fun BudgetData.toAccountsConfig(): AccountsConfig =
     AccountsConfig(
         generalAccount.id,

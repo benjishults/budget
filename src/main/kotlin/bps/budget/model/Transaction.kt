@@ -4,10 +4,11 @@ import kotlinx.datetime.Instant
 import java.math.BigDecimal
 import java.util.UUID
 
-class Transaction private constructor(
+data class Transaction private constructor(
     val id: UUID,
     val description: String,
     val timestamp: Instant,
+    val clears: Transaction? = null,
 ) {
 
     lateinit var categoryItems: List<Item>
@@ -17,7 +18,7 @@ class Transaction private constructor(
     lateinit var draftItems: List<Item>
         private set
 
-    fun validate(): Boolean {
+    private fun validate(): Boolean {
         val categoryAndDraftSum: BigDecimal =
             (categoryItems + draftItems)
                 .fold(BigDecimal.ZERO.setScale(2)) { sum: BigDecimal, item: Item ->
@@ -31,20 +32,15 @@ class Transaction private constructor(
         return categoryAndDraftSum == realSum
     }
 
-    @Volatile
-    private var initialized: Boolean = false
-
     private fun populate(
         categoryItems: List<Item>,
         realItems: List<Item>,
         draftItems: List<Item>,
     ) {
-        check(!initialized) { "attempt to initialize already-initialized transaction: $this" }
         this.categoryItems = categoryItems
         this.realItems = realItems
         this.draftItems = draftItems
         require(validate()) { "attempt was made to create invalid transaction: $this" }
-        initialized = true
     }
 
     inner class Item(
@@ -53,10 +49,10 @@ class Transaction private constructor(
         val categoryAccount: CategoryAccount? = null,
         val realAccount: RealAccount? = null,
         val draftAccount: DraftAccount? = null,
+        val draftStatus: DraftStatus = DraftStatus.none,
     ) {
 
-        lateinit var transaction: Transaction
-            private set
+        val transaction = this@Transaction
 
         override fun toString(): String =
             "TransactionItem(${categoryAccount ?: realAccount ?: draftAccount}, $amount${
@@ -66,6 +62,32 @@ class Transaction private constructor(
                     ""
             })"
 
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is Item) return false
+
+            if (transaction != other.transaction) return false
+            if (amount != other.amount) return false
+            if (description != other.description) return false
+            if (categoryAccount != other.categoryAccount) return false
+            if (realAccount != other.realAccount) return false
+            if (draftAccount != other.draftAccount) return false
+            if (draftStatus != other.draftStatus) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = amount.hashCode()
+            result = 31 * result + (description?.hashCode() ?: 0)
+            result = 31 * result + (categoryAccount?.hashCode() ?: 0)
+            result = 31 * result + (realAccount?.hashCode() ?: 0)
+            result = 31 * result + (draftAccount?.hashCode() ?: 0)
+            result = 31 * result + draftStatus.hashCode()
+            result = 31 * result + transaction.hashCode()
+            return result
+        }
+
     }
 
     class ItemBuilder(
@@ -74,9 +96,10 @@ class Transaction private constructor(
         var categoryAccount: CategoryAccount? = null,
         var realAccount: RealAccount? = null,
         var draftAccount: DraftAccount? = null,
+        var draftStatus: DraftStatus = DraftStatus.none,
     ) {
         fun build(transaction: Transaction): Item =
-            transaction.Item(amount!!, description, categoryAccount, realAccount, draftAccount)
+            transaction.Item(amount!!, description, categoryAccount, realAccount, draftAccount, draftStatus)
 
     }
 
@@ -84,24 +107,51 @@ class Transaction private constructor(
         var description: String? = null,
         var timestamp: Instant? = null,
         var id: UUID? = null,
+        var clears: Transaction? = null,
     ) {
         val categoryItemBuilders: MutableList<ItemBuilder> = mutableListOf()
         val realItemBuilders: MutableList<ItemBuilder> = mutableListOf()
         val draftItemBuilders: MutableList<ItemBuilder> = mutableListOf()
 
         fun build(): Transaction = Transaction(
-            this@Builder.id ?: UUID.randomUUID(),
-            this@Builder.description!!,
-            this@Builder.timestamp!!,
+            id = this@Builder.id ?: UUID.randomUUID(),
+            description = this@Builder.description!!,
+            timestamp = this@Builder.timestamp!!,
+            clears = this@Builder.clears,
         )
             .apply {
                 populate(
-                    this@Builder.categoryItemBuilders.map { it.build(this) },
-                    this@Builder.realItemBuilders.map { it.build(this) },
-                    this@Builder.draftItemBuilders.map { it.build(this) },
+                    this@Builder
+                        .categoryItemBuilders
+                        .map { it.build(this) },
+                    this@Builder
+                        .realItemBuilders
+                        .map { it.build(this) },
+                    this@Builder
+                        .draftItemBuilders
+                        .map { it.build(this) },
                 )
             }
 
     }
 
+}
+
+enum class DraftStatus {
+    none,
+
+    /**
+     * Means that the item is a cleared draft or charge.
+     */
+    cleared,
+
+    /**
+     * Means that it is part of a clearing transaction on a real account.
+     */
+    clearing,
+
+    /**
+     * Means that the item is waiting for a clearing event on a real account.
+     */
+    outstanding
 }

@@ -75,7 +75,7 @@ class BasicSetupInteractionsTest : FreeSpec(),
                             | 2. $makeAllowances
                             | 3. $recordSpending
                             | 4. View History
-                            | 5. $recordDrafts
+                            | 5. $writeOrClearChecks
                             | 6. $clearDrafts
                             | 7. $transfer
                             | 8. $setup

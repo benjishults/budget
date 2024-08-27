@@ -73,7 +73,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 2. $makeAllowances
                             | 3. $recordSpending
                             | 4. View History
-                            | 5. $recordDrafts
+                            | 5. $writeOrClearChecks
                             | 6. $clearDrafts
                             | 7. $transfer
                             | 8. $setup
@@ -139,7 +139,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 2. $makeAllowances
                             | 3. $recordSpending
                             | 4. View History
-                            | 5. $recordDrafts
+                            | 5. $writeOrClearChecks
                             | 6. $clearDrafts
                             | 7. $transfer
                             | 8. $setup
@@ -196,7 +196,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
             }
             "view transactions" {
-                inputs.addAll(listOf("4", "1", "3", "5", "14"))
+                inputs.addAll(listOf("4", "1", "3", "5", "13"))
                 unPause()
                 waitForPause(helper.awaitMillis).shouldBeTrue()
                 outputs shouldContainExactly listOf(
@@ -206,7 +206,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 2. $makeAllowances
                             | 3. $recordSpending
                             | 4. $viewHistory
-                            | 5. $recordDrafts
+                            | 5. $writeOrClearChecks
                             | 6. $clearDrafts
                             | 7. $transfer
                             | 8. $setup
@@ -226,9 +226,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 10.       0.00 | Work
 11.   5,000.00 | Checking
 12.     200.00 | Wallet
-13.       0.00 | Checking Drafts
-14. Back
-15. Quit
+13. Back
+14. Quit
 """,
                     "Enter selection: ",
                     """
@@ -273,9 +272,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 10.       0.00 | Work
 11.   5,000.00 | Checking
 12.     200.00 | Wallet
-13.       0.00 | Checking Drafts
-14. Back
-15. Quit
+13. Back
+14. Quit
 """,
                     "Enter selection: ",
                 )
@@ -291,7 +289,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 2. $makeAllowances
                             | 3. $recordSpending
                             | 4. $viewHistory
-                            | 5. $recordDrafts
+                            | 5. $writeOrClearChecks
                             | 6. $clearDrafts
                             | 7. $transfer
                             | 8. $setup
@@ -341,7 +339,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
             }
             "write a check to SuperMarket" {
                 inputs.addAll(
-                    listOf("5", "1", "300", "SuperMarket", "", "3", "200", "", "6", "100", "", "3"),
+                    listOf("5", "1", "1", "300", "SuperMarket", "", "3", "200", "", "6", "100", "", "2"),
                 )
                 unPause()
                 waitForPause(helper.awaitMillis).shouldBeTrue()
@@ -352,7 +350,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 2. $makeAllowances
                             | 3. $recordSpending
                             | 4. $viewHistory
-                            | 5. $recordDrafts
+                            | 5. $writeOrClearChecks
                             | 6. $clearDrafts
                             | 7. $transfer
                             | 8. $setup
@@ -360,22 +358,22 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             |""".trimMargin(),
                     "Enter selection: ",
                     """
-            |Writing a check or using a credit card is slightly different from paying cash or using a debit card.
-            |You will have a "drafts" account associated with each checking account or credit card.
-            |When a check is written or credit card charged, the amount is transferred from the category accounts
-            |(such as food or rent) to the "draft" account.
-            |When the check clears or the credit card bill is paid, those transactions are cleared from the "draft" account.
-            |""".trimMargin(),
+                         | 1. Write a check
+                         | 2. Record check cleared
+                         | 3. Back
+                         | 4. Quit
+                         |""".trimMargin(),
+                    "Enter selection: ",
                     """
-                        |Select account the draft or charge was made on
+                        |Select account the check was written on
                         | 1.   5,000.00 | Checking Drafts
                         | 2. Back
                         | 3. Quit
                         |
                     """.trimMargin(),
                     "Enter selection: ",
-                    "Enter the amount of check or charge on Checking Drafts [0.00, 5000.00]: ",
-                    "Enter description of recipient of draft or charge: ",
+                    "Enter the amount of check on Checking Drafts [0.00, 5000.00]: ",
+                    "Enter the recipient of the check: ",
                     "Use current time [Y]? ",
                     """
                         |Select a category that some of that money was spent on.  Left to cover: $300.00
@@ -414,7 +412,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     "Enter the amount spent on Necessities [0.00, [100.00]]: ",
                     "Enter description for Necessities spend [SuperMarket]: ",
                     """
-                        |Select account the draft or charge was made on
+                        |Select account the check was written on
                         | 1.   4,700.00 | Checking Drafts
                         | 2. Back
                         | 3. Quit
@@ -423,12 +421,65 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     "Enter selection: ",
                 )
             }
-            "!ensure user can back out of a transaction without saving" {
-            }
-            "!check clears" {
+            "check clears" {
                 inputs.addAll(
-                    listOf("6", "1", "300", "SuperMarket", "", "3", "200", "", "6", "100", "", "3"),
+                    listOf("2", "1", "1", "", "1", "2", "3"),
                 )
+                unPause()
+                waitForPause(helper.awaitMillis).shouldBeTrue()
+                outputs shouldContainExactly listOf(
+                    """
+                         | 1. Write a check
+                         | 2. Record check cleared
+                         | 3. Back
+                         | 4. Quit
+                         |
+                    """.trimMargin(),
+                    "Enter selection: ",
+                    """
+                        |Select the checking account
+                        | 1.   4,700.00 | Checking Drafts
+                        | 2. Back
+                        | 3. Quit
+                        |
+                    """.trimMargin(),
+                    "Enter selection: ",
+                    """
+                        |Select the check that cleared
+                        |    Time Stamp          | Amount     | Description
+                        | 1. 2024-08-08 19:00:05 |     300.00 | SuperMarket
+                        | 2. Back
+                        | 3. Quit
+                        |""".trimMargin(),
+                    "Select the check that cleared: ",
+                    "Did the check clear just now [Y]? ",
+                    """
+                        |Select the check that cleared
+                        |    Time Stamp          | Amount     | Description
+                        | 1. Back
+                        | 2. Quit
+                        |""".trimMargin(),
+                    "Select the check that cleared: ",
+                    """
+                        |Select the checking account
+                        | 1.   4,700.00 | Checking Drafts
+                        | 2. Back
+                        | 3. Quit
+                        |
+                    """.trimMargin(),
+                    "Enter selection: ",
+                    """
+                         | 1. Write a check
+                         | 2. Record check cleared
+                         | 3. Back
+                         | 4. Quit
+                         |
+                    """.trimMargin(),
+                    "Enter selection: ",
+                )
+            }
+            "check balances" {
+                inputs.addAll(listOf("4", "11", "2", "3", "13"))
                 unPause()
                 waitForPause(helper.awaitMillis).shouldBeTrue()
                 outputs shouldContainExactly listOf(
@@ -438,12 +489,73 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 2. $makeAllowances
                             | 3. $recordSpending
                             | 4. $viewHistory
-                            | 5. $recordDrafts
+                            | 5. $writeOrClearChecks
                             | 6. $clearDrafts
                             | 7. $transfer
                             | 8. $setup
                             | 9. Quit
                             |""".trimMargin(),
+                    "Enter selection: ",
+                    """Select account to view history
+ 1.   4,800.00 | General
+ 2.       0.00 | Education
+ 3.       0.00 | Entertainment
+ 4.      98.50 | Food
+ 5.       0.00 | Medical
+ 6.       0.00 | Necessities
+ 7.       0.00 | Network
+ 8.       0.00 | Transportation
+ 9.       0.00 | Travel
+10.       0.00 | Work
+11.   4,700.00 | Checking
+12.     198.50 | Wallet
+13. Back
+14. Quit
+""",
+                    "Enter selection: ",
+                    """
+                        |'Checking' Account Transactions
+                        |    Time Stamp          | Amount     | Description
+                        | 1. 2024-08-08 19:00:00 |   5,000.00 | income into $defaultCheckingAccountName
+                        | 2. 2024-08-08 19:00:06 |    -300.00 | SuperMarket
+                        | 3. Back
+                        | 4. Quit
+                        |""".trimMargin(),
+                    "Select transaction for details: ",
+                    """
+                        |2024-08-08 19:00:06
+                        |SuperMarket
+                        |Category Account | Amount     | Description
+                        |Food             |    -200.00 |
+                        |Necessities      |    -100.00 |
+                        |     Real Items: | Amount     | Description
+                        |Checking         |    -300.00 | SuperMarket
+                        |""".trimMargin(),
+                    """
+                        |'Checking' Account Transactions
+                        |    Time Stamp          | Amount     | Description
+                        | 1. 2024-08-08 19:00:00 |   5,000.00 | income into $defaultCheckingAccountName
+                        | 2. 2024-08-08 19:00:06 |    -300.00 | SuperMarket
+                        | 3. Back
+                        | 4. Quit
+                        |""".trimMargin(),
+                    "Select transaction for details: ",
+                    """Select account to view history
+ 1.   4,800.00 | General
+ 2.       0.00 | Education
+ 3.       0.00 | Entertainment
+ 4.      98.50 | Food
+ 5.       0.00 | Medical
+ 6.       0.00 | Necessities
+ 7.       0.00 | Network
+ 8.       0.00 | Transportation
+ 9.       0.00 | Travel
+10.       0.00 | Work
+11.   4,700.00 | Checking
+12.     198.50 | Wallet
+13. Back
+14. Quit
+""",
                     "Enter selection: ",
                 )
             }
@@ -452,6 +564,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
             "!pay credit card balance" {
             }
             "!check balances in DB" {
+            }
+            "!ensure user can back out of a transaction without saving" {
             }
         }
     }

@@ -36,42 +36,11 @@ class BudgetData(
                 it.id
             }
 
-    fun addCategoryAccount(account: CategoryAccount) {
-        categoryAccounts = categoryAccounts + account
-        byId[account.id] = account
-    }
-
-    fun addRealAccount(account: RealAccount) {
-        realAccounts = realAccounts + account
-        byId[account.id] = account
-    }
-
-    fun addDraftAccount(account: DraftAccount) {
-        draftAccounts = draftAccounts + account
-        byId[account.id] = account
-    }
-
-    fun deleteCategoryAccount(account: CategoryAccount) {
-        categoryAccounts = categoryAccounts - account
-        byId.remove(account.id)
-    }
-
-    fun deleteRealAccount(account: RealAccount) {
-        realAccounts = realAccounts - account
-        byId.remove(account.id)
-    }
-
-    fun deleteDraftAccount(account: DraftAccount) {
-        draftAccounts = draftAccounts - account
-        byId.remove(account.id)
-    }
-
     @Suppress("UNCHECKED_CAST")
     fun <T : Account?> getAccountById(id: UUID): T =
         byId[id] as T
 
     fun commit(transaction: Transaction) {
-        require(transaction.validate())
         transaction.categoryItems
             .forEach { item: Transaction.Item ->
                 getAccountById<CategoryAccount>(item.categoryAccount!!.id)

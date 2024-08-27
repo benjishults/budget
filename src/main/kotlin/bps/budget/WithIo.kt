@@ -7,14 +7,14 @@ import bps.console.io.OutPrinter
 
 const val recordIncome = "Record Income"
 const val makeAllowances = "Make Allowances"
-const val recordDrafts = "Write Checks or Use Credit Cards"
+const val writeOrClearChecks = "Write or Clear Checks"
 const val clearDrafts = "Clear Drafts"
 const val transfer = "Transfer Money"
 const val setup = "Manage Accounts"
 const val recordSpending = "Record Spending"
 const val viewHistory = "View History"
 
-class AllMenus(
+class WithIo(
     val inputReader: InputReader = DefaultInputReader,
     val outPrinter: OutPrinter = DefaultOutPrinter,
 )

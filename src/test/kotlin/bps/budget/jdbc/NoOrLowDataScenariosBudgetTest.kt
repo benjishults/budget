@@ -5,7 +5,7 @@ import bps.budget.BudgetConfigurations
 import bps.budget.clearDrafts
 import bps.budget.makeAllowances
 import bps.budget.persistence.jdbc.JdbcDao
-import bps.budget.recordDrafts
+import bps.budget.writeOrClearChecks
 import bps.budget.recordIncome
 import bps.budget.recordSpending
 import bps.budget.setup
@@ -49,7 +49,7 @@ Enter the name for your "General" account [General] """,
                             | 2. $makeAllowances
                             | 3. $recordSpending
                             | 4. View History
-                            | 5. $recordDrafts
+                            | 5. $writeOrClearChecks
                             | 6. $clearDrafts
                             | 7. $transfer
                             | 8. $setup
