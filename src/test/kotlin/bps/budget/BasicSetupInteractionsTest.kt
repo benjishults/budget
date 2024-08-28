@@ -76,7 +76,7 @@ class BasicSetupInteractionsTest : FreeSpec(),
                             | 3. $recordSpending
                             | 4. View History
                             | 5. $writeOrClearChecks
-                            | 6. $clearDrafts
+                            | 6. $useOrPayCreditCards
                             | 7. $transfer
                             | 8. $setup
                             | 9. Quit

@@ -9,6 +9,7 @@ import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.OutPrinter
+import bps.console.menu.MenuItem
 import bps.console.menu.MenuSession
 import bps.console.menu.ScrollingSelectionMenu
 import kotlinx.datetime.LocalDate
@@ -31,16 +32,17 @@ open class ViewTransactionsMenu(
     header: String? = "'${account.name}' Account Transactions",
     prompt: String = "Select transaction for details: ",
     val outPrinter: OutPrinter = DefaultOutPrinter,
-    next: (MenuSession, Pair<Transaction, Transaction.Item>) -> Unit = { _, (transaction: Transaction, _) ->
-        outPrinter.showTransactionDetailsAction(transaction, budgetData)
+    extraItems: List<MenuItem> = emptyList(),
+    actOnSelectedItem: (MenuSession, Transaction.Item) -> Unit = { _, transactionItem: Transaction.Item ->
+        outPrinter.showTransactionDetailsAction(transactionItem.transaction, budgetData)
     },
-) : ScrollingSelectionMenu<Pair<Transaction, Transaction.Item>>(
+) : ScrollingSelectionMenu<Transaction.Item>(
     header + TRANSACTIONS_TABLE_HEADER,
     prompt,
     limit,
     offset,
+    extraItems = extraItems,
     labelGenerator = {
-        val (transaction: Transaction, item: Transaction.Item) = this
         String.format(
             "%s | %,10.2f | %s",
             transaction
@@ -69,8 +71,8 @@ open class ViewTransactionsMenu(
                         )
                     },
                 ),
-            item.amount,
-            item.description ?: transaction.description,
+            amount,
+            description ?: transaction.description,
         )
     },
     itemListGenerator = { selectedLimit: Int, selectedOffset: Int ->
@@ -107,10 +109,10 @@ open class ViewTransactionsMenu(
                         } == account
                     }
                     .filter(filter)
-                    .map { transaction to it }
             }
+            .sorted()
     },
-    next = next,
+    actOnSelectedItem = actOnSelectedItem,
 ) {
 
     init {

@@ -8,7 +8,7 @@ import bps.console.io.OutPrinter
 const val recordIncome = "Record Income"
 const val makeAllowances = "Make Allowances"
 const val writeOrClearChecks = "Write or Clear Checks"
-const val clearDrafts = "Clear Drafts"
+const val useOrPayCreditCards = "Use or Pay Credit Cards"
 const val transfer = "Transfer Money"
 const val setup = "Manage Accounts"
 const val recordSpending = "Record Spending"

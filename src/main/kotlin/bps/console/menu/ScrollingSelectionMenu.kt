@@ -9,8 +9,9 @@ open class ScrollingSelectionMenu<T>(
     val limit: Int = 30,
     val offset: Int = 0,
     itemListGenerator: (Int, Int) -> List<T>,
+    extraItems: List<MenuItem> = emptyList(),
     labelGenerator: T.() -> String = { toString() },
-    next: (MenuSession, T) -> Unit,
+    actOnSelectedItem: (MenuSession, T) -> Unit,
 ) : Menu {
 
     constructor(
@@ -19,6 +20,7 @@ open class ScrollingSelectionMenu<T>(
         limit: Int = 30,
         offset: Int = 0,
         baseList: List<T>,
+        extraItems: List<MenuItem> = emptyList(),
         labelGenerator: T.() -> String = { toString() },
         next: (MenuSession, T) -> Unit,
     ) : this(
@@ -28,6 +30,7 @@ open class ScrollingSelectionMenu<T>(
         offset,
         @Suppress("NAME_SHADOWING")
         { limit, offset -> baseList.subList(offset, min(baseList.size, offset + limit)) },
+        extraItems,
         labelGenerator,
         next,
     )
@@ -41,7 +44,7 @@ open class ScrollingSelectionMenu<T>(
             itemListGenerator(limit, offset)
                 .mapTo(mutableListOf()) { item ->
                     item(item.labelGenerator()) { session ->
-                        next(session, item)
+                        actOnSelectedItem(session, item)
                     }
                 }
                 .also { menuItems ->
@@ -56,8 +59,9 @@ open class ScrollingSelectionMenu<T>(
                                         limit,
                                         offset + limit,
                                         itemListGenerator,
+                                        extraItems,
                                         labelGenerator,
-                                        next,
+                                        actOnSelectedItem,
                                     ),
                                 )
                             },
@@ -74,14 +78,15 @@ open class ScrollingSelectionMenu<T>(
                                         limit,
                                         max(offset - limit, 0),
                                         itemListGenerator,
+                                        extraItems,
                                         labelGenerator,
-                                        next,
+                                        actOnSelectedItem,
                                     ),
                                 )
                             },
                         )
                     }
-
+                    menuItems.addAll(extraItems)
                     menuItems.add(backItem)
                     menuItems.add(quitItem)
                 }

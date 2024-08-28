@@ -3,9 +3,9 @@ package bps.console.menu
 import bps.console.QuitException
 
 fun interface MenuItemAction : (MenuSession) -> Unit
-fun interface IntermediateMenuItemAction : () -> Unit
+fun interface IntermediateMenuItemAction<out T> : () -> T
 
-object NoopIntermediateAction : IntermediateMenuItemAction {
+object NoopIntermediateAction : IntermediateMenuItemAction<Unit> {
     override fun invoke() {
     }
 }
@@ -49,7 +49,7 @@ fun item(
  */
 fun popMenuItem(
     label: String = "Back",
-    intermediateAction: IntermediateMenuItemAction = NoopIntermediateAction,
+    intermediateAction: IntermediateMenuItemAction<Unit> = NoopIntermediateAction,
 ): MenuItem =
     item(label) { menuSession: MenuSession ->
         menuSession.pop()
@@ -62,7 +62,7 @@ fun popMenuItem(
  */
 fun takeAction(
     label: String,
-    intermediateAction: IntermediateMenuItemAction,
+    intermediateAction: IntermediateMenuItemAction<Unit>,
 ): MenuItem =
     takeActionAndPush(label, null, intermediateAction)
 
@@ -71,15 +71,15 @@ fun takeAction(
  * @param to if not `null`, this will be pushed onto the menu session
  * @param label the display of the menu item
  */
-fun takeActionAndPush(
+fun <T> takeActionAndPush(
     label: String,
-    to: (() -> Menu)? = null,
-    intermediateAction: IntermediateMenuItemAction = NoopIntermediateAction,
+    to: ((T) -> Menu)? = null,
+    intermediateAction: IntermediateMenuItemAction<T>,
 ): MenuItem =
     item(label) { menuSession: MenuSession ->
-        intermediateAction()
-        to?.let {
-            menuSession.push(it())
+        val value: T = intermediateAction()
+        if (to !== null) {
+            menuSession.push(to(value))
         }
     }
 

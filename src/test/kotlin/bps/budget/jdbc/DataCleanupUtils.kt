@@ -18,6 +18,7 @@ fun dropTables(connection: Connection, schema: String) {
                 statement.execute("drop table if exists transactions")
                 statement.execute("drop table if exists staged_draft_accounts")
                 statement.execute("drop table if exists staged_real_accounts")
+                statement.execute("drop table if exists staged_charge_accounts")
                 statement.execute("drop table if exists staged_category_accounts")
                 statement.execute("drop table if exists draft_accounts")
                 statement.execute("drop table if exists charge_accounts")
@@ -49,6 +50,11 @@ fun deleteAccounts(budgetId: UUID, connection: Connection) =
                     it.setUuid(1, budgetId)
                     it.executeUpdate()
                 }
+            prepareStatement("delete from charge_accounts where budget_id = ?")
+                .use {
+                    it.setUuid(1, budgetId)
+                    it.executeUpdate()
+                }
             prepareStatement("delete from category_accounts where budget_id = ?")
                 .use {
                     it.setUuid(1, budgetId)
@@ -62,6 +68,7 @@ fun cleanupTransactions(budgetId: UUID, connection: Connection) =
         connection.transactOrNull {
             zeroBalance(budgetId, "category_accounts")
             zeroBalance(budgetId, "real_accounts")
+            zeroBalance(budgetId, "charge_accounts")
             zeroBalance(budgetId, "draft_accounts")
             prepareStatement("delete from transaction_items where budget_id = ?")
                 .use {

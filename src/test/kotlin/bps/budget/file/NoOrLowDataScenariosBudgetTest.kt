@@ -3,13 +3,13 @@ package bps.budget.file
 import bps.budget.BudgetApplication
 import bps.budget.BudgetConfigurations
 import bps.budget.WithIo
-import bps.budget.clearDrafts
 import bps.budget.makeAllowances
 import bps.budget.recordIncome
 import bps.budget.recordSpending
 import bps.budget.setup
 import bps.budget.transfer
 import bps.budget.ui.ConsoleUiFacade
+import bps.budget.useOrPayCreditCards
 import bps.budget.writeOrClearChecks
 import bps.config.convertToPath
 import bps.console.SimpleConsoleIoTestFixture
@@ -60,7 +60,7 @@ Enter the name for your "General" account [General] """,
                             | 3. $recordSpending
                             | 4. View History
                             | 5. $writeOrClearChecks
-                            | 6. $clearDrafts
+                            | 6. $useOrPayCreditCards
                             | 7. $transfer
                             | 8. $setup
                             | 9. Quit

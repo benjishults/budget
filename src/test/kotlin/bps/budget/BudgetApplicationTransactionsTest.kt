@@ -74,7 +74,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 3. $recordSpending
                             | 4. View History
                             | 5. $writeOrClearChecks
-                            | 6. $clearDrafts
+                            | 6. $useOrPayCreditCards
                             | 7. $transfer
                             | 8. $setup
                             | 9. Quit
@@ -140,7 +140,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 3. $recordSpending
                             | 4. View History
                             | 5. $writeOrClearChecks
-                            | 6. $clearDrafts
+                            | 6. $useOrPayCreditCards
                             | 7. $transfer
                             | 8. $setup
                             | 9. Quit
@@ -207,7 +207,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 3. $recordSpending
                             | 4. $viewHistory
                             | 5. $writeOrClearChecks
-                            | 6. $clearDrafts
+                            | 6. $useOrPayCreditCards
                             | 7. $transfer
                             | 8. $setup
                             | 9. Quit
@@ -290,7 +290,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 3. $recordSpending
                             | 4. $viewHistory
                             | 5. $writeOrClearChecks
-                            | 6. $clearDrafts
+                            | 6. $useOrPayCreditCards
                             | 7. $transfer
                             | 8. $setup
                             | 9. Quit
@@ -351,7 +351,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 3. $recordSpending
                             | 4. $viewHistory
                             | 5. $writeOrClearChecks
-                            | 6. $clearDrafts
+                            | 6. $useOrPayCreditCards
                             | 7. $transfer
                             | 8. $setup
                             | 9. Quit
@@ -490,7 +490,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 3. $recordSpending
                             | 4. $viewHistory
                             | 5. $writeOrClearChecks
-                            | 6. $clearDrafts
+                            | 6. $useOrPayCreditCards
                             | 7. $transfer
                             | 8. $setup
                             | 9. Quit
@@ -559,13 +559,144 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     "Enter selection: ",
                 )
             }
+            "create a credit card account" {
+                inputs.addAll(
+                    listOf("8", "3", "Costco Visa", "", "4"),
+                )
+                unPause()
+                waitForPause(helper.awaitMillis).shouldBeTrue()
+                outputs shouldContainExactly listOf(
+                    """
+                            |Budget!
+                            | 1. $recordIncome
+                            | 2. $makeAllowances
+                            | 3. $recordSpending
+                            | 4. $viewHistory
+                            | 5. $writeOrClearChecks
+                            | 6. $useOrPayCreditCards
+                            | 7. $transfer
+                            | 8. $setup
+                            | 9. Quit
+                            |""".trimMargin(),
+                    "Enter selection: ",
+                    """
+                         | 1. Create a New Category
+                         | 2. Create a Real Fund
+                         | 3. Add a Credit Card
+                         | 4. Back
+                         | 5. Quit
+                         |""".trimMargin(),
+                    "Enter selection: ",
+                    "Enter a unique name for the new credit card: ",
+                    "Enter a description for the new credit card: ",
+                    """
+                         | 1. Create a New Category
+                         | 2. Create a Real Fund
+                         | 3. Add a Credit Card
+                         | 4. Back
+                         | 5. Quit
+                         |""".trimMargin(),
+                    "Enter selection: ",
+                )
+
+            }
             "!spend using credit card" {
+                inputs.addAll(
+                    listOf("6", "1", "1", "300", "SuperMarket", "", "3", "200", "", "6", "100", "", "2"),
+                )
+                unPause()
+                waitForPause(helper.awaitMillis).shouldBeTrue()
+                outputs shouldContainExactly listOf(
+                    """
+                            |Budget!
+                            | 1. $recordIncome
+                            | 2. $makeAllowances
+                            | 3. $recordSpending
+                            | 4. $viewHistory
+                            | 5. $writeOrClearChecks
+                            | 6. $useOrPayCreditCards
+                            | 7. $transfer
+                            | 8. $setup
+                            | 9. Quit
+                            |""".trimMargin(),
+                    "Enter selection: ",
+                    """
+                         | 1. Write a check
+                         | 2. Record check cleared
+                         | 3. Back
+                         | 4. Quit
+                         |""".trimMargin(),
+                    "Enter selection: ",
+                    """
+                        |Select account the check was written on
+                        | 1.   5,000.00 | Checking Drafts
+                        | 2. Back
+                        | 3. Quit
+                        |
+                    """.trimMargin(),
+                    "Enter selection: ",
+                    "Enter the amount of check on Checking Drafts [0.00, 5000.00]: ",
+                    "Enter the recipient of the check: ",
+                    "Use current time [Y]? ",
+                    """
+                        |Select a category that some of that money was spent on.  Left to cover: $300.00
+                        | 1.       0.00 | Education
+                        | 2.       0.00 | Entertainment
+                        | 3.     298.50 | Food
+                        | 4.   4,800.00 | General
+                        | 5.       0.00 | Medical
+                        | 6.     100.00 | Necessities
+                        | 7.       0.00 | Network
+                        | 8.       0.00 | Transportation
+                        | 9.       0.00 | Travel
+                        |10.       0.00 | Work
+                        |11. Back
+                        |12. Quit
+                        |""".trimMargin(),
+                    "Enter selection: ",
+                    "Enter the amount spent on Food [0.00, [298.50]]: ",
+                    "Enter description for Food spend [SuperMarket]: ",
+                    """
+                        |Select a category that some of that money was spent on.  Left to cover: $100.00
+                        | 1.       0.00 | Education
+                        | 2.       0.00 | Entertainment
+                        | 3.      98.50 | Food
+                        | 4.   4,800.00 | General
+                        | 5.       0.00 | Medical
+                        | 6.     100.00 | Necessities
+                        | 7.       0.00 | Network
+                        | 8.       0.00 | Transportation
+                        | 9.       0.00 | Travel
+                        |10.       0.00 | Work
+                        |11. Back
+                        |12. Quit
+                        |""".trimMargin(),
+                    "Enter selection: ",
+                    "Enter the amount spent on Necessities [0.00, [100.00]]: ",
+                    "Enter description for Necessities spend [SuperMarket]: ",
+                    """
+                        |Select account the check was written on
+                        | 1.   4,700.00 | Checking Drafts
+                        | 2. Back
+                        | 3. Quit
+                        |
+                    """.trimMargin(),
+                    "Enter selection: ",
+                )
             }
             "!pay credit card balance" {
             }
-            "!check balances in DB" {
+            "!check balances again" {
             }
             "!ensure user can back out of a transaction without saving" {
+            }
+            "!write a check to pay for credit card and see what we want the transaction to look like" {
+            }
+            "!if I view a transaction on food that was the result of a check (cleared or not) what's it look like?" {
+            }
+            "!if I view a transaction on food that was the result of a charge (cleared or not) what's it look like?" {
+            }
+            "!if I view a transaction on food that was the result of a charge paid by check (cleared or not) what's it look like?" {
             }
         }
     }

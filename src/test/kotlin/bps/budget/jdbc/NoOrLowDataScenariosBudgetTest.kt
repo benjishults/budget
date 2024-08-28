@@ -2,15 +2,15 @@ package bps.budget.jdbc
 
 import bps.budget.BudgetApplication
 import bps.budget.BudgetConfigurations
-import bps.budget.clearDrafts
 import bps.budget.makeAllowances
 import bps.budget.persistence.jdbc.JdbcDao
-import bps.budget.writeOrClearChecks
 import bps.budget.recordIncome
 import bps.budget.recordSpending
 import bps.budget.setup
 import bps.budget.transfer
 import bps.budget.ui.ConsoleUiFacade
+import bps.budget.useOrPayCreditCards
+import bps.budget.writeOrClearChecks
 import bps.console.SimpleConsoleIoTestFixture
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContainExactly
@@ -50,7 +50,7 @@ Enter the name for your "General" account [General] """,
                             | 3. $recordSpending
                             | 4. View History
                             | 5. $writeOrClearChecks
-                            | 6. $clearDrafts
+                            | 6. $useOrPayCreditCards
                             | 7. $transfer
                             | 8. $setup
                             | 9. Quit

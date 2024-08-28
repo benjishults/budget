@@ -46,6 +46,7 @@ sealed class Account(
     override var id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
 ) : AccountData {
+
     override var balance: BigDecimal = balance
         protected set
 
@@ -86,16 +87,12 @@ class CategoryAccount(
     }
 }
 
-class RealAccount(
+open class RealAccount(
     name: String,
     description: String = "",
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
-) : Account(name, description, id, balance) {
-    override fun toString(): String {
-        return "Real${super.toString()}"
-    }
-}
+) : Account(name, description, id, balance)
 
 /**
  * A separate [DraftAccount] is useful for quickly determining the outstanding balance.  One only has to look at the
@@ -114,19 +111,16 @@ class DraftAccount(
 }
 
 // FIXME do I need these two classes?
-///**
-// * Isn't associated to a particular real account.  transactions can be cleared from various real accounts.
-// */
-//class ChargeAccount(
-//    name: String,
-//    description: String = "",
-//    id: UUID = UUID.randomUUID(),
-//    balance: BigDecimal = BigDecimal.ZERO.setScale(2),
-//) : Account(name, description, id, balance) {
-//    override fun toString(): String {
-//        return "Charge${super.toString()}"
-//    }
-//}
+class ChargeAccount(
+    name: String,
+    description: String = "",
+    id: UUID = UUID.randomUUID(),
+    balance: BigDecimal = BigDecimal.ZERO.setScale(2),
+) : RealAccount(name, description, id, balance) {
+    override fun toString(): String {
+        return "Charge${super.toString()}"
+    }
+}
 
 //class CheckingAccount(
 //    name: String,

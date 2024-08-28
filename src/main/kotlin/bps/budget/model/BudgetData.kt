@@ -15,6 +15,7 @@ class BudgetData(
     categoryAccounts: List<CategoryAccount>,
     realAccounts: List<RealAccount> = emptyList(),
     draftAccounts: List<DraftAccount> = emptyList(),
+    chargeAccounts: List<ChargeAccount> = emptyList(),
 ) {
 
     var categoryAccounts: List<CategoryAccount> = categoryAccounts.sortedBy { it.name }
@@ -24,6 +25,9 @@ class BudgetData(
         private set
 
     var draftAccounts: List<DraftAccount> = draftAccounts.sortedBy { it.name }
+        private set
+
+    var chargeAccounts: List<ChargeAccount> = chargeAccounts.sortedBy { it.name }
         private set
 
     init {
@@ -37,23 +41,23 @@ class BudgetData(
             }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T : Account?> getAccountById(id: UUID): T =
-        byId[id] as T
+    fun <T : Account> getAccountByIdOrNull(id: UUID): T? =
+        byId[id] as T?
 
     fun commit(transaction: Transaction) {
         transaction.categoryItems
             .forEach { item: Transaction.Item ->
-                getAccountById<CategoryAccount>(item.categoryAccount!!.id)
+                getAccountByIdOrNull<CategoryAccount>(item.categoryAccount!!.id)!!
                     .commit(item)
             }
         transaction.realItems
             .forEach { item: Transaction.Item ->
-                getAccountById<RealAccount>(item.realAccount!!.id)
+                getAccountByIdOrNull<RealAccount>(item.realAccount!!.id)!!
                     .commit(item)
             }
         transaction.draftItems
             .forEach { item: Transaction.Item ->
-                getAccountById<DraftAccount>(item.draftAccount!!.id)
+                getAccountByIdOrNull<DraftAccount>(item.draftAccount!!.id)!!
                     .commit(item)
             }
 
@@ -69,7 +73,7 @@ class BudgetData(
                     sum + account.balance
                 }
         val realSum: BigDecimal =
-            realAccounts
+            (realAccounts + chargeAccounts)
                 .fold(BigDecimal.ZERO.setScale(2)) { sum: BigDecimal, account: Account ->
                     sum + account.balance
                 }
@@ -80,11 +84,28 @@ class BudgetData(
     override fun toString(): String =
         buildString {
             append("BudgetData($generalAccount")
-            ((categoryAccounts - generalAccount) + realAccounts + draftAccounts).forEach {
-                append(", $it")
-            }
+            ((categoryAccounts - generalAccount) + realAccounts + chargeAccounts + draftAccounts)
+                .forEach {
+                    append(", $it")
+                }
             append(")")
         }
+
+    fun addChargeAccount(chargeAccount: ChargeAccount) {
+        chargeAccounts = chargeAccounts + chargeAccount
+    }
+
+    fun addCategoryAccount(categoryAccount: CategoryAccount) {
+        categoryAccounts = categoryAccounts + categoryAccount
+    }
+
+    fun addRealAccount(realAccount: RealAccount) {
+        realAccounts = realAccounts + realAccount
+    }
+
+    fun addDraftAccount(draftAccount: DraftAccount) {
+        draftAccounts = draftAccounts + draftAccount
+    }
 
     companion object {
 

@@ -3,10 +3,10 @@
 package bps.budget
 
 import bps.budget.auth.User
-import bps.budget.customize.customizeMenu
 import bps.budget.model.Account
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
+import bps.budget.model.ChargeAccount
 import bps.budget.model.DraftAccount
 import bps.budget.model.DraftStatus
 import bps.budget.model.RealAccount
@@ -94,7 +94,7 @@ class BudgetApplication private constructor(
     private val menuApplicationWithQuit =
         MenuApplicationWithQuit(
             WithIo(inputReader, outPrinter)
-                .budgetMenu(budgetData, budgetDao, configurations.user, clock),
+                .budgetMenu(budgetData, budgetDao, configurations.user, user, clock),
             inputReader,
             outPrinter,
         )
@@ -115,6 +115,7 @@ fun WithIo.budgetMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
+    user: User,
     clock: Clock,
 ): Menu {
     return Menu("Budget!") {
@@ -157,14 +158,8 @@ fun WithIo.budgetMenu(
             ) { checksMenu(budgetData, budgetDao, userConfig, clock) },
         )
         add(
-            takeAction(clearDrafts) {
-                outPrinter(
-                    """
-                |When the user gets a report from the bank telling which checks have cleared, the user needs to update the records in the budget program.
-                |This is done by removing the transaction from the draft account and turning it into a debit in the associated checking account.
-                |Optional: Do something similar for credit cards.
-                |When the user receives a credit card bill, she should be able to check off those transactions that are covered on that bill.""".trimMargin(),
-                )
+            pushMenu(useOrPayCreditCards) {
+                creditCardMenu(budgetData, budgetDao, userConfig, clock)
             },
         )
         add(
@@ -178,17 +173,125 @@ fun WithIo.budgetMenu(
             },
         )
         add(
-            takeActionAndPush(setup, { customizeMenu }) {
-                outPrinter(
-                    """
-            |The user must be able to add/remove accounts and categorize accounts (category fund account, real fund account, etc.)
-            |The user may change the information associated with some account.
-            |The user may associate a drafts account with a checking account and vice-versa.""".trimMargin(),
-                )
-            },
+            pushMenu(setup, { customizeMenu(budgetData, budgetDao, user) }),
         )
         add(quitItem)
     }
+}
+
+private fun WithIo.customizeMenu(
+    budgetData: BudgetData,
+    budgetDao: BudgetDao,
+    user: User,
+) = Menu {
+    add(
+        takeAction("Create a New Category") {
+            val name: String =
+                SimplePrompt<String>(
+                    "Enter a unique name for the new category: ",
+                    inputReader,
+                    outPrinter,
+                    validate = { input ->
+                        budgetData
+                            .categoryAccounts
+                            .none { account ->
+                                account.name == input
+                            }
+                    },
+                )
+                    .getResult()
+                    .trim()
+            if (name.isNotBlank()) {
+                val description: String =
+                    SimplePromptWithDefault(
+                        "Enter a description for the new category: ",
+                        inputReader = inputReader,
+                        outPrinter = outPrinter,
+                        defaultValue = name,
+                    )
+                        .getResult()
+                        .trim()
+                budgetData.addCategoryAccount(CategoryAccount(name, description))
+                budgetDao.save(budgetData, user)
+            }
+        },
+    )
+    add(
+        takeAction("Create a Real Fund") {
+            val name: String =
+                SimplePrompt<String>(
+                    "Enter a unique name for the real account: ",
+                    inputReader,
+                    outPrinter,
+                    validate = { input ->
+                        budgetData
+                            .realAccounts
+                            .none { account ->
+                                account.name == input
+                            }
+                    },
+                )
+                    .getResult()
+                    .trim()
+            if (name.isNotBlank()) {
+                val description: String =
+                    SimplePromptWithDefault(
+                        "Enter a description for the real account: ",
+                        inputReader = inputReader,
+                        outPrinter = outPrinter,
+                        defaultValue = name,
+                    )
+                        .getResult()
+                        .trim()
+                val isDraft: Boolean = SimplePromptWithDefault(
+                    "Will you write checks on this account [y/N]? ",
+                    inputReader = inputReader,
+                    outPrinter = outPrinter,
+                    defaultValue = false,
+                ) { it.trim() in listOf("Y", "y", "true", "yes") }
+                    .getResult()
+                val realAccount = RealAccount(name, description)
+                budgetData.addRealAccount(realAccount)
+                if (isDraft)
+                    budgetData.addDraftAccount(DraftAccount(name, description, realCompanion = realAccount))
+                budgetDao.save(budgetData, user)
+            }
+        },
+    )
+    add(
+        takeAction("Add a Credit Card") {
+            val name: String =
+                SimplePrompt<String>(
+                    "Enter a unique name for the new credit card: ",
+                    inputReader,
+                    outPrinter,
+                    validate = { input ->
+                        budgetData
+                            .chargeAccounts
+                            .none { account ->
+                                account.name == input
+                            }
+                    },
+                )
+                    .getResult()
+                    .trim()
+            if (name.isNotBlank()) {
+                val description: String =
+                    SimplePromptWithDefault(
+                        "Enter a description for the new credit card: ",
+                        inputReader = inputReader,
+                        outPrinter = outPrinter,
+                        defaultValue = name,
+                    )
+                        .getResult()
+                        .trim()
+                budgetData.addChargeAccount(ChargeAccount(name, description))
+                budgetDao.save(budgetData, user)
+            }
+        },
+    )
+    add(backItem)
+    add(quitItem)
 }
 
 private fun WithIo.viewHistoryMenu(
@@ -202,7 +305,6 @@ private fun WithIo.viewHistoryMenu(
         add(budgetData.generalAccount)
         addAll(budgetData.categoryAccounts - budgetData.generalAccount)
         addAll(budgetData.realAccounts)
-//        addAll(budgetData.draftAccounts)
     },
     labelGenerator = {
         String.format("%,10.2f | %s", balance, name)
@@ -318,7 +420,7 @@ private fun WithIo.checksMenu(
                             budgetData = budgetData,
                             limit = userConfig.numberOfItemsInScrollingList,
                             outPrinter = outPrinter,
-                        ) { _, (draftTransaction, draftTransactionItem) ->
+                        ) { _, draftTransactionItem ->
                             val timestamp: Instant =
                                 TimestampPrompt(
                                     "Did the check clear just now [Y]? ",
@@ -329,25 +431,26 @@ private fun WithIo.checksMenu(
                                 )
                                     .getResult()
                                     .toInstant(budgetData.timeZone)
-                            val clearingTransaction = Transaction.Builder(draftTransaction.description, timestamp)
-                                .apply {
-                                    draftItemBuilders.add(
-                                        Transaction.ItemBuilder(
-                                            amount = -draftTransactionItem.amount,
-                                            description = description,
-                                            draftAccount = selectedAccount,
-                                            draftStatus = DraftStatus.clearing,
-                                        ),
-                                    )
-                                    realItemBuilders.add(
-                                        Transaction.ItemBuilder(
-                                            amount = -draftTransactionItem.amount,
-                                            description = description,
-                                            realAccount = draftTransactionItem.draftAccount!!.realCompanion,
-                                        ),
-                                    )
-                                }
-                                .build()
+                            val clearingTransaction =
+                                Transaction.Builder(draftTransactionItem.transaction.description, timestamp)
+                                    .apply {
+                                        draftItemBuilders.add(
+                                            Transaction.ItemBuilder(
+                                                amount = -draftTransactionItem.amount,
+                                                description = description,
+                                                draftAccount = selectedAccount,
+                                                draftStatus = DraftStatus.clearing,
+                                            ),
+                                        )
+                                        realItemBuilders.add(
+                                            Transaction.ItemBuilder(
+                                                amount = -draftTransactionItem.amount,
+                                                description = description,
+                                                realAccount = draftTransactionItem.draftAccount!!.realCompanion,
+                                            ),
+                                        )
+                                    }
+                                    .build()
                             budgetData.commit(clearingTransaction)
                             budgetDao.clearCheck(draftTransactionItem, clearingTransaction, budgetData.id)
                         },
@@ -359,12 +462,271 @@ private fun WithIo.checksMenu(
         add(quitItem)
     }
 
+private fun WithIo.creditCardMenu(
+    budgetData: BudgetData,
+    budgetDao: BudgetDao,
+    userConfig: UserConfiguration,
+    clock: Clock,
+) =
+    Menu {
+        add(
+            pushMenu("Spend on a card") {
+                ScrollingSelectionMenu(
+                    header = "Select credit card",
+                    limit = userConfig.numberOfItemsInScrollingList,
+                    baseList = budgetData.chargeAccounts,
+                    // TODO do we want to incorporate credit limits to determine the balance and max
+                    labelGenerator = { String.format("%,10.2f | %s", balance, name) },
+                ) { menuSession, chargeAccount: ChargeAccount ->
+                    spendOnACreditCard(budgetData, clock, budgetDao, userConfig, menuSession, chargeAccount)
+                }
+            },
+        )
+        add(
+            pushMenu("Pay credit card bill") {
+                ScrollingSelectionMenu(
+                    header = "Select the credit card",
+                    limit = userConfig.numberOfItemsInScrollingList,
+                    baseList = budgetData.chargeAccounts,
+                    labelGenerator = { String.format("%,10.2f | %s", balance, name) },
+                ) { menuSession, selectedAccount: ChargeAccount ->
+                    val amountOfBill: BigDecimal =
+                        SimplePrompt(
+                            basicPrompt = "Enter the total amount of the bill: ",
+                            inputReader = inputReader,
+                            outPrinter = outPrinter,
+                            validate = {
+                                it
+                                    .toCurrencyAmountOrNull()
+                                    ?.let { amount ->
+                                        amount >= BigDecimal.ZERO
+                                    }
+                                    ?: false
+                            },
+                        ) { it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO }
+                            .getResult()
+                    if (amountOfBill > BigDecimal.ZERO) {
+                        menuSession.push(
+                            selectOrCreateChargeTransactionsForBill(
+                                amountOfBill,
+                                selectedAccount,
+                                emptyList(),
+                                budgetData,
+                                budgetDao,
+                                userConfig,
+                                menuSession,
+                                clock,
+                            ),
+                        )
+                    }
+                }
+            },
+        )
+        add(backItem)
+        add(quitItem)
+    }
+
+// TODO would be nice to display the already-selected transaction items as well
+// TODO some folks might like to be able to pay an amount that isn't related to transactions on the card
+private fun WithIo.selectOrCreateChargeTransactionsForBill(
+    totalAmountOfBill: BigDecimal,
+    chargeAccount: ChargeAccount,
+    selectedItems: List<Transaction.Item>,
+    budgetData: BudgetData,
+    budgetDao: BudgetDao,
+    userConfig: UserConfiguration,
+    menuSession: MenuSession,
+    clock: Clock,
+): Menu = ViewTransactionsMenu(
+    filter = { it.draftStatus === DraftStatus.outstanding && it !in selectedItems },
+    header = "Select all transactions from this bill.  Amount to be covered: \$${
+        totalAmountOfBill + selectedItems.fold(
+            BigDecimal.ZERO,
+        ) { sum, item ->
+            sum + item.amount
+        }
+    }",
+    prompt = "Select a transaction covered in this bill: ",
+    extraItems = listOf(
+        takeAction("Record a missing transaction from this bill") {
+//            menuSession.pop()
+            spendOnACreditCard(
+                budgetData,
+                clock,
+                budgetDao,
+                userConfig,
+                menuSession,
+                chargeAccount,
+            )
+//            menuSession.push(
+//                selectOrCreateChargeTransactionsForBill(
+//                    totalAmountOfBill,
+//                    chargeAccount,
+//                    selectedItems,
+//                    budgetData,
+//                    budgetDao,
+//                    userConfig,
+//                    menuSession,
+//                    clock,
+//                ),
+//            )
+        },
+    ),
+    account = chargeAccount,
+    budgetDao = budgetDao,
+    budgetData = budgetData,
+    limit = userConfig.numberOfItemsInScrollingList,
+    outPrinter = outPrinter,
+) { _, chargeTransactionItem ->
+    menuSession.pop()
+    val allSelectedItems: List<Transaction.Item> = selectedItems + chargeTransactionItem
+    if (totalAmountOfBill +
+        allSelectedItems
+            .fold(BigDecimal.ZERO) { sum, item ->
+                sum + item.amount
+            } > BigDecimal.ZERO
+    ) {
+        menuSession.push(
+            selectOrCreateChargeTransactionsForBill(
+                totalAmountOfBill = totalAmountOfBill,
+                chargeAccount = chargeAccount,
+                selectedItems = allSelectedItems,
+                budgetData = budgetData,
+                budgetDao = budgetDao,
+                userConfig = userConfig,
+                menuSession = menuSession,
+                clock = clock,
+            ),
+        )
+    } else
+        menuSession.push(
+            ScrollingSelectionMenu(
+                header = "Select real account bill was paid from.",
+                limit = userConfig.numberOfItemsInScrollingList,
+                baseList = budgetData.realAccounts,
+                labelGenerator = { String.format("%,10.2f | %s", balance, name) },
+            ) { _: MenuSession, selectedRealAccount: RealAccount ->
+                val timestamp: Instant =
+                    TimestampPrompt(
+                        "Use current time for the bill-pay transaction [Y]? ",
+                        budgetData.timeZone,
+                        clock,
+                        inputReader,
+                        outPrinter,
+                    )
+                        .getResult()
+                        .toInstant(budgetData.timeZone)
+                val description: String =
+                    SimplePromptWithDefault(
+                        "Description of transaction [$chargeAccount.name]: ",
+                        inputReader = inputReader,
+                        outPrinter = outPrinter,
+                        defaultValue = chargeAccount.name,
+                    )
+                        .getResult()
+                val billPayTransaction =
+                    Transaction.Builder(description, timestamp)
+                        .apply {
+                            realItemBuilders.add(
+                                Transaction.ItemBuilder(
+                                    amount = totalAmountOfBill,
+                                    description = description,
+                                    realAccount = chargeAccount,
+                                    draftStatus = DraftStatus.clearing,
+                                ),
+                            )
+                            realItemBuilders.add(
+                                Transaction.ItemBuilder(
+                                    amount = -totalAmountOfBill,
+                                    description = description,
+                                    realAccount = selectedRealAccount,
+                                    draftStatus = DraftStatus.clearing,
+                                ),
+                            )
+                        }
+                        .build()
+                budgetData.commit(billPayTransaction)
+                budgetDao.payCreditCardBill(selectedItems, billPayTransaction, budgetData.id)
+            },
+        )
+}
+
+private fun WithIo.spendOnACreditCard(
+    budgetData: BudgetData,
+    clock: Clock,
+    budgetDao: BudgetDao,
+    userConfig: UserConfiguration,
+    menuSession: MenuSession,
+    chargeAccount: ChargeAccount,
+) {
+    // TODO enter check number if checking account
+    // NOTE this is why we have separate draft accounts -- to easily know the real vs draft balance
+    val amount: BigDecimal =
+        SimplePrompt<BigDecimal>(
+            "Enter the amount of the charge on ${chargeAccount.name}: ",
+            inputReader = inputReader,
+            outPrinter = outPrinter,
+            validate = { input: String ->
+                input
+                    .toCurrencyAmountOrNull()
+                    ?.let {
+                        it >= BigDecimal.ZERO
+                    }
+                    ?: false
+            },
+        ) {
+            it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
+        }
+            .getResult()
+    if (amount > BigDecimal.ZERO) {
+        val description: String =
+            SimplePrompt<String>(
+                "Enter the recipient of the charge: ",
+                inputReader = inputReader,
+                outPrinter = outPrinter,
+            )
+                .getResult()
+        val timestamp: Instant =
+            TimestampPrompt(
+                "Use current time [Y]? ",
+                budgetData.timeZone,
+                clock,
+                inputReader,
+                outPrinter,
+            )
+                .getResult()
+                .toInstant(budgetData.timeZone)
+        val transactionBuilder: Transaction.Builder =
+            Transaction.Builder(description, timestamp)
+                .apply {
+                    realItemBuilders.add(
+                        Transaction.ItemBuilder(
+                            amount = -amount,
+                            description = description,
+                            realAccount = chargeAccount,
+                            draftStatus = DraftStatus.outstanding,
+                        ),
+                    )
+                }
+        menuSession.push(
+            createTransactionItemMenu(
+                amount,
+                transactionBuilder,
+                description,
+                budgetData,
+                budgetDao,
+                userConfig,
+            ),
+        )
+    }
+}
+
 private fun WithIo.recordSpendingMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
     clock: Clock,
-) = ScrollingSelectionMenu(
+): Menu = ScrollingSelectionMenu(
     header = "Select real account money was spent from.",
     limit = userConfig.numberOfItemsInScrollingList,
     baseList = budgetData.realAccounts,
