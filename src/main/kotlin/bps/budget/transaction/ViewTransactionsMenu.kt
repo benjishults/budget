@@ -3,6 +3,7 @@ package bps.budget.transaction
 import bps.budget.model.Account
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
+import bps.budget.model.ChargeAccount
 import bps.budget.model.DraftAccount
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
@@ -88,6 +89,9 @@ open class ViewTransactionsMenu(
                     is CategoryAccount -> {
                         transaction.categoryItems
                     }
+                    is ChargeAccount -> {
+                        transaction.chargeItems
+                    }
                     is RealAccount -> {
                         transaction.realItems
                     }
@@ -99,6 +103,9 @@ open class ViewTransactionsMenu(
                         when (account) {
                             is CategoryAccount -> {
                                 item.categoryAccount
+                            }
+                            is ChargeAccount -> {
+                                item.chargeAccount
                             }
                             is RealAccount -> {
                                 item.realAccount
@@ -155,11 +162,9 @@ private fun OutPrinter.showTransactionDetailsAction(transaction: Transaction, bu
             append("\n")
             append(transaction.description)
             append("\n")
-            appendItems(
-                "Category Account",
-                transaction.categoryItems,
-            ) { categoryAccount!! }
+            appendItems("Category Account", transaction.categoryItems) { categoryAccount!! }
             appendItems("Real Items:", transaction.realItems) { realAccount!! }
+            appendItems("Credit Card Items:", transaction.chargeItems) { chargeAccount!! }
             appendItems("Draft Items:", transaction.draftItems) { draftAccount!! }
         },
     )
@@ -172,19 +177,21 @@ private fun StringBuilder.appendItems(
 ) {
     if (items.isNotEmpty()) {
         append(String.format("%16s | Amount     | Description\n", accountColumnLabel))
-        items.forEach { transactionItem: Transaction.Item ->
-            append(
-                String.format(
-                    "%-16s | %10.2f |%s",
-                    accountGetter(transactionItem).name,
-                    transactionItem.amount,
-                    transactionItem
-                        .description
-                        ?.let { " $it" }
-                        ?: "",
-                ),
-            )
-            append("\n")
-        }
+        items
+            .sorted()
+            .forEach { transactionItem: Transaction.Item ->
+                append(
+                    String.format(
+                        "%-16s | %10.2f |%s",
+                        accountGetter(transactionItem).name,
+                        transactionItem.amount,
+                        transactionItem
+                            .description
+                            ?.let { " $it" }
+                            ?: "",
+                    ),
+                )
+                append("\n")
+            }
     }
 }

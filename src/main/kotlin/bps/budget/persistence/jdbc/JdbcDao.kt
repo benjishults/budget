@@ -288,9 +288,7 @@ create table if not exists transactions
                 createIndexStatement.executeUpdate(
                     """
 create index if not exists lookup_transaction_by_date
-    on transactions
-        (timestamp_utc desc,
-         budget_id)
+    on transactions (timestamp_utc desc, budget_id);
                     """.trimIndent(),
                 )
             }
@@ -304,13 +302,30 @@ create table if not exists transaction_items
     amount              numeric(30, 2) not null,
     category_account_id uuid           null references category_accounts (id),
     real_account_id     uuid           null references real_accounts (id),
+    charge_account_id   uuid           null references charge_accounts (id),
     draft_account_id    uuid           null references draft_accounts (id),
     draft_status        varchar        not null default 'none', -- 'none' 'outstanding' 'cleared'
     budget_id           uuid           not null references budgets (id),
     constraint only_one_account_per_transaction_item check
-        ((real_account_id is not null and (category_account_id is null and draft_account_id is null)) or
-         (category_account_id is not null and (real_account_id is null and draft_account_id is null)) or
-         (draft_account_id is not null and (category_account_id is null and real_account_id is null)))
+        ((real_account_id is not null and
+          category_account_id is null and
+          draft_account_id is null and
+          charge_account_id is null
+             ) or
+         (category_account_id is not null and
+          real_account_id is null and
+          draft_account_id is null and
+          charge_account_id is null
+             ) or
+         (draft_account_id is not null and
+          real_account_id is null and
+          category_account_id is null and
+          charge_account_id is null
+             ) or
+         (charge_account_id is not null and
+          real_account_id is null and
+          draft_account_id is null and
+          category_account_id is null))
 )
                 """.trimIndent(),
                 )
@@ -319,9 +334,7 @@ create table if not exists transaction_items
                 createIndexStatement.executeUpdate(
                     """
 create index if not exists lookup_category_account_transaction_items_by_account
-    on transaction_items
-        (category_account_id,
-         budget_id)
+    on transaction_items (category_account_id, budget_id)
     where category_account_id is not null
                     """.trimIndent(),
                 )
@@ -330,9 +343,7 @@ create index if not exists lookup_category_account_transaction_items_by_account
                 createIndexStatement.executeUpdate(
                     """
 create index if not exists lookup_real_account_transaction_items_by_account
-    on transaction_items
-        (real_account_id,
-         budget_id)
+    on transaction_items (real_account_id, budget_id)
     where real_account_id is not null
                     """.trimIndent(),
                 )
@@ -340,10 +351,17 @@ create index if not exists lookup_real_account_transaction_items_by_account
             createStatement().use { createIndexStatement: Statement ->
                 createIndexStatement.executeUpdate(
                     """
+create index if not exists lookup_charge_account_transaction_items_by_account
+    on transaction_items (charge_account_id, budget_id)
+    where charge_account_id is not null
+                    """.trimIndent(),
+                )
+            }
+            createStatement().use { createIndexStatement: Statement ->
+                createIndexStatement.executeUpdate(
+                    """
 create index if not exists lookup_draft_account_transaction_items_by_account
-    on transaction_items
-        (draft_account_id,
-         budget_id)
+    on transaction_items (draft_account_id, budget_id)
     where draft_account_id is not null
                     """.trimIndent(),
                 )
@@ -379,6 +397,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                     |       i.category_account_id,
                     |       i.draft_account_id,
                     |       i.real_account_id,
+                    |       i.charge_account_id,
                     |       i.draft_status
                     |from transactions t
                     |         join transaction_items i on i.transaction_id = t.id
@@ -390,6 +409,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                     |               where ti.${
                     when (account) {
                         is CategoryAccount -> "category_account_id"
+                        is ChargeAccount -> "charge_account_id"
                         is RealAccount -> "real_account_id"
                         is DraftAccount -> "draft_account_id"
                     }
@@ -427,17 +447,17 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                                 if (draftStatus == DraftStatus.clearing) {
                                     prepareStatement(
                                         """
-                                        |select t.*,
-                                        |       i.amount      as item_amount,
-                                        |       i.description as item_description,
-                                        |       i.category_account_id
-                                        |from transactions t
-                                        |         join transaction_items i on i.transaction_id = t.id
-                                        |where t.id in (select id
-                                        |               from transactions
-                                        |               where cleared_by_transaction_id = ?)
-                                        |  and i.category_account_id is not null
-                                    """.trimMargin(),
+                                            |select t.*,
+                                            |       i.amount      as item_amount,
+                                            |       i.description as item_description,
+                                            |       i.category_account_id
+                                            |from transactions t
+                                            |         join transaction_items i on i.transaction_id = t.id
+                                            |where t.id in (select id
+                                            |               from transactions
+                                            |               where cleared_by_transaction_id = ?)
+                                            |  and i.category_account_id is not null
+                                        """.trimMargin(),
                                     )
                                         .use { preparedStatement: PreparedStatement ->
                                             preparedStatement.setUuid(1, transactionId!!)
@@ -574,49 +594,11 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         }
     }
 
-    private fun Connection.createStagingRealAccountsTable() {
+    private fun Connection.createStagingAccountsTable(tableNamePrefix: String) {
         createStatement().use { createTablesStatement: Statement ->
             createTablesStatement.executeUpdate(
                 """
-    create temp table if not exists staged_real_accounts
-    (
-        id          uuid           not null,
-        gen         integer        not null generated always as identity,
-        name        varchar(50)    not null,
-        description varchar(110)   not null default '',
-        balance     numeric(30, 2) not null default 0.0,
-        budget_id   uuid           not null
-    )
-        on commit drop
-                        """.trimIndent(),
-            )
-        }
-    }
-
-    private fun Connection.createStagingChargeAccountsTable() {
-        createStatement().use { createTablesStatement: Statement ->
-            createTablesStatement.executeUpdate(
-                """
-    create temp table if not exists staged_charge_accounts
-    (
-        id          uuid           not null,
-        gen         integer        not null generated always as identity,
-        name        varchar(50)    not null,
-        description varchar(110)   not null default '',
-        balance     numeric(30, 2) not null default 0.0,
-        budget_id   uuid           not null
-    )
-        on commit drop
-                        """.trimIndent(),
-            )
-        }
-    }
-
-    private fun Connection.createStagingCategoryAccountsTable() {
-        createStatement().use { createTablesStatement: Statement ->
-            createTablesStatement.executeUpdate(
-                """
-    create temp table if not exists staged_category_accounts
+    create temp table if not exists staged_${tableNamePrefix}_accounts
     (
         id          uuid           not null,
         gen         integer        not null generated always as identity,
@@ -721,6 +703,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                     generalAccount,
                     categoryAccounts,
                     realAccounts,
+                    chargeAccounts,
                     draftAccounts,
                 )
             }
@@ -769,6 +752,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         // require clearTransaction is a simple draft transaction(s) clearing transaction
         require(clearingTransaction.draftItems.isNotEmpty())
         require(clearingTransaction.categoryItems.isEmpty())
+        require(clearingTransaction.chargeItems.isEmpty())
         require(clearingTransaction.realItems.size == 1)
         val realTransactionItem: Transaction.Item = clearingTransaction.realItems.first()
         val realAccount: RealAccount = realTransactionItem.realAccount!!
@@ -788,6 +772,8 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                         &&
                         with(it.transaction) {
                             realItems.isEmpty()
+                                    &&
+                                    chargeItems.isEmpty()
                                     &&
                                     draftItems.size == 1
                         }
@@ -858,7 +844,8 @@ create index if not exists lookup_draft_account_transaction_items_by_account
      * @throws IllegalArgumentException if either the [clearedItems] or the [billPayTransaction] is not what
      * we expect
      */
-    override fun payCreditCardBill(
+    // TODO allow checks to pay credit card bills
+    override fun commitCreditCardPayment(
         clearedItems: List<Transaction.Item>,
         billPayTransaction: Transaction,
         budgetId: UUID,
@@ -866,21 +853,18 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         // require billPayTransaction is a simple real transfer
         require(billPayTransaction.draftItems.isEmpty())
         require(billPayTransaction.categoryItems.isEmpty())
+        require(billPayTransaction.chargeItems.size == 1)
+        require(billPayTransaction.realItems.size == 1)
         val chargeTransactionItem: Transaction.Item =
-            billPayTransaction.realItems.first { it.realAccount is ChargeAccount }
-        val chargeAccount: ChargeAccount = chargeTransactionItem.realAccount!! as ChargeAccount
+            billPayTransaction.chargeItems.first()
+        val chargeAccount: ChargeAccount =
+            chargeTransactionItem.chargeAccount!!
         // require clearedItems to be what we expect
         require(clearedItems.isNotEmpty())
         require(
             clearedItems.all {
-                it.realAccount == chargeAccount
+                it.chargeAccount == chargeAccount
             },
-        )
-        require(
-            clearedItems
-                .mapTo(mutableSetOf()) { it.transaction }
-                .size ==
-                    clearedItems.size,
         )
         require(
             clearedItems
@@ -891,21 +875,21 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         )
         connection.transactOrNull {
             clearedItems
-                .forEach { draftTransactionItem ->
+                .forEach { chargeTransactionItem: Transaction.Item ->
                     prepareStatement(
                         """
                             |update transaction_items ti
                             |set draft_status = 'cleared'
                             |where ti.budget_id = ?
                             |and ti.transaction_id = ?
-                            |and ti.draft_account_id = ?
+                            |and ti.charge_account_id = ?
                             |and ti.draft_status = 'outstanding'
                         """.trimMargin(),
                     )
                         .use { statement ->
                             statement.setUuid(1, budgetId)
-                            statement.setUuid(2, draftTransactionItem.transaction.id)
-                            statement.setUuid(3, draftTransactionItem.draftAccount!!.id)
+                            statement.setUuid(2, chargeTransactionItem.transaction.id)
+                            statement.setUuid(3, chargeTransactionItem.chargeAccount!!.id)
                             if (statement.executeUpdate() != 1)
                                 throw IllegalStateException("Charge being cleared not found in DB")
                         }
@@ -919,7 +903,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                     )
                         .use { statement ->
                             statement.setUuid(1, billPayTransaction.id)
-                            statement.setUuid(2, draftTransactionItem.transaction.id)
+                            statement.setUuid(2, chargeTransactionItem.transaction.id)
                             statement.setUuid(3, budgetId)
                             statement.executeUpdate()
                         }
@@ -987,25 +971,21 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                 realAccountUpdateStatement,
                 buildList {
                     transaction.realItems.forEach { transactionItem: Transaction.Item ->
-                        if (transactionItem.realAccount !is ChargeAccount) {
-                            add(
-                                transactionItem.realAccount!!.id to
-                                        transactionItem.amount,
-                            )
-                        }
+                        add(
+                            transactionItem.realAccount!!.id to
+                                    transactionItem.amount,
+                        )
                     }
                 },
             )
             put(
                 chargeAccountUpdateStatement,
                 buildList {
-                    transaction.realItems.forEach { transactionItem: Transaction.Item ->
-                        if (transactionItem.realAccount is ChargeAccount) {
-                            add(
-                                transactionItem.realAccount.id to
-                                        transactionItem.amount,
-                            )
-                        }
+                    transaction.chargeItems.forEach { transactionItem: Transaction.Item ->
+                        add(
+                            transactionItem.chargeAccount!!.id to
+                                    transactionItem.amount,
+                        )
                     }
                 },
             )
@@ -1038,14 +1018,14 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         budgetId: UUID,
     ): PreparedStatement {
         val transactionItemCounter =
-            transaction.categoryItems.size + transaction.realItems.size + transaction.draftItems.size
+            transaction.categoryItems.size + transaction.realItems.size + transaction.draftItems.size + transaction.chargeItems.size
         val insertSql = buildString {
             var counter = transactionItemCounter
-            append("insert into transaction_items (transaction_id, description, amount, draft_status, budget_id, category_account_id, real_account_id, draft_account_id) values ")
+            append("insert into transaction_items (transaction_id, description, amount, draft_status, budget_id, category_account_id, real_account_id, charge_account_id, draft_account_id) values ")
             if (counter-- > 0) {
-                append("(?, ?, ?, ?, ?, ?, ?, ?)")
+                append("(?, ?, ?, ?, ?, ?, ?, ?, ?)")
                 while (counter-- > 0) {
-                    append(", (?, ?, ?, ?, ?, ?, ?, ?)")
+                    append(", (?, ?, ?, ?, ?, ?, ?, ?, ?)")
                 }
             }
         }
@@ -1062,6 +1042,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
             transactionItemInsert.setUuid(parameterIndex++, transactionItem.categoryAccount!!.id)
             transactionItemInsert.setNull(parameterIndex++, OTHER)
             transactionItemInsert.setNull(parameterIndex++, OTHER)
+            transactionItemInsert.setNull(parameterIndex++, OTHER)
         }
         transaction.realItems.forEach { transactionItem: Transaction.Item ->
             parameterIndex += setStandardProperties(
@@ -1074,6 +1055,20 @@ create index if not exists lookup_draft_account_transaction_items_by_account
             transactionItemInsert.setNull(parameterIndex++, OTHER)
             transactionItemInsert.setUuid(parameterIndex++, transactionItem.realAccount!!.id)
             transactionItemInsert.setNull(parameterIndex++, OTHER)
+            transactionItemInsert.setNull(parameterIndex++, OTHER)
+        }
+        transaction.chargeItems.forEach { transactionItem: Transaction.Item ->
+            parameterIndex += setStandardProperties(
+                transactionItemInsert,
+                parameterIndex,
+                transaction,
+                transactionItem,
+                budgetId,
+            )
+            transactionItemInsert.setNull(parameterIndex++, OTHER)
+            transactionItemInsert.setNull(parameterIndex++, OTHER)
+            transactionItemInsert.setUuid(parameterIndex++, transactionItem.chargeAccount!!.id)
+            transactionItemInsert.setNull(parameterIndex++, OTHER)
         }
         transaction.draftItems.forEach { transactionItem: Transaction.Item ->
             parameterIndex += setStandardProperties(
@@ -1083,6 +1078,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                 transactionItem,
                 budgetId,
             )
+            transactionItemInsert.setNull(parameterIndex++, OTHER)
             transactionItemInsert.setNull(parameterIndex++, OTHER)
             transactionItemInsert.setNull(parameterIndex++, OTHER)
             transactionItemInsert.setUuid(parameterIndex++, transactionItem.draftAccount!!.id)
@@ -1171,11 +1167,11 @@ create index if not exists lookup_draft_account_transaction_items_by_account
 //                        .also { if (it == 0)  }
                 }
             // create accounts that aren't there and update those that are
-            createStagingCategoryAccountsTable()
+            createStagingAccountsTable("category")
             upsertAccountData(data.categoryAccounts, CATEGORY_ACCOUNT_TABLE_NAME, data.id)
-            createStagingRealAccountsTable()
+            createStagingAccountsTable("real")
             upsertAccountData(data.realAccounts, REAL_ACCOUNT_TABLE_NAME, data.id)
-            createStagingChargeAccountsTable()
+            createStagingAccountsTable("charge")
             upsertAccountData(data.chargeAccounts, CHARGE_ACCOUNT_TABLE_NAME, data.id)
             createStagingDraftAccountsTable()
             upsertAccountData(data.draftAccounts, DRAFT_ACCOUNT_TABLE_NAME, data.id)

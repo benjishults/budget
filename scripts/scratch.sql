@@ -139,9 +139,7 @@ create table if not exists transactions
 );
 
 create index if not exists lookup_transaction_by_date
-    on transactions
-        (timestamp_utc desc,
-         budget_id);
+    on transactions (timestamp_utc desc, budget_id);
 
 create table if not exists transaction_items
 (
@@ -150,31 +148,47 @@ create table if not exists transaction_items
     amount              numeric(30, 2) not null,
     category_account_id uuid           null references category_accounts (id),
     real_account_id     uuid           null references real_accounts (id),
+    charge_account_id   uuid           null references charge_accounts (id),
     draft_account_id    uuid           null references draft_accounts (id),
     draft_status        varchar        not null default 'none', -- 'none' 'outstanding' 'cleared'
     budget_id           uuid           not null references budgets (id),
     constraint only_one_account_per_transaction_item check
-        ((real_account_id is not null and category_account_id is null) or
-         (category_account_id is not null and real_account_id is null))
+        ((real_account_id is not null and
+          category_account_id is null and
+          draft_account_id is null and
+          charge_account_id is null
+             ) or
+         (category_account_id is not null and
+          real_account_id is null and
+          draft_account_id is null and
+          charge_account_id is null
+             ) or
+         (draft_account_id is not null and
+          real_account_id is null and
+          category_account_id is null and
+          charge_account_id is null
+             ) or
+         (charge_account_id is not null and
+          real_account_id is null and
+          draft_account_id is null and
+          category_account_id is null))
 );
 
 create index if not exists lookup_category_account_transaction_items_by_account
-    on transaction_items
-        (category_account_id,
-         budget_id)
+    on transaction_items (category_account_id, budget_id)
     where category_account_id is not null;
 
 create index if not exists lookup_real_account_transaction_items_by_account
-    on transaction_items
-        (real_account_id,
-         budget_id)
+    on transaction_items (real_account_id, budget_id)
     where real_account_id is not null;
 
--- create index if not exists lookup_draft_account_transaction_items_by_account
---     on transaction_items
---         (draft_account_id,
---          budget_id)
---     where draft_account_id is not null;
+create index if not exists lookup_charge_account_transaction_items_by_account
+    on transaction_items (charge_account_id, budget_id)
+    where charge_account_id is not null;
+
+create index if not exists lookup_draft_account_transaction_items_by_account
+    on transaction_items (draft_account_id, budget_id)
+    where draft_account_id is not null;
 
 
 insert into users (id, login)
@@ -300,6 +314,7 @@ select t.*,
        i.category_account_id,
        i.draft_account_id,
        i.real_account_id,
+       i.charge_account_id,
        i.draft_status
 from transactions t
          join transaction_items i on i.transaction_id = t.id
@@ -333,6 +348,7 @@ select t.*,
        i.category_account_id,
        i.draft_account_id,
        i.real_account_id,
+       i.charge_account_id,
        i.draft_status
 from transactions t
          join transaction_items i on i.transaction_id = t.id
@@ -365,6 +381,7 @@ select t.timestamp_utc as timestamp_utc,
        i.description   as item_description,
        i.category_account_id,
 --        i.draft_account_id,
+       i.charge_account_id,
        i.real_account_id
 from transactions t
          join transaction_items i on i.transaction_id = t.id

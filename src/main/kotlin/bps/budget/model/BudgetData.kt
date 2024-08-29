@@ -14,8 +14,8 @@ class BudgetData(
     val generalAccount: CategoryAccount,
     categoryAccounts: List<CategoryAccount>,
     realAccounts: List<RealAccount> = emptyList(),
-    draftAccounts: List<DraftAccount> = emptyList(),
     chargeAccounts: List<ChargeAccount> = emptyList(),
+    draftAccounts: List<DraftAccount> = emptyList(),
 ) {
 
     var categoryAccounts: List<CategoryAccount> = categoryAccounts.sortedBy { it.name }
@@ -35,7 +35,7 @@ class BudgetData(
     }
 
     private val byId: MutableMap<UUID, Account> =
-        (categoryAccounts + realAccounts + draftAccounts)
+        (categoryAccounts + realAccounts + draftAccounts + chargeAccounts)
             .associateByTo(mutableMapOf()) {
                 it.id
             }
@@ -53,6 +53,11 @@ class BudgetData(
         transaction.realItems
             .forEach { item: Transaction.Item ->
                 getAccountByIdOrNull<RealAccount>(item.realAccount!!.id)!!
+                    .commit(item)
+            }
+        transaction.chargeItems
+            .forEach { item: Transaction.Item ->
+                getAccountByIdOrNull<ChargeAccount>(item.chargeAccount!!.id)!!
                     .commit(item)
             }
         transaction.draftItems
@@ -93,18 +98,22 @@ class BudgetData(
 
     fun addChargeAccount(chargeAccount: ChargeAccount) {
         chargeAccounts = chargeAccounts + chargeAccount
+        byId[chargeAccount.id] = chargeAccount
     }
 
     fun addCategoryAccount(categoryAccount: CategoryAccount) {
         categoryAccounts = categoryAccounts + categoryAccount
+        byId[categoryAccount.id] = categoryAccount
     }
 
     fun addRealAccount(realAccount: RealAccount) {
         realAccounts = realAccounts + realAccount
+        byId[realAccount.id] = realAccount
     }
 
     fun addDraftAccount(draftAccount: DraftAccount) {
         draftAccounts = draftAccounts + draftAccount
+        byId[draftAccount.id] = draftAccount
     }
 
     companion object {

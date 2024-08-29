@@ -30,6 +30,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
     override val jdbcDao = JdbcDao(configurations.persistence.jdbc!!)
 
     init {
+        System.setProperty("kotest.assertions.collection.print.size", "1000")
+        System.setProperty("kotest.assertions.collection.enumerate.size", "1000")
         val budgetId: UUID = UUID.fromString("89bc165a-ee70-43a4-b637-2774bcfc3ea4")
         clearInputsAndOutputsBeforeEach()
         val userId = UUID.fromString("f0f209c8-1b1e-43b3-8799-2dba58524d02")
@@ -128,7 +130,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
             }
             "allocate to food and necessities" {
                 inputs.addAll(
-                    listOf("2", "3", "300", "", "5", "100", "", "10"),
+                    listOf("2", "3", "300", "", "5", "200", "", "10"),
                 )
                 unPause()
                 waitForPause(helper.awaitMillis).shouldBeTrue()
@@ -184,7 +186,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
  2.       0.00 | Entertainment
  3.     300.00 | Food
  4.       0.00 | Medical
- 5.     100.00 | Necessities
+ 5.     200.00 | Necessities
  6.       0.00 | Network
  7.       0.00 | Transportation
  8.       0.00 | Travel
@@ -214,12 +216,12 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             |""".trimMargin(),
                     "Enter selection: ",
                     """Select account to view history
- 1.   4,800.00 | General
+ 1.   4,700.00 | General
  2.       0.00 | Education
  3.       0.00 | Entertainment
  4.     300.00 | Food
  5.       0.00 | Medical
- 6.     100.00 | Necessities
+ 6.     200.00 | Necessities
  7.       0.00 | Network
  8.       0.00 | Transportation
  9.       0.00 | Travel
@@ -236,7 +238,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 1. 2024-08-08 19:00:00 |   5,000.00 | income into $defaultCheckingAccountName
                         | 2. 2024-08-08 19:00:01 |     200.00 | income into $defaultWalletAccountName
                         | 3. 2024-08-08 19:00:02 |    -300.00 | allowance into $defaultFoodAccountName
-                        | 4. 2024-08-08 19:00:03 |    -100.00 | allowance into $defaultNecessitiesAccountName
+                        | 4. 2024-08-08 19:00:03 |    -200.00 | allowance into $defaultNecessitiesAccountName
                         | 5. Back
                         | 6. Quit
                         |""".trimMargin(),
@@ -245,8 +247,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |2024-08-08 19:00:02
                         |allowance into Food
                         |Category Account | Amount     | Description
-                        |General          |    -300.00 |
                         |Food             |     300.00 |
+                        |General          |    -300.00 |
                         |""".trimMargin(),
                     """
                         |'General' Account Transactions
@@ -254,18 +256,18 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 1. 2024-08-08 19:00:00 |   5,000.00 | income into $defaultCheckingAccountName
                         | 2. 2024-08-08 19:00:01 |     200.00 | income into $defaultWalletAccountName
                         | 3. 2024-08-08 19:00:02 |    -300.00 | allowance into $defaultFoodAccountName
-                        | 4. 2024-08-08 19:00:03 |    -100.00 | allowance into $defaultNecessitiesAccountName
+                        | 4. 2024-08-08 19:00:03 |    -200.00 | allowance into $defaultNecessitiesAccountName
                         | 5. Back
                         | 6. Quit
                         |""".trimMargin(),
                     "Select transaction for details: ",
                     """Select account to view history
- 1.   4,800.00 | General
+ 1.   4,700.00 | General
  2.       0.00 | Education
  3.       0.00 | Entertainment
  4.     300.00 | Food
  5.       0.00 | Medical
- 6.     100.00 | Necessities
+ 6.     200.00 | Necessities
  7.       0.00 | Network
  8.       0.00 | Transportation
  9.       0.00 | Travel
@@ -313,15 +315,14 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 1.       0.00 | Education
                         | 2.       0.00 | Entertainment
                         | 3.     300.00 | Food
-                        | 4.   4,800.00 | General
-                        | 5.       0.00 | Medical
-                        | 6.     100.00 | Necessities
-                        | 7.       0.00 | Network
-                        | 8.       0.00 | Transportation
-                        | 9.       0.00 | Travel
-                        |10.       0.00 | Work
-                        |11. Back
-                        |12. Quit
+                        | 4.       0.00 | Medical
+                        | 5.     200.00 | Necessities
+                        | 6.       0.00 | Network
+                        | 7.       0.00 | Transportation
+                        | 8.       0.00 | Travel
+                        | 9.       0.00 | Work
+                        |10. Back
+                        |11. Quit
                         |""".trimMargin(),
                     "Enter selection: ",
                     "Enter the amount spent on Food [0.00, [1.50]]: ",
@@ -339,7 +340,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
             }
             "write a check to SuperMarket" {
                 inputs.addAll(
-                    listOf("5", "1", "1", "300", "SuperMarket", "", "3", "200", "", "6", "100", "", "2"),
+                    listOf("5", "1", "1", "300", "SuperMarket", "", "3", "200", "", "5", "100", ""),
                 )
                 unPause()
                 waitForPause(helper.awaitMillis).shouldBeTrue()
@@ -358,19 +359,19 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             |""".trimMargin(),
                     "Enter selection: ",
                     """
-                         | 1. Write a check
-                         | 2. Record check cleared
-                         | 3. Back
-                         | 4. Quit
-                         |""".trimMargin(),
-                    "Enter selection: ",
-                    """
-                        |Select account the check was written on
+                        |Select the checking account
                         | 1.   5,000.00 | Checking Drafts
                         | 2. Back
                         | 3. Quit
                         |
                     """.trimMargin(),
+                    "Enter selection: ",
+                    """
+                         | 1. Write a check on Checking Drafts
+                         | 2. Record check cleared
+                         | 3. Back
+                         | 4. Quit
+                         |""".trimMargin(),
                     "Enter selection: ",
                     "Enter the amount of check on Checking Drafts [0.00, 5000.00]: ",
                     "Enter the recipient of the check: ",
@@ -380,15 +381,14 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 1.       0.00 | Education
                         | 2.       0.00 | Entertainment
                         | 3.     298.50 | Food
-                        | 4.   4,800.00 | General
-                        | 5.       0.00 | Medical
-                        | 6.     100.00 | Necessities
-                        | 7.       0.00 | Network
-                        | 8.       0.00 | Transportation
-                        | 9.       0.00 | Travel
-                        |10.       0.00 | Work
-                        |11. Back
-                        |12. Quit
+                        | 4.       0.00 | Medical
+                        | 5.     200.00 | Necessities
+                        | 6.       0.00 | Network
+                        | 7.       0.00 | Transportation
+                        | 8.       0.00 | Travel
+                        | 9.       0.00 | Work
+                        |10. Back
+                        |11. Quit
                         |""".trimMargin(),
                     "Enter selection: ",
                     "Enter the amount spent on Food [0.00, [298.50]]: ",
@@ -398,51 +398,41 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 1.       0.00 | Education
                         | 2.       0.00 | Entertainment
                         | 3.      98.50 | Food
-                        | 4.   4,800.00 | General
-                        | 5.       0.00 | Medical
-                        | 6.     100.00 | Necessities
-                        | 7.       0.00 | Network
-                        | 8.       0.00 | Transportation
-                        | 9.       0.00 | Travel
-                        |10.       0.00 | Work
-                        |11. Back
-                        |12. Quit
+                        | 4.       0.00 | Medical
+                        | 5.     200.00 | Necessities
+                        | 6.       0.00 | Network
+                        | 7.       0.00 | Transportation
+                        | 8.       0.00 | Travel
+                        | 9.       0.00 | Work
+                        |10. Back
+                        |11. Quit
                         |""".trimMargin(),
                     "Enter selection: ",
                     "Enter the amount spent on Necessities [0.00, [100.00]]: ",
                     "Enter description for Necessities spend [SuperMarket]: ",
-                    """
-                        |Select account the check was written on
-                        | 1.   4,700.00 | Checking Drafts
-                        | 2. Back
-                        | 3. Quit
-                        |
-                    """.trimMargin(),
-                    "Enter selection: ",
+//                    """
+//                        |Select account the check was written on
+//                        | 1.   4,700.00 | Checking Drafts
+//                        | 2. Back
+//                        | 3. Quit
+//                        |
+//                    """.trimMargin(),
+//                    "Enter selection: ",
                 )
             }
             "check clears" {
                 inputs.addAll(
-                    listOf("2", "1", "1", "", "1", "2", "3"),
+                    listOf("2", "1", "", "1", "3", "2"),
                 )
                 unPause()
                 waitForPause(helper.awaitMillis).shouldBeTrue()
                 outputs shouldContainExactly listOf(
                     """
-                         | 1. Write a check
+                         | 1. Write a check on Checking Drafts
                          | 2. Record check cleared
                          | 3. Back
                          | 4. Quit
-                         |
-                    """.trimMargin(),
-                    "Enter selection: ",
-                    """
-                        |Select the checking account
-                        | 1.   4,700.00 | Checking Drafts
-                        | 2. Back
-                        | 3. Quit
-                        |
-                    """.trimMargin(),
+                         |""".trimMargin(),
                     "Enter selection: ",
                     """
                         |Select the check that cleared
@@ -461,19 +451,19 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |""".trimMargin(),
                     "Select the check that cleared: ",
                     """
+                         | 1. Write a check on Checking Drafts
+                         | 2. Record check cleared
+                         | 3. Back
+                         | 4. Quit
+                         |
+                    """.trimMargin(),
+                    "Enter selection: ",
+                    """
                         |Select the checking account
                         | 1.   4,700.00 | Checking Drafts
                         | 2. Back
                         | 3. Quit
                         |
-                    """.trimMargin(),
-                    "Enter selection: ",
-                    """
-                         | 1. Write a check
-                         | 2. Record check cleared
-                         | 3. Back
-                         | 4. Quit
-                         |
                     """.trimMargin(),
                     "Enter selection: ",
                 )
@@ -497,12 +487,12 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             |""".trimMargin(),
                     "Enter selection: ",
                     """Select account to view history
- 1.   4,800.00 | General
+ 1.   4,700.00 | General
  2.       0.00 | Education
  3.       0.00 | Entertainment
  4.      98.50 | Food
  5.       0.00 | Medical
- 6.       0.00 | Necessities
+ 6.     100.00 | Necessities
  7.       0.00 | Network
  8.       0.00 | Transportation
  9.       0.00 | Travel
@@ -541,12 +531,12 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |""".trimMargin(),
                     "Select transaction for details: ",
                     """Select account to view history
- 1.   4,800.00 | General
+ 1.   4,700.00 | General
  2.       0.00 | Education
  3.       0.00 | Entertainment
  4.      98.50 | Food
  5.       0.00 | Medical
- 6.       0.00 | Necessities
+ 6.     100.00 | Necessities
  7.       0.00 | Network
  8.       0.00 | Transportation
  9.       0.00 | Travel
@@ -600,9 +590,9 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
 
             }
-            "!spend using credit card" {
+            "spend using credit card" {
                 inputs.addAll(
-                    listOf("6", "1", "1", "300", "SuperMarket", "", "3", "200", "", "6", "100", "", "2"),
+                    listOf("6", "1", "1", "30", "Costco", "", "3", "20", "", "5", "10", "", "4", "2"),
                 )
                 unPause()
                 waitForPause(helper.awaitMillis).shouldBeTrue()
@@ -621,66 +611,73 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             |""".trimMargin(),
                     "Enter selection: ",
                     """
-                         | 1. Write a check
-                         | 2. Record check cleared
-                         | 3. Back
-                         | 4. Quit
-                         |""".trimMargin(),
-                    "Enter selection: ",
-                    """
-                        |Select account the check was written on
-                        | 1.   5,000.00 | Checking Drafts
+                        |Select a credit card
+                        | 1.       0.00 | Costco Visa
                         | 2. Back
                         | 3. Quit
+                        |""".trimMargin(),
+                    "Enter selection: ",
+                    """
+                        | 1. Record spending on Costco Visa
+                        | 2. Pay Costco Visa bill
+                        | 3. View unpaid transactions on Costco Visa
+                        | 4. Back
+                        | 5. Quit
                         |
                     """.trimMargin(),
                     "Enter selection: ",
-                    "Enter the amount of check on Checking Drafts [0.00, 5000.00]: ",
-                    "Enter the recipient of the check: ",
+                    "Enter the amount of the charge on Costco Visa: ",
+                    "Enter the recipient of the charge: ",
                     "Use current time [Y]? ",
                     """
-                        |Select a category that some of that money was spent on.  Left to cover: $300.00
-                        | 1.       0.00 | Education
-                        | 2.       0.00 | Entertainment
-                        | 3.     298.50 | Food
-                        | 4.   4,800.00 | General
-                        | 5.       0.00 | Medical
-                        | 6.     100.00 | Necessities
-                        | 7.       0.00 | Network
-                        | 8.       0.00 | Transportation
-                        | 9.       0.00 | Travel
-                        |10.       0.00 | Work
-                        |11. Back
-                        |12. Quit
-                        |""".trimMargin(),
-                    "Enter selection: ",
-                    "Enter the amount spent on Food [0.00, [298.50]]: ",
-                    "Enter description for Food spend [SuperMarket]: ",
-                    """
-                        |Select a category that some of that money was spent on.  Left to cover: $100.00
+                        |Select a category that some of that money was spent on.  Left to cover: $30.00
                         | 1.       0.00 | Education
                         | 2.       0.00 | Entertainment
                         | 3.      98.50 | Food
-                        | 4.   4,800.00 | General
-                        | 5.       0.00 | Medical
-                        | 6.     100.00 | Necessities
-                        | 7.       0.00 | Network
-                        | 8.       0.00 | Transportation
-                        | 9.       0.00 | Travel
-                        |10.       0.00 | Work
-                        |11. Back
-                        |12. Quit
+                        | 4.       0.00 | Medical
+                        | 5.     100.00 | Necessities
+                        | 6.       0.00 | Network
+                        | 7.       0.00 | Transportation
+                        | 8.       0.00 | Travel
+                        | 9.       0.00 | Work
+                        |10. Back
+                        |11. Quit
                         |""".trimMargin(),
                     "Enter selection: ",
-                    "Enter the amount spent on Necessities [0.00, [100.00]]: ",
-                    "Enter description for Necessities spend [SuperMarket]: ",
+                    "Enter the amount spent on Food [0.00, [30.00]]: ",
+                    "Enter description for Food spend [Costco]: ",
                     """
-                        |Select account the check was written on
-                        | 1.   4,700.00 | Checking Drafts
-                        | 2. Back
-                        | 3. Quit
+                        |Select a category that some of that money was spent on.  Left to cover: $10.00
+                        | 1.       0.00 | Education
+                        | 2.       0.00 | Entertainment
+                        | 3.      78.50 | Food
+                        | 4.       0.00 | Medical
+                        | 5.     100.00 | Necessities
+                        | 6.       0.00 | Network
+                        | 7.       0.00 | Transportation
+                        | 8.       0.00 | Travel
+                        | 9.       0.00 | Work
+                        |10. Back
+                        |11. Quit
+                        |""".trimMargin(),
+                    "Enter selection: ",
+                    "Enter the amount spent on Necessities [0.00, [10.00]]: ",
+                    "Enter description for Necessities spend [Costco]: ",
+                    """
+                        | 1. Record spending on Costco Visa
+                        | 2. Pay Costco Visa bill
+                        | 3. View unpaid transactions on Costco Visa
+                        | 4. Back
+                        | 5. Quit
                         |
                     """.trimMargin(),
+                    "Enter selection: ",
+                    """
+                        |Select a credit card
+                        | 1.     -30.00 | Costco Visa
+                        | 2. Back
+                        | 3. Quit
+                        |""".trimMargin(),
                     "Enter selection: ",
                 )
             }

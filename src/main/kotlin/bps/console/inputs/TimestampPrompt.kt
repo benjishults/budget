@@ -1,5 +1,6 @@
 package bps.console.inputs
 
+import bps.budget.WithIo
 import bps.console.io.DefaultInputReader
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
@@ -7,6 +8,7 @@ import bps.console.io.OutPrinter
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 
 class TimestampPrompt(
@@ -84,6 +86,21 @@ class TimestampPrompt(
         }
     },
 )
+
+fun WithIo.getTimestampFromUser(
+    prompt: String = "Use current time [Y]? ",
+    timeZone: TimeZone,
+    clock: Clock,
+) = TimestampPrompt(
+    prompt,
+    timeZone,
+    clock,
+    inputReader,
+    outPrinter,
+)
+    .getResult()
+    .toInstant(timeZone)
+
 
 //fun LocalDateTime.toInstantForTimeZone(timeZone: TimeZone): Instant =
 //    ZonedDateTime

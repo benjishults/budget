@@ -15,6 +15,8 @@ data class Transaction private constructor(
         private set
     lateinit var realItems: List<Item>
         private set
+    lateinit var chargeItems: List<Item>
+        private set
     lateinit var draftItems: List<Item>
         private set
 
@@ -25,7 +27,7 @@ data class Transaction private constructor(
                     sum + item.amount
                 }
         val realSum: BigDecimal =
-            realItems
+            (realItems + chargeItems)
                 .fold(BigDecimal.ZERO.setScale(2)) { sum: BigDecimal, item: Item ->
                     sum + item.amount
                 }
@@ -35,10 +37,12 @@ data class Transaction private constructor(
     private fun populate(
         categoryItems: List<Item>,
         realItems: List<Item>,
+        chargeItems: List<Item>,
         draftItems: List<Item>,
     ) {
         this.categoryItems = categoryItems
         this.realItems = realItems
+        this.chargeItems = chargeItems
         this.draftItems = draftItems
         require(validate()) { "attempt was made to create invalid transaction: $this" }
     }
@@ -48,68 +52,34 @@ data class Transaction private constructor(
         val description: String? = null,
         val categoryAccount: CategoryAccount? = null,
         val realAccount: RealAccount? = null,
+        val chargeAccount: ChargeAccount? = null,
         val draftAccount: DraftAccount? = null,
         val draftStatus: DraftStatus = DraftStatus.none,
     ) : Comparable<Item> {
 
         val transaction = this@Transaction
-        override fun compareTo(other: Item): Int {
-            val firstPart = transaction.timestamp.compareTo(other.transaction.timestamp)
-            return when {
-                firstPart != 0 -> firstPart
-                else -> {
-                    val secondPart = (draftAccount ?: realAccount ?: categoryAccount)!!.name
-                        .compareTo(
-                            (other.draftAccount ?: other.realAccount ?: other.categoryAccount)!!.name,
-                        )
-                    when {
-                        secondPart != 0 -> secondPart
-                        else -> {
-                            (description
-                                ?: transaction.description)
-                                .compareTo(
-                                    other.description
-                                        ?: other.transaction.description,
-                                )
-                        }
-                    }
-                }
-            }
-        }
+
+        // TODO this is really not careful and won't be compatible with a careful equals method
+        override fun compareTo(other: Item): Int =
+            transaction.timestamp
+                .compareTo(other.transaction.timestamp)
+                .takeIf { it != 0 }
+                ?: (draftAccount ?: realAccount ?: chargeAccount ?: categoryAccount)!!.name
+                    .compareTo(
+                        (other.draftAccount ?: other.realAccount ?: other.chargeAccount
+                        ?: other.categoryAccount)!!.name,
+                    )
+                    .takeIf { it != 0 }
+                ?: (description ?: transaction.description)
+                    .compareTo(other.description ?: other.transaction.description)
 
         override fun toString(): String =
-            "TransactionItem(${categoryAccount ?: realAccount ?: draftAccount}, $amount${
+            "TransactionItem(${categoryAccount ?: realAccount ?: chargeAccount ?: draftAccount}, $amount${
                 if (description?.isNotBlank() == true)
                     ", '$description'"
                 else
                     ""
             })"
-
-//        override fun equals(other: Any?): Boolean {
-//            if (this === other) return true
-//            if (other !is Item) return false
-//
-//            if (transaction != other.transaction) return false
-//            if (amount != other.amount) return false
-//            if (description != other.description) return false
-//            if (categoryAccount != other.categoryAccount) return false
-//            if (realAccount != other.realAccount) return false
-//            if (draftAccount != other.draftAccount) return false
-//            if (draftStatus != other.draftStatus) return false
-//
-//            return true
-//        }
-//
-//        override fun hashCode(): Int {
-//            var result = amount.hashCode()
-//            result = 31 * result + (description?.hashCode() ?: 0)
-//            result = 31 * result + (categoryAccount?.hashCode() ?: 0)
-//            result = 31 * result + (realAccount?.hashCode() ?: 0)
-//            result = 31 * result + (draftAccount?.hashCode() ?: 0)
-//            result = 31 * result + draftStatus.hashCode()
-//            result = 31 * result + transaction.hashCode()
-//            return result
-//        }
 
     }
 
@@ -118,11 +88,20 @@ data class Transaction private constructor(
         var description: String? = null,
         var categoryAccount: CategoryAccount? = null,
         var realAccount: RealAccount? = null,
+        var chargeAccount: ChargeAccount? = null,
         var draftAccount: DraftAccount? = null,
         var draftStatus: DraftStatus = DraftStatus.none,
     ) {
         fun build(transaction: Transaction): Item =
-            transaction.Item(amount!!, description, categoryAccount, realAccount, draftAccount, draftStatus)
+            transaction.Item(
+                amount!!,
+                description,
+                categoryAccount,
+                realAccount,
+                chargeAccount,
+                draftAccount,
+                draftStatus,
+            )
 
     }
 
@@ -134,6 +113,7 @@ data class Transaction private constructor(
     ) {
         val categoryItemBuilders: MutableList<ItemBuilder> = mutableListOf()
         val realItemBuilders: MutableList<ItemBuilder> = mutableListOf()
+        val chargeItemBuilders: MutableList<ItemBuilder> = mutableListOf()
         val draftItemBuilders: MutableList<ItemBuilder> = mutableListOf()
 
         fun build(): Transaction = Transaction(
@@ -151,13 +131,14 @@ data class Transaction private constructor(
                         .realItemBuilders
                         .map { it.build(this) },
                     this@Builder
+                        .chargeItemBuilders
+                        .map { it.build(this) },
+                    this@Builder
                         .draftItemBuilders
                         .map { it.build(this) },
                 )
             }
-
     }
-
 }
 
 enum class DraftStatus {

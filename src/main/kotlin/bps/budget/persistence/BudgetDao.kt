@@ -38,7 +38,12 @@ interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
     ) =
         clearCheck(listOf(draftTransactionItem), clearingTransaction, budgetId)
 
-    fun payCreditCardBill(clearedItems: List<Transaction.Item>, billPayTransaction: Transaction, budgetId: UUID) {}
+    fun commitCreditCardPayment(
+        clearedItems: List<Transaction.Item>,
+        billPayTransaction: Transaction,
+        budgetId: UUID,
+    ) {
+    }
 
     fun deleteAccount(account: Account) {}
     fun deleteBudget(budgetId: UUID) {}
