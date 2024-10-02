@@ -8,10 +8,14 @@ import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.model.defaultCheckingAccountName
 import bps.budget.model.defaultCheckingDraftsAccountName
+import bps.budget.model.defaultCosmeticsAccountName
 import bps.budget.model.defaultEducationAccountName
 import bps.budget.model.defaultEntertainmentAccountName
 import bps.budget.model.defaultFoodAccountName
 import bps.budget.model.defaultGeneralAccountName
+import bps.budget.model.defaultHobbyAccountName
+import bps.budget.model.defaultHomeAccountName
+import bps.budget.model.defaultHousingAccountName
 import bps.budget.model.defaultMedicalAccountName
 import bps.budget.model.defaultNecessitiesAccountName
 import bps.budget.model.defaultNetworkAccountName
@@ -155,15 +159,19 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                 budgetData.categoryAccounts.forEach { it: CategoryAccount ->
                     when (it.name) {
                         defaultGeneralAccountName -> it.balance shouldBe BigDecimal("700.00")
-                        defaultFoodAccountName -> it.balance shouldBe BigDecimal("200.00")
-                        defaultNecessitiesAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-                        defaultWorkAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-                        defaultTransportationAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-                        defaultTravelAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
-                        defaultMedicalAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
+                        defaultCosmeticsAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
                         defaultEducationAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
                         defaultEntertainmentAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
+                        defaultFoodAccountName -> it.balance shouldBe BigDecimal("200.00")
+                        defaultHobbyAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
+                        defaultHomeAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
+                        defaultHousingAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
+                        defaultMedicalAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
+                        defaultNecessitiesAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
                         defaultNetworkAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
+                        defaultTransportationAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
+                        defaultTravelAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
+                        defaultWorkAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
                         else -> fail("unexpected category account: $it")
                     }
                 }
@@ -226,11 +234,15 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                     fail("unexpected real account: $realAccount")
             }
         }
-        budgetData.categoryAccounts.size shouldBe 10
+        budgetData.categoryAccounts.size shouldBe 14
         budgetData.categoryAccounts.forEach { it: CategoryAccount ->
             when (it.name) {
                 defaultGeneralAccountName -> it.balance shouldBe BigDecimal("700.00")
+                defaultCosmeticsAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
                 defaultFoodAccountName -> it.balance shouldBe BigDecimal("200.00")
+                defaultHobbyAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
+                defaultHomeAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
+                defaultHousingAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
                 defaultNecessitiesAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
                 defaultWorkAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
                 defaultTransportationAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)

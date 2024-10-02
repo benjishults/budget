@@ -27,7 +27,7 @@ class LoadingAccountsJdbcData : FreeSpec(), BasicAccountsJdbcTestFixture {
             val budgetData = jdbcDao.load(budgetId, userId)
             budgetData.generalAccount.id.toString() shouldBeEqual "dfa8a21c-f0ad-434d-bcb5-9e37749fa81e"
             budgetData.realAccounts shouldHaveSize 2
-            budgetData.categoryAccounts shouldHaveSize 10
+            budgetData.categoryAccounts shouldHaveSize 14
             budgetData.draftAccounts shouldHaveSize 1
         }
 

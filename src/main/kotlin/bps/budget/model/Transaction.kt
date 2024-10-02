@@ -81,6 +81,30 @@ data class Transaction private constructor(
                     ""
             })"
 
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is Item) return false
+
+            if (amount != other.amount) return false
+            if (categoryAccount != other.categoryAccount) return false
+            if (realAccount != other.realAccount) return false
+            if (chargeAccount != other.chargeAccount) return false
+            if (draftAccount != other.draftAccount) return false
+            if (transaction != other.transaction) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = amount.hashCode()
+            result = 31 * result + (categoryAccount?.hashCode() ?: 0)
+            result = 31 * result + (realAccount?.hashCode() ?: 0)
+            result = 31 * result + (chargeAccount?.hashCode() ?: 0)
+            result = 31 * result + (draftAccount?.hashCode() ?: 0)
+            result = 31 * result + transaction.hashCode()
+            return result
+        }
+
     }
 
     class ItemBuilder(

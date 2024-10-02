@@ -468,35 +468,7 @@ private fun WithIo.creditCardMenu(
                 )
                 add(
                     takeAction("Pay ${chargeAccount.name} bill") {
-                        val amountOfBill: BigDecimal =
-                            SimplePrompt(
-                                basicPrompt = "Enter the total amount of the bill: ",
-                                inputReader = inputReader,
-                                outPrinter = outPrinter,
-                                validate = {
-                                    it
-                                        .toCurrencyAmountOrNull()
-                                        ?.let { amount ->
-                                            amount >= BigDecimal.ZERO
-                                        }
-                                        ?: false
-                                },
-                            ) { it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO }
-                                .getResult()
-                        if (amountOfBill > BigDecimal.ZERO) {
-                            menuSession.push(
-                                selectOrCreateChargeTransactionsForBill(
-                                    amountOfBill,
-                                    chargeAccount,
-                                    emptyList(),
-                                    budgetData,
-                                    budgetDao,
-                                    userConfig,
-                                    menuSession,
-                                    clock,
-                                ),
-                            )
-                        }
+                        payCreditCardBill(menuSession, userConfig, budgetData, clock, chargeAccount, budgetDao)
                     },
                 )
                 add(
@@ -520,82 +492,33 @@ private fun WithIo.creditCardMenu(
         )
     }
 
-// TODO would be nice to display the already-selected transaction items as well
-// TODO some folks might like to be able to pay an amount that isn't related to transactions on the card
-private fun WithIo.selectOrCreateChargeTransactionsForBill(
-    totalAmountOfBill: BigDecimal,
-    chargeAccount: ChargeAccount,
-    selectedItems: List<Transaction.Item>,
-    budgetData: BudgetData,
-    budgetDao: BudgetDao,
-    userConfig: UserConfiguration,
+private fun WithIo.payCreditCardBill(
     menuSession: MenuSession,
+    userConfig: UserConfiguration,
+    budgetData: BudgetData,
     clock: Clock,
-): Menu = ViewTransactionsMenu(
-    filter = { it.draftStatus === DraftStatus.outstanding && it !in selectedItems },
-    header = "Select all transactions from this bill.  Amount to be covered: \$${
-        totalAmountOfBill + selectedItems.fold(
-            BigDecimal.ZERO,
-        ) { sum, item ->
-            sum + item.amount
-        }
-    }",
-    prompt = "Select a transaction covered in this bill: ",
-    extraItems = listOf(
-        takeAction("Record a missing transaction from this bill") {
-//            menuSession.pop()
-            spendOnACreditCard(
-                budgetData,
-                clock,
-                budgetDao,
-                userConfig,
-                menuSession,
-                chargeAccount,
-            )
-//            menuSession.push(
-//                selectOrCreateChargeTransactionsForBill(
-//                    totalAmountOfBill,
-//                    chargeAccount,
-//                    selectedItems,
-//                    budgetData,
-//                    budgetDao,
-//                    userConfig,
-//                    menuSession,
-//                    clock,
-//                ),
-//            )
-        },
-    ),
-    account = chargeAccount,
-    budgetDao = budgetDao,
-    budgetData = budgetData,
-    limit = userConfig.numberOfItemsInScrollingList,
-    outPrinter = outPrinter,
-) { _, chargeTransactionItem ->
-    menuSession.pop()
-    val allSelectedItems: List<Transaction.Item> = selectedItems + chargeTransactionItem
-    if (totalAmountOfBill +
-        allSelectedItems
-            .fold(BigDecimal.ZERO) { sum, item ->
-                sum + item.amount
-            } > BigDecimal.ZERO
-    ) {
-        menuSession.push(
-            selectOrCreateChargeTransactionsForBill(
-                totalAmountOfBill = totalAmountOfBill,
-                chargeAccount = chargeAccount,
-                selectedItems = allSelectedItems,
-                budgetData = budgetData,
-                budgetDao = budgetDao,
-                userConfig = userConfig,
-                menuSession = menuSession,
-                clock = clock,
-            ),
-        )
-    } else
+    chargeAccount: ChargeAccount,
+    budgetDao: BudgetDao,
+) {
+    val amountOfBill: BigDecimal =
+        SimplePrompt(
+            basicPrompt = "Enter the total amount of the bill: ",
+            inputReader = inputReader,
+            outPrinter = outPrinter,
+            validate = {
+                it
+                    .toCurrencyAmountOrNull()
+                    ?.let { amount ->
+                        amount >= BigDecimal.ZERO
+                    }
+                    ?: false
+            },
+        ) { it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO }
+            .getResult()
+    if (amountOfBill > BigDecimal.ZERO) {
         menuSession.push(
             ScrollingSelectionMenu(
-                header = "Select real account bill was paid from.",
+                header = "Select real account bill was paid from",
                 limit = userConfig.numberOfItemsInScrollingList,
                 baseList = budgetData.realAccounts,
                 labelGenerator = { String.format("%,10.2f | %s", balance, name) },
@@ -608,37 +531,127 @@ private fun WithIo.selectOrCreateChargeTransactionsForBill(
                     )
                 val description: String =
                     SimplePromptWithDefault(
-                        "Description of transaction [$chargeAccount.name]: ",
+                        "Description of transaction [${chargeAccount.name}]: ",
                         inputReader = inputReader,
                         outPrinter = outPrinter,
                         defaultValue = chargeAccount.name,
                     )
                         .getResult()
-                val billPayTransaction =
+                val billPayTransaction: Transaction =
                     Transaction.Builder(description, timestamp)
                         .apply {
                             realItemBuilders.add(
                                 Transaction.ItemBuilder(
-                                    amount = totalAmountOfBill,
-                                    description = description,
-                                    realAccount = chargeAccount,
-                                    draftStatus = DraftStatus.clearing,
-                                ),
-                            )
-                            realItemBuilders.add(
-                                Transaction.ItemBuilder(
-                                    amount = -totalAmountOfBill,
+                                    amount = -amountOfBill,
                                     description = description,
                                     realAccount = selectedRealAccount,
+                                ),
+                            )
+                            chargeItemBuilders.add(
+                                Transaction.ItemBuilder(
+                                    amount = amountOfBill,
+                                    description = description,
+                                    chargeAccount = chargeAccount,
                                     draftStatus = DraftStatus.clearing,
                                 ),
                             )
                         }
                         .build()
-                budgetData.commit(billPayTransaction)
-                budgetDao.commitCreditCardPayment(selectedItems, billPayTransaction, budgetData.id)
+                //
+                menuSession.push(
+                    selectOrCreateChargeTransactionsForBill(
+                        amountOfBill,
+                        billPayTransaction,
+                        chargeAccount,
+                        emptyList(),
+                        budgetData,
+                        budgetDao,
+                        userConfig,
+                        menuSession,
+                        clock,
+                    ),
+                )
             },
         )
+
+    }
+}
+
+// TODO would be nice to display the already-selected transaction items as well
+// TODO some folks might like to be able to pay an amount that isn't related to transactions on the card
+private fun WithIo.selectOrCreateChargeTransactionsForBill(
+    amountOfBill: BigDecimal,
+    billPayTransaction: Transaction,
+    chargeAccount: ChargeAccount,
+    selectedItems: List<Transaction.Item>,
+    budgetData: BudgetData,
+    budgetDao: BudgetDao,
+    userConfig: UserConfiguration,
+    menuSession: MenuSession,
+    clock: Clock,
+): Menu = ViewTransactionsMenu(
+    filter = { it.draftStatus === DraftStatus.outstanding && it !in selectedItems },
+    header = "Select all transactions from this bill.  Amount to be covered: $${
+        amountOfBill +
+                selectedItems.fold(BigDecimal.ZERO) { sum, item ->
+                    sum + item.amount
+                }
+    }",
+    prompt = "Select a transaction covered in this bill: ",
+    extraItems = listOf(
+        takeAction("Record a missing transaction from this bill") {
+            spendOnACreditCard(
+                budgetData,
+                clock,
+                budgetDao,
+                userConfig,
+                menuSession,
+                chargeAccount,
+            )
+        },
+    ),
+    account = chargeAccount,
+    budgetDao = budgetDao,
+    budgetData = budgetData,
+    limit = userConfig.numberOfItemsInScrollingList,
+    outPrinter = outPrinter,
+) { _, chargeTransactionItem ->
+    val allSelectedItems: List<Transaction.Item> = selectedItems + chargeTransactionItem
+    // FIXME if the selected amount is greater than allowed, then give a "denied" message
+    //       ... or don't show such items in the first place
+    val remainingToBeCovered: BigDecimal =
+        amountOfBill +
+                allSelectedItems
+                    .fold(BigDecimal.ZERO) { sum, item ->
+                        sum + item.amount
+                    }
+    when {
+        remainingToBeCovered == BigDecimal.ZERO -> {
+            menuSession.pop()
+            outPrinter("Payment recorded!\n")
+            budgetData.commit(billPayTransaction)
+            budgetDao.commitCreditCardPayment(selectedItems, billPayTransaction, budgetData.id)
+        }
+        remainingToBeCovered < BigDecimal.ZERO -> {
+            outPrinter("ERROR: this bill payment amount is not large enough to cover that transaction\n")
+        }
+        else -> {
+            menuSession.pop()
+            menuSession.push(
+                selectOrCreateChargeTransactionsForBill(
+                    amountOfBill = amountOfBill,
+                    billPayTransaction = billPayTransaction,
+                    chargeAccount = chargeAccount,
+                    selectedItems = allSelectedItems,
+                    budgetData = budgetData,
+                    budgetDao = budgetDao,
+                    userConfig = userConfig,
+                    menuSession = menuSession,
+                    clock = clock,
+                ),
+            )
+        }
+    }
 }
 
 private fun WithIo.spendOnACreditCard(

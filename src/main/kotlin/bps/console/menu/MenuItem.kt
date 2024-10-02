@@ -68,18 +68,21 @@ fun takeAction(
 
 /**
  * @param intermediateAction action to take prior to going back to menu session
- * @param to if not `null`, this will be pushed onto the menu session
+ * @param to if not `null`, and if calling it produced non-`null`, then the result will be pushed onto the menu session
  * @param label the display of the menu item
  */
 fun <T> takeActionAndPush(
     label: String,
-    to: ((T) -> Menu)? = null,
+    to: ((T) -> Menu?)? = null,
     intermediateAction: IntermediateMenuItemAction<T>,
 ): MenuItem =
     item(label) { menuSession: MenuSession ->
         val value: T = intermediateAction()
         if (to !== null) {
-            menuSession.push(to(value))
+            val pushing: Menu? = to(value)
+            if (pushing !== null) {
+                menuSession.push(pushing)
+            }
         }
     }
 

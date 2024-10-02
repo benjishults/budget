@@ -120,17 +120,17 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 application.budgetData.asClue { budgetData: BudgetData ->
                     budgetData.categoryAccounts shouldContain budgetData.generalAccount
                     budgetData.generalAccount.balance shouldBe BigDecimal(5200).setScale(2)
-                    budgetData.categoryAccounts.size shouldBe 10
+                    budgetData.categoryAccounts.size shouldBe 14
                 }
                 application.budgetDao.load(application.budgetData.id, userId).asClue { budgetData: BudgetData ->
                     budgetData.categoryAccounts shouldContain budgetData.generalAccount
                     budgetData.generalAccount.balance shouldBe BigDecimal(5200).setScale(2)
-                    budgetData.categoryAccounts.size shouldBe 10
+                    budgetData.categoryAccounts.size shouldBe 14
                 }
             }
             "allocate to food and necessities" {
                 inputs.addAll(
-                    listOf("2", "3", "300", "", "5", "200", "", "10"),
+                    listOf("2", "4", "300", "", "9", "200", "", "14"),
                 )
                 unPause()
                 waitForPause(helper.awaitMillis).shouldBeTrue()
@@ -150,55 +150,67 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     "Enter selection: ",
                     "Every month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n",
                     "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
- 1.       0.00 | Education
- 2.       0.00 | Entertainment
- 3.       0.00 | Food
- 4.       0.00 | Medical
- 5.       0.00 | Necessities
- 6.       0.00 | Network
- 7.       0.00 | Transportation
- 8.       0.00 | Travel
- 9.       0.00 | Work
-10. Back
-11. Quit
+ 1.       0.00 | Cosmetics
+ 2.       0.00 | Education
+ 3.       0.00 | Entertainment
+ 4.       0.00 | Food
+ 5.       0.00 | Hobby
+ 6.       0.00 | Home Upkeep
+ 7.       0.00 | Housing
+ 8.       0.00 | Medical
+ 9.       0.00 | Necessities
+10.       0.00 | Network
+11.       0.00 | Transportation
+12.       0.00 | Travel
+13.       0.00 | Work
+14. Back
+15. Quit
 """,
                     "Enter selection: ",
-                    "Enter the amount to allocate into ${application.budgetData.categoryAccounts[2].name} [0.00, 5200.00]: ",
+                    "Enter the amount to allocate into ${defaultFoodAccountName} [0.00, 5200.00]: ",
                     "Enter description of transaction [allowance into $defaultFoodAccountName]: ",
                     "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
- 1.       0.00 | Education
- 2.       0.00 | Entertainment
- 3.     300.00 | Food
- 4.       0.00 | Medical
- 5.       0.00 | Necessities
- 6.       0.00 | Network
- 7.       0.00 | Transportation
- 8.       0.00 | Travel
- 9.       0.00 | Work
-10. Back
-11. Quit
+ 1.       0.00 | Cosmetics
+ 2.       0.00 | Education
+ 3.       0.00 | Entertainment
+ 4.     300.00 | Food
+ 5.       0.00 | Hobby
+ 6.       0.00 | Home Upkeep
+ 7.       0.00 | Housing
+ 8.       0.00 | Medical
+ 9.       0.00 | Necessities
+10.       0.00 | Network
+11.       0.00 | Transportation
+12.       0.00 | Travel
+13.       0.00 | Work
+14. Back
+15. Quit
 """,
                     "Enter selection: ",
-                    "Enter the amount to allocate into ${application.budgetData.categoryAccounts[5].name} [0.00, 4900.00]: ",
+                    "Enter the amount to allocate into ${defaultNecessitiesAccountName} [0.00, 4900.00]: ",
                     "Enter description of transaction [allowance into $defaultNecessitiesAccountName]: ",
                     "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
- 1.       0.00 | Education
- 2.       0.00 | Entertainment
- 3.     300.00 | Food
- 4.       0.00 | Medical
- 5.     200.00 | Necessities
- 6.       0.00 | Network
- 7.       0.00 | Transportation
- 8.       0.00 | Travel
- 9.       0.00 | Work
-10. Back
-11. Quit
+ 1.       0.00 | Cosmetics
+ 2.       0.00 | Education
+ 3.       0.00 | Entertainment
+ 4.     300.00 | Food
+ 5.       0.00 | Hobby
+ 6.       0.00 | Home Upkeep
+ 7.       0.00 | Housing
+ 8.       0.00 | Medical
+ 9.     200.00 | Necessities
+10.       0.00 | Network
+11.       0.00 | Transportation
+12.       0.00 | Travel
+13.       0.00 | Work
+14. Back
+15. Quit
 """,
                     "Enter selection: ",
                 )
             }
             "view transactions" {
-                inputs.addAll(listOf("4", "1", "3", "5", "13"))
+                inputs.addAll(listOf("4", "1", "3", "5", "17"))
                 unPause()
                 waitForPause(helper.awaitMillis).shouldBeTrue()
                 outputs shouldContainExactly listOf(
@@ -217,19 +229,23 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     "Enter selection: ",
                     """Select account to view history
  1.   4,700.00 | General
- 2.       0.00 | Education
- 3.       0.00 | Entertainment
- 4.     300.00 | Food
- 5.       0.00 | Medical
- 6.     200.00 | Necessities
- 7.       0.00 | Network
- 8.       0.00 | Transportation
- 9.       0.00 | Travel
-10.       0.00 | Work
-11.   5,000.00 | Checking
-12.     200.00 | Wallet
-13. Back
-14. Quit
+ 2.       0.00 | Cosmetics
+ 3.       0.00 | Education
+ 4.       0.00 | Entertainment
+ 5.     300.00 | Food
+ 6.       0.00 | Hobby
+ 7.       0.00 | Home Upkeep
+ 8.       0.00 | Housing
+ 9.       0.00 | Medical
+10.     200.00 | Necessities
+11.       0.00 | Network
+12.       0.00 | Transportation
+13.       0.00 | Travel
+14.       0.00 | Work
+15.   5,000.00 | Checking
+16.     200.00 | Wallet
+17. Back
+18. Quit
 """,
                     "Enter selection: ",
                     """
@@ -263,25 +279,29 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     "Select transaction for details: ",
                     """Select account to view history
  1.   4,700.00 | General
- 2.       0.00 | Education
- 3.       0.00 | Entertainment
- 4.     300.00 | Food
- 5.       0.00 | Medical
- 6.     200.00 | Necessities
- 7.       0.00 | Network
- 8.       0.00 | Transportation
- 9.       0.00 | Travel
-10.       0.00 | Work
-11.   5,000.00 | Checking
-12.     200.00 | Wallet
-13. Back
-14. Quit
+ 2.       0.00 | Cosmetics
+ 3.       0.00 | Education
+ 4.       0.00 | Entertainment
+ 5.     300.00 | Food
+ 6.       0.00 | Hobby
+ 7.       0.00 | Home Upkeep
+ 8.       0.00 | Housing
+ 9.       0.00 | Medical
+10.     200.00 | Necessities
+11.       0.00 | Network
+12.       0.00 | Transportation
+13.       0.00 | Travel
+14.       0.00 | Work
+15.   5,000.00 | Checking
+16.     200.00 | Wallet
+17. Back
+18. Quit
 """,
                     "Enter selection: ",
                 )
             }
             "record spending" {
-                inputs.addAll(listOf("3", "2", "1.5", "Pepsi", "", "3", "", "", "3"))
+                inputs.addAll(listOf("3", "2", "1.5", "Pepsi", "", "4", "", "", "3"))
                 unPause()
                 waitForPause(helper.awaitMillis).shouldBeTrue()
                 outputs shouldContainExactly listOf(
@@ -312,17 +332,21 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     "Use current time [Y]? ",
                     """
                         |Select a category that some of that money was spent on.  Left to cover: $1.50
-                        | 1.       0.00 | Education
-                        | 2.       0.00 | Entertainment
-                        | 3.     300.00 | Food
-                        | 4.       0.00 | Medical
-                        | 5.     200.00 | Necessities
-                        | 6.       0.00 | Network
-                        | 7.       0.00 | Transportation
-                        | 8.       0.00 | Travel
-                        | 9.       0.00 | Work
-                        |10. Back
-                        |11. Quit
+                        | 1.       0.00 | Cosmetics
+                        | 2.       0.00 | Education
+                        | 3.       0.00 | Entertainment
+                        | 4.     300.00 | Food
+                        | 5.       0.00 | Hobby
+                        | 6.       0.00 | Home Upkeep
+                        | 7.       0.00 | Housing
+                        | 8.       0.00 | Medical
+                        | 9.     200.00 | Necessities
+                        |10.       0.00 | Network
+                        |11.       0.00 | Transportation
+                        |12.       0.00 | Travel
+                        |13.       0.00 | Work
+                        |14. Back
+                        |15. Quit
                         |""".trimMargin(),
                     "Enter selection: ",
                     "Enter the amount spent on Food [0.00, [1.50]]: ",
@@ -340,7 +364,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
             }
             "write a check to SuperMarket" {
                 inputs.addAll(
-                    listOf("5", "1", "1", "300", "SuperMarket", "", "3", "200", "", "5", "100", ""),
+                    listOf("5", "1", "1", "300", "SuperMarket", "", "4", "200", "", "9", "100", ""),
                 )
                 unPause()
                 waitForPause(helper.awaitMillis).shouldBeTrue()
@@ -378,34 +402,42 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     "Use current time [Y]? ",
                     """
                         |Select a category that some of that money was spent on.  Left to cover: $300.00
-                        | 1.       0.00 | Education
-                        | 2.       0.00 | Entertainment
-                        | 3.     298.50 | Food
-                        | 4.       0.00 | Medical
-                        | 5.     200.00 | Necessities
-                        | 6.       0.00 | Network
-                        | 7.       0.00 | Transportation
-                        | 8.       0.00 | Travel
-                        | 9.       0.00 | Work
-                        |10. Back
-                        |11. Quit
+                        | 1.       0.00 | Cosmetics
+                        | 2.       0.00 | Education
+                        | 3.       0.00 | Entertainment
+                        | 4.     298.50 | Food
+                        | 5.       0.00 | Hobby
+                        | 6.       0.00 | Home Upkeep
+                        | 7.       0.00 | Housing
+                        | 8.       0.00 | Medical
+                        | 9.     200.00 | Necessities
+                        |10.       0.00 | Network
+                        |11.       0.00 | Transportation
+                        |12.       0.00 | Travel
+                        |13.       0.00 | Work
+                        |14. Back
+                        |15. Quit
                         |""".trimMargin(),
                     "Enter selection: ",
                     "Enter the amount spent on Food [0.00, [298.50]]: ",
                     "Enter description for Food spend [SuperMarket]: ",
                     """
                         |Select a category that some of that money was spent on.  Left to cover: $100.00
-                        | 1.       0.00 | Education
-                        | 2.       0.00 | Entertainment
-                        | 3.      98.50 | Food
-                        | 4.       0.00 | Medical
-                        | 5.     200.00 | Necessities
-                        | 6.       0.00 | Network
-                        | 7.       0.00 | Transportation
-                        | 8.       0.00 | Travel
-                        | 9.       0.00 | Work
-                        |10. Back
-                        |11. Quit
+                        | 1.       0.00 | Cosmetics
+                        | 2.       0.00 | Education
+                        | 3.       0.00 | Entertainment
+                        | 4.      98.50 | Food
+                        | 5.       0.00 | Hobby
+                        | 6.       0.00 | Home Upkeep
+                        | 7.       0.00 | Housing
+                        | 8.       0.00 | Medical
+                        | 9.     200.00 | Necessities
+                        |10.       0.00 | Network
+                        |11.       0.00 | Transportation
+                        |12.       0.00 | Travel
+                        |13.       0.00 | Work
+                        |14. Back
+                        |15. Quit
                         |""".trimMargin(),
                     "Enter selection: ",
                     "Enter the amount spent on Necessities [0.00, [100.00]]: ",
@@ -469,7 +501,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
             }
             "check balances" {
-                inputs.addAll(listOf("4", "11", "2", "3", "13"))
+                inputs.addAll(listOf("4", "15", "2", "3", "17"))
                 unPause()
                 waitForPause(helper.awaitMillis).shouldBeTrue()
                 outputs shouldContainExactly listOf(
@@ -488,19 +520,23 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     "Enter selection: ",
                     """Select account to view history
  1.   4,700.00 | General
- 2.       0.00 | Education
- 3.       0.00 | Entertainment
- 4.      98.50 | Food
- 5.       0.00 | Medical
- 6.     100.00 | Necessities
- 7.       0.00 | Network
- 8.       0.00 | Transportation
- 9.       0.00 | Travel
-10.       0.00 | Work
-11.   4,700.00 | Checking
-12.     198.50 | Wallet
-13. Back
-14. Quit
+ 2.       0.00 | Cosmetics
+ 3.       0.00 | Education
+ 4.       0.00 | Entertainment
+ 5.      98.50 | Food
+ 6.       0.00 | Hobby
+ 7.       0.00 | Home Upkeep
+ 8.       0.00 | Housing
+ 9.       0.00 | Medical
+10.     100.00 | Necessities
+11.       0.00 | Network
+12.       0.00 | Transportation
+13.       0.00 | Travel
+14.       0.00 | Work
+15.   4,700.00 | Checking
+16.     198.50 | Wallet
+17. Back
+18. Quit
 """,
                     "Enter selection: ",
                     """
@@ -532,19 +568,23 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     "Select transaction for details: ",
                     """Select account to view history
  1.   4,700.00 | General
- 2.       0.00 | Education
- 3.       0.00 | Entertainment
- 4.      98.50 | Food
- 5.       0.00 | Medical
- 6.     100.00 | Necessities
- 7.       0.00 | Network
- 8.       0.00 | Transportation
- 9.       0.00 | Travel
-10.       0.00 | Work
-11.   4,700.00 | Checking
-12.     198.50 | Wallet
-13. Back
-14. Quit
+ 2.       0.00 | Cosmetics
+ 3.       0.00 | Education
+ 4.       0.00 | Entertainment
+ 5.      98.50 | Food
+ 6.       0.00 | Hobby
+ 7.       0.00 | Home Upkeep
+ 8.       0.00 | Housing
+ 9.       0.00 | Medical
+10.     100.00 | Necessities
+11.       0.00 | Network
+12.       0.00 | Transportation
+13.       0.00 | Travel
+14.       0.00 | Work
+15.   4,700.00 | Checking
+16.     198.50 | Wallet
+17. Back
+18. Quit
 """,
                     "Enter selection: ",
                 )
@@ -592,7 +632,27 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
             }
             "spend using credit card" {
                 inputs.addAll(
-                    listOf("6", "1", "1", "30", "Costco", "", "3", "20", "", "5", "10", "", "4", "2"),
+                    listOf(
+                        "6",
+                        "1",
+                        "1",
+                        "30",
+                        "Costco",
+                        "",
+                        "4",
+                        "20",
+                        "",
+                        "9",
+                        "10",
+                        "",
+                        "1",
+                        "20",
+                        "Target",
+                        "",
+                        "9",
+                        "",
+                        "",
+                    ),
                 )
                 unPause()
                 waitForPause(helper.awaitMillis).shouldBeTrue()
@@ -631,34 +691,42 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     "Use current time [Y]? ",
                     """
                         |Select a category that some of that money was spent on.  Left to cover: $30.00
-                        | 1.       0.00 | Education
-                        | 2.       0.00 | Entertainment
-                        | 3.      98.50 | Food
-                        | 4.       0.00 | Medical
-                        | 5.     100.00 | Necessities
-                        | 6.       0.00 | Network
-                        | 7.       0.00 | Transportation
-                        | 8.       0.00 | Travel
-                        | 9.       0.00 | Work
-                        |10. Back
-                        |11. Quit
+                        | 1.       0.00 | Cosmetics
+                        | 2.       0.00 | Education
+                        | 3.       0.00 | Entertainment
+                        | 4.      98.50 | Food
+                        | 5.       0.00 | Hobby
+                        | 6.       0.00 | Home Upkeep
+                        | 7.       0.00 | Housing
+                        | 8.       0.00 | Medical
+                        | 9.     100.00 | Necessities
+                        |10.       0.00 | Network
+                        |11.       0.00 | Transportation
+                        |12.       0.00 | Travel
+                        |13.       0.00 | Work
+                        |14. Back
+                        |15. Quit
                         |""".trimMargin(),
                     "Enter selection: ",
                     "Enter the amount spent on Food [0.00, [30.00]]: ",
                     "Enter description for Food spend [Costco]: ",
                     """
                         |Select a category that some of that money was spent on.  Left to cover: $10.00
-                        | 1.       0.00 | Education
-                        | 2.       0.00 | Entertainment
-                        | 3.      78.50 | Food
-                        | 4.       0.00 | Medical
-                        | 5.     100.00 | Necessities
-                        | 6.       0.00 | Network
-                        | 7.       0.00 | Transportation
-                        | 8.       0.00 | Travel
-                        | 9.       0.00 | Work
-                        |10. Back
-                        |11. Quit
+                        | 1.       0.00 | Cosmetics
+                        | 2.       0.00 | Education
+                        | 3.       0.00 | Entertainment
+                        | 4.      78.50 | Food
+                        | 5.       0.00 | Hobby
+                        | 6.       0.00 | Home Upkeep
+                        | 7.       0.00 | Housing
+                        | 8.       0.00 | Medical
+                        | 9.     100.00 | Necessities
+                        |10.       0.00 | Network
+                        |11.       0.00 | Transportation
+                        |12.       0.00 | Travel
+                        |13.       0.00 | Work
+                        |14. Back
+                        |15. Quit
                         |""".trimMargin(),
                     "Enter selection: ",
                     "Enter the amount spent on Necessities [0.00, [10.00]]: ",
@@ -672,16 +740,153 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |
                     """.trimMargin(),
                     "Enter selection: ",
+                    "Enter the amount of the charge on Costco Visa: ",
+                    "Enter the recipient of the charge: ",
+                    "Use current time [Y]? ",
                     """
-                        |Select a credit card
-                        | 1.     -30.00 | Costco Visa
-                        | 2. Back
-                        | 3. Quit
+                        |Select a category that some of that money was spent on.  Left to cover: $20.00
+                        | 1.       0.00 | Cosmetics
+                        | 2.       0.00 | Education
+                        | 3.       0.00 | Entertainment
+                        | 4.      78.50 | Food
+                        | 5.       0.00 | Hobby
+                        | 6.       0.00 | Home Upkeep
+                        | 7.       0.00 | Housing
+                        | 8.       0.00 | Medical
+                        | 9.      90.00 | Necessities
+                        |10.       0.00 | Network
+                        |11.       0.00 | Transportation
+                        |12.       0.00 | Travel
+                        |13.       0.00 | Work
+                        |14. Back
+                        |15. Quit
                         |""".trimMargin(),
                     "Enter selection: ",
+                    "Enter the amount spent on Necessities [0.00, [20.00]]: ",
+                    "Enter description for Necessities spend [Target]: ",
                 )
             }
             "!pay credit card balance" {
+                inputs.addAll(
+                    listOf(
+                        "2",
+                        "35",
+                        "1",
+                        "",
+                        "",
+                        "1",
+                        "1",
+                        "2",
+                        "5",
+                        "Brausen's",
+                        "",
+                        "9",
+                        "",
+                        "",
+                        "2",
+                        "4",
+                    ),
+                )
+                unPause()
+                waitForPause(helper.awaitMillis).shouldBeTrue()
+                outputs shouldContainExactly listOf(
+                    """
+                        | 1. Record spending on Costco Visa
+                        | 2. Pay Costco Visa bill
+                        | 3. View unpaid transactions on Costco Visa
+                        | 4. Back
+                        | 5. Quit
+                        |
+                    """.trimMargin(),
+                    "Enter selection: ",
+                    "Enter the total amount of the bill: ",
+                    """
+                        |Select real account bill was paid from
+                        | 1.   4,700.00 | Checking
+                        | 2.     198.50 | Wallet
+                        | 3. Back
+                        | 4. Quit
+                        |
+                    """.trimMargin(),
+                    "Enter selection: ",
+                    "Use current time for the bill-pay transaction [Y]? ",
+                    "Description of transaction [Costco Visa]: ",
+                    """
+                        |Select all transactions from this bill.  Amount to be covered: $35.00
+                        |    Time Stamp          | Amount     | Description
+                        | 1. 2024-08-08 19:00:07 |     -30.00 | Costco
+                        | 2. 2024-08-08 19:00:08 |     -20.00 | Target
+                        | 3. Record a missing transaction from this bill
+                        | 4. Back
+                        | 5. Quit
+                        |
+                    """.trimMargin(),
+                    "Select a transaction covered in this bill: ",
+                    """
+                        |Select all transactions from this bill.  Amount to be covered: $5.00
+                        |    Time Stamp          | Amount     | Description
+                        | 1. 2024-08-08 19:00:08 |     -20.00 | Target
+                        | 2. Record a missing transaction from this bill
+                        | 3. Back
+                        | 4. Quit
+                        |""".trimMargin(),
+                    "Select a transaction covered in this bill: ",
+                    "ERROR: this bill payment amount is not large enough to cover that transaction\n",
+                    """
+                        |Select all transactions from this bill.  Amount to be covered: $5.00
+                        |    Time Stamp          | Amount     | Description
+                        | 1. 2024-08-08 19:00:08 |     -20.00 | Target
+                        | 2. Record a missing transaction from this bill
+                        | 3. Back
+                        | 4. Quit
+                        |""".trimMargin(),
+                    "Select a transaction covered in this bill: ",
+                    "Enter the amount of the charge on Costco Visa: ",
+                    "Enter the recipient of the charge: ",
+                    "Use current time [Y]? ",
+                    """
+                        |Select a category that some of that money was spent on.  Left to cover: $5.00
+                        | 1.       0.00 | Cosmetics
+                        | 2.       0.00 | Education
+                        | 3.       0.00 | Entertainment
+                        | 4.      78.50 | Food
+                        | 5.       0.00 | Hobby
+                        | 6.       0.00 | Home Upkeep
+                        | 7.       0.00 | Housing
+                        | 8.       0.00 | Medical
+                        | 9.      70.00 | Necessities
+                        |10.       0.00 | Network
+                        |11.       0.00 | Transportation
+                        |12.       0.00 | Travel
+                        |13.       0.00 | Work
+                        |14. Back
+                        |15. Quit
+                        |""".trimMargin(),
+                    "Enter selection: ",
+                    "Enter the amount spent on Necessities [0.00, [5.00]]: ",
+                    "Enter description for Necessities spend [Brausen's]: ",
+                    """
+                        |Select all transactions from this bill.  Amount to be covered: $5.00
+                        |    Time Stamp          | Amount     | Description
+                        | 1. 2024-08-08 19:00:08 |     -20.00 | Target
+                        | 2. 2024-08-08 19:00:10 |      -5.00 | Brausen's
+                        | 3. Record a missing transaction from this bill
+                        | 4. Back
+                        | 5. Quit
+                        |""".trimMargin(),
+                    "Select a transaction covered in this bill: ",
+                    "Payment recorded!\n",
+                    """
+                        | 1. Record spending on Costco Visa
+                        | 2. Pay Costco Visa bill
+                        | 3. View unpaid transactions on Costco Visa
+                        | 4. Back
+                        | 5. Quit
+                        |
+                    """.trimMargin(),
+                    "Enter selection: ",
+
+                    )
             }
             "!check balances again" {
             }

@@ -40,12 +40,12 @@ class BasicSetupInteractionsTest : FreeSpec(),
                     application.run()
                     application.budgetData.asClue { budgetData: BudgetData ->
                         budgetData.categoryAccounts shouldContain budgetData.generalAccount
-                        budgetData.categoryAccounts.size shouldBe 10
+                        budgetData.categoryAccounts.size shouldBe 14
                     }
                     application.budgetDao.load(application.budgetData.id, application.user.id)
                         .asClue { budgetData: BudgetData ->
                             budgetData.categoryAccounts shouldContain budgetData.generalAccount
-                            budgetData.categoryAccounts.size shouldBe 10
+                            budgetData.categoryAccounts.size shouldBe 14
                         }
                 }
             outputs shouldContainExactly listOf(

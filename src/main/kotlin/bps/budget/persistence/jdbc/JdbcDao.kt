@@ -509,6 +509,17 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                                             realAccount = account
                                         }
                                     transactionBuilder!!
+                                        .chargeItemBuilders.maybeAddItemBuilder(
+                                            result,
+                                            itemAmount,
+                                            itemDescription,
+                                            data,
+                                            "charge",
+                                            draftStatus,
+                                        ) { account: ChargeAccount ->
+                                            chargeAccount = account
+                                        }
+                                    transactionBuilder!!
                                         .draftItemBuilders
                                         .maybeAddItemBuilder(
                                             result,
@@ -855,10 +866,10 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         require(billPayTransaction.categoryItems.isEmpty())
         require(billPayTransaction.chargeItems.size == 1)
         require(billPayTransaction.realItems.size == 1)
-        val chargeTransactionItem: Transaction.Item =
+        val billPayChargeTransactionItem: Transaction.Item =
             billPayTransaction.chargeItems.first()
         val chargeAccount: ChargeAccount =
-            chargeTransactionItem.chargeAccount!!
+            billPayChargeTransactionItem.chargeAccount!!
         // require clearedItems to be what we expect
         require(clearedItems.isNotEmpty())
         require(
@@ -871,7 +882,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                 .fold(BigDecimal.ZERO.setScale(2)) { sum, transactionItem ->
                     sum + transactionItem.amount
                 } ==
-                    -chargeTransactionItem.amount,
+                    -billPayChargeTransactionItem.amount,
         )
         connection.transactOrNull {
             clearedItems
