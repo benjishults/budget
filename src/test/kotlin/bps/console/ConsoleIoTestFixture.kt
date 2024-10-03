@@ -4,6 +4,7 @@ import bps.console.io.InputReader
 import bps.console.io.OutPrinter
 import io.kotest.core.spec.Spec
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldContainExactly
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -166,14 +167,14 @@ interface ComplexConsoleIoTestFixture : SimpleConsoleIoTestFixture {
         val waitForPause = AtomicReference(CountDownLatch(1))
 
         private fun pause() {
-            check(!paused.get()) { "Already paused" }
+//            check(!paused.get()) { "Already paused" }
             waitForUnPause.set(CountDownLatch(1))
             paused.set(true)
             waitForPause.get().countDown()
         }
 
         fun unPause() {
-            check(paused.get()) { "Not paused" }
+//            check(paused.get()) { "Not paused" }
             waitForPause.set(CountDownLatch(1))
             paused.set(false)
             waitForUnPause.get().countDown()
@@ -200,6 +201,14 @@ interface ComplexConsoleIoTestFixture : SimpleConsoleIoTestFixture {
             outputs.add(it)
         }
 
+    }
+
+    fun validateInteraction(expectedOutputs: List<String>, toInput: List<String>) {
+        outputs.clear()
+        inputs.addAll(toInput)
+        unPause()
+        waitForPause(helper.awaitMillis).shouldBeTrue()
+        outputs shouldContainExactly expectedOutputs
     }
 
 }

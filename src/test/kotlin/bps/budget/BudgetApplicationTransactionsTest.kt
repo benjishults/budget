@@ -13,9 +13,7 @@ import bps.budget.ui.ConsoleUiFacade
 import bps.console.ComplexConsoleIoTestFixture
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.FreeSpec
-import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContain
-import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -63,13 +61,9 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 application.run()
             }
             "record income" {
-                inputs.addAll(
-                    listOf("1", "1", "5000", "", "", "2", "200", "", "", "3"),
-                )
-                unPause()
-                waitForPause(helper.awaitMillis).shouldBeTrue()
-                outputs shouldContainExactly listOf(
-                    """
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                             |Budget!
                             | 1. $recordIncome
                             | 2. $makeAllowances
@@ -81,41 +75,61 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 8. $setup
                             | 9. Quit
                             |""".trimMargin(),
-                    "Enter selection: ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("1"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |Enter the real fund account into which the money is going (e.g., savings).
                         |The same amount of money will be automatically entered into the 'General' account.
                         |""".trimMargin(),
-                    """
+                        """
                         |Select account receiving the income:
                         | 1.       0.00 | Checking
                         | 2.       0.00 | Wallet
                         | 3. Back
                         | 4. Quit
                         |""".trimMargin(),
-                    "Enter selection: ",
-                    "Enter the amount of income: ",
-                    "Enter description of income [income into $defaultCheckingAccountName]: ",
-                    "Use current time [Y]? ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("1"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf("Enter the amount of income: "),
+                    toInput = listOf("5000"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Enter description of income [income into $defaultCheckingAccountName]: ",
+                        "Use current time [Y]? ",
+                        """
                         |Select account receiving the income:
                         | 1.   5,000.00 | Checking
                         | 2.       0.00 | Wallet
                         | 3. Back
                         | 4. Quit
                         |""".trimMargin(),
-                    "Enter selection: ",
-                    "Enter the amount of income: ",
-                    "Enter description of income [income into $defaultWalletAccountName]: ",
-                    "Use current time [Y]? ",
-                    """
-                        |Select account receiving the income:
-                        | 1.   5,000.00 | Checking
-                        | 2.     200.00 | Wallet
-                        | 3. Back
-                        | 4. Quit
-                        |""".trimMargin(),
-                    "Enter selection: ",
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("", "", "2"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Enter the amount of income: ",
+                        "Enter description of income [income into $defaultWalletAccountName]: ",
+                        "Use current time [Y]? ",
+                        """
+                                            |Select account receiving the income:
+                                            | 1.   5,000.00 | Checking
+                                            | 2.     200.00 | Wallet
+                                            | 3. Back
+                                            | 4. Quit
+                                            |""".trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("200", "", "", "3"),
                 )
                 application.budgetData.asClue { budgetData: BudgetData ->
                     budgetData.categoryAccounts shouldContain budgetData.generalAccount
@@ -129,13 +143,9 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 }
             }
             "allocate to food and necessities" {
-                inputs.addAll(
-                    listOf("2", "4", "300", "", "9", "200", "", "14"),
-                )
-                unPause()
-                waitForPause(helper.awaitMillis).shouldBeTrue()
-                outputs shouldContainExactly listOf(
-                    """
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                             |Budget!
                             | 1. $recordIncome
                             | 2. $makeAllowances
@@ -147,9 +157,14 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 8. $setup
                             | 9. Quit
                             |""".trimMargin(),
-                    "Enter selection: ",
-                    "Every month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n",
-                    "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("2"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Every month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n",
+                        "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
  1.       0.00 | Cosmetics
  2.       0.00 | Education
  3.       0.00 | Entertainment
@@ -166,10 +181,20 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 14. Back
 15. Quit
 """,
-                    "Enter selection: ",
-                    "Enter the amount to allocate into ${defaultFoodAccountName} [0.00, 5200.00]: ",
-                    "Enter description of transaction [allowance into $defaultFoodAccountName]: ",
-                    "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("4"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Enter the amount to allocate into ${defaultFoodAccountName} [0.00, 5200.00]: ",
+                        "Enter description of transaction [allowance into $defaultFoodAccountName]: ",
+                    ),
+                    toInput = listOf("300", ""),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
  1.       0.00 | Cosmetics
  2.       0.00 | Education
  3.       0.00 | Entertainment
@@ -186,10 +211,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 14. Back
 15. Quit
 """,
-                    "Enter selection: ",
-                    "Enter the amount to allocate into ${defaultNecessitiesAccountName} [0.00, 4900.00]: ",
-                    "Enter description of transaction [allowance into $defaultNecessitiesAccountName]: ",
-                    "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("9"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Enter the amount to allocate into $defaultNecessitiesAccountName [0.00, 4900.00]: ",
+                        "Enter description of transaction [allowance into $defaultNecessitiesAccountName]: ",
+                        "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
  1.       0.00 | Cosmetics
  2.       0.00 | Education
  3.       0.00 | Entertainment
@@ -206,15 +236,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 14. Back
 15. Quit
 """,
-                    "Enter selection: ",
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("200", "", "14"),
                 )
             }
             "view transactions" {
-                inputs.addAll(listOf("4", "1", "3", "5", "17"))
-                unPause()
-                waitForPause(helper.awaitMillis).shouldBeTrue()
-                outputs shouldContainExactly listOf(
-                    """
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                             |Budget!
                             | 1. $recordIncome
                             | 2. $makeAllowances
@@ -226,8 +256,13 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 8. $setup
                             | 9. Quit
                             |""".trimMargin(),
-                    "Enter selection: ",
-                    """Select account to view history
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("4"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """Select account to view history
  1.   4,700.00 | General
  2.       0.00 | Cosmetics
  3.       0.00 | Education
@@ -247,8 +282,13 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 17. Back
 18. Quit
 """,
-                    "Enter selection: ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("1"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |'General' Account Transactions
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:00 |   5,000.00 | income into $defaultCheckingAccountName
@@ -258,15 +298,20 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 5. Back
                         | 6. Quit
                         |""".trimMargin(),
-                    "Select transaction for details: ",
-                    """
+                        "Select transaction for details: ",
+                    ),
+                    toInput = listOf("3"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |2024-08-08 19:00:02
                         |allowance into Food
                         |Category Account | Amount     | Description
                         |Food             |     300.00 |
                         |General          |    -300.00 |
                         |""".trimMargin(),
-                    """
+                        """
                         |'General' Account Transactions
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:00 |   5,000.00 | income into $defaultCheckingAccountName
@@ -276,8 +321,13 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 5. Back
                         | 6. Quit
                         |""".trimMargin(),
-                    "Select transaction for details: ",
-                    """Select account to view history
+                        "Select transaction for details: ",
+                    ),
+                    toInput = listOf("5"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """Select account to view history
  1.   4,700.00 | General
  2.       0.00 | Cosmetics
  3.       0.00 | Education
@@ -297,15 +347,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 17. Back
 18. Quit
 """,
-                    "Enter selection: ",
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("17"),
                 )
             }
             "record spending" {
-                inputs.addAll(listOf("3", "2", "1.5", "Pepsi", "", "4", "", "", "3"))
-                unPause()
-                waitForPause(helper.awaitMillis).shouldBeTrue()
-                outputs shouldContainExactly listOf(
-                    """
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                             |Budget!
                             | 1. $recordIncome
                             | 2. $makeAllowances
@@ -317,8 +367,13 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 8. $setup
                             | 9. Quit
                             |""".trimMargin(),
-                    "Enter selection: ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("3"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |Select real account money was spent from.
                         | 1.   5,000.00 | Checking
                         | 2.     200.00 | Wallet
@@ -326,11 +381,24 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 4. Quit
                         |
                     """.trimMargin(),
-                    "Enter selection: ",
-                    "Enter the amount spent from Wallet [0.00, 200.00]: ",
-                    "Enter description of transaction [spending]: ",
-                    "Use current time [Y]? ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("2"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf("Enter the amount spent from Wallet [0.00, 200.00]: "),
+                    toInput = listOf("1.5"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Enter description of transaction [spending]: ",
+                        "Use current time [Y]? ",
+                    ),
+                    toInput = listOf("Pepsi", ""),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |Select a category that some of that money was spent on.  Left to cover: $1.50
                         | 1.       0.00 | Cosmetics
                         | 2.       0.00 | Education
@@ -348,10 +416,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |14. Back
                         |15. Quit
                         |""".trimMargin(),
-                    "Enter selection: ",
-                    "Enter the amount spent on Food [0.00, [1.50]]: ",
-                    "Enter description for Food spend [Pepsi]: ",
-                    """
+                        "Enter selection: ",
+                        "Enter the amount spent on Food [0.00, [1.50]]: ",
+                        "Enter description for Food spend [Pepsi]: ",
+                    ),
+                    toInput = listOf("4", "", ""),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |Select real account money was spent from.
                         | 1.   5,000.00 | Checking
                         | 2.     198.50 | Wallet
@@ -359,17 +432,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 4. Quit
                         |
                     """.trimMargin(),
-                    "Enter selection: ",
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("3"),
                 )
             }
             "write a check to SuperMarket" {
-                inputs.addAll(
-                    listOf("5", "1", "1", "300", "SuperMarket", "", "4", "200", "", "9", "100", ""),
-                )
-                unPause()
-                waitForPause(helper.awaitMillis).shouldBeTrue()
-                outputs shouldContainExactly listOf(
-                    """
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                             |Budget!
                             | 1. $recordIncome
                             | 2. $makeAllowances
@@ -381,26 +452,49 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 8. $setup
                             | 9. Quit
                             |""".trimMargin(),
-                    "Enter selection: ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("5"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |Select the checking account
                         | 1.   5,000.00 | Checking Drafts
                         | 2. Back
                         | 3. Quit
                         |
                     """.trimMargin(),
-                    "Enter selection: ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("1"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                          | 1. Write a check on Checking Drafts
                          | 2. Record check cleared
                          | 3. Back
                          | 4. Quit
                          |""".trimMargin(),
-                    "Enter selection: ",
-                    "Enter the amount of check on Checking Drafts [0.00, 5000.00]: ",
-                    "Enter the recipient of the check: ",
-                    "Use current time [Y]? ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("1"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf("Enter the amount of check on Checking Drafts [0.00, 5000.00]: "),
+                    toInput = listOf("300"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Enter the recipient of the check: ",
+                        "Use current time [Y]? ",
+                    ),
+                    toInput = listOf("SuperMarket", ""),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |Select a category that some of that money was spent on.  Left to cover: $300.00
                         | 1.       0.00 | Cosmetics
                         | 2.       0.00 | Education
@@ -418,10 +512,20 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |14. Back
                         |15. Quit
                         |""".trimMargin(),
-                    "Enter selection: ",
-                    "Enter the amount spent on Food [0.00, [298.50]]: ",
-                    "Enter description for Food spend [SuperMarket]: ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("4"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Enter the amount spent on Food [0.00, [298.50]]: ",
+                        "Enter description for Food spend [SuperMarket]: ",
+                    ),
+                    toInput = listOf("200", ""),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |Select a category that some of that money was spent on.  Left to cover: $100.00
                         | 1.       0.00 | Cosmetics
                         | 2.       0.00 | Education
@@ -439,73 +543,88 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |14. Back
                         |15. Quit
                         |""".trimMargin(),
-                    "Enter selection: ",
-                    "Enter the amount spent on Necessities [0.00, [100.00]]: ",
-                    "Enter description for Necessities spend [SuperMarket]: ",
-//                    """
-//                        |Select account the check was written on
-//                        | 1.   4,700.00 | Checking Drafts
-//                        | 2. Back
-//                        | 3. Quit
-//                        |
-//                    """.trimMargin(),
-//                    "Enter selection: ",
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("9"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Enter the amount spent on Necessities [0.00, [100.00]]: ",
+                        "Enter description for Necessities spend [SuperMarket]: ",
+                    ),
+                    toInput = listOf("100", ""),
                 )
             }
             "check clears" {
-                inputs.addAll(
-                    listOf("2", "1", "", "1", "3", "2"),
-                )
-                unPause()
-                waitForPause(helper.awaitMillis).shouldBeTrue()
-                outputs shouldContainExactly listOf(
-                    """
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                          | 1. Write a check on Checking Drafts
                          | 2. Record check cleared
                          | 3. Back
                          | 4. Quit
                          |""".trimMargin(),
-                    "Enter selection: ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("2"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |Select the check that cleared
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:05 |     300.00 | SuperMarket
                         | 2. Back
                         | 3. Quit
                         |""".trimMargin(),
-                    "Select the check that cleared: ",
-                    "Did the check clear just now [Y]? ",
-                    """
+                        "Select the check that cleared: ",
+                        "Did the check clear just now [Y]? ",
+                    ),
+                    toInput = listOf("1", ""),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |Select the check that cleared
                         |    Time Stamp          | Amount     | Description
                         | 1. Back
                         | 2. Quit
                         |""".trimMargin(),
-                    "Select the check that cleared: ",
-                    """
+                        "Select the check that cleared: ",
+                    ),
+                    toInput = listOf("1"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                          | 1. Write a check on Checking Drafts
                          | 2. Record check cleared
                          | 3. Back
                          | 4. Quit
                          |
                     """.trimMargin(),
-                    "Enter selection: ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("3"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |Select the checking account
                         | 1.   4,700.00 | Checking Drafts
                         | 2. Back
                         | 3. Quit
                         |
                     """.trimMargin(),
-                    "Enter selection: ",
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("2"),
                 )
             }
             "check balances" {
-                inputs.addAll(listOf("4", "15", "2", "3", "17"))
-                unPause()
-                waitForPause(helper.awaitMillis).shouldBeTrue()
-                outputs shouldContainExactly listOf(
-                    """
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                             |Budget!
                             | 1. $recordIncome
                             | 2. $makeAllowances
@@ -517,8 +636,13 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 8. $setup
                             | 9. Quit
                             |""".trimMargin(),
-                    "Enter selection: ",
-                    """Select account to view history
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("4"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """Select account to view history
  1.   4,700.00 | General
  2.       0.00 | Cosmetics
  3.       0.00 | Education
@@ -538,8 +662,13 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 17. Back
 18. Quit
 """,
-                    "Enter selection: ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("15"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |'Checking' Account Transactions
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:00 |   5,000.00 | income into $defaultCheckingAccountName
@@ -547,8 +676,13 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 3. Back
                         | 4. Quit
                         |""".trimMargin(),
-                    "Select transaction for details: ",
-                    """
+                        "Select transaction for details: ",
+                    ),
+                    toInput = listOf("2"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |2024-08-08 19:00:06
                         |SuperMarket
                         |Category Account | Amount     | Description
@@ -557,7 +691,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |     Real Items: | Amount     | Description
                         |Checking         |    -300.00 | SuperMarket
                         |""".trimMargin(),
-                    """
+                        """
                         |'Checking' Account Transactions
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:00 |   5,000.00 | income into $defaultCheckingAccountName
@@ -565,8 +699,13 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 3. Back
                         | 4. Quit
                         |""".trimMargin(),
-                    "Select transaction for details: ",
-                    """Select account to view history
+                        "Select transaction for details: ",
+                    ),
+                    toInput = listOf("3"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """Select account to view history
  1.   4,700.00 | General
  2.       0.00 | Cosmetics
  3.       0.00 | Education
@@ -586,17 +725,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 17. Back
 18. Quit
 """,
-                    "Enter selection: ",
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("17"),
                 )
             }
             "create a credit card account" {
-                inputs.addAll(
-                    listOf("8", "3", "Costco Visa", "", "4"),
-                )
-                unPause()
-                waitForPause(helper.awaitMillis).shouldBeTrue()
-                outputs shouldContainExactly listOf(
-                    """
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                             |Budget!
                             | 1. $recordIncome
                             | 2. $makeAllowances
@@ -608,56 +745,48 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 8. $setup
                             | 9. Quit
                             |""".trimMargin(),
-                    "Enter selection: ",
-                    """
-                         | 1. Create a New Category
-                         | 2. Create a Real Fund
-                         | 3. Add a Credit Card
-                         | 4. Back
-                         | 5. Quit
-                         |""".trimMargin(),
-                    "Enter selection: ",
-                    "Enter a unique name for the new credit card: ",
-                    "Enter a description for the new credit card: ",
-                    """
-                         | 1. Create a New Category
-                         | 2. Create a Real Fund
-                         | 3. Add a Credit Card
-                         | 4. Back
-                         | 5. Quit
-                         |""".trimMargin(),
-                    "Enter selection: ",
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("8"),
                 )
-
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                         | 1. Create a New Category
+                         | 2. Create a Real Fund
+                         | 3. Add a Credit Card
+                         | 4. Back
+                         | 5. Quit
+                         |""".trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("3"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Enter a unique name for the new credit card: ",
+                        "Enter a description for the new credit card: ",
+                    ),
+                    toInput = listOf("Costco Visa", ""),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                         | 1. Create a New Category
+                         | 2. Create a Real Fund
+                         | 3. Add a Credit Card
+                         | 4. Back
+                         | 5. Quit
+                         |""".trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("4"),
+                )
             }
             "spend using credit card" {
-                inputs.addAll(
-                    listOf(
-                        "6",
-                        "1",
-                        "1",
-                        "30",
-                        "Costco",
-                        "",
-                        "4",
-                        "20",
-                        "",
-                        "9",
-                        "10",
-                        "",
-                        "1",
-                        "20",
-                        "Target",
-                        "",
-                        "9",
-                        "",
-                        "",
-                    ),
-                )
-                unPause()
-                waitForPause(helper.awaitMillis).shouldBeTrue()
-                outputs shouldContainExactly listOf(
-                    """
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                             |Budget!
                             | 1. $recordIncome
                             | 2. $makeAllowances
@@ -669,15 +798,25 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 8. $setup
                             | 9. Quit
                             |""".trimMargin(),
-                    "Enter selection: ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("6"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |Select a credit card
                         | 1.       0.00 | Costco Visa
                         | 2. Back
                         | 3. Quit
                         |""".trimMargin(),
-                    "Enter selection: ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("1"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         | 1. Record spending on Costco Visa
                         | 2. Pay Costco Visa bill
                         | 3. View unpaid transactions on Costco Visa
@@ -685,11 +824,21 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 5. Quit
                         |
                     """.trimMargin(),
-                    "Enter selection: ",
-                    "Enter the amount of the charge on Costco Visa: ",
-                    "Enter the recipient of the charge: ",
-                    "Use current time [Y]? ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("1"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Enter the amount of the charge on Costco Visa: ",
+                        "Enter the recipient of the charge: ",
+                        "Use current time [Y]? ",
+                    ),
+                    toInput = listOf("30", "Costco", ""),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |Select a category that some of that money was spent on.  Left to cover: $30.00
                         | 1.       0.00 | Cosmetics
                         | 2.       0.00 | Education
@@ -707,10 +856,20 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |14. Back
                         |15. Quit
                         |""".trimMargin(),
-                    "Enter selection: ",
-                    "Enter the amount spent on Food [0.00, [30.00]]: ",
-                    "Enter description for Food spend [Costco]: ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("4"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Enter the amount spent on Food [0.00, [30.00]]: ",
+                        "Enter description for Food spend [Costco]: ",
+                    ),
+                    toInput = listOf("20", ""),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |Select a category that some of that money was spent on.  Left to cover: $10.00
                         | 1.       0.00 | Cosmetics
                         | 2.       0.00 | Education
@@ -728,10 +887,20 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |14. Back
                         |15. Quit
                         |""".trimMargin(),
-                    "Enter selection: ",
-                    "Enter the amount spent on Necessities [0.00, [10.00]]: ",
-                    "Enter description for Necessities spend [Costco]: ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("9"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Enter the amount spent on Necessities [0.00, [10.00]]: ",
+                        "Enter description for Necessities spend [Costco]: ",
+                    ),
+                    toInput = listOf("10", ""),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         | 1. Record spending on Costco Visa
                         | 2. Pay Costco Visa bill
                         | 3. View unpaid transactions on Costco Visa
@@ -739,11 +908,21 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 5. Quit
                         |
                     """.trimMargin(),
-                    "Enter selection: ",
-                    "Enter the amount of the charge on Costco Visa: ",
-                    "Enter the recipient of the charge: ",
-                    "Use current time [Y]? ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("1"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Enter the amount of the charge on Costco Visa: ",
+                        "Enter the recipient of the charge: ",
+                        "Use current time [Y]? ",
+                    ),
+                    toInput = listOf("20", "Target", ""),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |Select a category that some of that money was spent on.  Left to cover: $20.00
                         | 1.       0.00 | Cosmetics
                         | 2.       0.00 | Education
@@ -761,36 +940,17 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |14. Back
                         |15. Quit
                         |""".trimMargin(),
-                    "Enter selection: ",
-                    "Enter the amount spent on Necessities [0.00, [20.00]]: ",
-                    "Enter description for Necessities spend [Target]: ",
+                        "Enter selection: ",
+                        "Enter the amount spent on Necessities [0.00, [20.00]]: ",
+                        "Enter description for Necessities spend [Target]: ",
+                    ),
+                    toInput = listOf("9", "", ""),
                 )
             }
             "!pay credit card balance" {
-                inputs.addAll(
-                    listOf(
-                        "2",
-                        "35",
-                        "1",
-                        "",
-                        "",
-                        "1",
-                        "1",
-                        "2",
-                        "5",
-                        "Brausen's",
-                        "",
-                        "9",
-                        "",
-                        "",
-                        "2",
-                        "4",
-                    ),
-                )
-                unPause()
-                waitForPause(helper.awaitMillis).shouldBeTrue()
-                outputs shouldContainExactly listOf(
-                    """
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         | 1. Record spending on Costco Visa
                         | 2. Pay Costco Visa bill
                         | 3. View unpaid transactions on Costco Visa
@@ -798,9 +958,14 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 5. Quit
                         |
                     """.trimMargin(),
-                    "Enter selection: ",
-                    "Enter the total amount of the bill: ",
-                    """
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("2"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Enter the total amount of the bill: ",
+                        """
                         |Select real account bill was paid from
                         | 1.   4,700.00 | Checking
                         | 2.     198.50 | Wallet
@@ -808,10 +973,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 4. Quit
                         |
                     """.trimMargin(),
-                    "Enter selection: ",
-                    "Use current time for the bill-pay transaction [Y]? ",
-                    "Description of transaction [Costco Visa]: ",
-                    """
+                        "Enter selection: ",
+                        "Use current time for the bill-pay transaction [Y]? ",
+                        "Description of transaction [Costco Visa]: ",
+                    ),
+                    toInput = listOf("35", "1", "", ""),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |Select all transactions from this bill.  Amount to be covered: $35.00
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:07 |     -30.00 | Costco
@@ -821,8 +991,13 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 5. Quit
                         |
                     """.trimMargin(),
-                    "Select a transaction covered in this bill: ",
-                    """
+                        "Select a transaction covered in this bill: ",
+                    ),
+                    toInput = listOf("1"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |Select all transactions from this bill.  Amount to be covered: $5.00
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:08 |     -20.00 | Target
@@ -830,9 +1005,14 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 3. Back
                         | 4. Quit
                         |""".trimMargin(),
-                    "Select a transaction covered in this bill: ",
-                    "ERROR: this bill payment amount is not large enough to cover that transaction\n",
-                    """
+                        "Select a transaction covered in this bill: ",
+                    ),
+                    toInput = listOf("1"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "ERROR: this bill payment amount is not large enough to cover that transaction\n",
+                        """
                         |Select all transactions from this bill.  Amount to be covered: $5.00
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:08 |     -20.00 | Target
@@ -840,11 +1020,21 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 3. Back
                         | 4. Quit
                         |""".trimMargin(),
-                    "Select a transaction covered in this bill: ",
-                    "Enter the amount of the charge on Costco Visa: ",
-                    "Enter the recipient of the charge: ",
-                    "Use current time [Y]? ",
-                    """
+                        "Select a transaction covered in this bill: ",
+                    ),
+                    toInput = listOf("2"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Enter the amount of the charge on Costco Visa: ",
+                        "Enter the recipient of the charge: ",
+                        "Use current time [Y]? ",
+                    ),
+                    toInput = listOf("5", "Brausen's", ""),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |Select a category that some of that money was spent on.  Left to cover: $5.00
                         | 1.       0.00 | Cosmetics
                         | 2.       0.00 | Education
@@ -862,10 +1052,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |14. Back
                         |15. Quit
                         |""".trimMargin(),
-                    "Enter selection: ",
-                    "Enter the amount spent on Necessities [0.00, [5.00]]: ",
-                    "Enter description for Necessities spend [Brausen's]: ",
-                    """
+                        "Enter selection: ",
+                        "Enter the amount spent on Necessities [0.00, [5.00]]: ",
+                        "Enter description for Necessities spend [Brausen's]: ",
+                    ),
+                    toInput = listOf("9", "", ""),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
                         |Select all transactions from this bill.  Amount to be covered: $5.00
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:08 |     -20.00 | Target
@@ -874,9 +1069,14 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 4. Back
                         | 5. Quit
                         |""".trimMargin(),
-                    "Select a transaction covered in this bill: ",
-                    "Payment recorded!\n",
-                    """
+                        "Select a transaction covered in this bill: ",
+                    ),
+                    toInput = listOf("2"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Payment recorded!\n",
+                        """
                         | 1. Record spending on Costco Visa
                         | 2. Pay Costco Visa bill
                         | 3. View unpaid transactions on Costco Visa
@@ -884,9 +1084,10 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 5. Quit
                         |
                     """.trimMargin(),
-                    "Enter selection: ",
-
-                    )
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("4"),
+                )
             }
             "!check balances again" {
             }
