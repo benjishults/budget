@@ -560,15 +560,15 @@ private fun WithIo.payCreditCardBill(
                 //
                 menuSession.push(
                     selectOrCreateChargeTransactionsForBill(
-                        amountOfBill,
-                        billPayTransaction,
-                        chargeAccount,
-                        emptyList(),
-                        budgetData,
-                        budgetDao,
-                        userConfig,
-                        menuSession,
-                        clock,
+                        amountOfBill = amountOfBill,
+                        billPayTransaction = billPayTransaction,
+                        chargeAccount = chargeAccount,
+                        selectedItems = emptyList(),
+                        budgetData = budgetData,
+                        budgetDao = budgetDao,
+                        userConfig = userConfig,
+                        menuSession = menuSession,
+                        clock = clock,
                     ),
                 )
             },
@@ -622,15 +622,15 @@ private fun WithIo.selectOrCreateChargeTransactionsForBill(
     val remainingToBeCovered: BigDecimal =
         amountOfBill +
                 allSelectedItems
-                    .fold(BigDecimal.ZERO) { sum, item ->
+                    .fold(BigDecimal.ZERO.setScale(2)) { sum, item ->
                         sum + item.amount
                     }
     when {
-        remainingToBeCovered == BigDecimal.ZERO -> {
+        remainingToBeCovered == BigDecimal.ZERO.setScale(2) -> {
             menuSession.pop()
             outPrinter("Payment recorded!\n")
             budgetData.commit(billPayTransaction)
-            budgetDao.commitCreditCardPayment(selectedItems, billPayTransaction, budgetData.id)
+            budgetDao.commitCreditCardPayment(allSelectedItems, billPayTransaction, budgetData.id)
         }
         remainingToBeCovered < BigDecimal.ZERO -> {
             outPrinter("ERROR: this bill payment amount is not large enough to cover that transaction\n")

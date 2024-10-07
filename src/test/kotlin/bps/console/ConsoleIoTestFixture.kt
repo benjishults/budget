@@ -73,33 +73,42 @@ const val MAX_LONG_MILLIS_FOR_WAITING_FOR_PAUSE_DURING_DEBUGGING = Long.MAX_VALU
 
 /**
  * This fixture allows the application to pause between tests (allowing the JDBC connection to remain
- * open between tests).
- * The application will pause automatically
- * * when [inputs] is empty
- * * just prior to printing the next output
- * After re-populating the [inputs]
- * list, you can unpause the application by calling [unPause].
- *
- * After calling [unPause], the application will resume and run through the new inputs.
- * You will want to immediately call [waitForPause] so that the application will run through your inputs
- * prior to validating the results.
+ * open between tests).  Using the [validateInteraction] function will work for most use cases.
  *
  * Usage:
  *
  * ```kotlin
- *            // beginning of each test looks something like this:
- *            // populate list of inputs for test
- *            inputs.addAll(
- *                listOf("2", "3", "300", "", "5", "100", "", "10"),
- *            )
- *            // unpause to allow the application to run through these inputs
- *            unPause()
- *            // wait for the application to run through those inputs before beginning validation of results
- *            waitForPause()
- *            // validations...
- *            outputs shouldContainExactly listOf( /* ... */ )
- *
+ *                 validateInteraction(
+ *                     expectedOutputs = listOf("Enter the amount of income: "),
+ *                     toInput = listOf("5000"),
+ *                 )
+ *                 validateInteraction(
+ *                     expectedOutputs = listOf(
+ *                         "Enter description of income [income into $defaultCheckingAccountName]: ",
+ *                         "Use current time [Y]? ",
+ *                         """
+ *                         |Select account receiving the income:
+ *                         | 1.   5,000.00 | Checking
+ *                         | 2.       0.00 | Wallet
+ *                         | 3. Back
+ *                         | 4. Quit
+ *                         |""".trimMargin(),
+ *                         "Enter selection: ",
+ *                     ),
+ *                     toInput = listOf("", "", "2"),
+ *                 )
  * ```
+ * ## Expert Mode
+ *
+ * The application will pause automatically
+ * * when [inputs] is empty
+ * * just prior to printing the next output
+ *
+ * After re-populating the [inputs] list, you can unpause the application by calling [unPause].
+ *
+ * After calling [unPause], the application will resume and run through the new inputs.
+ * You will want to immediately call [waitForPause] so that the application will run through your inputs
+ * prior to validating the results.
  *
  * If you want to capture the Quitting output and ensure that the application thread ends before you go on to the
  * next test, then you might ought to be using the [SimpleConsoleIoTestFixture] instead.  However, if you need to
@@ -126,7 +135,6 @@ interface ComplexConsoleIoTestFixture : SimpleConsoleIoTestFixture {
 
     val helper: Helper
 
-
     /** Call [waitForPause] before validation to allow the application to finish processing.  The application will
      * pause automatically when the [inputs] list is emptied.
      */
@@ -152,7 +160,12 @@ interface ComplexConsoleIoTestFixture : SimpleConsoleIoTestFixture {
         operator fun invoke(debugging: Boolean = false): ComplexConsoleIoTestFixture {
             return object : ComplexConsoleIoTestFixture {
                 override val helper: Helper =
-                    Helper(if (debugging) MAX_LONG_MILLIS_FOR_WAITING_FOR_PAUSE_DURING_DEBUGGING else ONE_SECOND_IN_MILLIS_FOR_WAITING_FOR_PAUSE)
+                    Helper(
+                        if (debugging)
+                            MAX_LONG_MILLIS_FOR_WAITING_FOR_PAUSE_DURING_DEBUGGING
+                        else
+                            ONE_SECOND_IN_MILLIS_FOR_WAITING_FOR_PAUSE,
+                    )
             }
         }
     }

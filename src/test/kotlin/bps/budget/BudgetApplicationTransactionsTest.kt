@@ -947,7 +947,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     toInput = listOf("9", "", ""),
                 )
             }
-            "!pay credit card balance" {
+            "pay credit card balance" {
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
@@ -1076,6 +1076,20 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         "Payment recorded!\n",
+                        """
+                        |Select real account bill was paid from
+                        | 1.   4,665.00 | Checking
+                        | 2.     198.50 | Wallet
+                        | 3. Back
+                        | 4. Quit
+                        |
+                    """.trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("3"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
                         """
                         | 1. Record spending on Costco Visa
                         | 2. Pay Costco Visa bill
