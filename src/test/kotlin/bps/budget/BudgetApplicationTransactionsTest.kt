@@ -946,8 +946,178 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     ),
                     toInput = listOf("9", "", ""),
                 )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                        | 1. Record spending on Costco Visa
+                        | 2. Pay Costco Visa bill
+                        | 3. View unpaid transactions on Costco Visa
+                        | 4. Back
+                        | 5. Quit
+                        |
+                    """.trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("4"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                        |Select a credit card
+                        | 1.     -50.00 | Costco Visa
+                        | 2. Back
+                        | 3. Quit
+                        |
+                    """.trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("2"),
+                )
+            }
+            "check balances before paying credit card" {
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                            |Budget!
+                            | 1. $recordIncome
+                            | 2. $makeAllowances
+                            | 3. $recordSpending
+                            | 4. $viewHistory
+                            | 5. $writeOrClearChecks
+                            | 6. $useOrPayCreditCards
+                            | 7. $transfer
+                            | 8. $setup
+                            | 9. Quit
+                            |""".trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("4"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """Select account to view history
+ 1.   4,700.00 | General
+ 2.       0.00 | Cosmetics
+ 3.       0.00 | Education
+ 4.       0.00 | Entertainment
+ 5.      78.50 | Food
+ 6.       0.00 | Hobby
+ 7.       0.00 | Home Upkeep
+ 8.       0.00 | Housing
+ 9.       0.00 | Medical
+10.      70.00 | Necessities
+11.       0.00 | Network
+12.       0.00 | Transportation
+13.       0.00 | Travel
+14.       0.00 | Work
+15.   4,700.00 | Checking
+16.     198.50 | Wallet
+17. Back
+18. Quit
+""",
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("5"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                        |'Food' Account Transactions
+                        |    Time Stamp          | Amount     | Description
+                        | 1. 2024-08-08 19:00:02 |     300.00 | allowance into $defaultFoodAccountName
+                        | 2. 2024-08-08 19:00:04 |      -1.50 | Pepsi
+                        | 3. 2024-08-08 19:00:05 |    -200.00 | SuperMarket
+                        | 4. 2024-08-08 19:00:07 |     -20.00 | Costco
+                        | 5. Back
+                        | 6. Quit
+                        |""".trimMargin(),
+                        "Select transaction for details: ",
+                    ),
+                    toInput = listOf("4"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                        |2024-08-08 19:00:07
+                        |Costco
+                        |Category Account | Amount     | Description
+                        |Food             |     -20.00 |
+                        |Necessities      |     -10.00 |
+                        |Credit Card Items: | Amount     | Description
+                        |Costco Visa      |     -30.00 | Costco
+                        |""".trimMargin(),
+                        """
+                        |'$defaultFoodAccountName' Account Transactions
+                        |    Time Stamp          | Amount     | Description
+                        | 1. 2024-08-08 19:00:02 |     300.00 | allowance into Food
+                        | 2. 2024-08-08 19:00:04 |      -1.50 | Pepsi
+                        | 3. 2024-08-08 19:00:05 |    -200.00 | SuperMarket
+                        | 4. 2024-08-08 19:00:07 |     -20.00 | Costco
+                        | 5. Back
+                        | 6. Quit
+                        |""".trimMargin(),
+                        "Select transaction for details: ",
+                    ),
+                    toInput = listOf("5"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """Select account to view history
+ 1.   4,700.00 | General
+ 2.       0.00 | Cosmetics
+ 3.       0.00 | Education
+ 4.       0.00 | Entertainment
+ 5.      78.50 | Food
+ 6.       0.00 | Hobby
+ 7.       0.00 | Home Upkeep
+ 8.       0.00 | Housing
+ 9.       0.00 | Medical
+10.      70.00 | Necessities
+11.       0.00 | Network
+12.       0.00 | Transportation
+13.       0.00 | Travel
+14.       0.00 | Work
+15.   4,700.00 | Checking
+16.     198.50 | Wallet
+17. Back
+18. Quit
+""",
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("17"),
+                )
             }
             "pay credit card balance" {
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                            |Budget!
+                            | 1. $recordIncome
+                            | 2. $makeAllowances
+                            | 3. $recordSpending
+                            | 4. $viewHistory
+                            | 5. $writeOrClearChecks
+                            | 6. $useOrPayCreditCards
+                            | 7. $transfer
+                            | 8. $setup
+                            | 9. Quit
+                            |""".trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("6"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                        |Select a credit card
+                        | 1.     -50.00 | Costco Visa
+                        | 2. Back
+                        | 3. Quit
+                        |""".trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("1"),
+                )
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
