@@ -1102,10 +1102,136 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     ),
                     toInput = listOf("4"),
                 )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                        |Select a credit card
+                        | 1.     -20.00 | Costco Visa
+                        | 2. Back
+                        | 3. Quit
+                        |
+                    """.trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("2"),
+                )
             }
-            "!check balances again" {
+            "check balances again" {
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                            |Budget!
+                            | 1. $recordIncome
+                            | 2. $makeAllowances
+                            | 3. $recordSpending
+                            | 4. $viewHistory
+                            | 5. $writeOrClearChecks
+                            | 6. $useOrPayCreditCards
+                            | 7. $transfer
+                            | 8. $setup
+                            | 9. Quit
+                            |""".trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("4"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """Select account to view history
+ 1.   4,700.00 | General
+ 2.       0.00 | Cosmetics
+ 3.       0.00 | Education
+ 4.       0.00 | Entertainment
+ 5.      78.50 | Food
+ 6.       0.00 | Hobby
+ 7.       0.00 | Home Upkeep
+ 8.       0.00 | Housing
+ 9.       0.00 | Medical
+10.      65.00 | Necessities
+11.       0.00 | Network
+12.       0.00 | Transportation
+13.       0.00 | Travel
+14.       0.00 | Work
+15.   4,665.00 | Checking
+16.     198.50 | Wallet
+17. Back
+18. Quit
+""",
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("15"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                        |'Checking' Account Transactions
+                        |    Time Stamp          | Amount     | Description
+                        | 1. 2024-08-08 19:00:00 |   5,000.00 | income into $defaultCheckingAccountName
+                        | 2. 2024-08-08 19:00:06 |    -300.00 | SuperMarket
+                        | 3. 2024-08-08 19:00:09 |     -35.00 | Costco Visa
+                        | 4. Back
+                        | 5. Quit
+                        |""".trimMargin(),
+                        "Select transaction for details: ",
+                    ),
+                    toInput = listOf("2"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                        |2024-08-08 19:00:06
+                        |SuperMarket
+                        |Category Account | Amount     | Description
+                        |Food             |    -200.00 |
+                        |Necessities      |    -100.00 |
+                        |     Real Items: | Amount     | Description
+                        |Checking         |    -300.00 | SuperMarket
+                        |""".trimMargin(),
+                        """
+                        |'Checking' Account Transactions
+                        |    Time Stamp          | Amount     | Description
+                        | 1. 2024-08-08 19:00:00 |   5,000.00 | income into $defaultCheckingAccountName
+                        | 2. 2024-08-08 19:00:06 |    -300.00 | SuperMarket
+                        | 3. 2024-08-08 19:00:09 |     -35.00 | Costco Visa
+                        | 4. Back
+                        | 5. Quit
+                        |""".trimMargin(),
+                        "Select transaction for details: ",
+                    ),
+                    toInput = listOf("4"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """Select account to view history
+ 1.   4,700.00 | General
+ 2.       0.00 | Cosmetics
+ 3.       0.00 | Education
+ 4.       0.00 | Entertainment
+ 5.      78.50 | Food
+ 6.       0.00 | Hobby
+ 7.       0.00 | Home Upkeep
+ 8.       0.00 | Housing
+ 9.       0.00 | Medical
+10.      65.00 | Necessities
+11.       0.00 | Network
+12.       0.00 | Transportation
+13.       0.00 | Travel
+14.       0.00 | Work
+15.   4,665.00 | Checking
+16.     198.50 | Wallet
+17. Back
+18. Quit
+""",
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("17"),
+                )
             }
-            "!ensure user can back out of a transaction without saving" {
+            "!ensure user can back out of a transaction without saving" - {
+                "should be asked to confirm if transaction is in progress" {}
+                "should NOT be asked to confirm if transaction is in progress" {}
+                "credit card payment" {}
+                "transfer" {}
             }
             "!write a check to pay for credit card and see what we want the transaction to look like" {
             }
