@@ -24,15 +24,15 @@ open class ScrollingSelectionMenu<T>(
         labelGenerator: T.() -> String = { toString() },
         next: (MenuSession, T) -> Unit,
     ) : this(
-        header,
-        prompt,
-        limit,
-        offset,
-        @Suppress("NAME_SHADOWING")
+        header = header,
+        prompt = prompt,
+        limit = limit,
+        offset = offset,
+        itemListGenerator = @Suppress("NAME_SHADOWING")
         { limit, offset -> baseList.subList(offset, min(baseList.size, offset + limit)) },
-        extraItems,
-        labelGenerator,
-        next,
+        extraItems = extraItems,
+        labelGenerator = labelGenerator,
+        actOnSelectedItem = next,
     )
 
     init {

@@ -19,6 +19,7 @@ import bps.budget.persistence.loadOrBuildBudgetData
 import bps.budget.transaction.ViewTransactionsMenu
 import bps.budget.ui.ConsoleUiFacade
 import bps.budget.ui.UiFacade
+import bps.config.convertToPath
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
@@ -38,9 +39,11 @@ import bps.console.menu.takeActionAndPush
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
+import kotlin.math.min
 
-fun main(args: Array<String>) {
-    val configurations = BudgetConfigurations(sequenceOf("budget.yml", "~/.config/bps-budget/budget.yml"))
+fun main() {
+    val configurations =
+        BudgetConfigurations(sequenceOf("budget.yml", convertToPath("~/.config/bps-budget/budget.yml")))
     val uiFunctions = ConsoleUiFacade()
 
     BudgetApplication(
@@ -166,7 +169,7 @@ fun WithIo.budgetMenu(
                 outPrinter(
                     """
             |The user should be able to record transfers between read fund accounts
-            |(e.g., a cash withdrawl is a transfer from savings to pocket) and transfers between category fund accounts
+            |(e.g., a cash withdrawal is a transfer from savings to pocket) and transfers between category fund accounts
             |(e.g., when a big expenditure comes up under entertainment, you may need to transfer money from the school account.)""".trimMargin(),
                 )
             },
@@ -416,7 +419,10 @@ private fun WithIo.checksMenu(
                                     clock,
                                 )
                             val clearingTransaction =
-                                Transaction.Builder(draftTransactionItem.transaction.description, timestamp)
+                                Transaction.Builder(
+                                    draftTransactionItem.transaction.description,
+                                    timestamp,
+                                )
                                     .apply {
                                         draftItemBuilders.add(
                                             Transaction.ItemBuilder(
@@ -436,7 +442,11 @@ private fun WithIo.checksMenu(
                                     }
                                     .build()
                             budgetData.commit(clearingTransaction)
-                            budgetDao.clearCheck(draftTransactionItem, clearingTransaction, budgetData.id)
+                            budgetDao.clearCheck(
+                                draftTransactionItem,
+                                clearingTransaction,
+                                budgetData.id,
+                            )
                         }
                     },
                 )
@@ -463,12 +473,26 @@ private fun WithIo.creditCardMenu(
             Menu {
                 add(
                     takeAction("Record spending on ${chargeAccount.name}") {
-                        spendOnACreditCard(budgetData, clock, budgetDao, userConfig, menuSession, chargeAccount)
+                        spendOnACreditCard(
+                            budgetData,
+                            clock,
+                            budgetDao,
+                            userConfig,
+                            menuSession,
+                            chargeAccount,
+                        )
                     },
                 )
                 add(
                     takeAction("Pay ${chargeAccount.name} bill") {
-                        payCreditCardBill(menuSession, userConfig, budgetData, clock, chargeAccount, budgetDao)
+                        payCreditCardBill(
+                            menuSession,
+                            userConfig,
+                            budgetData,
+                            clock,
+                            chargeAccount,
+                            budgetDao,
+                        )
                     },
                 )
                 add(
@@ -630,7 +654,11 @@ private fun WithIo.selectOrCreateChargeTransactionsForBill(
             menuSession.pop()
             outPrinter("Payment recorded!\n")
             budgetData.commit(billPayTransaction)
-            budgetDao.commitCreditCardPayment(allSelectedItems, billPayTransaction, budgetData.id)
+            budgetDao.commitCreditCardPayment(
+                allSelectedItems,
+                billPayTransaction,
+                budgetData.id,
+            )
         }
         remainingToBeCovered < BigDecimal.ZERO -> {
             outPrinter("ERROR: this bill payment amount is not large enough to cover that transaction\n")
@@ -689,7 +717,8 @@ private fun WithIo.spendOnACreditCard(
                 outPrinter = outPrinter,
             )
                 .getResult()
-        val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
+        val timestamp: Instant =
+            getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
         val transactionBuilder: Transaction.Builder =
             Transaction.Builder(description, timestamp)
                 .apply {
@@ -754,7 +783,8 @@ private fun WithIo.recordSpendingMenu(
                 outPrinter = outPrinter,
             )
                 .getResult()
-        val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
+        val timestamp: Instant =
+            getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
         val transactionBuilder: Transaction.Builder =
             Transaction.Builder(description, timestamp)
                 .apply {

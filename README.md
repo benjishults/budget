@@ -23,7 +23,7 @@ java -cp build/libs/budget-1.0-SNAPSHOT-all.jar bps.budget.Budget
 
 To customize, create a file named `budget.yml` in your `~/.config/bps-budget` folder.
 
-It should like this:
+It should something like this:
 
 ```yaml
 persistence:
@@ -33,10 +33,12 @@ persistence:
         dbProvider: postgresql
         port: 5432
         host: localhost # if your DB is running on a different machine, change this to its domain or IP
+        schema: budget
         user: budget
         password: budget
 
 budgetUser:
     defaultLogin: fake@fake.com # your email
     defaultTimeZone: America/New_York # your time zone
+
 ```

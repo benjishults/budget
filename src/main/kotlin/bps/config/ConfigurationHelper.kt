@@ -2,7 +2,9 @@ package bps.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.nhubbard.konf.Config
+import io.github.nhubbard.konf.source.SourceNotFoundException
 import io.github.nhubbard.konf.source.yaml.yaml
+import java.io.IOException
 
 /**
  *
@@ -62,7 +64,13 @@ open class ConfigurationHelper(
             }
             .let {
                 filesProducer.fold(it) { config: Config, fileName: String ->
-                    config.from.yaml.resource(fileName, optional = true)
+                    try {
+                        config.from.yaml.resource(fileName, optional = false)
+                    } catch (ex: IOException) {
+                        config.from.yaml.file(fileName, optional = true)
+                    } catch (ex: SourceNotFoundException) {
+                        config.from.yaml.file(fileName, optional = true)
+                    }
                 }
             }
             .let { config: Config ->

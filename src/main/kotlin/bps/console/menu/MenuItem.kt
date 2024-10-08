@@ -87,7 +87,7 @@ fun <T> takeActionAndPush(
     }
 
 /**
- * @param to will be pushed onto the menu session
+ * @param to will be evaluated and its value pushed onto the menu session
  * @param label the display of the menu item
  */
 fun pushMenu(
