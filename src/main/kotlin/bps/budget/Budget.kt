@@ -175,15 +175,48 @@ fun WithIo.budgetMenu(
             },
         )
         add(
-            pushMenu(setup, { customizeMenu(budgetData, budgetDao, user) }),
+            pushMenu(setup, { customizeMenu(budgetData, budgetDao, user, userConfig) }),
         )
         add(quitItem)
+    }
+
+fun BudgetData.deleteCategoryAccountMenu(userConfig: UserConfiguration): Menu =
+    deleteAccountMenu(userConfig, deleter = { deleteCategoryAccount(it) }) { categoryAccounts - generalAccount }
+
+fun BudgetData.deleteRealAccountMenu(userConfig: UserConfiguration): Menu =
+    deleteAccountMenu(userConfig, deleter = { deleteRealAccount(it) }) { realAccounts }
+
+fun BudgetData.deleteChargeAccountMenu(userConfig: UserConfiguration): Menu =
+    deleteAccountMenu(userConfig, deleter = { deleteChargeAccount(it) }) { chargeAccounts }
+
+fun BudgetData.deleteDraftAccountMenu(userConfig: UserConfiguration): Menu =
+    deleteAccountMenu(userConfig, deleter = { deleteDraftAccount(it) }) { draftAccounts }
+
+fun <T : Account> deleteAccountMenu(
+    userConfig: UserConfiguration,
+    deleter: (T) -> Unit,
+    deleteFrom: () -> List<T>,
+): Menu =
+    ScrollingSelectionMenu(
+        header = "Select account to delete",
+        limit = userConfig.numberOfItemsInScrollingList,
+        itemListGenerator = { limit, offset ->
+            val baseList = deleteFrom()
+            baseList.subList(
+                offset,
+                min(baseList.size, offset + limit),
+            )
+        },
+        labelGenerator = { String.format("%,10.2f | %s", balance, name) },
+    ) { _: MenuSession, selectedAccount: T ->
+        deleter(selectedAccount)
     }
 
 private fun WithIo.customizeMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     user: User,
+    userConfig: UserConfiguration,
 ) =
     Menu {
         add(
@@ -215,6 +248,34 @@ private fun WithIo.customizeMenu(
                             .trim()
                     budgetData.addCategoryAccount(CategoryAccount(name, description))
                     budgetDao.save(budgetData, user)
+                }
+            },
+        )
+        add(
+            pushMenu("Delete an Account") {
+                Menu("What kind af account do you want to delete?") {
+                    add(
+                        pushMenu("Category Account") {
+                            budgetData.deleteCategoryAccountMenu(userConfig)
+                        },
+                    )
+                    add(
+                        pushMenu("Real Account") {
+                            budgetData.deleteRealAccountMenu(userConfig)
+                        },
+                    )
+                    add(
+                        pushMenu("Charge Account") {
+                            budgetData.deleteChargeAccountMenu(userConfig)
+                        },
+                    )
+                    add(
+                        pushMenu("Draft Account") {
+                            budgetData.deleteDraftAccountMenu(userConfig)
+                        },
+                    )
+                    add(backItem)
+                    add(quitItem)
                 }
             },
         )

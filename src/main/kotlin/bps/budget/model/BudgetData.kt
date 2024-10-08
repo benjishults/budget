@@ -116,6 +116,26 @@ class BudgetData(
         byId[draftAccount.id] = draftAccount
     }
 
+    fun deleteChargeAccount(chargeAccount: ChargeAccount) {
+        chargeAccounts = chargeAccounts - chargeAccount
+        byId.remove(chargeAccount.id)
+    }
+
+    fun deleteRealAccount(realAccount: RealAccount) {
+        realAccounts = realAccounts - realAccount
+        byId.remove(realAccount.id)
+    }
+
+    fun deleteCategoryAccount(categoryAccount: CategoryAccount) {
+        categoryAccounts = categoryAccounts - categoryAccount
+        byId.remove(categoryAccount.id)
+    }
+
+    fun deleteDraftAccount(draftAccount: DraftAccount) {
+        draftAccounts = draftAccounts - draftAccount
+        byId.remove(draftAccount.id)
+    }
+
     companion object {
 
         @JvmStatic

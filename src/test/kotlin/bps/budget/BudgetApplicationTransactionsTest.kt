@@ -142,6 +142,95 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     budgetData.categoryAccounts.size shouldBe 14
                 }
             }
+            "delete Cosmetics account" {
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                            |Budget!
+                            | 1. $recordIncome
+                            | 2. $makeAllowances
+                            | 3. $recordSpending
+                            | 4. View History
+                            | 5. $writeOrClearChecks
+                            | 6. $useOrPayCreditCards
+                            | 7. $transfer
+                            | 8. $setup
+                            | 9. Quit
+                            |""".trimMargin(),
+                        "Enter selection: ",
+                        """ 1. Create a New Category
+ 2. Delete an Account
+ 3. Create a Real Fund
+ 4. Add a Credit Card
+ 5. Back
+ 6. Quit
+""",
+                        "Enter selection: ",
+                        """What kind af account do you want to delete?
+ 1. Category Account
+ 2. Real Account
+ 3. Charge Account
+ 4. Draft Account
+ 5. Back
+ 6. Quit
+""",
+                        "Enter selection: ",
+                        """Select account to delete
+ 1.       0.00 | Cosmetics
+ 2.       0.00 | Education
+ 3.       0.00 | Entertainment
+ 4.       0.00 | Food
+ 5.       0.00 | Hobby
+ 6.       0.00 | Home Upkeep
+ 7.       0.00 | Housing
+ 8.       0.00 | Medical
+ 9.       0.00 | Necessities
+10.       0.00 | Network
+11.       0.00 | Transportation
+12.       0.00 | Travel
+13.       0.00 | Work
+14. Back
+15. Quit
+""",
+                        "Enter selection: ",
+                        """Select account to delete
+ 1.       0.00 | Education
+ 2.       0.00 | Entertainment
+ 3.       0.00 | Food
+ 4.       0.00 | Hobby
+ 5.       0.00 | Home Upkeep
+ 6.       0.00 | Housing
+ 7.       0.00 | Medical
+ 8.       0.00 | Necessities
+ 9.       0.00 | Network
+10.       0.00 | Transportation
+11.       0.00 | Travel
+12.       0.00 | Work
+13. Back
+14. Quit
+""",
+                        "Enter selection: ",
+                        """What kind af account do you want to delete?
+ 1. Category Account
+ 2. Real Account
+ 3. Charge Account
+ 4. Draft Account
+ 5. Back
+ 6. Quit
+""",
+                        "Enter selection: ",
+                        """ 1. Create a New Category
+ 2. Delete an Account
+ 3. Create a Real Fund
+ 4. Add a Credit Card
+ 5. Back
+ 6. Quit
+""",
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("8", "2", "1", "1", "13", "5", "5"),
+                )
+            }
             "allocate to food and necessities" {
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -165,25 +254,24 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         "Every month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n",
                         "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
- 1.       0.00 | Cosmetics
- 2.       0.00 | Education
- 3.       0.00 | Entertainment
- 4.       0.00 | Food
- 5.       0.00 | Hobby
- 6.       0.00 | Home Upkeep
- 7.       0.00 | Housing
- 8.       0.00 | Medical
- 9.       0.00 | Necessities
-10.       0.00 | Network
-11.       0.00 | Transportation
-12.       0.00 | Travel
-13.       0.00 | Work
-14. Back
-15. Quit
+ 1.       0.00 | Education
+ 2.       0.00 | Entertainment
+ 3.       0.00 | Food
+ 4.       0.00 | Hobby
+ 5.       0.00 | Home Upkeep
+ 6.       0.00 | Housing
+ 7.       0.00 | Medical
+ 8.       0.00 | Necessities
+ 9.       0.00 | Network
+10.       0.00 | Transportation
+11.       0.00 | Travel
+12.       0.00 | Work
+13. Back
+14. Quit
 """,
                         "Enter selection: ",
                     ),
-                    toInput = listOf("4"),
+                    toInput = listOf("3"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -195,50 +283,48 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
- 1.       0.00 | Cosmetics
- 2.       0.00 | Education
- 3.       0.00 | Entertainment
- 4.     300.00 | Food
- 5.       0.00 | Hobby
- 6.       0.00 | Home Upkeep
- 7.       0.00 | Housing
- 8.       0.00 | Medical
- 9.       0.00 | Necessities
-10.       0.00 | Network
-11.       0.00 | Transportation
-12.       0.00 | Travel
-13.       0.00 | Work
-14. Back
-15. Quit
+ 1.       0.00 | Education
+ 2.       0.00 | Entertainment
+ 3.     300.00 | Food
+ 4.       0.00 | Hobby
+ 5.       0.00 | Home Upkeep
+ 6.       0.00 | Housing
+ 7.       0.00 | Medical
+ 8.       0.00 | Necessities
+ 9.       0.00 | Network
+10.       0.00 | Transportation
+11.       0.00 | Travel
+12.       0.00 | Work
+13. Back
+14. Quit
 """,
                         "Enter selection: ",
                     ),
-                    toInput = listOf("9"),
+                    toInput = listOf("8"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
                         "Enter the amount to allocate into $defaultNecessitiesAccountName [0.00, 4900.00]: ",
                         "Enter description of transaction [allowance into $defaultNecessitiesAccountName]: ",
                         "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
- 1.       0.00 | Cosmetics
- 2.       0.00 | Education
- 3.       0.00 | Entertainment
- 4.     300.00 | Food
- 5.       0.00 | Hobby
- 6.       0.00 | Home Upkeep
- 7.       0.00 | Housing
- 8.       0.00 | Medical
- 9.     200.00 | Necessities
-10.       0.00 | Network
-11.       0.00 | Transportation
-12.       0.00 | Travel
-13.       0.00 | Work
-14. Back
-15. Quit
+ 1.       0.00 | Education
+ 2.       0.00 | Entertainment
+ 3.     300.00 | Food
+ 4.       0.00 | Hobby
+ 5.       0.00 | Home Upkeep
+ 6.       0.00 | Housing
+ 7.       0.00 | Medical
+ 8.     200.00 | Necessities
+ 9.       0.00 | Network
+10.       0.00 | Transportation
+11.       0.00 | Travel
+12.       0.00 | Work
+13. Back
+14. Quit
 """,
                         "Enter selection: ",
                     ),
-                    toInput = listOf("200", "", "14"),
+                    toInput = listOf("200", "", "13"),
                 )
             }
             "view transactions" {
@@ -264,23 +350,22 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """Select account to view history
  1.   4,700.00 | General
- 2.       0.00 | Cosmetics
- 3.       0.00 | Education
- 4.       0.00 | Entertainment
- 5.     300.00 | Food
- 6.       0.00 | Hobby
- 7.       0.00 | Home Upkeep
- 8.       0.00 | Housing
- 9.       0.00 | Medical
-10.     200.00 | Necessities
-11.       0.00 | Network
-12.       0.00 | Transportation
-13.       0.00 | Travel
-14.       0.00 | Work
-15.   5,000.00 | Checking
-16.     200.00 | Wallet
-17. Back
-18. Quit
+ 2.       0.00 | Education
+ 3.       0.00 | Entertainment
+ 4.     300.00 | Food
+ 5.       0.00 | Hobby
+ 6.       0.00 | Home Upkeep
+ 7.       0.00 | Housing
+ 8.       0.00 | Medical
+ 9.     200.00 | Necessities
+10.       0.00 | Network
+11.       0.00 | Transportation
+12.       0.00 | Travel
+13.       0.00 | Work
+14.   5,000.00 | Checking
+15.     200.00 | Wallet
+16. Back
+17. Quit
 """,
                         "Enter selection: ",
                     ),
@@ -329,27 +414,26 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """Select account to view history
  1.   4,700.00 | General
- 2.       0.00 | Cosmetics
- 3.       0.00 | Education
- 4.       0.00 | Entertainment
- 5.     300.00 | Food
- 6.       0.00 | Hobby
- 7.       0.00 | Home Upkeep
- 8.       0.00 | Housing
- 9.       0.00 | Medical
-10.     200.00 | Necessities
-11.       0.00 | Network
-12.       0.00 | Transportation
-13.       0.00 | Travel
-14.       0.00 | Work
-15.   5,000.00 | Checking
-16.     200.00 | Wallet
-17. Back
-18. Quit
+ 2.       0.00 | Education
+ 3.       0.00 | Entertainment
+ 4.     300.00 | Food
+ 5.       0.00 | Hobby
+ 6.       0.00 | Home Upkeep
+ 7.       0.00 | Housing
+ 8.       0.00 | Medical
+ 9.     200.00 | Necessities
+10.       0.00 | Network
+11.       0.00 | Transportation
+12.       0.00 | Travel
+13.       0.00 | Work
+14.   5,000.00 | Checking
+15.     200.00 | Wallet
+16. Back
+17. Quit
 """,
                         "Enter selection: ",
                     ),
-                    toInput = listOf("17"),
+                    toInput = listOf("16"),
                 )
             }
             "record spending" {
@@ -400,27 +484,26 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                         |Select a category that some of that money was spent on.  Left to cover: $1.50
-                        | 1.       0.00 | Cosmetics
-                        | 2.       0.00 | Education
-                        | 3.       0.00 | Entertainment
-                        | 4.     300.00 | Food
-                        | 5.       0.00 | Hobby
-                        | 6.       0.00 | Home Upkeep
-                        | 7.       0.00 | Housing
-                        | 8.       0.00 | Medical
-                        | 9.     200.00 | Necessities
-                        |10.       0.00 | Network
-                        |11.       0.00 | Transportation
-                        |12.       0.00 | Travel
-                        |13.       0.00 | Work
-                        |14. Back
-                        |15. Quit
+                        | 1.       0.00 | Education
+                        | 2.       0.00 | Entertainment
+                        | 3.     300.00 | Food
+                        | 4.       0.00 | Hobby
+                        | 5.       0.00 | Home Upkeep
+                        | 6.       0.00 | Housing
+                        | 7.       0.00 | Medical
+                        | 8.     200.00 | Necessities
+                        | 9.       0.00 | Network
+                        |10.       0.00 | Transportation
+                        |11.       0.00 | Travel
+                        |12.       0.00 | Work
+                        |13. Back
+                        |14. Quit
                         |""".trimMargin(),
                         "Enter selection: ",
                         "Enter the amount spent on Food [0.00, [1.50]]: ",
                         "Enter description for Food spend [Pepsi]: ",
                     ),
-                    toInput = listOf("4", "", ""),
+                    toInput = listOf("3", "", ""),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -496,25 +579,24 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                         |Select a category that some of that money was spent on.  Left to cover: $300.00
-                        | 1.       0.00 | Cosmetics
-                        | 2.       0.00 | Education
-                        | 3.       0.00 | Entertainment
-                        | 4.     298.50 | Food
-                        | 5.       0.00 | Hobby
-                        | 6.       0.00 | Home Upkeep
-                        | 7.       0.00 | Housing
-                        | 8.       0.00 | Medical
-                        | 9.     200.00 | Necessities
-                        |10.       0.00 | Network
-                        |11.       0.00 | Transportation
-                        |12.       0.00 | Travel
-                        |13.       0.00 | Work
-                        |14. Back
-                        |15. Quit
+                        | 1.       0.00 | Education
+                        | 2.       0.00 | Entertainment
+                        | 3.     298.50 | Food
+                        | 4.       0.00 | Hobby
+                        | 5.       0.00 | Home Upkeep
+                        | 6.       0.00 | Housing
+                        | 7.       0.00 | Medical
+                        | 8.     200.00 | Necessities
+                        | 9.       0.00 | Network
+                        |10.       0.00 | Transportation
+                        |11.       0.00 | Travel
+                        |12.       0.00 | Work
+                        |13. Back
+                        |14. Quit
                         |""".trimMargin(),
                         "Enter selection: ",
                     ),
-                    toInput = listOf("4"),
+                    toInput = listOf("3"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -527,25 +609,24 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                         |Select a category that some of that money was spent on.  Left to cover: $100.00
-                        | 1.       0.00 | Cosmetics
-                        | 2.       0.00 | Education
-                        | 3.       0.00 | Entertainment
-                        | 4.      98.50 | Food
-                        | 5.       0.00 | Hobby
-                        | 6.       0.00 | Home Upkeep
-                        | 7.       0.00 | Housing
-                        | 8.       0.00 | Medical
-                        | 9.     200.00 | Necessities
-                        |10.       0.00 | Network
-                        |11.       0.00 | Transportation
-                        |12.       0.00 | Travel
-                        |13.       0.00 | Work
-                        |14. Back
-                        |15. Quit
+                        | 1.       0.00 | Education
+                        | 2.       0.00 | Entertainment
+                        | 3.      98.50 | Food
+                        | 4.       0.00 | Hobby
+                        | 5.       0.00 | Home Upkeep
+                        | 6.       0.00 | Housing
+                        | 7.       0.00 | Medical
+                        | 8.     200.00 | Necessities
+                        | 9.       0.00 | Network
+                        |10.       0.00 | Transportation
+                        |11.       0.00 | Travel
+                        |12.       0.00 | Work
+                        |13. Back
+                        |14. Quit
                         |""".trimMargin(),
                         "Enter selection: ",
                     ),
-                    toInput = listOf("9"),
+                    toInput = listOf("8"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -644,27 +725,26 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """Select account to view history
  1.   4,700.00 | General
- 2.       0.00 | Cosmetics
- 3.       0.00 | Education
- 4.       0.00 | Entertainment
- 5.      98.50 | Food
- 6.       0.00 | Hobby
- 7.       0.00 | Home Upkeep
- 8.       0.00 | Housing
- 9.       0.00 | Medical
-10.     100.00 | Necessities
-11.       0.00 | Network
-12.       0.00 | Transportation
-13.       0.00 | Travel
-14.       0.00 | Work
-15.   4,700.00 | Checking
-16.     198.50 | Wallet
-17. Back
-18. Quit
+ 2.       0.00 | Education
+ 3.       0.00 | Entertainment
+ 4.      98.50 | Food
+ 5.       0.00 | Hobby
+ 6.       0.00 | Home Upkeep
+ 7.       0.00 | Housing
+ 8.       0.00 | Medical
+ 9.     100.00 | Necessities
+10.       0.00 | Network
+11.       0.00 | Transportation
+12.       0.00 | Travel
+13.       0.00 | Work
+14.   4,700.00 | Checking
+15.     198.50 | Wallet
+16. Back
+17. Quit
 """,
                         "Enter selection: ",
                     ),
-                    toInput = listOf("15"),
+                    toInput = listOf("14"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -707,27 +787,26 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """Select account to view history
  1.   4,700.00 | General
- 2.       0.00 | Cosmetics
- 3.       0.00 | Education
- 4.       0.00 | Entertainment
- 5.      98.50 | Food
- 6.       0.00 | Hobby
- 7.       0.00 | Home Upkeep
- 8.       0.00 | Housing
- 9.       0.00 | Medical
-10.     100.00 | Necessities
-11.       0.00 | Network
-12.       0.00 | Transportation
-13.       0.00 | Travel
-14.       0.00 | Work
-15.   4,700.00 | Checking
-16.     198.50 | Wallet
-17. Back
-18. Quit
+ 2.       0.00 | Education
+ 3.       0.00 | Entertainment
+ 4.      98.50 | Food
+ 5.       0.00 | Hobby
+ 6.       0.00 | Home Upkeep
+ 7.       0.00 | Housing
+ 8.       0.00 | Medical
+ 9.     100.00 | Necessities
+10.       0.00 | Network
+11.       0.00 | Transportation
+12.       0.00 | Travel
+13.       0.00 | Work
+14.   4,700.00 | Checking
+15.     198.50 | Wallet
+16. Back
+17. Quit
 """,
                         "Enter selection: ",
                     ),
-                    toInput = listOf("17"),
+                    toInput = listOf("16"),
                 )
             }
             "create a credit card account" {
@@ -753,14 +832,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                          | 1. Create a New Category
-                         | 2. Create a Real Fund
-                         | 3. Add a Credit Card
-                         | 4. Back
-                         | 5. Quit
+                         | 2. Delete an Account
+                         | 3. Create a Real Fund
+                         | 4. Add a Credit Card
+                         | 5. Back
+                         | 6. Quit
                          |""".trimMargin(),
                         "Enter selection: ",
                     ),
-                    toInput = listOf("3"),
+                    toInput = listOf("4"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -773,14 +853,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                          | 1. Create a New Category
-                         | 2. Create a Real Fund
-                         | 3. Add a Credit Card
-                         | 4. Back
-                         | 5. Quit
+                         | 2. Delete an Account
+                         | 3. Create a Real Fund
+                         | 4. Add a Credit Card
+                         | 5. Back
+                         | 6. Quit
                          |""".trimMargin(),
                         "Enter selection: ",
                     ),
-                    toInput = listOf("4"),
+                    toInput = listOf("5"),
                 )
             }
             "spend using credit card" {
@@ -840,25 +921,24 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                         |Select a category that some of that money was spent on.  Left to cover: $30.00
-                        | 1.       0.00 | Cosmetics
-                        | 2.       0.00 | Education
-                        | 3.       0.00 | Entertainment
-                        | 4.      98.50 | Food
-                        | 5.       0.00 | Hobby
-                        | 6.       0.00 | Home Upkeep
-                        | 7.       0.00 | Housing
-                        | 8.       0.00 | Medical
-                        | 9.     100.00 | Necessities
-                        |10.       0.00 | Network
-                        |11.       0.00 | Transportation
-                        |12.       0.00 | Travel
-                        |13.       0.00 | Work
-                        |14. Back
-                        |15. Quit
+                        | 1.       0.00 | Education
+                        | 2.       0.00 | Entertainment
+                        | 3.      98.50 | Food
+                        | 4.       0.00 | Hobby
+                        | 5.       0.00 | Home Upkeep
+                        | 6.       0.00 | Housing
+                        | 7.       0.00 | Medical
+                        | 8.     100.00 | Necessities
+                        | 9.       0.00 | Network
+                        |10.       0.00 | Transportation
+                        |11.       0.00 | Travel
+                        |12.       0.00 | Work
+                        |13. Back
+                        |14. Quit
                         |""".trimMargin(),
                         "Enter selection: ",
                     ),
-                    toInput = listOf("4"),
+                    toInput = listOf("3"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -871,25 +951,24 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                         |Select a category that some of that money was spent on.  Left to cover: $10.00
-                        | 1.       0.00 | Cosmetics
-                        | 2.       0.00 | Education
-                        | 3.       0.00 | Entertainment
-                        | 4.      78.50 | Food
-                        | 5.       0.00 | Hobby
-                        | 6.       0.00 | Home Upkeep
-                        | 7.       0.00 | Housing
-                        | 8.       0.00 | Medical
-                        | 9.     100.00 | Necessities
-                        |10.       0.00 | Network
-                        |11.       0.00 | Transportation
-                        |12.       0.00 | Travel
-                        |13.       0.00 | Work
-                        |14. Back
-                        |15. Quit
+                        | 1.       0.00 | Education
+                        | 2.       0.00 | Entertainment
+                        | 3.      78.50 | Food
+                        | 4.       0.00 | Hobby
+                        | 5.       0.00 | Home Upkeep
+                        | 6.       0.00 | Housing
+                        | 7.       0.00 | Medical
+                        | 8.     100.00 | Necessities
+                        | 9.       0.00 | Network
+                        |10.       0.00 | Transportation
+                        |11.       0.00 | Travel
+                        |12.       0.00 | Work
+                        |13. Back
+                        |14. Quit
                         |""".trimMargin(),
                         "Enter selection: ",
                     ),
-                    toInput = listOf("9"),
+                    toInput = listOf("8"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -924,27 +1003,26 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                         |Select a category that some of that money was spent on.  Left to cover: $20.00
-                        | 1.       0.00 | Cosmetics
-                        | 2.       0.00 | Education
-                        | 3.       0.00 | Entertainment
-                        | 4.      78.50 | Food
-                        | 5.       0.00 | Hobby
-                        | 6.       0.00 | Home Upkeep
-                        | 7.       0.00 | Housing
-                        | 8.       0.00 | Medical
-                        | 9.      90.00 | Necessities
-                        |10.       0.00 | Network
-                        |11.       0.00 | Transportation
-                        |12.       0.00 | Travel
-                        |13.       0.00 | Work
-                        |14. Back
-                        |15. Quit
+                        | 1.       0.00 | Education
+                        | 2.       0.00 | Entertainment
+                        | 3.      78.50 | Food
+                        | 4.       0.00 | Hobby
+                        | 5.       0.00 | Home Upkeep
+                        | 6.       0.00 | Housing
+                        | 7.       0.00 | Medical
+                        | 8.      90.00 | Necessities
+                        | 9.       0.00 | Network
+                        |10.       0.00 | Transportation
+                        |11.       0.00 | Travel
+                        |12.       0.00 | Work
+                        |13. Back
+                        |14. Quit
                         |""".trimMargin(),
                         "Enter selection: ",
                         "Enter the amount spent on Necessities [0.00, [20.00]]: ",
                         "Enter description for Necessities spend [Target]: ",
                     ),
-                    toInput = listOf("9", "", ""),
+                    toInput = listOf("8", "", ""),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -997,27 +1075,26 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """Select account to view history
  1.   4,700.00 | General
- 2.       0.00 | Cosmetics
- 3.       0.00 | Education
- 4.       0.00 | Entertainment
- 5.      78.50 | Food
- 6.       0.00 | Hobby
- 7.       0.00 | Home Upkeep
- 8.       0.00 | Housing
- 9.       0.00 | Medical
-10.      70.00 | Necessities
-11.       0.00 | Network
-12.       0.00 | Transportation
-13.       0.00 | Travel
-14.       0.00 | Work
-15.   4,700.00 | Checking
-16.     198.50 | Wallet
-17. Back
-18. Quit
+ 2.       0.00 | Education
+ 3.       0.00 | Entertainment
+ 4.      78.50 | Food
+ 5.       0.00 | Hobby
+ 6.       0.00 | Home Upkeep
+ 7.       0.00 | Housing
+ 8.       0.00 | Medical
+ 9.      70.00 | Necessities
+10.       0.00 | Network
+11.       0.00 | Transportation
+12.       0.00 | Travel
+13.       0.00 | Work
+14.   4,700.00 | Checking
+15.     198.50 | Wallet
+16. Back
+17. Quit
 """,
                         "Enter selection: ",
                     ),
-                    toInput = listOf("5"),
+                    toInput = listOf("4"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -1064,27 +1141,26 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """Select account to view history
  1.   4,700.00 | General
- 2.       0.00 | Cosmetics
- 3.       0.00 | Education
- 4.       0.00 | Entertainment
- 5.      78.50 | Food
- 6.       0.00 | Hobby
- 7.       0.00 | Home Upkeep
- 8.       0.00 | Housing
- 9.       0.00 | Medical
-10.      70.00 | Necessities
-11.       0.00 | Network
-12.       0.00 | Transportation
-13.       0.00 | Travel
-14.       0.00 | Work
-15.   4,700.00 | Checking
-16.     198.50 | Wallet
-17. Back
-18. Quit
+ 2.       0.00 | Education
+ 3.       0.00 | Entertainment
+ 4.      78.50 | Food
+ 5.       0.00 | Hobby
+ 6.       0.00 | Home Upkeep
+ 7.       0.00 | Housing
+ 8.       0.00 | Medical
+ 9.      70.00 | Necessities
+10.       0.00 | Network
+11.       0.00 | Transportation
+12.       0.00 | Travel
+13.       0.00 | Work
+14.   4,700.00 | Checking
+15.     198.50 | Wallet
+16. Back
+17. Quit
 """,
                         "Enter selection: ",
                     ),
-                    toInput = listOf("17"),
+                    toInput = listOf("16"),
                 )
             }
             "pay credit card balance" {
@@ -1206,27 +1282,26 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                         |Select a category that some of that money was spent on.  Left to cover: $5.00
-                        | 1.       0.00 | Cosmetics
-                        | 2.       0.00 | Education
-                        | 3.       0.00 | Entertainment
-                        | 4.      78.50 | Food
-                        | 5.       0.00 | Hobby
-                        | 6.       0.00 | Home Upkeep
-                        | 7.       0.00 | Housing
-                        | 8.       0.00 | Medical
-                        | 9.      70.00 | Necessities
-                        |10.       0.00 | Network
-                        |11.       0.00 | Transportation
-                        |12.       0.00 | Travel
-                        |13.       0.00 | Work
-                        |14. Back
-                        |15. Quit
+                        | 1.       0.00 | Education
+                        | 2.       0.00 | Entertainment
+                        | 3.      78.50 | Food
+                        | 4.       0.00 | Hobby
+                        | 5.       0.00 | Home Upkeep
+                        | 6.       0.00 | Housing
+                        | 7.       0.00 | Medical
+                        | 8.      70.00 | Necessities
+                        | 9.       0.00 | Network
+                        |10.       0.00 | Transportation
+                        |11.       0.00 | Travel
+                        |12.       0.00 | Work
+                        |13. Back
+                        |14. Quit
                         |""".trimMargin(),
                         "Enter selection: ",
                         "Enter the amount spent on Necessities [0.00, [5.00]]: ",
                         "Enter description for Necessities spend [Brausen's]: ",
                     ),
-                    toInput = listOf("9", "", ""),
+                    toInput = listOf("8", "", ""),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -1309,27 +1384,26 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """Select account to view history
  1.   4,700.00 | General
- 2.       0.00 | Cosmetics
- 3.       0.00 | Education
- 4.       0.00 | Entertainment
- 5.      78.50 | Food
- 6.       0.00 | Hobby
- 7.       0.00 | Home Upkeep
- 8.       0.00 | Housing
- 9.       0.00 | Medical
-10.      65.00 | Necessities
-11.       0.00 | Network
-12.       0.00 | Transportation
-13.       0.00 | Travel
-14.       0.00 | Work
-15.   4,665.00 | Checking
-16.     198.50 | Wallet
-17. Back
-18. Quit
+ 2.       0.00 | Education
+ 3.       0.00 | Entertainment
+ 4.      78.50 | Food
+ 5.       0.00 | Hobby
+ 6.       0.00 | Home Upkeep
+ 7.       0.00 | Housing
+ 8.       0.00 | Medical
+ 9.      65.00 | Necessities
+10.       0.00 | Network
+11.       0.00 | Transportation
+12.       0.00 | Travel
+13.       0.00 | Work
+14.   4,665.00 | Checking
+15.     198.50 | Wallet
+16. Back
+17. Quit
 """,
                         "Enter selection: ",
                     ),
-                    toInput = listOf("15"),
+                    toInput = listOf("14"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -1374,27 +1448,26 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """Select account to view history
  1.   4,700.00 | General
- 2.       0.00 | Cosmetics
- 3.       0.00 | Education
- 4.       0.00 | Entertainment
- 5.      78.50 | Food
- 6.       0.00 | Hobby
- 7.       0.00 | Home Upkeep
- 8.       0.00 | Housing
- 9.       0.00 | Medical
-10.      65.00 | Necessities
-11.       0.00 | Network
-12.       0.00 | Transportation
-13.       0.00 | Travel
-14.       0.00 | Work
-15.   4,665.00 | Checking
-16.     198.50 | Wallet
-17. Back
-18. Quit
+ 2.       0.00 | Education
+ 3.       0.00 | Entertainment
+ 4.      78.50 | Food
+ 5.       0.00 | Hobby
+ 6.       0.00 | Home Upkeep
+ 7.       0.00 | Housing
+ 8.       0.00 | Medical
+ 9.      65.00 | Necessities
+10.       0.00 | Network
+11.       0.00 | Transportation
+12.       0.00 | Travel
+13.       0.00 | Work
+14.   4,665.00 | Checking
+15.     198.50 | Wallet
+16. Back
+17. Quit
 """,
                         "Enter selection: ",
                     ),
-                    toInput = listOf("17"),
+                    toInput = listOf("16"),
                 )
             }
             "!ensure user can back out of a transaction without saving" - {
