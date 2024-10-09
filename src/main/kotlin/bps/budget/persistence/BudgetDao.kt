@@ -23,6 +23,10 @@ interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
      */
     fun load(budgetId: UUID, userId: UUID): BudgetData = TODO()
     fun prepForFirstSave() {}
+
+    /**
+     * Save top-level account data.  Persist adding and deleting accounts
+     */
     fun save(data: BudgetData, user: User) {}
     fun commit(transaction: Transaction, budgetId: UUID) {}
     fun clearCheck(

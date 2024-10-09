@@ -1147,8 +1147,6 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                     createBudgetStatement.setUuid(1, user.id)
                     createBudgetStatement.setString(2, user.login)
                     createBudgetStatement.executeUpdate()
-                    // TODO set up logging to a file and have the file printed to console on quit
-//                        .also { if (it == 0)  }
                 }
             prepareStatement(
                 """
@@ -1159,8 +1157,6 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                     createBudgetStatement.setUuid(1, data.id)
                     createBudgetStatement.setUuid(2, generalAccountId)
                     createBudgetStatement.executeUpdate()
-                    // TODO set up logging to a file and have the file printed to console on quit
-//                        .also { if (it == 0)  }
                 }
             prepareStatement(
                 """
@@ -1174,8 +1170,6 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                     createBudgetStatement.setString(4, data.timeZone.id)
                     createBudgetStatement.setString(5, config.budgetName)
                     createBudgetStatement.executeUpdate()
-                    // TODO set up logging to a file and have the file printed to console on quit
-//                        .also { if (it == 0)  }
                 }
             // create accounts that aren't there and update those that are
             createStagingAccountsTable("category")

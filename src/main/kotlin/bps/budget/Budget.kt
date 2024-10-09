@@ -327,33 +327,48 @@ private fun WithIo.customizeMenu(
                         ?: BigDecimal.ZERO.setScale(2)
                     val realAccount = RealAccount(name, accountDescription)
                     budgetData.addRealAccount(realAccount)
-                    if (balance >= BigDecimal.ZERO.setScale(2)) {
-                        val incomeDescription: String =
-                            SimplePromptWithDefault(
-                                "Enter description of income [initial balance in '${realAccount.name}']: ",
-                                defaultValue = "initial balance in '${realAccount.name}'",
-                                inputReader = inputReader,
-                                outPrinter = outPrinter,
-                            )
-                                .getResult()
-                        outPrinter("Enter timestamp for '$incomeDescription' transaction\n")
-                        val timestamp: Instant = getTimestampFromUser(
-                            timeZone = budgetData.timeZone,
-                            clock = clock,
-                        )
-                        budgetData.commit(
-                            createIncomeTransaction(
-                                incomeDescription,
-                                timestamp,
-                                balance,
-                                budgetData,
-                                realAccount,
+                    if (isDraft)
+                        budgetData.addDraftAccount(
+                            DraftAccount(
+                                name,
+                                accountDescription,
+                                realCompanion = realAccount,
                             ),
                         )
+                    try {
+                        val incomeTransaction: Transaction? =
+                            if (balance >= BigDecimal.ZERO.setScale(2)) {
+                                val incomeDescription: String =
+                                    SimplePromptWithDefault(
+                                        "Enter description of income [initial balance in '${realAccount.name}']: ",
+                                        defaultValue = "initial balance in '${realAccount.name}'",
+                                        inputReader = inputReader,
+                                        outPrinter = outPrinter,
+                                    )
+                                        .getResult()
+                                outPrinter("Enter timestamp for '$incomeDescription' transaction\n")
+                                val timestamp: Instant = getTimestampFromUser(
+                                    timeZone = budgetData.timeZone,
+                                    clock = clock,
+                                )
+                                createIncomeTransaction(
+                                    incomeDescription,
+                                    timestamp,
+                                    balance,
+                                    budgetData,
+                                    realAccount,
+                                )
+                            } else
+                                null
+                        budgetDao.save(budgetData, user)
+                        if (incomeTransaction != null) {
+                            budgetData.commit(incomeTransaction)
+                            budgetDao.commit(incomeTransaction, budgetData.id)
+                        }
+                    } catch (ex: Exception) {
+                        budgetDao.save(budgetData, user)
+                        outPrinter("\nSaved account with zero balance.\n\n")
                     }
-                    if (isDraft)
-                        budgetData.addDraftAccount(DraftAccount(name, accountDescription, realCompanion = realAccount))
-                    budgetDao.save(budgetData, user)
                 }
             },
         )

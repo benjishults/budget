@@ -97,22 +97,22 @@ class BudgetData(
         }
 
     fun addChargeAccount(chargeAccount: ChargeAccount) {
-        chargeAccounts = chargeAccounts + chargeAccount
+        chargeAccounts = (chargeAccounts + chargeAccount).sortedBy { it.name }
         byId[chargeAccount.id] = chargeAccount
     }
 
     fun addCategoryAccount(categoryAccount: CategoryAccount) {
-        categoryAccounts = categoryAccounts + categoryAccount
+        categoryAccounts = (categoryAccounts + categoryAccount).sortedBy { it.name }
         byId[categoryAccount.id] = categoryAccount
     }
 
     fun addRealAccount(realAccount: RealAccount) {
-        realAccounts = realAccounts + realAccount
+        realAccounts = (realAccounts + realAccount).sortedBy { it.name }
         byId[realAccount.id] = realAccount
     }
 
     fun addDraftAccount(draftAccount: DraftAccount) {
-        draftAccounts = draftAccounts + draftAccount
+        draftAccounts = (draftAccounts + draftAccount).sortedBy { it.name }
         byId[draftAccount.id] = draftAccount
     }
 

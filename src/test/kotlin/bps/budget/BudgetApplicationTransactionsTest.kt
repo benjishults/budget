@@ -1536,6 +1536,93 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     ),
                     toInput = listOf("5"),
                 )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                            |Budget!
+                            | 1. $recordIncome
+                            | 2. $makeAllowances
+                            | 3. $recordSpending
+                            | 4. $viewHistory
+                            | 5. $writeOrClearChecks
+                            | 6. $useOrPayCreditCards
+                            | 7. $transfer
+                            | 8. $setup
+                            | 9. Quit
+                            |""".trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("4"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """Select account to view history
+ 1.   5,700.00 | General
+ 2.       0.00 | Education
+ 3.       0.00 | Entertainment
+ 4.      78.50 | Food
+ 5.       0.00 | Hobby
+ 6.       0.00 | Home Upkeep
+ 7.       0.00 | Housing
+ 8.       0.00 | Medical
+ 9.      65.00 | Necessities
+10.       0.00 | Network
+11.       0.00 | Transportation
+12.       0.00 | Travel
+13.       0.00 | Work
+14.   4,665.00 | Checking
+15.   1,000.00 | Savings
+16.     198.50 | Wallet
+17. Back
+18. Quit
+""",
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("1"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                        |'General' Account Transactions
+                        |    Time Stamp          | Amount     | Description
+                        | 1. 2024-08-08 19:00:00 |   5,000.00 | income into $defaultCheckingAccountName
+                        | 2. 2024-08-08 19:00:01 |     200.00 | income into $defaultWalletAccountName
+                        | 3. 2024-08-08 19:00:02 |    -300.00 | allowance into $defaultFoodAccountName
+                        | 4. 2024-08-08 19:00:03 |    -200.00 | allowance into $defaultNecessitiesAccountName
+                        | 5. 2024-08-08 19:00:11 |   1,000.00 | initial balance in 'Savings'
+                        | 6. Back
+                        | 7. Quit
+                        |""".trimMargin(),
+                        "Select transaction for details: ",
+                    ),
+                    toInput = listOf("6"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """Select account to view history
+ 1.   5,700.00 | General
+ 2.       0.00 | Education
+ 3.       0.00 | Entertainment
+ 4.      78.50 | Food
+ 5.       0.00 | Hobby
+ 6.       0.00 | Home Upkeep
+ 7.       0.00 | Housing
+ 8.       0.00 | Medical
+ 9.      65.00 | Necessities
+10.       0.00 | Network
+11.       0.00 | Transportation
+12.       0.00 | Travel
+13.       0.00 | Work
+14.   4,665.00 | Checking
+15.   1,000.00 | Savings
+16.     198.50 | Wallet
+17. Back
+18. Quit
+""",
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("17"),
+                )
             }
             "!ensure user can back out of a transaction without saving" - {
                 "should be asked to confirm if transaction is in progress" {}
