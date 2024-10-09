@@ -1470,6 +1470,73 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     toInput = listOf("16"),
                 )
             }
+            "add a real account with a balance" {
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                            |Budget!
+                            | 1. $recordIncome
+                            | 2. $makeAllowances
+                            | 3. $recordSpending
+                            | 4. $viewHistory
+                            | 5. $writeOrClearChecks
+                            | 6. $useOrPayCreditCards
+                            | 7. $transfer
+                            | 8. $setup
+                            | 9. Quit
+                            |""".trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("8"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                         | 1. Create a New Category
+                         | 2. Delete an Account
+                         | 3. Create a Real Fund
+                         | 4. Add a Credit Card
+                         | 5. Back
+                         | 6. Quit
+                         |""".trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("3"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Enter a unique name for the real account: ",
+                        "Enter a description for the real account: ",
+                        "Will you write checks on this account [y/N]? ",
+                        "Initial balance on account [0.00]:  (This amount will be added to your General account as well.) ",
+                        "Enter description of income [initial balance in 'Savings']: ",
+                        "Enter timestamp for 'initial balance in 'Savings'' transaction\n",
+                        "Use current time [Y]? ",
+                    ),
+                    toInput = listOf(
+                        "Savings",
+                        "Savings account at My Bank",
+                        "",
+                        "1000",
+                        "",
+                        "",
+                    ),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                         | 1. Create a New Category
+                         | 2. Delete an Account
+                         | 3. Create a Real Fund
+                         | 4. Add a Credit Card
+                         | 5. Back
+                         | 6. Quit
+                         |""".trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("5"),
+                )
+            }
             "!ensure user can back out of a transaction without saving" - {
                 "should be asked to confirm if transaction is in progress" {}
                 "should NOT be asked to confirm if transaction is in progress" {}

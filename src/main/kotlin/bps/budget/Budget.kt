@@ -175,7 +175,7 @@ fun WithIo.budgetMenu(
             },
         )
         add(
-            pushMenu(setup, { customizeMenu(budgetData, budgetDao, user, userConfig) }),
+            pushMenu(setup, { customizeMenu(budgetData, budgetDao, user, userConfig, clock) }),
         )
         add(quitItem)
     }
@@ -217,6 +217,7 @@ private fun WithIo.customizeMenu(
     budgetDao: BudgetDao,
     user: User,
     userConfig: UserConfiguration,
+    clock: Clock,
 ) =
     Menu {
         add(
@@ -297,7 +298,7 @@ private fun WithIo.customizeMenu(
                         .getResult()
                         .trim()
                 if (name.isNotBlank()) {
-                    val description: String =
+                    val accountDescription: String =
                         SimplePromptWithDefault(
                             "Enter a description for the real account: ",
                             inputReader = inputReader,
@@ -313,10 +314,45 @@ private fun WithIo.customizeMenu(
                         defaultValue = false,
                     ) { it.trim() in listOf("Y", "y", "true", "yes") }
                         .getResult()
-                    val realAccount = RealAccount(name, description)
+                    val balance: BigDecimal = SimplePromptWithDefault(
+                        basicPrompt = "Initial balance on account [0.00]:  (This amount will be added to your General account as well.) ",
+                        defaultValue = BigDecimal.ZERO.setScale(2),
+                        additionalValidation = { !it.trim().startsWith("-") },
+                        inputReader = inputReader,
+                        outPrinter = outPrinter,
+                    ) {
+                        it.toCurrencyAmountOrNull()
+                    }
+                        .getResult()
+                        ?: BigDecimal.ZERO.setScale(2)
+                    val realAccount = RealAccount(name, accountDescription)
                     budgetData.addRealAccount(realAccount)
+                    if (balance >= BigDecimal.ZERO.setScale(2)) {
+                        val incomeDescription: String =
+                            SimplePromptWithDefault(
+                                "Enter description of income [initial balance in '${realAccount.name}']: ",
+                                defaultValue = "initial balance in '${realAccount.name}'",
+                                inputReader = inputReader,
+                                outPrinter = outPrinter,
+                            )
+                                .getResult()
+                        outPrinter("Enter timestamp for '$incomeDescription' transaction\n")
+                        val timestamp: Instant = getTimestampFromUser(
+                            timeZone = budgetData.timeZone,
+                            clock = clock,
+                        )
+                        budgetData.commit(
+                            createIncomeTransaction(
+                                incomeDescription,
+                                timestamp,
+                                balance,
+                                budgetData,
+                                realAccount,
+                            ),
+                        )
+                    }
                     if (isDraft)
-                        budgetData.addDraftAccount(DraftAccount(name, description, realCompanion = realAccount))
+                        budgetData.addDraftAccount(DraftAccount(name, accountDescription, realCompanion = realAccount))
                     budgetDao.save(budgetData, user)
                 }
             },
@@ -975,7 +1011,7 @@ fun WithIo.recordIncomeSelectionMenu(
     baseList = budgetData.realAccounts,
     labelGenerator = { String.format("%,10.2f | %s", balance, name) },
 ) { _: MenuSession, realAccount: RealAccount ->
-    val amount =
+    val amount: BigDecimal =
         SimplePrompt(
             "Enter the amount of income: ",
             inputReader = inputReader,
@@ -984,29 +1020,42 @@ fun WithIo.recordIncomeSelectionMenu(
             it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
         }
             .getResult()
-    val description =
-        SimplePromptWithDefault(
-            "Enter description of income [income into ${realAccount.name}]: ",
-            defaultValue = "income into ${realAccount.name}",
-            inputReader = inputReader,
-            outPrinter = outPrinter,
-        )
-            .getResult()
-    val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
-    val income: Transaction = Transaction.Builder(description, timestamp)
-        .apply {
-            categoryItemBuilders.add(
-                Transaction.ItemBuilder(
-                    amount,
-                    categoryAccount = budgetData.generalAccount,
-                ),
+            ?: BigDecimal.ZERO.setScale(2)
+    if (amount <= BigDecimal.ZERO.setScale(2)) {
+        outPrinter("\nNot recording non-positive income.\n\n")
+    } else {
+        val description: String =
+            SimplePromptWithDefault(
+                "Enter description of income [income into ${realAccount.name}]: ",
+                defaultValue = "income into ${realAccount.name}",
+                inputReader = inputReader,
+                outPrinter = outPrinter,
             )
-            realItemBuilders.add(Transaction.ItemBuilder(amount, realAccount = realAccount))
-        }
-        .build()
-    budgetData.commit(income)
-    budgetDao.commit(income, budgetData.id)
+                .getResult()
+        val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
+        val income: Transaction = createIncomeTransaction(description, timestamp, amount, budgetData, realAccount)
+        budgetData.commit(income)
+        budgetDao.commit(income, budgetData.id)
+    }
 }
+
+fun createIncomeTransaction(
+    description: String,
+    timestamp: Instant,
+    amount: BigDecimal,
+    budgetData: BudgetData,
+    realAccount: RealAccount,
+) = Transaction.Builder(description, timestamp)
+    .apply {
+        categoryItemBuilders.add(
+            Transaction.ItemBuilder(
+                amount,
+                categoryAccount = budgetData.generalAccount,
+            ),
+        )
+        realItemBuilders.add(Transaction.ItemBuilder(amount, realAccount = realAccount))
+    }
+    .build()
 
 private fun WithIo.makeAllowancesSelectionMenu(
     budgetData: BudgetData,
