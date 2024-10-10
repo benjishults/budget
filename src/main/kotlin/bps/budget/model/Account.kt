@@ -55,7 +55,7 @@ sealed class Account(
     }
 
     override fun toString(): String {
-        return "Account('$name', $balance)"
+        return "${javaClass.name}('$name', $balance)"
     }
 
     override fun equals(other: Any?): Boolean =
@@ -74,18 +74,14 @@ sealed class Account(
 
 }
 
-// TODO consider merging these into a single class.
+// TODO consider merging (most of) these into a single class.
 
 class CategoryAccount(
     name: String,
     description: String = "",
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
-) : Account(name, description, id, balance) {
-    override fun toString(): String {
-        return "Category${super.toString()}"
-    }
-}
+) : Account(name, description, id, balance)
 
 open class RealAccount(
     name: String,
@@ -104,31 +100,11 @@ class DraftAccount(
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
     val realCompanion: RealAccount,
-) : Account(name, description, id, balance) {
-    override fun toString(): String {
-        return "Draft${super.toString()}"
-    }
-}
+) : Account(name, description, id, balance)
 
-// FIXME do I need these two classes?
 class ChargeAccount(
     name: String,
     description: String = "",
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
-) : RealAccount(name, description, id, balance) {
-    override fun toString(): String {
-        return "Charge${super.toString()}"
-    }
-}
-
-//class CheckingAccount(
-//    name: String,
-//    description: String = "",
-//    id: UUID = UUID.randomUUID(),
-//    balance: BigDecimal = BigDecimal.ZERO.setScale(2),
-//) : RealAccount(name, description, id, balance) {
-//    override fun toString(): String {
-//        return "Checking${super.toString()}"
-//    }
-//}
+) : RealAccount(name, description, id, balance)

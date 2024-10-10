@@ -597,11 +597,9 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         uuid: UUID,
     ): Transaction.Builder {
         val transactionBuilder: Transaction.Builder = Transaction.Builder()
-        val description = result.getString("description")
-        val time: Timestamp = result.getTimestamp("timestamp_utc")
         transactionBuilder.id = uuid
-        transactionBuilder.description = description
-        transactionBuilder.timestamp = time.toInstant().toKotlinInstant()
+        transactionBuilder.description = result.getString("description")
+        transactionBuilder.timestamp = result.getInstant()
         return transactionBuilder
     }
 
@@ -713,7 +711,18 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                 val chargeAccounts: List<ChargeAccount> =
                     getAccounts("charge", budgetId, ::ChargeAccount)
                 val draftAccounts: List<DraftAccount> =
-                    prepareStatement("select * from draft_accounts where budget_id = ?")
+                    prepareStatement(
+                        """
+select acc.*
+from draft_accounts acc
+         join account_active_periods aap
+              on acc.id = aap.draft_account_id
+                  and acc.budget_id = aap.budget_id
+where acc.budget_id = ?
+  and now() > aap.start_date_utc
+  and now() < aap.end_date_utc
+""".trimIndent(),
+                    )
                         .use { getDraftAccountsStatement ->
                             getDraftAccountsStatement.setUuid(1, budgetId)
                             getDraftAccountsStatement.executeQuery()
@@ -761,7 +770,18 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         budgetId: UUID,
         factory: (String, String, UUID, BigDecimal) -> T,
     ): List<T> =
-        prepareStatement("select * from ${tablePrefix}_accounts where budget_id = ?")
+        prepareStatement(
+            """
+select acc.*
+from ${tablePrefix}_accounts acc
+         join account_active_periods aap
+              on acc.id = aap.${tablePrefix}_account_id
+                  and acc.budget_id = aap.budget_id
+where acc.budget_id = ?
+  and now() > aap.start_date_utc
+  and now() < aap.end_date_utc
+""".trimIndent(),
+        )
             .use { getAccounts: PreparedStatement ->
                 getAccounts.setUuid(1, budgetId)
                 getAccounts.executeQuery()

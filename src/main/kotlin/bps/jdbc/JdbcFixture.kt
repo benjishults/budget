@@ -4,6 +4,7 @@ import bps.budget.persistence.jdbc.toLocalDateTime
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toKotlinInstant
 import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -27,12 +28,17 @@ interface JdbcFixture {
         setTimestamp(parameterIndex, Timestamp(timestamp.toEpochMilliseconds()))
     }
 
-    fun ResultSet.getLocalDateTimeForTimeZone(timeZone: TimeZone): LocalDateTime =
-        getTimestamp(
-            "timestamp_utc",
-            /*Calendar.Builder().setTimeZone(TimeZone.getDefault()).build(),*/
-        )
+    fun ResultSet.getLocalDateTimeForTimeZone(
+        timeZone: TimeZone,
+        columnLabel: String = "timestamp_utc",
+    ): LocalDateTime =
+        getTimestamp(columnLabel)
             .toLocalDateTime(timeZone)
+
+    fun ResultSet.getInstant(columnLabel: String = "timestamp_utc"): Instant =
+        getTimestamp(columnLabel)
+            .toInstant()
+            .toKotlinInstant()
 
     fun ResultSet.getCurrencyAmount(name: String): BigDecimal =
         getBigDecimal(name).setScale(2)
