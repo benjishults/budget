@@ -110,22 +110,42 @@ create table if not exists charge_accounts
     unique (name, budget_id)
 );
 
--- create table if not exists account_active_periods
--- (
---     start_date          timestamp  not null default now(),
---     end_date            timestamp  not null default '9999-12-31T23:59:59.999Z',
---     category_account_id uuid                     null references category_accounts (id),
---     real_account_id     uuid                     null references real_accounts (id),
---     draft_account_id    uuid                     null references draft_accounts (id),
---     budget_name         varchar(110)             not null references budgets (budget_name)
---         constraint only_one_account_per_period check
---             ((real_account_id is not null and (category_account_id is null and draft_account_id is null)) or
---              (category_account_id is not null and (real_account_id is null and draft_account_id is null)) or
---              (draft_account_id is not null and (category_account_id is null and real_account_id is null))),
---     unique (start_date, draft_account_id, budget_name),
---     unique (start_date, category_account_id, budget_name),
---     unique (start_date, real_account_id, budget_name)
--- );
+create table if not exists account_active_periods
+(
+    id                  uuid      not null unique,
+    start_date_utc      timestamp not null default '0001-01-01T00:00:00Z',
+    end_date_utc        timestamp not null default '9999-12-31T23:59:59.999Z',
+    category_account_id uuid      null references category_accounts (id),
+    real_account_id     uuid      null references real_accounts (id),
+    charge_account_id   uuid      null references charge_accounts (id),
+    draft_account_id    uuid      null references draft_accounts (id),
+    budget_id           uuid      not null references budgets (id)
+        constraint only_one_account_per_period check
+            ((real_account_id is not null and
+              (category_account_id is null and draft_account_id is null and charge_account_id is null)) or
+             (category_account_id is not null and
+              (real_account_id is null and draft_account_id is null and charge_account_id is null)) or
+             (charge_account_id is not null and
+              (real_account_id is null and draft_account_id is null and category_account_id is null)) or
+             (draft_account_id is not null and
+              (category_account_id is null and real_account_id is null and charge_account_id is null))),
+    unique (start_date_utc, draft_account_id, budget_id),
+    unique (start_date_utc, category_account_id, budget_id),
+    unique (start_date_utc, charge_account_id, budget_id),
+    unique (start_date_utc, real_account_id, budget_id)
+);
+
+create index if not exists lookup_account_active_periods_by_category_account_id
+    on account_active_periods (category_account_id, budget_id);
+
+create index if not exists lookup_account_active_periods_by_draft_account_id
+    on account_active_periods (draft_account_id, budget_id);
+
+create index if not exists lookup_account_active_periods_by_real_account_id
+    on account_active_periods (real_account_id, budget_id);
+
+create index if not exists lookup_account_active_periods_by_charge_account_id
+    on account_active_periods (charge_account_id, budget_id);
 
 create table if not exists transactions
 (
@@ -202,26 +222,93 @@ insert into budget_access (id, user_id, budget_id, budget_name, time_zone, coars
 VALUES ('a11a93df-6110-430e-ba76-08c1da364530', 'd9073256-0c5e-472e-bf3b-41ed1c1e5c35',
         'ccac6f53-04f3-4da5-a2ea-de39c6843e47', 'scratch budget', 'America/Chicago', 'admin');
 
-select *
-from users u
-         join budget_access ba on u.id = ba.user_id
-where 1 = 1;
+-- select *
+-- from users u
+--          join budget_access ba on u.id = ba.user_id
+-- where 1 = 1;
 
 -- create accounts
 insert into category_accounts (id, name, budget_id)
 VALUES ('1d5221d6-acb3-4377-8fa1-bc3289fa75ca', 'General', 'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
+insert into account_active_periods (id, category_account_id, budget_id)
+values ('f9b5abad-7eba-4dbc-8d46-7339fbb51a0b', '1d5221d6-acb3-4377-8fa1-bc3289fa75ca',
+        'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
 insert into category_accounts (id, name, budget_id)
 VALUES ('bea7965c-6f6a-4c80-ad3f-b9c1367664c0', 'Food', 'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
+insert into account_active_periods (id, category_account_id, budget_id)
+values ('d3d04d1f-a6cf-43b9-bf9e-eea0c5068a90', 'bea7965c-6f6a-4c80-ad3f-b9c1367664c0',
+        'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
 insert into category_accounts (id, name, budget_id)
 VALUES ('0aa01c8e-9944-45de-866b-388261010045', 'Necessities', 'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
+insert into account_active_periods (id, category_account_id, budget_id)
+values ('a2ef365b-d27b-4521-ad77-1eaf1d54c2f1', '0aa01c8e-9944-45de-866b-388261010045',
+        'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
 insert into real_accounts (id, name, budget_id)
 VALUES ('76ea4bb9-ad3e-4aff-832a-3d3b907713ba', 'Wallet', 'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
+insert into account_active_periods (id, real_account_id, budget_id)
+values ('ad697e12-9e4f-44d3-b02e-673e488c9234', '76ea4bb9-ad3e-4aff-832a-3d3b907713ba',
+        'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
 insert into real_accounts (id, name, budget_id)
 VALUES ('5bf25e8c-275d-40a8-a43f-0967697cf87c', 'Checking', 'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
+insert into account_active_periods (id, real_account_id, budget_id)
+values ('fa72ccf5-077e-474c-a93e-113aa88ba1fe', '5bf25e8c-275d-40a8-a43f-0967697cf87c',
+        'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
 -- insert into draft_accounts (id, name, description, balance, real_account_id, budget_id)
 -- VALUES ('58d6e527-2a20-49c2-991b-70bb0aa6b935', 'Checking Drafts', 'Checking Drafts', 0.0,
 --         '5bf25e8c-275d-40a8-a43f-0967697cf87c',
 --         'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
+
+-- insert into account_active_periods (charge_account_id, draft_account_id, real_account_id, category_account_id,
+--                                     budget_id)
+-- values (null, null, null, '1d5221d6-acb3-4377-8fa1-bc3289fa75ca', 'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
+
+select *
+from category_accounts cat
+         join account_active_periods aap
+              on cat.id = aap.category_account_id
+                  and cat.budget_id = aap.budget_id
+where cat.budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47';
+select *
+from category_accounts cat
+         join account_active_periods aap
+              on cat.id = aap.category_account_id
+                  and cat.budget_id = aap.budget_id
+where cat.budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47'
+  and now() > aap.start_date_utc
+  and now() < aap.end_date_utc;
+
+update account_active_periods
+set end_date_utc = now()
+where category_account_id = '0aa01c8e-9944-45de-866b-388261010045'
+  and budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47';
+
+update account_active_periods
+set end_date_utc = now()
+-- from -- account_active_periods aap,
+--      category_accounts acc
+where budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47'
+  and category_account_id not in
+      (select id
+       from category_accounts
+       where budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47'
+         and (id = '1d5221d6-acb3-4377-8fa1-bc3289fa75ca'
+           or id = 'bea7965c-6f6a-4c80-ad3f-b9c1367664c0'))
+  and exists
+    (select 1
+     from category_accounts acc
+     --               join account_active_periods aap
+--                    on acc.id = aap.category_account_id
+--                        and acc.budget_id = aap.budget_id
+     where acc.budget_id = ?
+       and acc.id = category_account_id
+       and acc.budget_id = budget_id
+       and now() > start_date_utc
+       and now() < end_date_utc)
+;
+
+insert into account_active_periods (id, start_date_utc, category_account_id, budget_id)
+values ('94c7bee3-80d6-4c8f-ba55-28b8f98dac7a', now(), '0aa01c8e-9944-45de-866b-388261010045',
+        'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
 
 -- income 100 to wallet
 insert into transactions (id, description, timestamp_utc, budget_id)

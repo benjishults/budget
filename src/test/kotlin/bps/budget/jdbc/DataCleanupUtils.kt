@@ -16,6 +16,7 @@ fun dropTables(connection: Connection, schema: String) {
             .use { statement ->
                 statement.execute("drop table if exists transaction_items")
                 statement.execute("drop table if exists transactions")
+                statement.execute("drop table if exists account_active_periods")
                 statement.execute("drop table if exists staged_draft_accounts")
                 statement.execute("drop table if exists staged_real_accounts")
                 statement.execute("drop table if exists staged_charge_accounts")
@@ -40,6 +41,11 @@ fun deleteAccounts(budgetId: UUID, connection: Connection) =
     with(JdbcFixture) {
         cleanupTransactions(budgetId, connection)
         connection.transactOrNull {
+            prepareStatement("delete from account_active_periods where budget_id = ?")
+                .use {
+                    it.setUuid(1, budgetId)
+                    it.executeUpdate()
+                }
             prepareStatement("delete from draft_accounts where budget_id = ?")
                 .use {
                     it.setUuid(1, budgetId)

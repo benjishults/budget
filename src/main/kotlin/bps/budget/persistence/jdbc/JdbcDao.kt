@@ -271,6 +271,36 @@ create table if not exists draft_accounts
             createStatement().use { createTablesStatement: Statement ->
                 createTablesStatement.executeUpdate(
                     """
+create table if not exists account_active_periods
+(
+    id                  uuid      not null unique,
+    start_date_utc      timestamp not null default '0001-01-01T00:00:00Z',
+    end_date_utc        timestamp not null default '9999-12-31T23:59:59.999Z',
+    category_account_id uuid      null references category_accounts (id),
+    real_account_id     uuid      null references real_accounts (id),
+    charge_account_id   uuid      null references charge_accounts (id),
+    draft_account_id    uuid      null references draft_accounts (id),
+    budget_id           uuid      not null references budgets (id)
+        constraint only_one_account_per_period check
+            ((real_account_id is not null and
+              (category_account_id is null and draft_account_id is null and charge_account_id is null)) or
+             (category_account_id is not null and
+              (real_account_id is null and draft_account_id is null and charge_account_id is null)) or
+             (charge_account_id is not null and
+              (real_account_id is null and draft_account_id is null and category_account_id is null)) or
+             (draft_account_id is not null and
+              (category_account_id is null and real_account_id is null and charge_account_id is null))),
+    unique (start_date_utc, draft_account_id, budget_id),
+    unique (start_date_utc, category_account_id, budget_id),
+    unique (start_date_utc, charge_account_id, budget_id),
+    unique (start_date_utc, real_account_id, budget_id)
+)
+                    """.trimIndent(),
+                )
+            }
+            createStatement().use { createTablesStatement: Statement ->
+                createTablesStatement.executeUpdate(
+                    """
 create table if not exists transactions
 (
     id                        uuid         not null unique,
@@ -1251,6 +1281,30 @@ create index if not exists lookup_draft_account_transaction_items_by_account
      * Must be called within a transaction with manual commits
      */
     private fun Connection.upsertAccountData(accounts: List<Account>, tableName: String, budgetId: UUID) {
+        // if an active account is not in the list, deactivate it
+        val fullListOfActiveAccountsWithActivityRecords: List<Pair<UUID, UUID>> =
+            getFullListOfActiveAccountsWithActivityRecords(tableName, budgetId)
+        val currentAccountIds: Set<UUID> =
+            accounts
+                .map { it.id }
+                .toSet()
+        val activityIdsToBeDeactivated: List<UUID> =
+            fullListOfActiveAccountsWithActivityRecords
+                .filter { it.first in currentAccountIds }
+                .map { it.second }
+        activityIdsToBeDeactivated.forEach { activityId: UUID ->
+            prepareStatement(
+                """
+update account_active_periods
+set end_date_utc = now()
+where id = ?
+                """.trimIndent(),
+            )
+                .use { deactivateActivityPeriod: PreparedStatement ->
+                    deactivateActivityPeriod.setUuid(1, activityId)
+                    deactivateActivityPeriod.executeUpdate()
+                }
+        }
         accounts.forEach { account ->
             prepareStatement(
                 """
@@ -1292,8 +1346,52 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                 .use { createAccountStatement: PreparedStatement ->
                     createAccountStatement.executeUpdate()
                 }
+            prepareStatement(
+                """
+                    insert into account_active_periods (id, ${foreignKeyNameForTable(tableName)}, budget_id)
+                    values (?, ?, ?)
+                    on conflict do nothing
+                """.trimIndent(),
+            )
+                .use { createActivePeriod: PreparedStatement ->
+                    createActivePeriod.setUuid(1, UUID.randomUUID())
+                    createActivePeriod.setUuid(2, account.id)
+                    createActivePeriod.setUuid(3, budgetId)
+                    // NOTE due to the uniqueness constraints on this table, this will be idempotent
+                    createActivePeriod.executeUpdate()
+                }
         }
     }
+
+    private fun Connection.getFullListOfActiveAccountsWithActivityRecords(
+        tableName: String,
+        budgetId: UUID,
+    ): List<Pair<UUID, UUID>> =
+        buildList {
+            prepareStatement(
+                """
+    select acc.id as account_id, aap.id as activity_id
+    from $tableName acc
+             join account_active_periods aap
+                  on acc.id = aap.${foreignKeyNameForTable(tableName)}
+                      and acc.budget_id = aap.budget_id
+    where acc.budget_id = ?
+      and now() > aap.start_date_utc
+      and now() < aap.end_date_utc
+                      """.trimIndent(),
+            )
+                .use { selectAllAccounts ->
+                    selectAllAccounts.setUuid(1, budgetId)
+                    selectAllAccounts.executeQuery()
+                        .use { resultSet: ResultSet ->
+                            while (resultSet.next()) {
+                                add(resultSet.getUuid("account_id") to resultSet.getUuid("activity_id"))
+                            }
+                        }
+                }
+        }
+
+    private fun foreignKeyNameForTable(tableName: String) = "${tableName.substring(0, tableName.length - 1)}_id"
 
     override fun close() {
         keepAliveSingleThreadScheduledExecutor.close()
