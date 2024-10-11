@@ -701,7 +701,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                         }
                 // TODO pull out duplicate code in these next three sections
                 val categoryAccounts: List<CategoryAccount> =
-                    getAccounts("category", budgetId, ::CategoryAccount)// {CategoryAccount}
+                    getAccounts("category", budgetId, ::CategoryAccount)
                 val generalAccount: CategoryAccount =
                     categoryAccounts.find {
                         it.id == generalAccountId
@@ -1411,7 +1411,7 @@ where id = ?
                 }
         }
 
-    private fun foreignKeyNameForTable(tableName: String) = "${tableName.substring(0, tableName.length - 1)}_id"
+    fun foreignKeyNameForTable(tableName: String) = "${tableName.substring(0, tableName.length - 1)}_id"
 
     override fun close() {
         keepAliveSingleThreadScheduledExecutor.close()

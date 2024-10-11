@@ -1,5 +1,7 @@
 package bps.budget.transaction
 
+import bps.budget.WithIo
+import bps.budget.min
 import bps.budget.model.Account
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
@@ -8,8 +10,12 @@ import bps.budget.model.DraftAccount
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.UserConfiguration
+import bps.budget.toCurrencyAmountOrNull
+import bps.console.inputs.SimplePromptWithDefault
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.OutPrinter
+import bps.console.menu.Menu
 import bps.console.menu.MenuItem
 import bps.console.menu.MenuSession
 import bps.console.menu.ScrollingSelectionMenu
@@ -19,6 +25,7 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
 import kotlinx.datetime.format.char
 import kotlinx.datetime.toLocalDateTime
+import java.math.BigDecimal
 
 const val TRANSACTIONS_TABLE_HEADER = """
     Time Stamp          | Amount     | Description"""
@@ -195,3 +202,125 @@ private fun StringBuilder.appendItems(
             }
     }
 }
+
+fun WithIo.viewHistoryMenu(
+    budgetData: BudgetData,
+    budgetDao: BudgetDao,
+    userConfig: UserConfiguration,
+): Menu =
+    ScrollingSelectionMenu(
+        header = "Select account to view history",
+        limit = userConfig.numberOfItemsInScrollingList,
+        baseList = buildList {
+            add(budgetData.generalAccount)
+            addAll(budgetData.categoryAccounts - budgetData.generalAccount)
+            addAll(budgetData.realAccounts)
+        },
+        labelGenerator = {
+            String.format("%,10.2f | %s", balance, name)
+        },
+    ) { menuSession: MenuSession, selectedAccount: Account ->
+        menuSession.push(
+            ViewTransactionsMenu(
+                account = selectedAccount,
+                limit = userConfig.numberOfItemsInScrollingList,
+                budgetDao = budgetDao,
+                budgetData = budgetData,
+                outPrinter = outPrinter,
+            ),
+        )
+    }
+
+fun WithIo.createTransactionItemMenu(
+    runningTotal: BigDecimal,
+    transactionBuilder: Transaction.Builder,
+    description: String,
+    budgetData: BudgetData,
+    budgetDao: BudgetDao,
+    userConfig: UserConfiguration,
+): Menu =
+    ScrollingSelectionMenu(
+        header = "Select a category that some of that money was spent on.  Left to cover: \$$runningTotal",
+        limit = userConfig.numberOfItemsInScrollingList,
+        baseList = budgetData.categoryAccounts - budgetData.generalAccount,
+        labelGenerator = {
+            String.format(
+                "%,10.2f | %s",
+                balance +
+                        transactionBuilder
+                            .categoryItemBuilders
+                            .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
+                                if (this == itemBuilder.categoryAccount)
+                                    runningValue + itemBuilder.amount!!
+                                else
+                                    runningValue
+                            },
+                name,
+            )
+        },
+    ) { menuSession: MenuSession, selectedCategoryAccount: CategoryAccount ->
+        val max = min(
+            runningTotal,
+            selectedCategoryAccount.balance +
+                    transactionBuilder
+                        .categoryItemBuilders
+                        .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
+                            if (selectedCategoryAccount == itemBuilder.categoryAccount)
+                                runningValue + itemBuilder.amount!!
+                            else
+                                runningValue
+                        },
+        )
+        val categoryAmount: BigDecimal =
+            SimplePromptWithDefault<BigDecimal>(
+                "Enter the amount spent on ${
+                    selectedCategoryAccount.name
+                } [0.00, [$max]]: ",
+                inputReader = inputReader,
+                outPrinter = outPrinter,
+                defaultValue = max,
+            ) {
+                (it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2))
+                    .let { entry: BigDecimal ->
+                        if (entry < BigDecimal.ZERO || entry > max)
+                            BigDecimal.ZERO.setScale(2)
+                        else
+                            entry
+                    }
+            }
+                .getResult()
+        if (categoryAmount > BigDecimal.ZERO) {
+            val categoryDescription =
+                SimplePromptWithDefault(
+                    "Enter description for ${selectedCategoryAccount.name} spend [$description]: ",
+                    defaultValue = description,
+                    inputReader = inputReader,
+                    outPrinter = outPrinter,
+                )
+                    .getResult()
+            transactionBuilder.categoryItemBuilders.add(
+                Transaction.ItemBuilder(
+                    amount = -categoryAmount,
+                    description = if (categoryDescription == description) null else categoryDescription,
+                    categoryAccount = selectedCategoryAccount,
+                ),
+            )
+            menuSession.pop()
+            if (runningTotal - categoryAmount > BigDecimal.ZERO) {
+                menuSession.push(
+                    createTransactionItemMenu(
+                        runningTotal - categoryAmount,
+                        transactionBuilder,
+                        description,
+                        budgetData,
+                        budgetDao,
+                        userConfig,
+                    ),
+                )
+            } else {
+                val transaction = transactionBuilder.build()
+                budgetData.commit(transaction)
+                budgetDao.commit(transaction, budgetData.id)
+            }
+        }
+    }
