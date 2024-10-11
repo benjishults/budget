@@ -117,21 +117,25 @@ class BudgetData(
     }
 
     fun deleteChargeAccount(chargeAccount: ChargeAccount) {
+        require(chargeAccount.balance == BigDecimal.ZERO.setScale(2)) { "chargeAccount balance must be zero" }
         chargeAccounts = chargeAccounts - chargeAccount
         byId.remove(chargeAccount.id)
     }
 
     fun deleteRealAccount(realAccount: RealAccount) {
+        require(realAccount.balance == BigDecimal.ZERO.setScale(2)) { "realAccount balance must be zero" }
         realAccounts = realAccounts - realAccount
         byId.remove(realAccount.id)
     }
 
     fun deleteCategoryAccount(categoryAccount: CategoryAccount) {
+        require(categoryAccount.balance == BigDecimal.ZERO.setScale(2)) { "categoryAccount balance must be zero" }
         categoryAccounts = categoryAccounts - categoryAccount
         byId.remove(categoryAccount.id)
     }
 
     fun deleteDraftAccount(draftAccount: DraftAccount) {
+        require(draftAccount.balance == BigDecimal.ZERO.setScale(2)) { "draftAccount balance must be zero" }
         draftAccounts = draftAccounts - draftAccount
         byId.remove(draftAccount.id)
     }

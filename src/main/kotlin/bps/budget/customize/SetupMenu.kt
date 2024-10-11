@@ -69,7 +69,7 @@ fun WithIo.customizeMenu(
             },
         )
         add(
-            pushMenu("Delete an Account") {
+            pushMenu("Deactivate an Account") {
                 Menu("What kind af account do you want to delete?") {
                     add(
                         pushMenu("Category Account") {
@@ -225,16 +225,38 @@ fun WithIo.customizeMenu(
     }
 
 fun BudgetData.deleteCategoryAccountMenu(userConfig: UserConfiguration): Menu =
-    deleteAccountMenu(userConfig, deleter = { deleteCategoryAccount(it) }) { categoryAccounts - generalAccount }
+    deleteAccountMenu(
+        userConfig,
+        deleter = { deleteCategoryAccount(it) },
+    ) {
+        (categoryAccounts - generalAccount).filter {
+            it.balance == BigDecimal.ZERO.setScale(2)
+        }
+    }
 
 fun BudgetData.deleteRealAccountMenu(userConfig: UserConfiguration): Menu =
-    deleteAccountMenu(userConfig, deleter = { deleteRealAccount(it) }) { realAccounts }
+    deleteAccountMenu(
+        userConfig,
+        deleter = { deleteRealAccount(it) },
+    ) {
+        realAccounts.filter { it.balance == BigDecimal.ZERO.setScale(2) }
+    }
 
 fun BudgetData.deleteChargeAccountMenu(userConfig: UserConfiguration): Menu =
-    deleteAccountMenu(userConfig, deleter = { deleteChargeAccount(it) }) { chargeAccounts }
+    deleteAccountMenu(
+        userConfig,
+        deleter = { deleteChargeAccount(it) },
+    ) {
+        chargeAccounts.filter { it.balance == BigDecimal.ZERO.setScale(2) }
+    }
 
 fun BudgetData.deleteDraftAccountMenu(userConfig: UserConfiguration): Menu =
-    deleteAccountMenu(userConfig, deleter = { deleteDraftAccount(it) }) { draftAccounts }
+    deleteAccountMenu(
+        userConfig,
+        deleter = { deleteDraftAccount(it) },
+    ) {
+        draftAccounts.filter { it.balance == BigDecimal.ZERO.setScale(2) }
+    }
 
 fun <T : Account> deleteAccountMenu(
     userConfig: UserConfiguration,

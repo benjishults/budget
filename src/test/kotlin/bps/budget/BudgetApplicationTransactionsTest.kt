@@ -159,7 +159,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             |""".trimMargin(),
                         "Enter selection: ",
                         """ 1. Create a New Category
- 2. Delete an Account
+ 2. Deactivate an Account
  3. Create a Real Fund
  4. Add a Credit Card
  5. Back
@@ -220,7 +220,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 """,
                         "Enter selection: ",
                         """ 1. Create a New Category
- 2. Delete an Account
+ 2. Deactivate an Account
  3. Create a Real Fund
  4. Add a Credit Card
  5. Back
@@ -832,7 +832,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                          | 1. Create a New Category
-                         | 2. Delete an Account
+                         | 2. Deactivate an Account
                          | 3. Create a Real Fund
                          | 4. Add a Credit Card
                          | 5. Back
@@ -853,7 +853,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                          | 1. Create a New Category
-                         | 2. Delete an Account
+                         | 2. Deactivate an Account
                          | 3. Create a Real Fund
                          | 4. Add a Credit Card
                          | 5. Back
@@ -1493,7 +1493,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                          | 1. Create a New Category
-                         | 2. Delete an Account
+                         | 2. Deactivate an Account
                          | 3. Create a Real Fund
                          | 4. Add a Credit Card
                          | 5. Back
@@ -1526,7 +1526,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                          | 1. Create a New Category
-                         | 2. Delete an Account
+                         | 2. Deactivate an Account
                          | 3. Create a Real Fund
                          | 4. Add a Credit Card
                          | 5. Back

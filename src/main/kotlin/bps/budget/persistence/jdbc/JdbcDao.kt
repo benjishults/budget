@@ -1185,7 +1185,7 @@ where acc.budget_id = ?
 
     override fun save(data: BudgetData, user: User) {
         require(data.validate())
-        // create budget if it isn't there
+        // create user and budget if it isn't there
         connection.transactOrNull {
             val generalAccountId: UUID = data.generalAccount.id
             prepareStatement(
@@ -1301,16 +1301,14 @@ where acc.budget_id = ?
      * Must be called within a transaction with manual commits
      */
     private fun Connection.upsertAccountData(accounts: List<Account>, tableName: String, budgetId: UUID) {
-        // if an active account is not in the list, deactivate it
-        val fullListOfActiveAccountsWithActivityRecords: List<Pair<UUID, UUID>> =
-            getFullListOfActiveAccountsWithActivityRecords(tableName, budgetId)
+        // if a DB-active account is not in the list, deactivate it in DB
         val currentAccountIds: Set<UUID> =
             accounts
                 .map { it.id }
                 .toSet()
         val activityIdsToBeDeactivated: List<UUID> =
-            fullListOfActiveAccountsWithActivityRecords
-                .filter { it.first in currentAccountIds }
+            getFullListOfActiveAccountsWithActivityRecords(tableName, budgetId)
+                .filter { it.first !in currentAccountIds }
                 .map { it.second }
         activityIdsToBeDeactivated.forEach { activityId: UUID ->
             prepareStatement(
