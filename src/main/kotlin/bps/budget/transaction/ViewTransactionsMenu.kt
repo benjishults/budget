@@ -215,9 +215,12 @@ fun WithIo.viewHistoryMenu(
             add(budgetData.generalAccount)
             addAll(budgetData.categoryAccounts - budgetData.generalAccount)
             addAll(budgetData.realAccounts)
+            addAll(budgetData.chargeAccounts)
         },
+        // TODO https://github.com/benjishults/budget/issues/7
+//        extraItems = listOf(item("View Inactive Accounts") {}),
         labelGenerator = {
-            String.format("%,10.2f | %s", balance, name)
+            String.format("%,10.2f | %s | %s", balance, name, description)
         },
     ) { menuSession: MenuSession, selectedAccount: Account ->
         menuSession.push(

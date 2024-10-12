@@ -55,15 +55,15 @@ Enter the name for your "General" account [General] """,
                 "Enter the description for your \"General\" account [Income is automatically deposited here and allowances are made from here.] ",
                 """
                             |Budget!
-                            | 1. $recordIncome
-                            | 2. $makeAllowances
-                            | 3. $recordSpending
-                            | 4. View History
-                            | 5. $writeOrClearChecks
-                            | 6. $useOrPayCreditCards
-                            | 7. $transfer
-                            | 8. $setup
-                            | 9. Quit
+                            | 1. $recordIncome (i)
+                            | 2. $makeAllowances (a)
+                            | 3. $recordSpending (s)
+                            | 4. View History (v)
+                            | 5. $writeOrClearChecks (ch)
+                            | 6. $useOrPayCreditCards (cr)
+                            | 7. $transfer (x)
+                            | 8. $setup (m)
+                            | 9. Quit (q)
                             |""".trimMargin(),
                 "Enter selection: ",
                 "Quitting\n",
@@ -101,15 +101,15 @@ Enter the name for your "General" account [General] """,
 //                "Enter the description for your \"General\" account [Income is automatically deposited here and allowances are made from here.] ",
 //                """
 //                            |Budget!
-//                            | 1. $recordIncome
-//                            | 2. $makeAllowances
-//                            | 3. $recordSpending
-//                            | 4. View History
+//                            | 1. $recordIncome (i)
+//                            | 2. $makeAllowances (a)
+//                            | 3. $recordSpending (s)
+//                            | 4. View History (v)
 //                            | 5. $recordDrafts
 //                            | 6. $clearDrafts
-//                            | 7. $transfer
-//                            | 8. $setup
-//                            | 9. Quit
+//                            | 7. $transfer (x)
+//                            | 8. $setup (m)
+//                            | 9. Quit (q)
 //                            |""".trimMargin(),
 //                "Enter selection: ",
 //                "Quitting\n",
@@ -141,15 +141,15 @@ Enter the name for your "General" account [General] """,
 //            outputs shouldContainExactly listOf(
 //                """
 //                            |Budget!
-//                            | 1. $recordIncome
-//                            | 2. $makeAllowances
-//                            | 3. $recordSpending
-//                            | 4. View History
+//                            | 1. $recordIncome (i)
+//                            | 2. $makeAllowances (a)
+//                            | 3. $recordSpending (s)
+//                            | 4. View History (v)
 //                            | 5. $recordDrafts
 //                            | 6. $clearDrafts
-//                            | 7. $transfer
-//                            | 8. $setup
-//                            | 9. Quit
+//                            | 7. $transfer (x)
+//                            | 8. $setup (m)
+//                            | 9. Quit (q)
 //                            |""".trimMargin(),
 //                "Enter selection: ",
 //                """The user must be able to add/remove accounts and categorize accounts (category fund account, real fund account, etc.)
@@ -160,8 +160,8 @@ Enter the name for your "General" account [General] """,
 //                        | 1. Create Category Fund
 //                        | 2. Create Real Fund
 //                        | 3. Create Draft Fund
-//                        | 4. Back
-//                        | 5. Quit
+//                        | 4. Back (b)
+//                        | 5. Quit (q)
 //                        |""".trimMargin(),
 //                "Enter selection: ",
 //                "Quitting\n",

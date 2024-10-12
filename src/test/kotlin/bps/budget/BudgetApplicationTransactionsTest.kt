@@ -65,15 +65,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome
-                            | 2. $makeAllowances
-                            | 3. $recordSpending
-                            | 4. View History
-                            | 5. $writeOrClearChecks
-                            | 6. $useOrPayCreditCards
-                            | 7. $transfer
-                            | 8. $setup
-                            | 9. Quit
+                            | 1. $recordIncome (i)
+                            | 2. $makeAllowances (a)
+                            | 3. $recordSpending (s)
+                            | 4. View History (v)
+                            | 5. $writeOrClearChecks (ch)
+                            | 6. $useOrPayCreditCards (cr)
+                            | 7. $transfer (x)
+                            | 8. $setup (m)
+                            | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -89,8 +89,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |Select account receiving the income:
                         | 1.       0.00 | Checking
                         | 2.       0.00 | Wallet
-                        | 3. Back
-                        | 4. Quit
+                        | 3. Back (b)
+                        | 4. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -108,8 +108,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |Select account receiving the income:
                         | 1.   5,000.00 | Checking
                         | 2.       0.00 | Wallet
-                        | 3. Back
-                        | 4. Quit
+                        | 3. Back (b)
+                        | 4. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -124,8 +124,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                                             |Select account receiving the income:
                                             | 1.   5,000.00 | Checking
                                             | 2.     200.00 | Wallet
-                                            | 3. Back
-                                            | 4. Quit
+                                            | 3. Back (b)
+                                            | 4. Quit (q)
                                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -147,23 +147,23 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome
-                            | 2. $makeAllowances
-                            | 3. $recordSpending
-                            | 4. View History
-                            | 5. $writeOrClearChecks
-                            | 6. $useOrPayCreditCards
-                            | 7. $transfer
-                            | 8. $setup
-                            | 9. Quit
+                            | 1. $recordIncome (i)
+                            | 2. $makeAllowances (a)
+                            | 3. $recordSpending (s)
+                            | 4. View History (v)
+                            | 5. $writeOrClearChecks (ch)
+                            | 6. $useOrPayCreditCards (cr)
+                            | 7. $transfer (x)
+                            | 8. $setup (m)
+                            | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                         """ 1. Create a New Category
  2. Deactivate an Account
  3. Create a Real Fund
  4. Add a Credit Card
- 5. Back
- 6. Quit
+ 5. Back (b)
+ 6. Quit (q)
 """,
                         "Enter selection: ",
                         """What kind af account do you want to delete?
@@ -171,8 +171,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
  2. Real Account
  3. Charge Account
  4. Draft Account
- 5. Back
- 6. Quit
+ 5. Back (b)
+ 6. Quit (q)
 """,
                         "Enter selection: ",
                         """Select account to delete
@@ -189,8 +189,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 11.       0.00 | Transportation
 12.       0.00 | Travel
 13.       0.00 | Work
-14. Back
-15. Quit
+14. Back (b)
+15. Quit (q)
 """,
                         "Enter selection: ",
                         """Select account to delete
@@ -206,8 +206,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 10.       0.00 | Transportation
 11.       0.00 | Travel
 12.       0.00 | Work
-13. Back
-14. Quit
+13. Back (b)
+14. Quit (q)
 """,
                         "Enter selection: ",
                         """What kind af account do you want to delete?
@@ -215,16 +215,16 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
  2. Real Account
  3. Charge Account
  4. Draft Account
- 5. Back
- 6. Quit
+ 5. Back (b)
+ 6. Quit (q)
 """,
                         "Enter selection: ",
                         """ 1. Create a New Category
  2. Deactivate an Account
  3. Create a Real Fund
  4. Add a Credit Card
- 5. Back
- 6. Quit
+ 5. Back (b)
+ 6. Quit (q)
 """,
                         "Enter selection: ",
                     ),
@@ -236,15 +236,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome
-                            | 2. $makeAllowances
-                            | 3. $recordSpending
-                            | 4. View History
-                            | 5. $writeOrClearChecks
-                            | 6. $useOrPayCreditCards
-                            | 7. $transfer
-                            | 8. $setup
-                            | 9. Quit
+                            | 1. $recordIncome (i)
+                            | 2. $makeAllowances (a)
+                            | 3. $recordSpending (s)
+                            | 4. View History (v)
+                            | 5. $writeOrClearChecks (ch)
+                            | 6. $useOrPayCreditCards (cr)
+                            | 7. $transfer (x)
+                            | 8. $setup (m)
+                            | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -266,8 +266,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 10.       0.00 | Transportation
 11.       0.00 | Travel
 12.       0.00 | Work
-13. Back
-14. Quit
+13. Back (b)
+14. Quit (q)
 """,
                         "Enter selection: ",
                     ),
@@ -295,8 +295,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 10.       0.00 | Transportation
 11.       0.00 | Travel
 12.       0.00 | Work
-13. Back
-14. Quit
+13. Back (b)
+14. Quit (q)
 """,
                         "Enter selection: ",
                     ),
@@ -319,8 +319,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 10.       0.00 | Transportation
 11.       0.00 | Travel
 12.       0.00 | Work
-13. Back
-14. Quit
+13. Back (b)
+14. Quit (q)
 """,
                         "Enter selection: ",
                     ),
@@ -332,15 +332,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome
-                            | 2. $makeAllowances
-                            | 3. $recordSpending
-                            | 4. $viewHistory
-                            | 5. $writeOrClearChecks
-                            | 6. $useOrPayCreditCards
-                            | 7. $transfer
-                            | 8. $setup
-                            | 9. Quit
+                            | 1. $recordIncome (i)
+                            | 2. $makeAllowances (a)
+                            | 3. $recordSpending (s)
+                            | 4. $viewHistory (v)
+                            | 5. $writeOrClearChecks (ch)
+                            | 6. $useOrPayCreditCards (cr)
+                            | 7. $transfer (x)
+                            | 8. $setup (m)
+                            | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -349,23 +349,23 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   4,700.00 | General
- 2.       0.00 | Education
- 3.       0.00 | Entertainment
- 4.     300.00 | Food
- 5.       0.00 | Hobby
- 6.       0.00 | Home Upkeep
- 7.       0.00 | Housing
- 8.       0.00 | Medical
- 9.     200.00 | Necessities
-10.       0.00 | Network
-11.       0.00 | Transportation
-12.       0.00 | Travel
-13.       0.00 | Work
-14.   5,000.00 | Checking
-15.     200.00 | Wallet
-16. Back
-17. Quit
+ 1.   4,700.00 | General | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education | Tuition, books, etc.
+ 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
+ 4.     300.00 | Food | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
+ 9.     200.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network | Mobile plan, routers, internet access
+11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel | Travel expenses for vacation
+13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
+14.   5,000.00 | Checking | Account from which checks clear
+15.     200.00 | Wallet | Cash on hand
+16. Back (b)
+17. Quit (q)
 """,
                         "Enter selection: ",
                     ),
@@ -380,8 +380,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 2. 2024-08-08 19:00:01 |     200.00 | income into $defaultWalletAccountName
                         | 3. 2024-08-08 19:00:02 |    -300.00 | allowance into $defaultFoodAccountName
                         | 4. 2024-08-08 19:00:03 |    -200.00 | allowance into $defaultNecessitiesAccountName
-                        | 5. Back
-                        | 6. Quit
+                        | 5. Back (b)
+                        | 6. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
@@ -403,8 +403,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 2. 2024-08-08 19:00:01 |     200.00 | income into $defaultWalletAccountName
                         | 3. 2024-08-08 19:00:02 |    -300.00 | allowance into $defaultFoodAccountName
                         | 4. 2024-08-08 19:00:03 |    -200.00 | allowance into $defaultNecessitiesAccountName
-                        | 5. Back
-                        | 6. Quit
+                        | 5. Back (b)
+                        | 6. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
@@ -413,23 +413,23 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   4,700.00 | General
- 2.       0.00 | Education
- 3.       0.00 | Entertainment
- 4.     300.00 | Food
- 5.       0.00 | Hobby
- 6.       0.00 | Home Upkeep
- 7.       0.00 | Housing
- 8.       0.00 | Medical
- 9.     200.00 | Necessities
-10.       0.00 | Network
-11.       0.00 | Transportation
-12.       0.00 | Travel
-13.       0.00 | Work
-14.   5,000.00 | Checking
-15.     200.00 | Wallet
-16. Back
-17. Quit
+ 1.   4,700.00 | General | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education | Tuition, books, etc.
+ 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
+ 4.     300.00 | Food | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
+ 9.     200.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network | Mobile plan, routers, internet access
+11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel | Travel expenses for vacation
+13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
+14.   5,000.00 | Checking | Account from which checks clear
+15.     200.00 | Wallet | Cash on hand
+16. Back (b)
+17. Quit (q)
 """,
                         "Enter selection: ",
                     ),
@@ -441,15 +441,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome
-                            | 2. $makeAllowances
-                            | 3. $recordSpending
-                            | 4. $viewHistory
-                            | 5. $writeOrClearChecks
-                            | 6. $useOrPayCreditCards
-                            | 7. $transfer
-                            | 8. $setup
-                            | 9. Quit
+                            | 1. $recordIncome (i)
+                            | 2. $makeAllowances (a)
+                            | 3. $recordSpending (s)
+                            | 4. $viewHistory (v)
+                            | 5. $writeOrClearChecks (ch)
+                            | 6. $useOrPayCreditCards (cr)
+                            | 7. $transfer (x)
+                            | 8. $setup (m)
+                            | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -461,8 +461,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |Select real account money was spent from.
                         | 1.   5,000.00 | Checking
                         | 2.     200.00 | Wallet
-                        | 3. Back
-                        | 4. Quit
+                        | 3. Back (b)
+                        | 4. Quit (q)
                         |
                     """.trimMargin(),
                         "Enter selection: ",
@@ -496,8 +496,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |10.       0.00 | Transportation
                         |11.       0.00 | Travel
                         |12.       0.00 | Work
-                        |13. Back
-                        |14. Quit
+                        |13. Back (b)
+                        |14. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
                         "Enter the amount spent on Food [0.00, [1.50]]: ",
@@ -511,8 +511,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |Select real account money was spent from.
                         | 1.   5,000.00 | Checking
                         | 2.     198.50 | Wallet
-                        | 3. Back
-                        | 4. Quit
+                        | 3. Back (b)
+                        | 4. Quit (q)
                         |
                     """.trimMargin(),
                         "Enter selection: ",
@@ -525,15 +525,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome
-                            | 2. $makeAllowances
-                            | 3. $recordSpending
-                            | 4. $viewHistory
-                            | 5. $writeOrClearChecks
-                            | 6. $useOrPayCreditCards
-                            | 7. $transfer
-                            | 8. $setup
-                            | 9. Quit
+                            | 1. $recordIncome (i)
+                            | 2. $makeAllowances (a)
+                            | 3. $recordSpending (s)
+                            | 4. $viewHistory (v)
+                            | 5. $writeOrClearChecks (ch)
+                            | 6. $useOrPayCreditCards (cr)
+                            | 7. $transfer (x)
+                            | 8. $setup (m)
+                            | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -544,8 +544,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         """
                         |Select the checking account
                         | 1.   5,000.00 | Checking Drafts
-                        | 2. Back
-                        | 3. Quit
+                        | 2. Back (b)
+                        | 3. Quit (q)
                         |
                     """.trimMargin(),
                         "Enter selection: ",
@@ -557,8 +557,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         """
                          | 1. Write a check on Checking Drafts
                          | 2. Record check cleared
-                         | 3. Back
-                         | 4. Quit
+                         | 3. Back (b)
+                         | 4. Quit (q)
                          |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -591,8 +591,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |10.       0.00 | Transportation
                         |11.       0.00 | Travel
                         |12.       0.00 | Work
-                        |13. Back
-                        |14. Quit
+                        |13. Back (b)
+                        |14. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -621,8 +621,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |10.       0.00 | Transportation
                         |11.       0.00 | Travel
                         |12.       0.00 | Work
-                        |13. Back
-                        |14. Quit
+                        |13. Back (b)
+                        |14. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -642,8 +642,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         """
                          | 1. Write a check on Checking Drafts
                          | 2. Record check cleared
-                         | 3. Back
-                         | 4. Quit
+                         | 3. Back (b)
+                         | 4. Quit (q)
                          |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -655,8 +655,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |Select the check that cleared
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:05 |     300.00 | SuperMarket
-                        | 2. Back
-                        | 3. Quit
+                        | 2. Back (b)
+                        | 3. Quit (q)
                         |""".trimMargin(),
                         "Select the check that cleared: ",
                         "Did the check clear just now [Y]? ",
@@ -668,8 +668,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         """
                         |Select the check that cleared
                         |    Time Stamp          | Amount     | Description
-                        | 1. Back
-                        | 2. Quit
+                        | 1. Back (b)
+                        | 2. Quit (q)
                         |""".trimMargin(),
                         "Select the check that cleared: ",
                     ),
@@ -680,8 +680,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         """
                          | 1. Write a check on Checking Drafts
                          | 2. Record check cleared
-                         | 3. Back
-                         | 4. Quit
+                         | 3. Back (b)
+                         | 4. Quit (q)
                          |
                     """.trimMargin(),
                         "Enter selection: ",
@@ -693,8 +693,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         """
                         |Select the checking account
                         | 1.   4,700.00 | Checking Drafts
-                        | 2. Back
-                        | 3. Quit
+                        | 2. Back (b)
+                        | 3. Quit (q)
                         |
                     """.trimMargin(),
                         "Enter selection: ",
@@ -707,15 +707,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome
-                            | 2. $makeAllowances
-                            | 3. $recordSpending
-                            | 4. $viewHistory
-                            | 5. $writeOrClearChecks
-                            | 6. $useOrPayCreditCards
-                            | 7. $transfer
-                            | 8. $setup
-                            | 9. Quit
+                            | 1. $recordIncome (i)
+                            | 2. $makeAllowances (a)
+                            | 3. $recordSpending (s)
+                            | 4. $viewHistory (v)
+                            | 5. $writeOrClearChecks (ch)
+                            | 6. $useOrPayCreditCards (cr)
+                            | 7. $transfer (x)
+                            | 8. $setup (m)
+                            | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -724,23 +724,23 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   4,700.00 | General
- 2.       0.00 | Education
- 3.       0.00 | Entertainment
- 4.      98.50 | Food
- 5.       0.00 | Hobby
- 6.       0.00 | Home Upkeep
- 7.       0.00 | Housing
- 8.       0.00 | Medical
- 9.     100.00 | Necessities
-10.       0.00 | Network
-11.       0.00 | Transportation
-12.       0.00 | Travel
-13.       0.00 | Work
-14.   4,700.00 | Checking
-15.     198.50 | Wallet
-16. Back
-17. Quit
+ 1.   4,700.00 | General | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education | Tuition, books, etc.
+ 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
+ 4.      98.50 | Food | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
+ 9.     100.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network | Mobile plan, routers, internet access
+11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel | Travel expenses for vacation
+13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
+14.   4,700.00 | Checking | Account from which checks clear
+15.     198.50 | Wallet | Cash on hand
+16. Back (b)
+17. Quit (q)
 """,
                         "Enter selection: ",
                     ),
@@ -753,8 +753,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:00 |   5,000.00 | income into $defaultCheckingAccountName
                         | 2. 2024-08-08 19:00:06 |    -300.00 | SuperMarket
-                        | 3. Back
-                        | 4. Quit
+                        | 3. Back (b)
+                        | 4. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
@@ -776,8 +776,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:00 |   5,000.00 | income into $defaultCheckingAccountName
                         | 2. 2024-08-08 19:00:06 |    -300.00 | SuperMarket
-                        | 3. Back
-                        | 4. Quit
+                        | 3. Back (b)
+                        | 4. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
@@ -786,23 +786,23 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   4,700.00 | General
- 2.       0.00 | Education
- 3.       0.00 | Entertainment
- 4.      98.50 | Food
- 5.       0.00 | Hobby
- 6.       0.00 | Home Upkeep
- 7.       0.00 | Housing
- 8.       0.00 | Medical
- 9.     100.00 | Necessities
-10.       0.00 | Network
-11.       0.00 | Transportation
-12.       0.00 | Travel
-13.       0.00 | Work
-14.   4,700.00 | Checking
-15.     198.50 | Wallet
-16. Back
-17. Quit
+ 1.   4,700.00 | General | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education | Tuition, books, etc.
+ 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
+ 4.      98.50 | Food | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
+ 9.     100.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network | Mobile plan, routers, internet access
+11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel | Travel expenses for vacation
+13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
+14.   4,700.00 | Checking | Account from which checks clear
+15.     198.50 | Wallet | Cash on hand
+16. Back (b)
+17. Quit (q)
 """,
                         "Enter selection: ",
                     ),
@@ -814,15 +814,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome
-                            | 2. $makeAllowances
-                            | 3. $recordSpending
-                            | 4. $viewHistory
-                            | 5. $writeOrClearChecks
-                            | 6. $useOrPayCreditCards
-                            | 7. $transfer
-                            | 8. $setup
-                            | 9. Quit
+                            | 1. $recordIncome (i)
+                            | 2. $makeAllowances (a)
+                            | 3. $recordSpending (s)
+                            | 4. $viewHistory (v)
+                            | 5. $writeOrClearChecks (ch)
+                            | 6. $useOrPayCreditCards (cr)
+                            | 7. $transfer (x)
+                            | 8. $setup (m)
+                            | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -835,8 +835,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                          | 2. Deactivate an Account
                          | 3. Create a Real Fund
                          | 4. Add a Credit Card
-                         | 5. Back
-                         | 6. Quit
+                         | 5. Back (b)
+                         | 6. Quit (q)
                          |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -856,8 +856,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                          | 2. Deactivate an Account
                          | 3. Create a Real Fund
                          | 4. Add a Credit Card
-                         | 5. Back
-                         | 6. Quit
+                         | 5. Back (b)
+                         | 6. Quit (q)
                          |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -869,15 +869,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome
-                            | 2. $makeAllowances
-                            | 3. $recordSpending
-                            | 4. $viewHistory
-                            | 5. $writeOrClearChecks
-                            | 6. $useOrPayCreditCards
-                            | 7. $transfer
-                            | 8. $setup
-                            | 9. Quit
+                            | 1. $recordIncome (i)
+                            | 2. $makeAllowances (a)
+                            | 3. $recordSpending (s)
+                            | 4. $viewHistory (v)
+                            | 5. $writeOrClearChecks (ch)
+                            | 6. $useOrPayCreditCards (cr)
+                            | 7. $transfer (x)
+                            | 8. $setup (m)
+                            | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -888,8 +888,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         """
                         |Select a credit card
                         | 1.       0.00 | Costco Visa
-                        | 2. Back
-                        | 3. Quit
+                        | 2. Back (b)
+                        | 3. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -901,8 +901,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 1. Record spending on Costco Visa
                         | 2. Pay Costco Visa bill
                         | 3. View unpaid transactions on Costco Visa
-                        | 4. Back
-                        | 5. Quit
+                        | 4. Back (b)
+                        | 5. Quit (q)
                         |
                     """.trimMargin(),
                         "Enter selection: ",
@@ -933,8 +933,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |10.       0.00 | Transportation
                         |11.       0.00 | Travel
                         |12.       0.00 | Work
-                        |13. Back
-                        |14. Quit
+                        |13. Back (b)
+                        |14. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -963,8 +963,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |10.       0.00 | Transportation
                         |11.       0.00 | Travel
                         |12.       0.00 | Work
-                        |13. Back
-                        |14. Quit
+                        |13. Back (b)
+                        |14. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -983,8 +983,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 1. Record spending on Costco Visa
                         | 2. Pay Costco Visa bill
                         | 3. View unpaid transactions on Costco Visa
-                        | 4. Back
-                        | 5. Quit
+                        | 4. Back (b)
+                        | 5. Quit (q)
                         |
                     """.trimMargin(),
                         "Enter selection: ",
@@ -1015,8 +1015,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |10.       0.00 | Transportation
                         |11.       0.00 | Travel
                         |12.       0.00 | Work
-                        |13. Back
-                        |14. Quit
+                        |13. Back (b)
+                        |14. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
                         "Enter the amount spent on Necessities [0.00, [20.00]]: ",
@@ -1030,8 +1030,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 1. Record spending on Costco Visa
                         | 2. Pay Costco Visa bill
                         | 3. View unpaid transactions on Costco Visa
-                        | 4. Back
-                        | 5. Quit
+                        | 4. Back (b)
+                        | 5. Quit (q)
                         |
                     """.trimMargin(),
                         "Enter selection: ",
@@ -1043,8 +1043,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         """
                         |Select a credit card
                         | 1.     -50.00 | Costco Visa
-                        | 2. Back
-                        | 3. Quit
+                        | 2. Back (b)
+                        | 3. Quit (q)
                         |
                     """.trimMargin(),
                         "Enter selection: ",
@@ -1057,15 +1057,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome
-                            | 2. $makeAllowances
-                            | 3. $recordSpending
-                            | 4. $viewHistory
-                            | 5. $writeOrClearChecks
-                            | 6. $useOrPayCreditCards
-                            | 7. $transfer
-                            | 8. $setup
-                            | 9. Quit
+                            | 1. $recordIncome (i)
+                            | 2. $makeAllowances (a)
+                            | 3. $recordSpending (s)
+                            | 4. $viewHistory (v)
+                            | 5. $writeOrClearChecks (ch)
+                            | 6. $useOrPayCreditCards (cr)
+                            | 7. $transfer (x)
+                            | 8. $setup (m)
+                            | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1074,23 +1074,24 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   4,700.00 | General
- 2.       0.00 | Education
- 3.       0.00 | Entertainment
- 4.      78.50 | Food
- 5.       0.00 | Hobby
- 6.       0.00 | Home Upkeep
- 7.       0.00 | Housing
- 8.       0.00 | Medical
- 9.      70.00 | Necessities
-10.       0.00 | Network
-11.       0.00 | Transportation
-12.       0.00 | Travel
-13.       0.00 | Work
-14.   4,700.00 | Checking
-15.     198.50 | Wallet
-16. Back
-17. Quit
+ 1.   4,700.00 | General | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education | Tuition, books, etc.
+ 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
+ 4.      78.50 | Food | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
+ 9.      70.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network | Mobile plan, routers, internet access
+11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel | Travel expenses for vacation
+13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
+14.   4,700.00 | Checking | Account from which checks clear
+15.     198.50 | Wallet | Cash on hand
+16.     -50.00 | Costco Visa | Costco Visa
+17. Back (b)
+18. Quit (q)
 """,
                         "Enter selection: ",
                     ),
@@ -1105,8 +1106,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 2. 2024-08-08 19:00:04 |      -1.50 | Pepsi
                         | 3. 2024-08-08 19:00:05 |    -200.00 | SuperMarket
                         | 4. 2024-08-08 19:00:07 |     -20.00 | Costco
-                        | 5. Back
-                        | 6. Quit
+                        | 5. Back (b)
+                        | 6. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
@@ -1130,8 +1131,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 2. 2024-08-08 19:00:04 |      -1.50 | Pepsi
                         | 3. 2024-08-08 19:00:05 |    -200.00 | SuperMarket
                         | 4. 2024-08-08 19:00:07 |     -20.00 | Costco
-                        | 5. Back
-                        | 6. Quit
+                        | 5. Back (b)
+                        | 6. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
@@ -1140,27 +1141,28 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   4,700.00 | General
- 2.       0.00 | Education
- 3.       0.00 | Entertainment
- 4.      78.50 | Food
- 5.       0.00 | Hobby
- 6.       0.00 | Home Upkeep
- 7.       0.00 | Housing
- 8.       0.00 | Medical
- 9.      70.00 | Necessities
-10.       0.00 | Network
-11.       0.00 | Transportation
-12.       0.00 | Travel
-13.       0.00 | Work
-14.   4,700.00 | Checking
-15.     198.50 | Wallet
-16. Back
-17. Quit
+ 1.   4,700.00 | General | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education | Tuition, books, etc.
+ 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
+ 4.      78.50 | Food | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
+ 9.      70.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network | Mobile plan, routers, internet access
+11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel | Travel expenses for vacation
+13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
+14.   4,700.00 | Checking | Account from which checks clear
+15.     198.50 | Wallet | Cash on hand
+16.     -50.00 | Costco Visa | Costco Visa
+17. Back (b)
+18. Quit (q)
 """,
                         "Enter selection: ",
                     ),
-                    toInput = listOf("16"),
+                    toInput = listOf("17"),
                 )
             }
             "pay credit card balance" {
@@ -1168,15 +1170,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome
-                            | 2. $makeAllowances
-                            | 3. $recordSpending
-                            | 4. $viewHistory
-                            | 5. $writeOrClearChecks
-                            | 6. $useOrPayCreditCards
-                            | 7. $transfer
-                            | 8. $setup
-                            | 9. Quit
+                            | 1. $recordIncome (i)
+                            | 2. $makeAllowances (a)
+                            | 3. $recordSpending (s)
+                            | 4. $viewHistory (v)
+                            | 5. $writeOrClearChecks (ch)
+                            | 6. $useOrPayCreditCards (cr)
+                            | 7. $transfer (x)
+                            | 8. $setup (m)
+                            | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1187,8 +1189,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         """
                         |Select a credit card
                         | 1.     -50.00 | Costco Visa
-                        | 2. Back
-                        | 3. Quit
+                        | 2. Back (b)
+                        | 3. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1200,8 +1202,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 1. Record spending on Costco Visa
                         | 2. Pay Costco Visa bill
                         | 3. View unpaid transactions on Costco Visa
-                        | 4. Back
-                        | 5. Quit
+                        | 4. Back (b)
+                        | 5. Quit (q)
                         |
                     """.trimMargin(),
                         "Enter selection: ",
@@ -1215,8 +1217,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |Select real account bill was paid from
                         | 1.   4,700.00 | Checking
                         | 2.     198.50 | Wallet
-                        | 3. Back
-                        | 4. Quit
+                        | 3. Back (b)
+                        | 4. Quit (q)
                         |
                     """.trimMargin(),
                         "Enter selection: ",
@@ -1233,8 +1235,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 1. 2024-08-08 19:00:07 |     -30.00 | Costco
                         | 2. 2024-08-08 19:00:08 |     -20.00 | Target
                         | 3. Record a missing transaction from this bill
-                        | 4. Back
-                        | 5. Quit
+                        | 4. Back (b)
+                        | 5. Quit (q)
                         |
                     """.trimMargin(),
                         "Select a transaction covered in this bill: ",
@@ -1248,8 +1250,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:08 |     -20.00 | Target
                         | 2. Record a missing transaction from this bill
-                        | 3. Back
-                        | 4. Quit
+                        | 3. Back (b)
+                        | 4. Quit (q)
                         |""".trimMargin(),
                         "Select a transaction covered in this bill: ",
                     ),
@@ -1263,8 +1265,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:08 |     -20.00 | Target
                         | 2. Record a missing transaction from this bill
-                        | 3. Back
-                        | 4. Quit
+                        | 3. Back (b)
+                        | 4. Quit (q)
                         |""".trimMargin(),
                         "Select a transaction covered in this bill: ",
                     ),
@@ -1294,8 +1296,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |10.       0.00 | Transportation
                         |11.       0.00 | Travel
                         |12.       0.00 | Work
-                        |13. Back
-                        |14. Quit
+                        |13. Back (b)
+                        |14. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
                         "Enter the amount spent on Necessities [0.00, [5.00]]: ",
@@ -1311,8 +1313,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 1. 2024-08-08 19:00:08 |     -20.00 | Target
                         | 2. 2024-08-08 19:00:10 |      -5.00 | Brausen's
                         | 3. Record a missing transaction from this bill
-                        | 4. Back
-                        | 5. Quit
+                        | 4. Back (b)
+                        | 5. Quit (q)
                         |""".trimMargin(),
                         "Select a transaction covered in this bill: ",
                     ),
@@ -1325,8 +1327,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |Select real account bill was paid from
                         | 1.   4,665.00 | Checking
                         | 2.     198.50 | Wallet
-                        | 3. Back
-                        | 4. Quit
+                        | 3. Back (b)
+                        | 4. Quit (q)
                         |
                     """.trimMargin(),
                         "Enter selection: ",
@@ -1339,8 +1341,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 1. Record spending on Costco Visa
                         | 2. Pay Costco Visa bill
                         | 3. View unpaid transactions on Costco Visa
-                        | 4. Back
-                        | 5. Quit
+                        | 4. Back (b)
+                        | 5. Quit (q)
                         |
                     """.trimMargin(),
                         "Enter selection: ",
@@ -1352,8 +1354,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         """
                         |Select a credit card
                         | 1.     -20.00 | Costco Visa
-                        | 2. Back
-                        | 3. Quit
+                        | 2. Back (b)
+                        | 3. Quit (q)
                         |
                     """.trimMargin(),
                         "Enter selection: ",
@@ -1366,15 +1368,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome
-                            | 2. $makeAllowances
-                            | 3. $recordSpending
-                            | 4. $viewHistory
-                            | 5. $writeOrClearChecks
-                            | 6. $useOrPayCreditCards
-                            | 7. $transfer
-                            | 8. $setup
-                            | 9. Quit
+                            | 1. $recordIncome (i)
+                            | 2. $makeAllowances (a)
+                            | 3. $recordSpending (s)
+                            | 4. $viewHistory (v)
+                            | 5. $writeOrClearChecks (ch)
+                            | 6. $useOrPayCreditCards (cr)
+                            | 7. $transfer (x)
+                            | 8. $setup (m)
+                            | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1383,23 +1385,24 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   4,700.00 | General
- 2.       0.00 | Education
- 3.       0.00 | Entertainment
- 4.      78.50 | Food
- 5.       0.00 | Hobby
- 6.       0.00 | Home Upkeep
- 7.       0.00 | Housing
- 8.       0.00 | Medical
- 9.      65.00 | Necessities
-10.       0.00 | Network
-11.       0.00 | Transportation
-12.       0.00 | Travel
-13.       0.00 | Work
-14.   4,665.00 | Checking
-15.     198.50 | Wallet
-16. Back
-17. Quit
+ 1.   4,700.00 | General | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education | Tuition, books, etc.
+ 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
+ 4.      78.50 | Food | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
+ 9.      65.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network | Mobile plan, routers, internet access
+11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel | Travel expenses for vacation
+13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
+14.   4,665.00 | Checking | Account from which checks clear
+15.     198.50 | Wallet | Cash on hand
+16.     -20.00 | Costco Visa | Costco Visa
+17. Back (b)
+18. Quit (q)
 """,
                         "Enter selection: ",
                     ),
@@ -1413,8 +1416,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 1. 2024-08-08 19:00:00 |   5,000.00 | income into $defaultCheckingAccountName
                         | 2. 2024-08-08 19:00:06 |    -300.00 | SuperMarket
                         | 3. 2024-08-08 19:00:09 |     -35.00 | Costco Visa
-                        | 4. Back
-                        | 5. Quit
+                        | 4. Back (b)
+                        | 5. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
@@ -1437,8 +1440,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 1. 2024-08-08 19:00:00 |   5,000.00 | income into $defaultCheckingAccountName
                         | 2. 2024-08-08 19:00:06 |    -300.00 | SuperMarket
                         | 3. 2024-08-08 19:00:09 |     -35.00 | Costco Visa
-                        | 4. Back
-                        | 5. Quit
+                        | 4. Back (b)
+                        | 5. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
@@ -1447,27 +1450,28 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   4,700.00 | General
- 2.       0.00 | Education
- 3.       0.00 | Entertainment
- 4.      78.50 | Food
- 5.       0.00 | Hobby
- 6.       0.00 | Home Upkeep
- 7.       0.00 | Housing
- 8.       0.00 | Medical
- 9.      65.00 | Necessities
-10.       0.00 | Network
-11.       0.00 | Transportation
-12.       0.00 | Travel
-13.       0.00 | Work
-14.   4,665.00 | Checking
-15.     198.50 | Wallet
-16. Back
-17. Quit
+ 1.   4,700.00 | General | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education | Tuition, books, etc.
+ 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
+ 4.      78.50 | Food | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
+ 9.      65.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network | Mobile plan, routers, internet access
+11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel | Travel expenses for vacation
+13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
+14.   4,665.00 | Checking | Account from which checks clear
+15.     198.50 | Wallet | Cash on hand
+16.     -20.00 | Costco Visa | Costco Visa
+17. Back (b)
+18. Quit (q)
 """,
                         "Enter selection: ",
                     ),
-                    toInput = listOf("16"),
+                    toInput = listOf("17"),
                 )
             }
             "add a real account with a balance" {
@@ -1475,15 +1479,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome
-                            | 2. $makeAllowances
-                            | 3. $recordSpending
-                            | 4. $viewHistory
-                            | 5. $writeOrClearChecks
-                            | 6. $useOrPayCreditCards
-                            | 7. $transfer
-                            | 8. $setup
-                            | 9. Quit
+                            | 1. $recordIncome (i)
+                            | 2. $makeAllowances (a)
+                            | 3. $recordSpending (s)
+                            | 4. $viewHistory (v)
+                            | 5. $writeOrClearChecks (ch)
+                            | 6. $useOrPayCreditCards (cr)
+                            | 7. $transfer (x)
+                            | 8. $setup (m)
+                            | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1496,8 +1500,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                          | 2. Deactivate an Account
                          | 3. Create a Real Fund
                          | 4. Add a Credit Card
-                         | 5. Back
-                         | 6. Quit
+                         | 5. Back (b)
+                         | 6. Quit (q)
                          |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1529,8 +1533,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                          | 2. Deactivate an Account
                          | 3. Create a Real Fund
                          | 4. Add a Credit Card
-                         | 5. Back
-                         | 6. Quit
+                         | 5. Back (b)
+                         | 6. Quit (q)
                          |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1540,15 +1544,15 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome
-                            | 2. $makeAllowances
-                            | 3. $recordSpending
-                            | 4. $viewHistory
-                            | 5. $writeOrClearChecks
-                            | 6. $useOrPayCreditCards
-                            | 7. $transfer
-                            | 8. $setup
-                            | 9. Quit
+                            | 1. $recordIncome (i)
+                            | 2. $makeAllowances (a)
+                            | 3. $recordSpending (s)
+                            | 4. $viewHistory (v)
+                            | 5. $writeOrClearChecks (ch)
+                            | 6. $useOrPayCreditCards (cr)
+                            | 7. $transfer (x)
+                            | 8. $setup (m)
+                            | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1557,24 +1561,25 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   5,700.00 | General
- 2.       0.00 | Education
- 3.       0.00 | Entertainment
- 4.      78.50 | Food
- 5.       0.00 | Hobby
- 6.       0.00 | Home Upkeep
- 7.       0.00 | Housing
- 8.       0.00 | Medical
- 9.      65.00 | Necessities
-10.       0.00 | Network
-11.       0.00 | Transportation
-12.       0.00 | Travel
-13.       0.00 | Work
-14.   4,665.00 | Checking
-15.   1,000.00 | Savings
-16.     198.50 | Wallet
-17. Back
-18. Quit
+ 1.   5,700.00 | General | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education | Tuition, books, etc.
+ 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
+ 4.      78.50 | Food | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
+ 9.      65.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network | Mobile plan, routers, internet access
+11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel | Travel expenses for vacation
+13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
+14.   4,665.00 | Checking | Account from which checks clear
+15.   1,000.00 | Savings | Savings account at My Bank
+16.     198.50 | Wallet | Cash on hand
+17.     -20.00 | Costco Visa | Costco Visa
+18. Back (b)
+19. Quit (q)
 """,
                         "Enter selection: ",
                     ),
@@ -1590,8 +1595,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         | 3. 2024-08-08 19:00:02 |    -300.00 | allowance into $defaultFoodAccountName
                         | 4. 2024-08-08 19:00:03 |    -200.00 | allowance into $defaultNecessitiesAccountName
                         | 5. 2024-08-08 19:00:11 |   1,000.00 | initial balance in 'Savings'
-                        | 6. Back
-                        | 7. Quit
+                        | 6. Back (b)
+                        | 7. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
@@ -1600,28 +1605,29 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   5,700.00 | General
- 2.       0.00 | Education
- 3.       0.00 | Entertainment
- 4.      78.50 | Food
- 5.       0.00 | Hobby
- 6.       0.00 | Home Upkeep
- 7.       0.00 | Housing
- 8.       0.00 | Medical
- 9.      65.00 | Necessities
-10.       0.00 | Network
-11.       0.00 | Transportation
-12.       0.00 | Travel
-13.       0.00 | Work
-14.   4,665.00 | Checking
-15.   1,000.00 | Savings
-16.     198.50 | Wallet
-17. Back
-18. Quit
+ 1.   5,700.00 | General | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education | Tuition, books, etc.
+ 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
+ 4.      78.50 | Food | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
+ 9.      65.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network | Mobile plan, routers, internet access
+11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel | Travel expenses for vacation
+13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
+14.   4,665.00 | Checking | Account from which checks clear
+15.   1,000.00 | Savings | Savings account at My Bank
+16.     198.50 | Wallet | Cash on hand
+17.     -20.00 | Costco Visa | Costco Visa
+18. Back (b)
+19. Quit (q)
 """,
                         "Enter selection: ",
                     ),
-                    toInput = listOf("17"),
+                    toInput = listOf("18"),
                 )
             }
             "!ensure user can back out of a transaction without saving" - {

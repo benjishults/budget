@@ -24,24 +24,29 @@ open class MenuApplicationWithQuit(
     override fun run() = try { // TODO move this out of while
         while (true) {
             menuSession.current()
-                .let { currentMenu: Menu ->
-                    val items = currentMenu.print(outPrinter)
-                    inputReader()
-                        .toIntOrNull()
-                        ?.let {
-                            items.getOrNull(it - 1)
-                                ?.action
-                                ?.invoke(menuSession)
-                            // TODO add an optional error message
-                                ?: this
-                        }
-                    // TODO add an optional error message
+                .run {// currentMenu: Menu ->
+                    val items: List<MenuItem> = itemsGenerator().print(outPrinter)
+                    getSelection(items)
+                        ?.action
+                        ?.invoke(menuSession)
                         ?: this
                 }
         }
     } catch (quit: QuitException) {
         quitAction(quit)
     }
+
+    private fun Menu.getSelection(items: List<MenuItem>): MenuItem? =
+        inputReader()
+            .let { inputString ->
+                this.shortcutMap[inputString]
+                    ?: inputString
+                        .toIntOrNull()
+                        ?.let {
+                            items.getOrNull(it - 1)
+                        }
+                // TODO add an optional error message
+            }
 
     override fun close() {
         menuSession.close()

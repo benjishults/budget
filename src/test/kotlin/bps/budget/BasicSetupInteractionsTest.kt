@@ -71,15 +71,15 @@ class BasicSetupInteractionsTest : FreeSpec(),
                 """.trimMargin(),
                 """
                             |Budget!
-                            | 1. $recordIncome
-                            | 2. $makeAllowances
-                            | 3. $recordSpending
-                            | 4. View History
-                            | 5. $writeOrClearChecks
-                            | 6. $useOrPayCreditCards
-                            | 7. $transfer
-                            | 8. $setup
-                            | 9. Quit
+                            | 1. $recordIncome (i)
+                            | 2. $makeAllowances (a)
+                            | 3. $recordSpending (s)
+                            | 4. View History (v)
+                            | 5. $writeOrClearChecks (ch)
+                            | 6. $useOrPayCreditCards (cr)
+                            | 7. $transfer (x)
+                            | 8. $setup (m)
+                            | 9. Quit (q)
                             |""".trimMargin(),
                 "Enter selection: ",
                 "Quitting\n",

@@ -36,7 +36,10 @@ class MenuTest : FreeSpec(),
             val topMenu: Menu =
                 Menu("top") {
                     add(
-                        takeActionAndPush("something", { bottomMenu }) {
+                        takeActionAndPush(
+                            label = "something",
+                            to = { bottomMenu },
+                        ) {
                             outPrinter("taking some action\n")
                         },
                     )
@@ -51,7 +54,7 @@ class MenuTest : FreeSpec(),
                 """
                       |top
                       | 1. something
-                      | 2. Quit
+                      | 2. Quit (q)
                       |""".trimMargin(),
                 "Enter selection: ",
                 "taking some action\n",
@@ -59,14 +62,72 @@ class MenuTest : FreeSpec(),
                       |bottom
                       | 1. something else
                       | 2. Back
-                      | 3. Quit
+                      | 3. Quit (q)
                       |""".trimMargin(),
                 "Enter selection: ",
                 "backing up\n",
                 """
                       |top
                       | 1. something
-                      | 2. Quit
+                      | 2. Quit (q)
+                      |""".trimMargin(),
+                "Enter selection: ",
+                "Quitting\n",
+            )
+            inputs shouldHaveSize 0
+        }
+        "shortcuts" {
+            val bottomMenu =
+                Menu("bottom") {
+                    add(
+                        takeAction("something else") {
+                            outPrinter("doing the thing\n")
+                        },
+                    )
+                    add(
+                        popMenuItem(shortcut = "b") {
+                            outPrinter("backing up\n")
+                        },
+                    )
+                    add(quitItem)
+                }
+            val topMenu: Menu =
+                Menu("top") {
+                    add(
+                        takeActionAndPush(
+                            label = "something",
+                            to = { bottomMenu },
+                        ) {
+                            outPrinter("taking some action\n")
+                        },
+                    )
+                    add(quitItem)
+                }
+            inputs.addAll(listOf("1", "b", "q"))
+            MenuApplicationWithQuit(topMenu, inputReader, outPrinter)
+                .use {
+                    it.run()
+                }
+            outputs shouldContainExactly listOf(
+                """
+                      |top
+                      | 1. something
+                      | 2. Quit (q)
+                      |""".trimMargin(),
+                "Enter selection: ",
+                "taking some action\n",
+                """
+                      |bottom
+                      | 1. something else
+                      | 2. Back (b)
+                      | 3. Quit (q)
+                      |""".trimMargin(),
+                "Enter selection: ",
+                "backing up\n",
+                """
+                      |top
+                      | 1. something
+                      | 2. Quit (q)
                       |""".trimMargin(),
                 "Enter selection: ",
                 "Quitting\n",

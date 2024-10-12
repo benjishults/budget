@@ -113,15 +113,15 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 //                outputs shouldContainExactly listOf(
 //                    """
 //                            |Budget!
-//                            | 1. $recordIncome
-//                            | 2. $makeAllowances
-//                            | 3. $recordSpending
-//                            | 4. View History
+//                            | 1. $recordIncome (i)
+//                            | 2. $makeAllowances (a)
+//                            | 3. $recordSpending (s)
+//                            | 4. View History (v)
 //                            | 5. $recordDrafts
 //                            | 6. $clearDrafts
-//                            | 7. $transfer
-//                            | 8. $setup
-//                            | 9. Quit
+//                            | 7. $transfer (x)
+//                            | 8. $setup (m)
+//                            | 9. Quit (q)
 //                            |""".trimMargin(),
 //                    "Enter selection: ",
 //                    """
@@ -132,8 +132,8 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 //                        |Select account receiving the income:
 //                        | 1.       0.00 | Checking
 //                        | 2.       0.00 | Wallet
-//                        | 3. Back
-//                        | 4. Quit
+//                        | 3. Back (b)
+//                        | 4. Quit (q)
 //                        |""".trimMargin(),
 //                    "Enter selection: ",
 //                    "Enter the amount of income: ",
@@ -143,8 +143,8 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 //                        |Select account receiving the income:
 //                        | 1.   5,000.00 | Checking
 //                        | 2.       0.00 | Wallet
-//                        | 3. Back
-//                        | 4. Quit
+//                        | 3. Back (b)
+//                        | 4. Quit (q)
 //                        |""".trimMargin(),
 //                    "Enter selection: ",
 //                    "Enter the amount of income: ",
@@ -154,8 +154,8 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 //                        |Select account receiving the income:
 //                        | 1.   5,000.00 | Checking
 //                        | 2.     200.00 | Wallet
-//                        | 3. Back
-//                        | 4. Quit
+//                        | 3. Back (b)
+//                        | 4. Quit (q)
 //                        |""".trimMargin(),
 //                    "Enter selection: ",
 //                )
@@ -185,15 +185,15 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 //                outputs shouldContainExactly listOf(
 //                    """
 //                            |Budget!
-//                            | 1. $recordIncome
-//                            | 2. $makeAllowances
-//                            | 3. $recordSpending
-//                            | 4. View History
+//                            | 1. $recordIncome (i)
+//                            | 2. $makeAllowances (a)
+//                            | 3. $recordSpending (s)
+//                            | 4. View History (v)
 //                            | 5. $recordDrafts
 //                            | 6. $clearDrafts
-//                            | 7. $transfer
-//                            | 8. $setup
-//                            | 9. Quit
+//                            | 7. $transfer (x)
+//                            | 8. $setup (m)
+//                            | 9. Quit (q)
 //                            |""".trimMargin(),
 //                    "Enter selection: ",
 //                    """
@@ -211,8 +211,8 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 // 7.       0.00 | Transportation
 // 8.       0.00 | Travel
 // 9.       0.00 | Work
-//10. Back
-//11. Quit
+//10. Back (b)
+//11. Quit (q)
 //""",
 //                    "Enter selection: ",
 //                    "Enter the amount to allocate into ${budgetData.categoryAccounts[2].name} (0.00 - 5200.00]: ",
@@ -227,8 +227,8 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 // 7.       0.00 | Transportation
 // 8.       0.00 | Travel
 // 9.       0.00 | Work
-//10. Back
-//11. Quit
+//10. Back (b)
+//11. Quit (q)
 //""",
 //                    "Enter selection: ",
 //                    "Enter the amount to allocate into ${budgetData.categoryAccounts[5].name} (0.00 - 4900.00]: ",
@@ -243,8 +243,8 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 // 7.       0.00 | Transportation
 // 8.       0.00 | Travel
 // 9.       0.00 | Work
-//10. Back
-//11. Quit
+//10. Back (b)
+//11. Quit (q)
 //""",
 //                    "Enter selection: ",
 //                )
@@ -256,15 +256,15 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 //                outputs shouldContainExactly listOf(
 //                    """
 //                            |Budget!
-//                            | 1. $recordIncome
-//                            | 2. $makeAllowances
-//                            | 3. $recordSpending
-//                            | 4. $viewHistory
+//                            | 1. $recordIncome (i)
+//                            | 2. $makeAllowances (a)
+//                            | 3. $recordSpending (s)
+//                            | 4. $viewHistory (v)
 //                            | 5. $recordDrafts
 //                            | 6. $clearDrafts
-//                            | 7. $transfer
-//                            | 8. $setup
-//                            | 9. Quit
+//                            | 7. $transfer (x)
+//                            | 8. $setup (m)
+//                            | 9. Quit (q)
 //                            |""".trimMargin(),
 //                    "Enter selection: ",
 //                    """Select account to view history
@@ -281,8 +281,8 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 //11.   5,000.00 | Checking
 //12.     200.00 | Wallet
 //13.       0.00 | Checking Drafts
-//14. Back
-//15. Quit
+//14. Back (b)
+//15. Quit (q)
 //""",
 //                    "Enter selection: ",
 //                    """
@@ -292,9 +292,9 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 //                        | 2. 2024-08-08 19:00:01 |     200.00 | income into $defaultWalletAccountName
 //                        | 3. 2024-08-08 19:00:02 |    -300.00 | allowance into $defaultFoodAccountName
 //                        | 4. 2024-08-08 19:00:03 |    -100.00 | allowance into $defaultNecessitiesAccountName
-//                        | 5. Next Items
-//                        | 6. Back
-//                        | 7. Quit
+//                        | 5. Next Items (n)
+//                        | 6. Back (b)
+//                        | 7. Quit (q)
 //                        |""".trimMargin(),
 //                    "Select transaction for details: ",
 //                )
@@ -325,15 +325,15 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 //                outputs shouldContainExactly listOf(
 //                    """
 //                            |Budget!
-//                            | 1. $recordIncome
-//                            | 2. $makeAllowances
-//                            | 3. $recordSpending
-//                            | 4. View History
+//                            | 1. $recordIncome (i)
+//                            | 2. $makeAllowances (a)
+//                            | 3. $recordSpending (s)
+//                            | 4. View History (v)
 //                            | 5. $recordDrafts
 //                            | 6. $clearDrafts
-//                            | 7. $transfer
-//                            | 8. $setup
-//                            | 9. Quit
+//                            | 7. $transfer (x)
+//                            | 8. $setup (m)
+//                            | 9. Quit (q)
 //                            |""".trimMargin(),
 //                    "Enter selection: ",
 //                    """
@@ -356,15 +356,15 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 //                    "Enter description of transaction [allowance into $defaultFoodAccountName]: ",
 //                    """
 //                            |Budget!
-//                            | 1. $recordIncome
-//                            | 2. $makeAllowances
-//                            | 3. $recordSpending
-//                            | 4. View History
+//                            | 1. $recordIncome (i)
+//                            | 2. $makeAllowances (a)
+//                            | 3. $recordSpending (s)
+//                            | 4. View History (v)
 //                            | 5. $recordDrafts
 //                            | 6. $clearDrafts
-//                            | 7. $transfer
-//                            | 8. $setup
-//                            | 9. Quit
+//                            | 7. $transfer (x)
+//                            | 8. $setup (m)
+//                            | 9. Quit (q)
 //                            |""".trimMargin(),
 //                    "Enter selection: ",
 //                    "Quitting\n",

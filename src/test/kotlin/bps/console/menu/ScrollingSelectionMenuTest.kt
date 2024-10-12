@@ -144,36 +144,36 @@ val firstGroup = """
                      | 1. item 0
                      | 2. item 1
                      | 3. item 2
-                     | 4. Next Items
-                     | 5. Back
-                     | 6. Quit
+                     | 4. Next Items (n)
+                     | 5. Back (b)
+                     | 6. Quit (q)
                      |""".trimMargin()
 val secondGroup = """
                      | 1. item 3
                      | 2. item 4
                      | 3. item 5
-                     | 4. Next Items
-                     | 5. Previous Items
-                     | 6. Back
-                     | 7. Quit
+                     | 4. Next Items (n)
+                     | 5. Previous Items (p)
+                     | 6. Back (b)
+                     | 7. Quit (q)
                      |""".trimMargin()
 val thirdGroup = """
                      | 1. item 6
                      | 2. item 7
                      | 3. item 8
-                     | 4. Next Items
-                     | 5. Previous Items
-                     | 6. Back
-                     | 7. Quit
+                     | 4. Next Items (n)
+                     | 5. Previous Items (p)
+                     | 6. Back (b)
+                     | 7. Quit (q)
                      |""".trimMargin()
 val lastGroup = """
                      | 1. item 9
-                     | 2. Previous Items
-                     | 3. Back
-                     | 4. Quit
+                     | 2. Previous Items (p)
+                     | 3. Back (b)
+                     | 4. Quit (q)
                      |""".trimMargin()
 val noItems = """
-                     | 1. Previous Items
-                     | 2. Back
-                     | 3. Quit
+                     | 1. Previous Items (p)
+                     | 2. Back (b)
+                     | 3. Quit (q)
                      |""".trimMargin()

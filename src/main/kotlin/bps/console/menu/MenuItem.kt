@@ -18,6 +18,8 @@ interface MenuItem {
      */
     val action: MenuItemAction
 
+    val shortcut: String?
+
 //    companion object {
 //        operator fun invoke(label: String, action: MenuItemAction): MenuItem =
 //            object : MenuItem {
@@ -30,17 +32,25 @@ interface MenuItem {
 
 open class BaseMenuItem(
     override val label: String,
+    override val shortcut: String? = null,
     override val action: MenuItemAction,
 ) : MenuItem {
+
+    init {
+        require(shortcut == null || shortcut!!.length <= 2)
+    }
+
     override fun toString(): String =
-        label
+        "$label${if (shortcut !== null) " ($shortcut)" else ""}"
+
 }
 
 fun item(
     label: String,
+    shortcut: String? = null,
     action: MenuItemAction,
 ): MenuItem =
-    BaseMenuItem(label, action)
+    BaseMenuItem(label, shortcut, action)
 
 /**
  * Takes the [intermediateAction] if provided and pops the menu session.
@@ -49,9 +59,10 @@ fun item(
  */
 fun popMenuItem(
     label: String = "Back",
+    shortcut: String? = null,
     intermediateAction: IntermediateMenuItemAction<Unit> = NoopIntermediateAction,
 ): MenuItem =
-    item(label) { menuSession: MenuSession ->
+    item(label, shortcut) { menuSession: MenuSession ->
         menuSession.pop()
         intermediateAction()
     }
@@ -62,9 +73,10 @@ fun popMenuItem(
  */
 fun takeAction(
     label: String,
+    shortcut: String? = null,
     intermediateAction: IntermediateMenuItemAction<Unit>,
 ): MenuItem =
-    takeActionAndPush(label, null, intermediateAction)
+    takeActionAndPush(label, shortcut, intermediateAction = intermediateAction)
 
 /**
  * @param intermediateAction action to take prior to going back to menu session
@@ -73,10 +85,11 @@ fun takeAction(
  */
 fun <T> takeActionAndPush(
     label: String,
+    shortcut: String? = null,
     to: ((T) -> Menu?)? = null,
     intermediateAction: IntermediateMenuItemAction<T>,
 ): MenuItem =
-    item(label) { menuSession: MenuSession ->
+    item(label, shortcut) { menuSession: MenuSession ->
         val value: T = intermediateAction()
         if (to !== null) {
             val pushing: Menu? = to(value)
@@ -92,14 +105,20 @@ fun <T> takeActionAndPush(
  */
 fun pushMenu(
     label: String,
+    shortcut: String? = null,
     to: () -> Menu,
 ): MenuItem =
-    item(label) { menuSession: MenuSession ->
+    item(label, shortcut) { menuSession: MenuSession ->
         menuSession.push(to())
     }
 
 val quitItem: MenuItem =
-    BaseMenuItem("Quit") { throw QuitException() }
+    BaseMenuItem("Quit", "q") { throw QuitException() }
 
-val backItem: MenuItem =
-    BaseMenuItem("Back") { it.pop() }
+val backItem: MenuItem = popMenuItem(shortcut = "b")
+
+val cancelItem: MenuItem =
+    item(
+        "Cancel", "c",
+    ) {}
+//    popMenuItem(label = "Cancel", shortcut = "c")

@@ -220,6 +220,17 @@ fun WithIo.customizeMenu(
                 }
             },
         )
+        // TODO https://github.com/benjishults/budget/issues/6
+//        add(
+//            pushMenu("Edit an Account") {
+//                ScrollingSelectionMenu(
+//                    header = "Select Account to Edit",
+//                    limit = userConfig.numberOfItemsInScrollingList,
+//                    labelGenerator = { String.format("%,10.2f | %s", balance, name) },
+//                    baseList = (budgetData.categoryAccounts - budgetData.generalAccount) + budgetData.realAccounts + budgetData.chargeAccounts,
+//                ) { menuSession: MenuSession, account: Account -> }
+//            },
+//        )
         add(backItem)
         add(quitItem)
     }

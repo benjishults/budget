@@ -14,6 +14,8 @@ open class ScrollingSelectionMenu<T>(
     actOnSelectedItem: (MenuSession, T) -> Unit,
 ) : Menu {
 
+    override val shortcutMap: MutableMap<String, MenuItem> = mutableMapOf()
+
     constructor(
         header: String?,
         prompt: String = "Enter selection: ",
@@ -39,6 +41,12 @@ open class ScrollingSelectionMenu<T>(
         require(limit > 0) { "limit must be > 0" }
     }
 
+    private fun MutableList<MenuItem>.incorporateItem(menuItem: MenuItem) {
+        add(menuItem)
+        if (menuItem.shortcut !== null)
+            shortcutMap[menuItem.shortcut!!] = menuItem
+    }
+
     override var itemsGenerator: () -> List<MenuItem> =
         {
             itemListGenerator(limit, offset)
@@ -47,10 +55,10 @@ open class ScrollingSelectionMenu<T>(
                         actOnSelectedItem(session, item)
                     }
                 }
-                .also { menuItems ->
+                .also { menuItems: MutableList<MenuItem> ->
                     if (menuItems.size == limit) {
-                        menuItems.add(
-                            item("Next Items") { menuSession ->
+                        menuItems.incorporateItem(
+                            item("Next Items", "n") { menuSession ->
                                 menuSession.pop()
                                 menuSession.push(
                                     ScrollingSelectionMenu(
@@ -68,8 +76,8 @@ open class ScrollingSelectionMenu<T>(
                         )
                     }
                     if (offset > 0) {
-                        menuItems.add(
-                            item("Previous Items") { menuSession ->
+                        menuItems.incorporateItem(
+                            item("Previous Items", "p") { menuSession ->
                                 menuSession.pop()
                                 menuSession.push(
                                     ScrollingSelectionMenu(
@@ -86,9 +94,9 @@ open class ScrollingSelectionMenu<T>(
                             },
                         )
                     }
-                    menuItems.addAll(extraItems)
-                    menuItems.add(backItem)
-                    menuItems.add(quitItem)
+                    extraItems.forEach { menuItems.incorporateItem(it) }
+                    menuItems.incorporateItem(backItem)
+                    menuItems.incorporateItem(quitItem)
                 }
         }
 }

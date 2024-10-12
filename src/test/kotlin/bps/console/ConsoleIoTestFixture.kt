@@ -90,8 +90,8 @@ const val MAX_LONG_MILLIS_FOR_WAITING_FOR_PAUSE_DURING_DEBUGGING = Long.MAX_VALU
  *                         |Select account receiving the income:
  *                         | 1.   5,000.00 | Checking
  *                         | 2.       0.00 | Wallet
- *                         | 3. Back
- *                         | 4. Quit
+ *                         | 3. Back (b)
+ *                         | 4. Quit (q)
  *                         |""".trimMargin(),
  *                         "Enter selection: ",
  *                     ),

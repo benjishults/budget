@@ -114,8 +114,9 @@ fun WithIo.budgetMenu(
     Menu("Budget!") {
         add(
             takeActionAndPush(
-                recordIncome,
-                { recordIncomeSelectionMenu(budgetData, budgetDao, userConfig, clock) },
+                label = recordIncome,
+                shortcut = "i",
+                to = { recordIncomeSelectionMenu(budgetData, budgetDao, userConfig, clock) },
             ) {
                 outPrinter(
                     """
@@ -127,8 +128,9 @@ fun WithIo.budgetMenu(
         )
         add(
             takeActionAndPush(
-                makeAllowances,
-                { makeAllowancesSelectionMenu(budgetData, budgetDao, userConfig, clock) },
+                label = makeAllowances,
+                shortcut = "a",
+                to = { makeAllowancesSelectionMenu(budgetData, budgetDao, userConfig, clock) },
             ) {
                 outPrinter(
                     "Every month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n",
@@ -136,27 +138,27 @@ fun WithIo.budgetMenu(
             },
         )
         add(
-            pushMenu(recordSpending) {
+            pushMenu(recordSpending, "s") {
                 recordSpendingMenu(budgetData, budgetDao, userConfig, clock)
             },
         )
         add(
-            pushMenu(viewHistory) {
+            pushMenu(viewHistory, "v") {
                 viewHistoryMenu(budgetData, budgetDao, userConfig)
             },
         )
         add(
-            pushMenu(writeOrClearChecks) {
+            pushMenu(writeOrClearChecks, "ch") {
                 checksMenu(budgetData, budgetDao, userConfig, clock)
             },
         )
         add(
-            pushMenu(useOrPayCreditCards) {
+            pushMenu(useOrPayCreditCards, "cr") {
                 creditCardMenu(budgetData, budgetDao, userConfig, clock)
             },
         )
         add(
-            takeAction(transfer) {
+            takeAction(transfer, "x") {
                 outPrinter(
                     """
             |The user should be able to record transfers between read fund accounts
@@ -165,7 +167,7 @@ fun WithIo.budgetMenu(
                 )
             },
         )
-        add(pushMenu(setup, { customizeMenu(budgetData, budgetDao, user, userConfig, clock) }))
+        add(pushMenu(setup, "m", { customizeMenu(budgetData, budgetDao, user, userConfig, clock) }))
         add(quitItem)
     }
 
