@@ -9,6 +9,7 @@ import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
+import bps.console.inputs.getTimestampFromUser
 import bps.console.menu.Menu
 import bps.console.menu.MenuSession
 import bps.console.menu.ScrollingSelectionMenu
@@ -25,7 +26,7 @@ fun WithIo.makeAllowancesSelectionMenu(
     limit = userConfig.numberOfItemsInScrollingList,
     baseList = budgetData.categoryAccounts - budgetData.generalAccount,
     labelGenerator = { String.format("%,10.2f | %s", balance, name) },
-) { menuSession: MenuSession, selectedCategoryAccount: CategoryAccount ->
+) { _: MenuSession, selectedCategoryAccount: CategoryAccount ->
     val max = budgetData.generalAccount.balance
     val min = BigDecimal.ZERO.setScale(2)
     val amount: BigDecimal =
@@ -54,7 +55,10 @@ fun WithIo.makeAllowancesSelectionMenu(
                 outPrinter = outPrinter,
             )
                 .getResult()
-        val allocate = Transaction.Builder(description, clock.now())
+        val allocate = Transaction.Builder(
+            description,
+            getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock),
+        )
             .apply {
                 categoryItemBuilders.add(
                     Transaction.ItemBuilder(
@@ -72,5 +76,7 @@ fun WithIo.makeAllowancesSelectionMenu(
             .build()
         budgetData.commit(allocate)
         budgetDao.commit(allocate, budgetData.id)
+    } else {
+        outPrinter("Must allow a positive amount.")
     }
 }

@@ -277,8 +277,9 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         "Enter the amount to allocate into ${defaultFoodAccountName} [0.00, 5200.00]: ",
                         "Enter description of transaction [allowance into $defaultFoodAccountName]: ",
+                        "Use current time [Y]? ",
                     ),
-                    toInput = listOf("300", ""),
+                    toInput = listOf("300", "", ""),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -306,6 +307,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         "Enter the amount to allocate into $defaultNecessitiesAccountName [0.00, 4900.00]: ",
                         "Enter description of transaction [allowance into $defaultNecessitiesAccountName]: ",
+                        "Use current time [Y]? ",
                         "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
  1.       0.00 | Education
  2.       0.00 | Entertainment
@@ -324,7 +326,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 """,
                         "Enter selection: ",
                     ),
-                    toInput = listOf("200", "", "13"),
+                    toInput = listOf("200", "", "", "13"),
                 )
             }
             "view transactions" {
