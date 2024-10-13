@@ -7,7 +7,7 @@ import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
-import bps.budget.transaction.createTransactionItemMenu
+import bps.budget.transaction.allocateSpendingItemMenu
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
@@ -33,7 +33,7 @@ fun WithIo.recordSpendingMenu(
     val min = BigDecimal.ZERO.setScale(2)
     val amount: BigDecimal =
         SimplePrompt<BigDecimal>(
-            "Enter the amount spent from ${selectedRealAccount.name} [$min, $max]: ",
+            "Enter the amount spent from '${selectedRealAccount.name}' [$min, $max]: ",
             inputReader = inputReader,
             outPrinter = outPrinter,
             validate = { input: String ->
@@ -51,8 +51,8 @@ fun WithIo.recordSpendingMenu(
     if (amount > BigDecimal.ZERO) {
         val description: String =
             SimplePromptWithDefault(
-                "Enter description of transaction [spending]: ",
-                defaultValue = "spending",
+                "Enter description of transaction [spending from '${selectedRealAccount.name}']: ",
+                defaultValue = "spending from '${selectedRealAccount.name}'",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
             )
@@ -71,7 +71,7 @@ fun WithIo.recordSpendingMenu(
                     )
                 }
         menuSession.push(
-            createTransactionItemMenu(
+            allocateSpendingItemMenu(
                 amount,
                 transactionBuilder,
                 description,

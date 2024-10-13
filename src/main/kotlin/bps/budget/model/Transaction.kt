@@ -140,6 +140,11 @@ data class Transaction private constructor(
         val chargeItemBuilders: MutableList<ItemBuilder> = mutableListOf()
         val draftItemBuilders: MutableList<ItemBuilder> = mutableListOf()
 
+//        fun toContextString(type: String): String =
+//            """
+//
+//            """.trimIndent()
+
         fun build(): Transaction = Transaction(
             id = this@Builder.id ?: UUID.randomUUID(),
             description = this@Builder.description!!,
@@ -164,6 +169,62 @@ data class Transaction private constructor(
             }
     }
 }
+
+//interface TransactionBehaviors {
+//    fun Transaction.Builder.toContextDescription()
+//}
+//
+// NOTE, at this point, we have no reason to persist this as part of a transaction since it is only used when the
+//       transaction is being created
+//
+//enum class TransactionType : TransactionBehaviors {
+//    SPENDING {
+//        override fun Transaction.Builder.toContextDescription() {
+//            TODO("")
+//        }
+//    },
+//    ALLOWANCE {
+//        override fun Transaction.Builder.toContextDescription() {
+//            TODO("")
+//        }
+//    },
+//    INCOME {
+//        override fun Transaction.Builder.toContextDescription() {
+//            TODO("")
+//        }
+//    },
+//    CHECK_WRITTEN {
+//        override fun Transaction.Builder.toContextDescription() {
+//            TODO("")
+//        }
+//    },
+//    CHECK_CLEARED {
+//        override fun Transaction.Builder.toContextDescription() {
+//            TODO("")
+//        }
+//    },
+//    CREDIT_SPENDING {
+//        override fun Transaction.Builder.toContextDescription() {
+//            TODO("")
+//        }
+//    },
+//    CREDIT_PAYMENT {
+//        override fun Transaction.Builder.toContextDescription() {
+//            TODO("")
+//        }
+//    },
+//    CATEGORY_TRANSFER {
+//        override fun Transaction.Builder.toContextDescription() {
+//            TODO("")
+//        }
+//    }, // TODO allowed?
+//    REAL_TRANSFER {
+//        override fun Transaction.Builder.toContextDescription() {
+//            TODO("")
+//        }
+//    };
+//
+//}
 
 enum class DraftStatus {
     none,

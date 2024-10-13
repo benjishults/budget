@@ -25,12 +25,12 @@ fun WithIo.recordIncomeSelectionMenu(
 ): Menu = ScrollingSelectionMenu(
     header = "Select account receiving the income:",
     limit = userConfig.numberOfItemsInScrollingList,
-    baseList = budgetData.realAccounts,
+    baseList = budgetData.realAccounts + budgetData.chargeAccounts,
     labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
 ) { _: MenuSession, realAccount: RealAccount ->
     val amount: BigDecimal =
         SimplePrompt(
-            "Enter the amount of income: ",
+            "Enter the amount of income into '${realAccount.name}': ",
             inputReader = inputReader,
             outPrinter = outPrinter,
         ) {
@@ -39,12 +39,12 @@ fun WithIo.recordIncomeSelectionMenu(
             .getResult()
             ?: BigDecimal.ZERO.setScale(2)
     if (amount <= BigDecimal.ZERO.setScale(2)) {
-        outPrinter("\nNot recording non-positive income.\n\n")
+        outPrinter.important("Not recording non-positive income.")
     } else {
         val description: String =
             SimplePromptWithDefault(
-                "Enter description of income [income into ${realAccount.name}]: ",
-                defaultValue = "income into ${realAccount.name}",
+                "Enter description of income [income into '${realAccount.name}']: ",
+                defaultValue = "income into '${realAccount.name}'",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
             )

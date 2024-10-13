@@ -22,7 +22,7 @@ fun WithIo.makeAllowancesSelectionMenu(
     userConfig: UserConfiguration,
     clock: Clock,
 ): Menu = ScrollingSelectionMenu(
-    header = "Select account to allocate money into from ${budgetData.generalAccount.name}: ",
+    header = "Select account to allocate money into from '${budgetData.generalAccount.name}': ",
     limit = userConfig.numberOfItemsInScrollingList,
     baseList = budgetData.categoryAccounts - budgetData.generalAccount,
     labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
@@ -31,7 +31,7 @@ fun WithIo.makeAllowancesSelectionMenu(
     val min = BigDecimal.ZERO.setScale(2)
     val amount: BigDecimal =
         SimplePrompt<BigDecimal>(
-            "Enter the amount to allocate into ${selectedCategoryAccount.name} [$min, $max]: ",
+            "Enter the amount to allocate into '${selectedCategoryAccount.name}' [$min, $max]: ",
             inputReader = inputReader,
             outPrinter = outPrinter,
             validate = { input: String ->
@@ -49,15 +49,16 @@ fun WithIo.makeAllowancesSelectionMenu(
     if (amount > BigDecimal.ZERO) {
         val description =
             SimplePromptWithDefault(
-                "Enter description of transaction [allowance into ${selectedCategoryAccount.name}]: ",
-                defaultValue = "allowance into ${selectedCategoryAccount.name}",
+                "Enter description of transaction [allowance into '${selectedCategoryAccount.name}']: ",
+                defaultValue = "allowance into '${selectedCategoryAccount.name}'",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
             )
                 .getResult()
+        val timestamp = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
         val allocate = Transaction.Builder(
             description,
-            getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock),
+            timestamp,
         )
             .apply {
                 categoryItemBuilders.add(
@@ -77,6 +78,6 @@ fun WithIo.makeAllowancesSelectionMenu(
         budgetData.commit(allocate)
         budgetDao.commit(allocate, budgetData.id)
     } else {
-        outPrinter("Must allow a positive amount.")
+        outPrinter.important("Must allow a positive amount.")
     }
 }

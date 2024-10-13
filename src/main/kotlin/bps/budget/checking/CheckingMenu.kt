@@ -9,7 +9,7 @@ import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.budget.transaction.ViewTransactionsMenu
-import bps.budget.transaction.createTransactionItemMenu
+import bps.budget.transaction.allocateSpendingItemMenu
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
@@ -38,14 +38,14 @@ fun WithIo.checksMenu(
         menuSession.push(
             Menu {
                 add(
-                    takeAction("Write a check on ${draftAccount.name}") {
+                    takeAction("Write a check on '${draftAccount.name}'") {
                         // TODO enter check number if checking account
                         // NOTE this is why we have separate draft accounts -- to easily know the real vs draft balance
                         val max = draftAccount.realCompanion.balance - draftAccount.balance
                         val min = BigDecimal.ZERO.setScale(2)
                         val amount: BigDecimal =
                             SimplePromptWithDefault<BigDecimal>(
-                                "Enter the amount of check on ${draftAccount.name} [$min, $max]: ",
+                                "Enter the amount of check on '${draftAccount.name}' [$min, $max]: ",
                                 inputReader = inputReader,
                                 outPrinter = outPrinter,
                                 defaultValue = min,
@@ -64,7 +64,7 @@ fun WithIo.checksMenu(
                         if (amount > BigDecimal.ZERO) {
                             val description: String =
                                 SimplePrompt<String>(
-                                    "Enter the recipient of the check: ",
+                                    "Enter the recipient of the check on '${draftAccount.name}': ",
                                     inputReader = inputReader,
                                     outPrinter = outPrinter,
                                 )
@@ -87,7 +87,7 @@ fun WithIo.checksMenu(
                                         )
                                     }
                             menuSession.push(
-                                createTransactionItemMenu(
+                                allocateSpendingItemMenu(
                                     amount,
                                     transactionBuilder,
                                     description,

@@ -10,7 +10,7 @@ import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.budget.transaction.ViewTransactionsMenu
-import bps.budget.transaction.createTransactionItemMenu
+import bps.budget.transaction.allocateSpendingItemMenu
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
@@ -41,7 +41,7 @@ fun WithIo.creditCardMenu(
         menuSession.push(
             Menu {
                 add(
-                    takeAction("Record spending on ${chargeAccount.name}") {
+                    takeAction("Record spending on '${chargeAccount.name}'") {
                         spendOnACreditCard(
                             budgetData,
                             clock,
@@ -53,7 +53,7 @@ fun WithIo.creditCardMenu(
                     },
                 )
                 add(
-                    takeAction("Pay ${chargeAccount.name} bill") {
+                    takeAction("Pay '${chargeAccount.name}' bill") {
                         payCreditCardBill(
                             menuSession,
                             userConfig,
@@ -65,14 +65,14 @@ fun WithIo.creditCardMenu(
                     },
                 )
                 add(
-                    pushMenu("View unpaid transactions on ${chargeAccount.name}") {
+                    pushMenu("View unpaid transactions on '${chargeAccount.name}'") {
                         ViewTransactionsMenu(
                             account = chargeAccount,
                             budgetDao = budgetDao,
                             budgetData = budgetData,
                             limit = userConfig.numberOfItemsInScrollingList,
                             filter = { it.draftStatus === DraftStatus.outstanding },
-                            header = "Unpaid transactions on ${chargeAccount.name}",
+                            header = "Unpaid transactions on '${chargeAccount.name}'",
                             prompt = "Select transaction to view details: ",
                             outPrinter = outPrinter,
                             extraItems = listOf(), // TODO toggle cleared/outstanding
@@ -263,7 +263,7 @@ private fun WithIo.spendOnACreditCard(
     // NOTE this is why we have separate draft accounts -- to easily know the real vs draft balance
     val amount: BigDecimal =
         SimplePrompt<BigDecimal>(
-            "Enter the amount of the charge on ${chargeAccount.name}: ",
+            "Enter the amount of the charge on '${chargeAccount.name}': ",
             inputReader = inputReader,
             outPrinter = outPrinter,
             validate = { input: String ->
@@ -281,7 +281,7 @@ private fun WithIo.spendOnACreditCard(
     if (amount > BigDecimal.ZERO) {
         val description: String =
             SimplePrompt<String>(
-                "Enter the recipient of the charge: ",
+                "Enter the recipient of the charge on '${chargeAccount.name}': ",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
             )
@@ -301,7 +301,7 @@ private fun WithIo.spendOnACreditCard(
                     )
                 }
         menuSession.push(
-            createTransactionItemMenu(
+            allocateSpendingItemMenu(
                 amount,
                 transactionBuilder,
                 description,
