@@ -87,8 +87,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |""".trimMargin(),
                         """
                         |Select account receiving the income:
-                        | 1.       0.00 | Checking
-                        | 2.       0.00 | Wallet
+                        | 1.       0.00 | Checking        | Account from which checks clear
+                        | 2.       0.00 | Wallet          | Cash on hand
                         | 3. Back (b)
                         | 4. Quit (q)
                         |""".trimMargin(),
@@ -106,8 +106,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         "Use current time [Y]? ",
                         """
                         |Select account receiving the income:
-                        | 1.   5,000.00 | Checking
-                        | 2.       0.00 | Wallet
+                        | 1.   5,000.00 | Checking        | Account from which checks clear
+                        | 2.       0.00 | Wallet          | Cash on hand
                         | 3. Back (b)
                         | 4. Quit (q)
                         |""".trimMargin(),
@@ -122,8 +122,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         "Use current time [Y]? ",
                         """
                                             |Select account receiving the income:
-                                            | 1.   5,000.00 | Checking
-                                            | 2.     200.00 | Wallet
+                                            | 1.   5,000.00 | Checking        | Account from which checks clear
+                                            | 2.     200.00 | Wallet          | Cash on hand
                                             | 3. Back (b)
                                             | 4. Quit (q)
                                             |""".trimMargin(),
@@ -176,36 +176,36 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 """,
                         "Enter selection: ",
                         """Select account to delete
- 1.       0.00 | Cosmetics
- 2.       0.00 | Education
- 3.       0.00 | Entertainment
- 4.       0.00 | Food
- 5.       0.00 | Hobby
- 6.       0.00 | Home Upkeep
- 7.       0.00 | Housing
- 8.       0.00 | Medical
- 9.       0.00 | Necessities
-10.       0.00 | Network
-11.       0.00 | Transportation
-12.       0.00 | Travel
-13.       0.00 | Work
+ 1.       0.00 | Cosmetics       | Cosmetics, procedures, pampering, and accessories
+ 2.       0.00 | Education       | Tuition, books, etc.
+ 3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+ 4.       0.00 | Food            | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby           | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+ 9.       0.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network         | Mobile plan, routers, internet access
+11.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel          | Travel expenses for vacation
+13.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
 14. Back (b)
 15. Quit (q)
 """,
                         "Enter selection: ",
                         """Select account to delete
- 1.       0.00 | Education
- 2.       0.00 | Entertainment
- 3.       0.00 | Food
- 4.       0.00 | Hobby
- 5.       0.00 | Home Upkeep
- 6.       0.00 | Housing
- 7.       0.00 | Medical
- 8.       0.00 | Necessities
- 9.       0.00 | Network
-10.       0.00 | Transportation
-11.       0.00 | Travel
-12.       0.00 | Work
+ 1.       0.00 | Education       | Tuition, books, etc.
+ 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+ 3.       0.00 | Food            | Food other than what's covered in entertainment
+ 4.       0.00 | Hobby           | Expenses related to a hobby
+ 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+ 7.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+ 8.       0.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+ 9.       0.00 | Network         | Mobile plan, routers, internet access
+10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+11.       0.00 | Travel          | Travel expenses for vacation
+12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
 13. Back (b)
 14. Quit (q)
 """,
@@ -254,18 +254,18 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         "Every month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n",
                         "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
- 1.       0.00 | Education
- 2.       0.00 | Entertainment
- 3.       0.00 | Food
- 4.       0.00 | Hobby
- 5.       0.00 | Home Upkeep
- 6.       0.00 | Housing
- 7.       0.00 | Medical
- 8.       0.00 | Necessities
- 9.       0.00 | Network
-10.       0.00 | Transportation
-11.       0.00 | Travel
-12.       0.00 | Work
+ 1.       0.00 | Education       | Tuition, books, etc.
+ 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+ 3.       0.00 | Food            | Food other than what's covered in entertainment
+ 4.       0.00 | Hobby           | Expenses related to a hobby
+ 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+ 7.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+ 8.       0.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+ 9.       0.00 | Network         | Mobile plan, routers, internet access
+10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+11.       0.00 | Travel          | Travel expenses for vacation
+12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
 13. Back (b)
 14. Quit (q)
 """,
@@ -284,18 +284,18 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
- 1.       0.00 | Education
- 2.       0.00 | Entertainment
- 3.     300.00 | Food
- 4.       0.00 | Hobby
- 5.       0.00 | Home Upkeep
- 6.       0.00 | Housing
- 7.       0.00 | Medical
- 8.       0.00 | Necessities
- 9.       0.00 | Network
-10.       0.00 | Transportation
-11.       0.00 | Travel
-12.       0.00 | Work
+ 1.       0.00 | Education       | Tuition, books, etc.
+ 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+ 3.     300.00 | Food            | Food other than what's covered in entertainment
+ 4.       0.00 | Hobby           | Expenses related to a hobby
+ 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+ 7.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+ 8.       0.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+ 9.       0.00 | Network         | Mobile plan, routers, internet access
+10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+11.       0.00 | Travel          | Travel expenses for vacation
+12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
 13. Back (b)
 14. Quit (q)
 """,
@@ -309,18 +309,18 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         "Enter description of transaction [allowance into $defaultNecessitiesAccountName]: ",
                         "Use current time [Y]? ",
                         "Select account to allocate money into from ${application.budgetData.generalAccount.name}: " + """
- 1.       0.00 | Education
- 2.       0.00 | Entertainment
- 3.     300.00 | Food
- 4.       0.00 | Hobby
- 5.       0.00 | Home Upkeep
- 6.       0.00 | Housing
- 7.       0.00 | Medical
- 8.     200.00 | Necessities
- 9.       0.00 | Network
-10.       0.00 | Transportation
-11.       0.00 | Travel
-12.       0.00 | Work
+ 1.       0.00 | Education       | Tuition, books, etc.
+ 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+ 3.     300.00 | Food            | Food other than what's covered in entertainment
+ 4.       0.00 | Hobby           | Expenses related to a hobby
+ 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+ 7.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+ 8.     200.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+ 9.       0.00 | Network         | Mobile plan, routers, internet access
+10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+11.       0.00 | Travel          | Travel expenses for vacation
+12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
 13. Back (b)
 14. Quit (q)
 """,
@@ -351,21 +351,21 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   4,700.00 | General | Income is automatically deposited here and allowances are made from here
- 2.       0.00 | Education | Tuition, books, etc.
- 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
- 4.     300.00 | Food | Food other than what's covered in entertainment
- 5.       0.00 | Hobby | Expenses related to a hobby
- 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
- 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
- 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
- 9.     200.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
-10.       0.00 | Network | Mobile plan, routers, internet access
-11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
-12.       0.00 | Travel | Travel expenses for vacation
-13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
-14.   5,000.00 | Checking | Account from which checks clear
-15.     200.00 | Wallet | Cash on hand
+ 1.   4,700.00 | General         | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education       | Tuition, books, etc.
+ 3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+ 4.     300.00 | Food            | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby           | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+ 9.     200.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network         | Mobile plan, routers, internet access
+11.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel          | Travel expenses for vacation
+13.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+14.   5,000.00 | Checking        | Account from which checks clear
+15.     200.00 | Wallet          | Cash on hand
 16. Back (b)
 17. Quit (q)
 """,
@@ -415,21 +415,21 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   4,700.00 | General | Income is automatically deposited here and allowances are made from here
- 2.       0.00 | Education | Tuition, books, etc.
- 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
- 4.     300.00 | Food | Food other than what's covered in entertainment
- 5.       0.00 | Hobby | Expenses related to a hobby
- 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
- 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
- 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
- 9.     200.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
-10.       0.00 | Network | Mobile plan, routers, internet access
-11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
-12.       0.00 | Travel | Travel expenses for vacation
-13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
-14.   5,000.00 | Checking | Account from which checks clear
-15.     200.00 | Wallet | Cash on hand
+ 1.   4,700.00 | General         | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education       | Tuition, books, etc.
+ 3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+ 4.     300.00 | Food            | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby           | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+ 9.     200.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network         | Mobile plan, routers, internet access
+11.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel          | Travel expenses for vacation
+13.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+14.   5,000.00 | Checking        | Account from which checks clear
+15.     200.00 | Wallet          | Cash on hand
 16. Back (b)
 17. Quit (q)
 """,
@@ -461,8 +461,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                         |Select real account money was spent from.
-                        | 1.   5,000.00 | Checking
-                        | 2.     200.00 | Wallet
+                        | 1.   5,000.00 | Checking        | Account from which checks clear
+                        | 2.     200.00 | Wallet          | Cash on hand
                         | 3. Back (b)
                         | 4. Quit (q)
                         |
@@ -511,8 +511,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                         |Select real account money was spent from.
-                        | 1.   5,000.00 | Checking
-                        | 2.     198.50 | Wallet
+                        | 1.   5,000.00 | Checking        | Account from which checks clear
+                        | 2.     198.50 | Wallet          | Cash on hand
                         | 3. Back (b)
                         | 4. Quit (q)
                         |
@@ -726,21 +726,21 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   4,700.00 | General | Income is automatically deposited here and allowances are made from here
- 2.       0.00 | Education | Tuition, books, etc.
- 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
- 4.      98.50 | Food | Food other than what's covered in entertainment
- 5.       0.00 | Hobby | Expenses related to a hobby
- 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
- 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
- 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
- 9.     100.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
-10.       0.00 | Network | Mobile plan, routers, internet access
-11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
-12.       0.00 | Travel | Travel expenses for vacation
-13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
-14.   4,700.00 | Checking | Account from which checks clear
-15.     198.50 | Wallet | Cash on hand
+ 1.   4,700.00 | General         | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education       | Tuition, books, etc.
+ 3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+ 4.      98.50 | Food            | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby           | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+ 9.     100.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network         | Mobile plan, routers, internet access
+11.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel          | Travel expenses for vacation
+13.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+14.   4,700.00 | Checking        | Account from which checks clear
+15.     198.50 | Wallet          | Cash on hand
 16. Back (b)
 17. Quit (q)
 """,
@@ -788,21 +788,21 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   4,700.00 | General | Income is automatically deposited here and allowances are made from here
- 2.       0.00 | Education | Tuition, books, etc.
- 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
- 4.      98.50 | Food | Food other than what's covered in entertainment
- 5.       0.00 | Hobby | Expenses related to a hobby
- 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
- 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
- 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
- 9.     100.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
-10.       0.00 | Network | Mobile plan, routers, internet access
-11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
-12.       0.00 | Travel | Travel expenses for vacation
-13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
-14.   4,700.00 | Checking | Account from which checks clear
-15.     198.50 | Wallet | Cash on hand
+ 1.   4,700.00 | General         | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education       | Tuition, books, etc.
+ 3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+ 4.      98.50 | Food            | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby           | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+ 9.     100.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network         | Mobile plan, routers, internet access
+11.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel          | Travel expenses for vacation
+13.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+14.   4,700.00 | Checking        | Account from which checks clear
+15.     198.50 | Wallet          | Cash on hand
 16. Back (b)
 17. Quit (q)
 """,
@@ -1076,22 +1076,22 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   4,700.00 | General | Income is automatically deposited here and allowances are made from here
- 2.       0.00 | Education | Tuition, books, etc.
- 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
- 4.      78.50 | Food | Food other than what's covered in entertainment
- 5.       0.00 | Hobby | Expenses related to a hobby
- 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
- 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
- 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
- 9.      70.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
-10.       0.00 | Network | Mobile plan, routers, internet access
-11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
-12.       0.00 | Travel | Travel expenses for vacation
-13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
-14.   4,700.00 | Checking | Account from which checks clear
-15.     198.50 | Wallet | Cash on hand
-16.     -50.00 | Costco Visa | Costco Visa
+ 1.   4,700.00 | General         | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education       | Tuition, books, etc.
+ 3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+ 4.      78.50 | Food            | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby           | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+ 9.      70.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network         | Mobile plan, routers, internet access
+11.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel          | Travel expenses for vacation
+13.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+14.   4,700.00 | Checking        | Account from which checks clear
+15.     198.50 | Wallet          | Cash on hand
+16.     -50.00 | Costco Visa     | Costco Visa
 17. Back (b)
 18. Quit (q)
 """,
@@ -1143,22 +1143,22 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   4,700.00 | General | Income is automatically deposited here and allowances are made from here
- 2.       0.00 | Education | Tuition, books, etc.
- 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
- 4.      78.50 | Food | Food other than what's covered in entertainment
- 5.       0.00 | Hobby | Expenses related to a hobby
- 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
- 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
- 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
- 9.      70.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
-10.       0.00 | Network | Mobile plan, routers, internet access
-11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
-12.       0.00 | Travel | Travel expenses for vacation
-13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
-14.   4,700.00 | Checking | Account from which checks clear
-15.     198.50 | Wallet | Cash on hand
-16.     -50.00 | Costco Visa | Costco Visa
+ 1.   4,700.00 | General         | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education       | Tuition, books, etc.
+ 3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+ 4.      78.50 | Food            | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby           | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+ 9.      70.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network         | Mobile plan, routers, internet access
+11.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel          | Travel expenses for vacation
+13.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+14.   4,700.00 | Checking        | Account from which checks clear
+15.     198.50 | Wallet          | Cash on hand
+16.     -50.00 | Costco Visa     | Costco Visa
 17. Back (b)
 18. Quit (q)
 """,
@@ -1387,22 +1387,22 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   4,700.00 | General | Income is automatically deposited here and allowances are made from here
- 2.       0.00 | Education | Tuition, books, etc.
- 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
- 4.      78.50 | Food | Food other than what's covered in entertainment
- 5.       0.00 | Hobby | Expenses related to a hobby
- 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
- 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
- 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
- 9.      65.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
-10.       0.00 | Network | Mobile plan, routers, internet access
-11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
-12.       0.00 | Travel | Travel expenses for vacation
-13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
-14.   4,665.00 | Checking | Account from which checks clear
-15.     198.50 | Wallet | Cash on hand
-16.     -20.00 | Costco Visa | Costco Visa
+ 1.   4,700.00 | General         | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education       | Tuition, books, etc.
+ 3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+ 4.      78.50 | Food            | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby           | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+ 9.      65.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network         | Mobile plan, routers, internet access
+11.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel          | Travel expenses for vacation
+13.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+14.   4,665.00 | Checking        | Account from which checks clear
+15.     198.50 | Wallet          | Cash on hand
+16.     -20.00 | Costco Visa     | Costco Visa
 17. Back (b)
 18. Quit (q)
 """,
@@ -1452,28 +1452,28 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   4,700.00 | General | Income is automatically deposited here and allowances are made from here
- 2.       0.00 | Education | Tuition, books, etc.
- 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
- 4.      78.50 | Food | Food other than what's covered in entertainment
- 5.       0.00 | Hobby | Expenses related to a hobby
- 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
- 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
- 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
- 9.      65.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
-10.       0.00 | Network | Mobile plan, routers, internet access
-11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
-12.       0.00 | Travel | Travel expenses for vacation
-13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
-14.   4,665.00 | Checking | Account from which checks clear
-15.     198.50 | Wallet | Cash on hand
-16.     -20.00 | Costco Visa | Costco Visa
+ 1.   4,700.00 | General         | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education       | Tuition, books, etc.
+ 3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+ 4.      78.50 | Food            | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby           | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+ 9.      65.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network         | Mobile plan, routers, internet access
+11.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel          | Travel expenses for vacation
+13.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+14.   4,665.00 | Checking        | Account from which checks clear
+15.     198.50 | Wallet          | Cash on hand
+16.     -20.00 | Costco Visa     | Costco Visa
 17. Back (b)
 18. Quit (q)
 """,
                         "Enter selection: ",
                     ),
-                    toInput = listOf("17"),
+                    toInput = listOf("b"),
                 )
             }
             "add a real account with a balance" {
@@ -1563,23 +1563,23 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   5,700.00 | General | Income is automatically deposited here and allowances are made from here
- 2.       0.00 | Education | Tuition, books, etc.
- 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
- 4.      78.50 | Food | Food other than what's covered in entertainment
- 5.       0.00 | Hobby | Expenses related to a hobby
- 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
- 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
- 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
- 9.      65.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
-10.       0.00 | Network | Mobile plan, routers, internet access
-11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
-12.       0.00 | Travel | Travel expenses for vacation
-13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
-14.   4,665.00 | Checking | Account from which checks clear
-15.   1,000.00 | Savings | Savings account at My Bank
-16.     198.50 | Wallet | Cash on hand
-17.     -20.00 | Costco Visa | Costco Visa
+ 1.   5,700.00 | General         | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education       | Tuition, books, etc.
+ 3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+ 4.      78.50 | Food            | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby           | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+ 9.      65.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network         | Mobile plan, routers, internet access
+11.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel          | Travel expenses for vacation
+13.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+14.   4,665.00 | Checking        | Account from which checks clear
+15.   1,000.00 | Savings         | Savings account at My Bank
+16.     198.50 | Wallet          | Cash on hand
+17.     -20.00 | Costco Visa     | Costco Visa
 18. Back (b)
 19. Quit (q)
 """,
@@ -1607,23 +1607,23 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """Select account to view history
- 1.   5,700.00 | General | Income is automatically deposited here and allowances are made from here
- 2.       0.00 | Education | Tuition, books, etc.
- 3.       0.00 | Entertainment | Games, books, subscriptions, going out for food or fun
- 4.      78.50 | Food | Food other than what's covered in entertainment
- 5.       0.00 | Hobby | Expenses related to a hobby
- 6.       0.00 | Home Upkeep | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
- 7.       0.00 | Housing | Rent, mortgage, property tax, insurance
- 8.       0.00 | Medical | Medicine, supplies, insurance, etc.
- 9.      65.00 | Necessities | Energy, water, cleaning supplies, soap, tooth brushes, etc.
-10.       0.00 | Network | Mobile plan, routers, internet access
-11.       0.00 | Transportation | Fares, vehicle payments, insurance, fuel, up-keep, etc.
-12.       0.00 | Travel | Travel expenses for vacation
-13.       0.00 | Work | Work-related expenses (possibly to be reimbursed)
-14.   4,665.00 | Checking | Account from which checks clear
-15.   1,000.00 | Savings | Savings account at My Bank
-16.     198.50 | Wallet | Cash on hand
-17.     -20.00 | Costco Visa | Costco Visa
+ 1.   5,700.00 | General         | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education       | Tuition, books, etc.
+ 3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+ 4.      78.50 | Food            | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby           | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+ 9.      65.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network         | Mobile plan, routers, internet access
+11.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel          | Travel expenses for vacation
+13.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+14.   4,665.00 | Checking        | Account from which checks clear
+15.   1,000.00 | Savings         | Savings account at My Bank
+16.     198.50 | Wallet          | Cash on hand
+17.     -20.00 | Costco Visa     | Costco Visa
 18. Back (b)
 19. Quit (q)
 """,

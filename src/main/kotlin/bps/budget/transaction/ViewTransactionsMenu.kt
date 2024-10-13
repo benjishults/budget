@@ -220,7 +220,7 @@ fun WithIo.viewHistoryMenu(
         // TODO https://github.com/benjishults/budget/issues/7
 //        extraItems = listOf(item("View Inactive Accounts") {}),
         labelGenerator = {
-            String.format("%,10.2f | %s | %s", balance, name, description)
+            String.format("%,10.2f | %-15s | %s", balance, name, description)
         },
     ) { menuSession: MenuSession, selectedAccount: Account ->
         menuSession.push(

@@ -27,7 +27,7 @@ fun WithIo.recordSpendingMenu(
     header = "Select real account money was spent from.",
     limit = userConfig.numberOfItemsInScrollingList,
     baseList = budgetData.realAccounts,
-    labelGenerator = { String.format("%,10.2f | %s", balance, name) },
+    labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
 ) { menuSession: MenuSession, selectedRealAccount: RealAccount ->
     val max = selectedRealAccount.balance
     val min = BigDecimal.ZERO.setScale(2)

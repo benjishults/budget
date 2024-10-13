@@ -26,7 +26,7 @@ fun WithIo.recordIncomeSelectionMenu(
     header = "Select account receiving the income:",
     limit = userConfig.numberOfItemsInScrollingList,
     baseList = budgetData.realAccounts,
-    labelGenerator = { String.format("%,10.2f | %s", balance, name) },
+    labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
 ) { _: MenuSession, realAccount: RealAccount ->
     val amount: BigDecimal =
         SimplePrompt(

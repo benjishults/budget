@@ -25,7 +25,7 @@ fun WithIo.makeAllowancesSelectionMenu(
     header = "Select account to allocate money into from ${budgetData.generalAccount.name}: ",
     limit = userConfig.numberOfItemsInScrollingList,
     baseList = budgetData.categoryAccounts - budgetData.generalAccount,
-    labelGenerator = { String.format("%,10.2f | %s", balance, name) },
+    labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
 ) { _: MenuSession, selectedCategoryAccount: CategoryAccount ->
     val max = budgetData.generalAccount.balance
     val min = BigDecimal.ZERO.setScale(2)

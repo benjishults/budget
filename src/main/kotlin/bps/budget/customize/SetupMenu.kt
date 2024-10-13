@@ -153,7 +153,7 @@ fun WithIo.customizeMenu(
                         )
                     try {
                         val incomeTransaction: Transaction? =
-                            if (balance >= BigDecimal.ZERO.setScale(2)) {
+                            if (balance > BigDecimal.ZERO) {
                                 val incomeDescription: String =
                                     SimplePromptWithDefault(
                                         "Enter description of income [initial balance in '${realAccount.name}']: ",
@@ -226,7 +226,7 @@ fun WithIo.customizeMenu(
 //                ScrollingSelectionMenu(
 //                    header = "Select Account to Edit",
 //                    limit = userConfig.numberOfItemsInScrollingList,
-//                    labelGenerator = { String.format("%,10.2f | %s", balance, name) },
+//                    labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
 //                    baseList = (budgetData.categoryAccounts - budgetData.generalAccount) + budgetData.realAccounts + budgetData.chargeAccounts,
 //                ) { menuSession: MenuSession, account: Account -> }
 //            },
@@ -284,7 +284,7 @@ fun <T : Account> deleteAccountMenu(
                 min(baseList.size, offset + limit),
             )
         },
-        labelGenerator = { String.format("%,10.2f | %s", balance, name) },
+        labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
     ) { _: MenuSession, selectedAccount: T ->
         deleter(selectedAccount)
     }
