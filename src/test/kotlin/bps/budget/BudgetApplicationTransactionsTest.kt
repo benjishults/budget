@@ -545,7 +545,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Select the checking account
+                        |Select the checking account to work on
                         | 1.   5,000.00 | Checking Drafts
                         | 2. Back (b)
                         | 3. Quit (q)
@@ -559,7 +559,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                          | 1. Write a check on 'Checking Drafts'
-                         | 2. Record check cleared
+                         | 2. Record check cleared on 'Checking Drafts'
                          | 3. Back (b)
                          | 4. Quit (q)
                          |""".trimMargin(),
@@ -646,7 +646,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                          | 1. Write a check on 'Checking Drafts'
-                         | 2. Record check cleared
+                         | 2. Record check cleared on 'Checking Drafts'
                          | 3. Back (b)
                          | 4. Quit (q)
                          |""".trimMargin(),
@@ -657,7 +657,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Select the check that cleared
+                        |Select the check that cleared on 'Checking Drafts'
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:05 |     300.00 | SuperMarket
                         | 2. Back (b)
@@ -671,32 +671,32 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Select the check that cleared
+                        |Select the check that cleared on 'Checking Drafts'
                         |    Time Stamp          | Amount     | Description
                         | 1. Back (b)
                         | 2. Quit (q)
                         |""".trimMargin(),
                         "Select the check that cleared: ",
                     ),
-                    toInput = listOf("1"),
+                    toInput = listOf("b"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
                          | 1. Write a check on 'Checking Drafts'
-                         | 2. Record check cleared
+                         | 2. Record check cleared on 'Checking Drafts'
                          | 3. Back (b)
                          | 4. Quit (q)
                          |
                     """.trimMargin(),
                         "Enter selection: ",
                     ),
-                    toInput = listOf("3"),
+                    toInput = listOf("b"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Select the checking account
+                        |Select the checking account to work on
                         | 1.   4,700.00 | Checking Drafts
                         | 2. Back (b)
                         | 3. Quit (q)
@@ -1220,9 +1220,9 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Enter the total amount of the bill: ",
+                        "Enter the total amount of the bill being paid on 'Costco Visa': ",
                         """
-                        |Select real account bill was paid from
+                        |Select real account bill on 'Costco Visa' was paid from
                         | 1.   4,700.00 | Checking
                         | 2.     198.50 | Wallet
                         | 3. Back (b)
@@ -1231,18 +1231,18 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     """.trimMargin(),
                         "Enter selection: ",
                         "Use current time for the bill-pay transaction [Y]? ",
-                        "Description of transaction [Costco Visa]: ",
+                        "Description of transaction [pay 'Costco Visa' bill]: ",
                     ),
                     toInput = listOf("35", "1", "", ""),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Select all transactions from this bill.  Amount to be covered: $35.00
+                        |Select all transactions from this 'Costco Visa' bill.  Amount to be covered: $35.00
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:07 |     -30.00 | Costco
                         | 2. 2024-08-08 19:00:08 |     -20.00 | Target
-                        | 3. Record a missing transaction from this bill
+                        | 3. Record a missing transaction from this 'Costco Visa' bill
                         | 4. Back (b)
                         | 5. Quit (q)
                         |
@@ -1254,10 +1254,10 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Select all transactions from this bill.  Amount to be covered: $5.00
+                        |Select all transactions from this 'Costco Visa' bill.  Amount to be covered: $5.00
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:08 |     -20.00 | Target
-                        | 2. Record a missing transaction from this bill
+                        | 2. Record a missing transaction from this 'Costco Visa' bill
                         | 3. Back (b)
                         | 4. Quit (q)
                         |""".trimMargin(),
@@ -1267,12 +1267,17 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "ERROR: this bill payment amount is not large enough to cover that transaction\n",
                         """
-                        |Select all transactions from this bill.  Amount to be covered: $5.00
+                            |
+                            |ERROR: this bill payment amount is not large enough to cover that transaction
+                            |
+                            |
+""".trimMargin(),
+                        """
+                        |Select all transactions from this 'Costco Visa' bill.  Amount to be covered: $5.00
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:08 |     -20.00 | Target
-                        | 2. Record a missing transaction from this bill
+                        | 2. Record a missing transaction from this 'Costco Visa' bill
                         | 3. Back (b)
                         | 4. Quit (q)
                         |""".trimMargin(),
@@ -1317,11 +1322,11 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Select all transactions from this bill.  Amount to be covered: $5.00
+                        |Select all transactions from this 'Costco Visa' bill.  Amount to be covered: $5.00
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:08 |     -20.00 | Target
                         | 2. 2024-08-08 19:00:10 |      -5.00 | Brausen's
-                        | 3. Record a missing transaction from this bill
+                        | 3. Record a missing transaction from this 'Costco Visa' bill
                         | 4. Back (b)
                         | 5. Quit (q)
                         |""".trimMargin(),
@@ -1331,9 +1336,13 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Payment recorded!\n",
                         """
-                        |Select real account bill was paid from
+                            |
+                            |Payment recorded!
+                            |
+                            |""".trimMargin(),
+                        """
+                        |Select real account bill on 'Costco Visa' was paid from
                         | 1.   4,665.00 | Checking
                         | 2.     198.50 | Wallet
                         | 3. Back (b)
@@ -1424,7 +1433,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:00 |   5,000.00 | income into '$defaultCheckingAccountName'
                         | 2. 2024-08-08 19:00:06 |    -300.00 | SuperMarket
-                        | 3. 2024-08-08 19:00:09 |     -35.00 | Costco Visa
+                        | 3. 2024-08-08 19:00:09 |     -35.00 | pay 'Costco Visa' bill
                         | 4. Back (b)
                         | 5. Quit (q)
                         |""".trimMargin(),
@@ -1448,7 +1457,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:00 |   5,000.00 | income into '$defaultCheckingAccountName'
                         | 2. 2024-08-08 19:00:06 |    -300.00 | SuperMarket
-                        | 3. 2024-08-08 19:00:09 |     -35.00 | Costco Visa
+                        | 3. 2024-08-08 19:00:09 |     -35.00 | pay 'Costco Visa' bill
                         | 4. Back (b)
                         | 5. Quit (q)
                         |""".trimMargin(),

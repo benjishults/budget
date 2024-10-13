@@ -63,9 +63,7 @@ fun WithIo.allocateSpendingItemMenu(
         )
         val categoryAmount: BigDecimal =
             SimplePromptWithDefault<BigDecimal>(
-                "Enter the amount spent on '${
-                    selectedCategoryAccount.name
-                }' [0.00, [$max]]: ",
+                "Enter the amount spent on '${selectedCategoryAccount.name}' [0.00, [$max]]: ",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
                 defaultValue = max,

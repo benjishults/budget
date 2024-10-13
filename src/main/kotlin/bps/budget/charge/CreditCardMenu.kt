@@ -95,7 +95,7 @@ private fun WithIo.payCreditCardBill(
 ) {
     val amountOfBill: BigDecimal =
         SimplePrompt(
-            basicPrompt = "Enter the total amount of the bill: ",
+            basicPrompt = "Enter the total amount of the bill being paid on '${chargeAccount.name}': ",
             inputReader = inputReader,
             outPrinter = outPrinter,
             validate = {
@@ -111,7 +111,7 @@ private fun WithIo.payCreditCardBill(
     if (amountOfBill > BigDecimal.ZERO) {
         menuSession.push(
             ScrollingSelectionMenu(
-                header = "Select real account bill was paid from",
+                header = "Select real account bill on '${chargeAccount.name}' was paid from",
                 limit = userConfig.numberOfItemsInScrollingList,
                 baseList = budgetData.realAccounts,
                 labelGenerator = { String.format("%,10.2f | %s", balance, name) },
@@ -124,10 +124,10 @@ private fun WithIo.payCreditCardBill(
                     )
                 val description: String =
                     SimplePromptWithDefault(
-                        "Description of transaction [${chargeAccount.name}]: ",
+                        "Description of transaction [pay '${chargeAccount.name}' bill]: ",
                         inputReader = inputReader,
                         outPrinter = outPrinter,
-                        defaultValue = chargeAccount.name,
+                        defaultValue = "pay '${chargeAccount.name}' bill",
                     )
                         .getResult()
                 val billPayTransaction: Transaction =
@@ -184,7 +184,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBill(
     clock: Clock,
 ): Menu = ViewTransactionsMenu(
     filter = { it.draftStatus === DraftStatus.outstanding && it !in selectedItems },
-    header = "Select all transactions from this bill.  Amount to be covered: $${
+    header = "Select all transactions from this '${chargeAccount.name}' bill.  Amount to be covered: $${
         amountOfBill +
                 selectedItems.fold(BigDecimal.ZERO) { sum, item ->
                     sum + item.amount
@@ -192,7 +192,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBill(
     }",
     prompt = "Select a transaction covered in this bill: ",
     extraItems = listOf(
-        takeAction("Record a missing transaction from this bill") {
+        takeAction("Record a missing transaction from this '${chargeAccount.name}' bill") {
             spendOnACreditCard(
                 budgetData,
                 clock,
@@ -221,7 +221,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBill(
     when {
         remainingToBeCovered == BigDecimal.ZERO.setScale(2) -> {
             menuSession.pop()
-            outPrinter("Payment recorded!\n")
+            outPrinter.important("Payment recorded!")
             budgetData.commit(billPayTransaction)
             budgetDao.commitCreditCardPayment(
                 allSelectedItems,
@@ -230,7 +230,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBill(
             )
         }
         remainingToBeCovered < BigDecimal.ZERO -> {
-            outPrinter("ERROR: this bill payment amount is not large enough to cover that transaction\n")
+            outPrinter.important("ERROR: this bill payment amount is not large enough to cover that transaction")
         }
         else -> {
             menuSession.pop()

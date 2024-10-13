@@ -30,7 +30,7 @@ fun WithIo.checksMenu(
     clock: Clock,
 ): Menu =
     ScrollingSelectionMenu(
-        header = "Select the checking account",
+        header = "Select the checking account to work on",
         limit = userConfig.numberOfItemsInScrollingList,
         baseList = budgetData.draftAccounts,
         labelGenerator = { String.format("%,10.2f | %s", realCompanion.balance - balance, name) },
@@ -100,10 +100,10 @@ fun WithIo.checksMenu(
                     },
                 )
                 add(
-                    pushMenu("Record check cleared") {
+                    pushMenu("Record check cleared on '${draftAccount.name}'") {
                         ViewTransactionsMenu(
                             filter = { it.draftStatus === DraftStatus.outstanding },
-                            header = "Select the check that cleared",
+                            header = "Select the check that cleared on '${draftAccount.name}'",
                             prompt = "Select the check that cleared: ",
                             account = draftAccount,
                             budgetDao = budgetDao,

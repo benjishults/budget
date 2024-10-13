@@ -88,11 +88,11 @@ class TimestampPrompt(
 )
 
 fun WithIo.getTimestampFromUser(
-    prompt: String = "Use current time [Y]? ",
+    queryForNow: String = "Use current time [Y]? ",
     timeZone: TimeZone,
     clock: Clock,
 ) = TimestampPrompt(
-    prompt,
+    queryForNow,
     timeZone,
     clock,
     inputReader,
