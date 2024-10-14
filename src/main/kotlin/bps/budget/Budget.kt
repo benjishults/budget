@@ -167,7 +167,11 @@ fun WithIo.budgetMenu(
                 )
             },
         )
-        add(pushMenu(setup, "m", { customizeMenu(budgetData, budgetDao, user, userConfig, clock) }))
+        add(
+            pushMenu(setup, "m") {
+                customizeMenu(budgetData, budgetDao, user, userConfig, clock)
+            },
+        )
         add(quitItem)
     }
 

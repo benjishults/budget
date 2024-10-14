@@ -485,7 +485,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Spending from 'Wallet'
+                        |Spending from 'Wallet': 'Pepsi'
                         |Select a category that some of that money was spent on.  Left to cover: $1.50
                         | 1.       0.00 | Education
                         | 2.       0.00 | Entertainment
@@ -503,7 +503,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |14. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
-                        "Enter the amount spent on 'Food' [0.00, [1.50]]: ",
+                        "Enter the amount spent on 'Food' for 'Pepsi' [0.00, [1.50]]: ",
                         "Enter description for 'Food' spend [Pepsi]: ",
                     ),
                     toInput = listOf("3", "", ""),
@@ -581,7 +581,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Spending from 'Checking Drafts'
+                        |Spending from 'Checking Drafts': 'SuperMarket'
                         |Select a category that some of that money was spent on.  Left to cover: $300.00
                         | 1.       0.00 | Education
                         | 2.       0.00 | Entertainment
@@ -604,7 +604,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Enter the amount spent on 'Food' [0.00, [298.50]]: ",
+                        "Enter the amount spent on 'Food' for 'SuperMarket' [0.00, [298.50]]: ",
                         "Enter description for 'Food' spend [SuperMarket]: ",
                     ),
                     toInput = listOf("200", ""),
@@ -612,7 +612,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Spending from 'Checking Drafts'
+                        |Spending from 'Checking Drafts': 'SuperMarket'
                         |Select a category that some of that money was spent on.  Left to cover: $100.00
                         | 1.       0.00 | Education
                         | 2.       0.00 | Entertainment
@@ -635,7 +635,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Enter the amount spent on 'Necessities' [0.00, [100.00]]: ",
+                        "Enter the amount spent on 'Necessities' for 'SuperMarket' [0.00, [100.00]]: ",
                         "Enter description for 'Necessities' spend [SuperMarket]: ",
                     ),
                     toInput = listOf("100", ""),
@@ -925,7 +925,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Spending from 'Costco Visa'
+                        |Spending from 'Costco Visa': 'Costco'
                         |Select a category that some of that money was spent on.  Left to cover: $30.00
                         | 1.       0.00 | Education
                         | 2.       0.00 | Entertainment
@@ -948,7 +948,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Enter the amount spent on 'Food' [0.00, [30.00]]: ",
+                        "Enter the amount spent on 'Food' for 'Costco' [0.00, [30.00]]: ",
                         "Enter description for 'Food' spend [Costco]: ",
                     ),
                     toInput = listOf("20", ""),
@@ -956,7 +956,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Spending from 'Costco Visa'
+                        |Spending from 'Costco Visa': 'Costco'
                         |Select a category that some of that money was spent on.  Left to cover: $10.00
                         | 1.       0.00 | Education
                         | 2.       0.00 | Entertainment
@@ -979,7 +979,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Enter the amount spent on 'Necessities' [0.00, [10.00]]: ",
+                        "Enter the amount spent on 'Necessities' for 'Costco' [0.00, [10.00]]: ",
                         "Enter description for 'Necessities' spend [Costco]: ",
                     ),
                     toInput = listOf("10", ""),
@@ -1009,7 +1009,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Spending from 'Costco Visa'
+                        |Spending from 'Costco Visa': 'Target'
                         |Select a category that some of that money was spent on.  Left to cover: $20.00
                         | 1.       0.00 | Education
                         | 2.       0.00 | Entertainment
@@ -1027,7 +1027,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |14. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
-                        "Enter the amount spent on 'Necessities' [0.00, [20.00]]: ",
+                        "Enter the amount spent on 'Necessities' for 'Target' [0.00, [20.00]]: ",
                         "Enter description for 'Necessities' spend [Target]: ",
                     ),
                     toInput = listOf("8", "", ""),
@@ -1296,7 +1296,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Spending from 'Costco Visa'
+                        |Spending from 'Costco Visa': 'Brausen's'
                         |Select a category that some of that money was spent on.  Left to cover: $5.00
                         | 1.       0.00 | Education
                         | 2.       0.00 | Entertainment
@@ -1314,7 +1314,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         |14. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
-                        "Enter the amount spent on 'Necessities' [0.00, [5.00]]: ",
+                        "Enter the amount spent on 'Necessities' for 'Brausen's' [0.00, [5.00]]: ",
                         "Enter description for 'Necessities' spend [Brausen's]: ",
                     ),
                     toInput = listOf("8", "", ""),

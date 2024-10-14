@@ -28,7 +28,7 @@ fun WithIo.allocateSpendingItemMenu(
             transactionBuilder.realItemBuilders.getOrNull(0)?.realAccount?.name
                 ?: transactionBuilder.chargeItemBuilders.getOrNull(0)?.chargeAccount?.name
                 ?: transactionBuilder.draftItemBuilders.getOrNull(0)?.draftAccount?.name
-        }'
+        }': '$description'
             Select a category that some of that money was spent on.  Left to cover: ${"$"}$runningTotal
             """.trimIndent(),
         limit = userConfig.numberOfItemsInScrollingList,
@@ -63,7 +63,7 @@ fun WithIo.allocateSpendingItemMenu(
         )
         val categoryAmount: BigDecimal =
             SimplePromptWithDefault<BigDecimal>(
-                "Enter the amount spent on '${selectedCategoryAccount.name}' [0.00, [$max]]: ",
+                "Enter the amount spent on '${selectedCategoryAccount.name}' for '$description' [0.00, [$max]]: ",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
                 defaultValue = max,
