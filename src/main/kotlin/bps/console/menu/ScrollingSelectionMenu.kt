@@ -1,5 +1,6 @@
 package bps.console.menu
 
+import bps.console.app.MenuSession
 import kotlin.math.max
 import kotlin.math.min
 
@@ -51,8 +52,8 @@ open class ScrollingSelectionMenu<T>(
         {
             itemListGenerator(limit, offset)
                 .mapTo(mutableListOf()) { item ->
-                    item(item.labelGenerator()) { session ->
-                        actOnSelectedItem(session, item)
+                    item(item.labelGenerator()) { menuSession: MenuSession ->
+                        actOnSelectedItem(menuSession, item)
                     }
                 }
                 .also { menuItems: MutableList<MenuItem> ->

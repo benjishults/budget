@@ -1,4 +1,6 @@
-package bps.console.menu
+package bps.console.app
+
+import bps.console.menu.Menu
 
 /**
  * Maintains the stack of menus active in an application.

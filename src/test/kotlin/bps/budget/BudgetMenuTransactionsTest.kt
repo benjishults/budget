@@ -367,7 +367,10 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 //                            | 9. Quit (q)
 //                            |""".trimMargin(),
 //                    "Enter selection: ",
-//                    "Quitting\n",
+//                    """
+//Quitting
+//
+//""",
 //                )
 //                val amount = BigDecimal("100.00")
 //                val writeCheck: Transaction =

@@ -1,9 +1,10 @@
 package bps.console.inputs
 
-interface CompositePrompt<T> : Prompt<T> {
+@Deprecated(message = "Just give separate prompts")
+interface CompositePrompt<T : Any> : Prompt<T> {
     val prompts: List<Prompt<*>>
     val transformer: (List<*>) -> T
-    val onError: (Throwable) -> T
+    val onError: (Throwable) -> T?
         //        get() = { getResult() }
         get() = {
             throw it
@@ -12,7 +13,7 @@ interface CompositePrompt<T> : Prompt<T> {
     /**
      * calls [onError] on exception
      */
-    override fun getResult(): T =
+    override fun getResult(): T? =
         try {
             transformer(
                 prompts.map { innerPrompt: Prompt<*> ->
@@ -24,7 +25,7 @@ interface CompositePrompt<T> : Prompt<T> {
         }
 
     companion object {
-        operator fun <T> invoke(
+        operator fun <T : Any> invoke(
             prompts: List<Prompt<*>>,
             transformer: (List<*>) -> T,
         ): CompositePrompt<T> =

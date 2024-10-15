@@ -7,13 +7,16 @@ import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
+import bps.console.app.MenuSession
+import bps.console.app.TryAgainAtMostRecentMenuException
+import bps.console.inputs.InRangeInclusiveSimpleEntryValidator
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
 import bps.console.menu.Menu
-import bps.console.menu.MenuSession
 import bps.console.menu.ScrollingSelectionMenu
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import java.math.BigDecimal
 
 fun WithIo.makeAllowancesSelectionMenu(
@@ -22,7 +25,7 @@ fun WithIo.makeAllowancesSelectionMenu(
     userConfig: UserConfiguration,
     clock: Clock,
 ): Menu = ScrollingSelectionMenu(
-    header = "Select account to allocate money into from '${budgetData.generalAccount.name}': ",
+    header = "Select account to ALLOCATE money into from '${budgetData.generalAccount.name}': ",
     limit = userConfig.numberOfItemsInScrollingList,
     baseList = budgetData.categoryAccounts - budgetData.generalAccount,
     labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
@@ -31,23 +34,17 @@ fun WithIo.makeAllowancesSelectionMenu(
     val min = BigDecimal.ZERO.setScale(2)
     val amount: BigDecimal =
         SimplePrompt<BigDecimal>(
-            "Enter the amount to allocate into '${selectedCategoryAccount.name}' [$min, $max]: ",
+            "Enter the amount to ALLOCATE into '${selectedCategoryAccount.name}' [$min, $max]: ",
             inputReader = inputReader,
             outPrinter = outPrinter,
-            validate = { input: String ->
-                input
-                    .toCurrencyAmountOrNull()
-                    ?.let {
-                        it in min..max
-                    }
-                    ?: false
-            },
+            validator = InRangeInclusiveSimpleEntryValidator(min, max),
         ) {
             it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
         }
             .getResult()
+            ?: throw TryAgainAtMostRecentMenuException("No amount entered.")
     if (amount > BigDecimal.ZERO) {
-        val description =
+        val description: String =
             SimplePromptWithDefault(
                 "Enter description of transaction [allowance into '${selectedCategoryAccount.name}']: ",
                 defaultValue = "allowance into '${selectedCategoryAccount.name}'",
@@ -55,7 +52,8 @@ fun WithIo.makeAllowancesSelectionMenu(
                 outPrinter = outPrinter,
             )
                 .getResult()
-        val timestamp = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
+                ?: throw TryAgainAtMostRecentMenuException("No description entered.")
+        val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
         val allocate = Transaction.Builder(
             description,
             timestamp,
@@ -77,6 +75,7 @@ fun WithIo.makeAllowancesSelectionMenu(
             .build()
         budgetData.commit(allocate)
         budgetDao.commit(allocate, budgetData.id)
+        outPrinter.important("Allowance recorded")
     } else {
         outPrinter.important("Must allow a positive amount.")
     }

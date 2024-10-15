@@ -1,6 +1,8 @@
 package bps.console.menu
 
 import bps.console.SimpleConsoleIoTestFixture
+import bps.console.app.MenuApplicationWithQuit
+import bps.console.app.MenuSession
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContainExactly
 
@@ -45,7 +47,10 @@ class ScrollingSelectionMenuTest : FreeSpec(),
                 "You chose: 'item 4'\n",
                 secondGroup,
                 "Enter selection: ",
-                "Quitting\n",
+                """
+Quitting
+
+""",
             )
         }
         "test with even division of items" {
@@ -91,7 +96,10 @@ class ScrollingSelectionMenuTest : FreeSpec(),
                 "Enter selection: ",
                 secondGroup,
                 "Enter selection: ",
-                "Quitting\n",
+                """
+Quitting
+
+""",
             )
         }
         "test with uneven division of items" {
@@ -133,7 +141,10 @@ class ScrollingSelectionMenuTest : FreeSpec(),
                 "Enter selection: ",
                 firstGroup,
                 "Enter selection: ",
-                "Quitting\n",
+                """
+Quitting
+
+""",
             )
         }
     }

@@ -6,7 +6,7 @@ import bps.console.io.InputReader
 import bps.console.io.OutPrinter
 
 // FIXME replace this with ScrollingSelectionMenu
-interface SelectionPrompt<T> : Prompt<T> {
+interface SelectionPrompt<T : Any> : Prompt<T> {
     val header: String?
     val prompt: String
     val inputReader: InputReader
@@ -43,7 +43,7 @@ interface SelectionPrompt<T> : Prompt<T> {
     }
 
     companion object {
-        operator fun <T> invoke(
+        operator fun <T : Any> invoke(
             header: String?,
             options: List<T>,
             prompt: String = "Enter selection: ",

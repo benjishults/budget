@@ -66,7 +66,10 @@ Enter the name for your "General" account [General] """,
                             | 9. Quit (q)
                             |""".trimMargin(),
                 "Enter selection: ",
-                "Quitting\n",
+                """
+Quitting
+
+""",
             )
             inputs shouldHaveSize 0
             File(convertToPath(configurations.persistence.file!!.dataDirectory)).deleteContentsOfNonEmptyFolder() shouldBe true
@@ -112,7 +115,10 @@ Enter the name for your "General" account [General] """,
 //                            | 9. Quit (q)
 //                            |""".trimMargin(),
 //                "Enter selection: ",
-//                "Quitting\n",
+//                """
+//Quitting
+//
+//""",
 //            )
 //            inputs shouldHaveSize 0
 //            File(convertToPath(configurations.persistence.file!!.dataDirectory)).deleteContentsOfNonEmptyFolder() shouldBe true
@@ -164,7 +170,10 @@ Enter the name for your "General" account [General] """,
 //                        | 5. Quit (q)
 //                        |""".trimMargin(),
 //                "Enter selection: ",
-//                "Quitting\n",
+//                """
+//Quitting
+//
+//""",
 //            )
 //            inputs shouldHaveSize 0
 ////            File(convertToPath(configurations.persistence.file!!.dataDirectory)).deleteContentsOfNonEmptyFolder() shouldBe true

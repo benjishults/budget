@@ -1,4 +1,4 @@
-package bps.console.menu
+package bps.console.app
 
 interface MenuApplication {
     fun run()

@@ -26,10 +26,10 @@ class BasicSetupInteractionsTest : FreeSpec(),
         dropAllBeforeEach()
         closeJdbcAfterSpec()
         "setup basic data through console ui" {
+            val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
             inputs.addAll(
                 listOf("test@test.com", "", "y", "2000", "100", "9"),
             )
-            val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
             BudgetApplication(
                 uiFunctions,
                 configurations,
@@ -82,7 +82,10 @@ class BasicSetupInteractionsTest : FreeSpec(),
                             | 9. Quit (q)
                             |""".trimMargin(),
                 "Enter selection: ",
-                "Quitting\n",
+                """
+Quitting
+
+""",
             )
             inputs shouldHaveSize 0
 

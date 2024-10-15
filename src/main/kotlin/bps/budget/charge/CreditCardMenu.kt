@@ -11,11 +11,13 @@ import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.budget.transaction.ViewTransactionsMenu
 import bps.budget.transaction.allocateSpendingItemMenu
+import bps.console.app.MenuSession
+import bps.console.app.TryAgainAtMostRecentMenuException
+import bps.console.inputs.NonNegativeSimpleEntryValidator
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
 import bps.console.menu.Menu
-import bps.console.menu.MenuSession
 import bps.console.menu.ScrollingSelectionMenu
 import bps.console.menu.backItem
 import bps.console.menu.pushMenu
@@ -41,6 +43,7 @@ fun WithIo.creditCardMenu(
         menuSession.push(
             Menu {
                 add(
+                    // NOTE these might ought to be takeActionAndPush.  The intermediateAction could collect the initial data and pass it on.
                     takeAction("Record spending on '${chargeAccount.name}'") {
                         spendOnACreditCard(
                             budgetData,
@@ -53,6 +56,7 @@ fun WithIo.creditCardMenu(
                     },
                 )
                 add(
+                    // NOTE these might ought to be takeActionAndPush.  The intermediateAction could collect the initial data and pass it on.
                     takeAction("Pay '${chargeAccount.name}' bill") {
                         payCreditCardBill(
                             menuSession,
@@ -98,16 +102,10 @@ private fun WithIo.payCreditCardBill(
             basicPrompt = "Enter the total amount of the bill being paid on '${chargeAccount.name}': ",
             inputReader = inputReader,
             outPrinter = outPrinter,
-            validate = {
-                it
-                    .toCurrencyAmountOrNull()
-                    ?.let { amount ->
-                        amount >= BigDecimal.ZERO
-                    }
-                    ?: false
-            },
+            validator = NonNegativeSimpleEntryValidator,
         ) { it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO }
             .getResult()
+            ?: throw TryAgainAtMostRecentMenuException("No amount entered.")
     if (amountOfBill > BigDecimal.ZERO) {
         menuSession.push(
             ScrollingSelectionMenu(
@@ -130,6 +128,7 @@ private fun WithIo.payCreditCardBill(
                         defaultValue = "pay '${chargeAccount.name}' bill",
                     )
                         .getResult()
+                        ?: throw TryAgainAtMostRecentMenuException("No description entered.")
                 val billPayTransaction: Transaction =
                     Transaction.Builder(description, timestamp)
                         .apply {
@@ -182,6 +181,31 @@ private fun WithIo.selectOrCreateChargeTransactionsForBill(
     userConfig: UserConfiguration,
     menuSession: MenuSession,
     clock: Clock,
+): Menu = selectOrCreateChargeTransactionsForBillHelper(
+    amountOfBill = amountOfBill,
+    runningTotal = amountOfBill,
+    billPayTransaction = billPayTransaction,
+    chargeAccount = chargeAccount,
+    selectedItems = selectedItems,
+    budgetData = budgetData,
+    budgetDao = budgetDao,
+    userConfig = userConfig,
+    menuSession = menuSession,
+    clock = clock,
+)
+
+private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
+    amountOfBill: BigDecimal,
+    // TODO use a helper to make this less error prone for the original call
+    runningTotal: BigDecimal,
+    billPayTransaction: Transaction,
+    chargeAccount: ChargeAccount,
+    selectedItems: List<Transaction.Item>,
+    budgetData: BudgetData,
+    budgetDao: BudgetDao,
+    userConfig: UserConfiguration,
+    menuSession: MenuSession,
+    clock: Clock,
 ): Menu = ViewTransactionsMenu(
     filter = { it.draftStatus === DraftStatus.outstanding && it !in selectedItems },
     header = "Select all transactions from this '${chargeAccount.name}' bill.  Amount to be covered: $${
@@ -212,31 +236,28 @@ private fun WithIo.selectOrCreateChargeTransactionsForBill(
     val allSelectedItems: List<Transaction.Item> = selectedItems + chargeTransactionItem
     // FIXME if the selected amount is greater than allowed, then give a "denied" message
     //       ... or don't show such items in the first place
-    val remainingToBeCovered: BigDecimal =
-        amountOfBill +
-                allSelectedItems
-                    .fold(BigDecimal.ZERO.setScale(2)) { sum, item ->
-                        sum + item.amount
-                    }
+    val remainingToBeCovered: BigDecimal = runningTotal + chargeTransactionItem.amount
     when {
         remainingToBeCovered == BigDecimal.ZERO.setScale(2) -> {
             menuSession.pop()
-            outPrinter.important("Payment recorded!")
             budgetData.commit(billPayTransaction)
             budgetDao.commitCreditCardPayment(
                 allSelectedItems,
                 billPayTransaction,
                 budgetData.id,
             )
+            outPrinter.important("Payment recorded!")
         }
         remainingToBeCovered < BigDecimal.ZERO -> {
             outPrinter.important("ERROR: this bill payment amount is not large enough to cover that transaction")
         }
         else -> {
+            outPrinter.important("Item prepared")
             menuSession.pop()
             menuSession.push(
-                selectOrCreateChargeTransactionsForBill(
+                selectOrCreateChargeTransactionsForBillHelper(
                     amountOfBill = amountOfBill,
+                    runningTotal = remainingToBeCovered,
                     billPayTransaction = billPayTransaction,
                     chargeAccount = chargeAccount,
                     selectedItems = allSelectedItems,
@@ -266,18 +287,12 @@ private fun WithIo.spendOnACreditCard(
             "Enter the amount of the charge on '${chargeAccount.name}': ",
             inputReader = inputReader,
             outPrinter = outPrinter,
-            validate = { input: String ->
-                input
-                    .toCurrencyAmountOrNull()
-                    ?.let {
-                        it >= BigDecimal.ZERO
-                    }
-                    ?: false
-            },
+            validator = NonNegativeSimpleEntryValidator,
         ) {
             it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
         }
             .getResult()
+            ?: throw TryAgainAtMostRecentMenuException("No amount entered.")
     if (amount > BigDecimal.ZERO) {
         val description: String =
             SimplePrompt<String>(
@@ -286,8 +301,8 @@ private fun WithIo.spendOnACreditCard(
                 outPrinter = outPrinter,
             )
                 .getResult()
-        val timestamp: Instant =
-            getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
+                ?: throw TryAgainAtMostRecentMenuException("No description entered.")
+        val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
         val transactionBuilder: Transaction.Builder =
             Transaction.Builder(description, timestamp)
                 .apply {

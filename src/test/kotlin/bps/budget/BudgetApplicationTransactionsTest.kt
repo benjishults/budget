@@ -82,11 +82,13 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Enter the real fund account into which the money is going (e.g., savings).
-                        |The same amount of money will be automatically entered into the 'General' account.
-                        |""".trimMargin(),
+                            |
+                            |Enter the real fund account into which the money is going (e.g., savings).
+                            |The same amount of money will be automatically entered into the 'General' account.
+                            |
+                            |""".trimMargin(),
                         """
-                        |Select account receiving the income:
+                        |Select account receiving the INCOME:
                         | 1.       0.00 | Checking        | Account from which checks clear
                         | 2.       0.00 | Wallet          | Cash on hand
                         | 3. Back (b)
@@ -97,7 +99,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     toInput = listOf("1"),
                 )
                 validateInteraction(
-                    expectedOutputs = listOf("Enter the amount of income into 'Checking': "),
+                    expectedOutputs = listOf("Enter the amount of INCOME into 'Checking': "),
                     toInput = listOf("5000"),
                 )
                 validateInteraction(
@@ -105,7 +107,13 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         "Enter description of income [income into '$defaultCheckingAccountName']: ",
                         "Use current time [Y]? ",
                         """
-                        |Select account receiving the income:
+                            |
+                            |Income recorded
+                            |
+                            |
+                        """.trimMargin(),
+                        """
+                        |Select account receiving the INCOME:
                         | 1.   5,000.00 | Checking        | Account from which checks clear
                         | 2.       0.00 | Wallet          | Cash on hand
                         | 3. Back (b)
@@ -117,11 +125,17 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Enter the amount of income into 'Wallet': ",
+                        "Enter the amount of INCOME into 'Wallet': ",
                         "Enter description of income [income into '$defaultWalletAccountName']: ",
                         "Use current time [Y]? ",
                         """
-                                            |Select account receiving the income:
+                            |
+                            |Income recorded
+                            |
+                            |
+                        """.trimMargin(),
+                        """
+                                            |Select account receiving the INCOME:
                                             | 1.   5,000.00 | Checking        | Account from which checks clear
                                             | 2.     200.00 | Wallet          | Cash on hand
                                             | 3. Back (b)
@@ -193,6 +207,10 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 15. Quit (q)
 """,
                         "Enter selection: ",
+                        """
+Deleted account 'Cosmetics'
+
+""",
                         """Select account to delete
  1.       0.00 | Education       | Tuition, books, etc.
  2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
@@ -253,7 +271,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         "Every month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n",
-                        "Select account to allocate money into from '${application.budgetData.generalAccount.name}': " + """
+                        "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}': " + """
  1.       0.00 | Education       | Tuition, books, etc.
  2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
  3.       0.00 | Food            | Food other than what's covered in entertainment
@@ -275,7 +293,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Enter the amount to allocate into '$defaultFoodAccountName' [0.00, 5200.00]: ",
+                        "Enter the amount to ALLOCATE into '$defaultFoodAccountName' [0.00, 5200.00]: ",
                         "Enter description of transaction [allowance into '$defaultFoodAccountName']: ",
                         "Use current time [Y]? ",
                     ),
@@ -283,7 +301,11 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Select account to allocate money into from '${application.budgetData.generalAccount.name}': " + """
+                        """
+Allowance recorded
+
+""",
+                        "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}': " + """
  1.       0.00 | Education       | Tuition, books, etc.
  2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
  3.     300.00 | Food            | Food other than what's covered in entertainment
@@ -305,10 +327,14 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Enter the amount to allocate into '$defaultNecessitiesAccountName' [0.00, 4900.00]: ",
+                        "Enter the amount to ALLOCATE into '$defaultNecessitiesAccountName' [0.00, 4900.00]: ",
                         "Enter description of transaction [allowance into '$defaultNecessitiesAccountName']: ",
                         "Use current time [Y]? ",
-                        "Select account to allocate money into from '${application.budgetData.generalAccount.name}': " + """
+                        """
+Allowance recorded
+
+""",
+                        "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}': " + """
  1.       0.00 | Education       | Tuition, books, etc.
  2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
  3.     300.00 | Food            | Food other than what's covered in entertainment
@@ -435,7 +461,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 """,
                         "Enter selection: ",
                     ),
-                    toInput = listOf("16"),
+                    toInput = listOf("b"),
                 )
             }
             "record spending" {
@@ -459,8 +485,17 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
+                        "Enter the total amount spent: ",
+                        "Enter description of transaction: ",
+                        "Use current time [Y]? ",
+                    ),
+                    toInput = listOf("1.5", "Pepsi", ""),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
                         """
-                        |Select real account money was spent from.
+                        |Spending $1.50 for 'Pepsi'
+                        |Select an account that some of that money was spent from.  Left to cover: $1.50
                         | 1.   5,000.00 | Checking        | Account from which checks clear
                         | 2.     200.00 | Wallet          | Cash on hand
                         | 3. Back (b)
@@ -472,18 +507,18 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     toInput = listOf("2"),
                 )
                 validateInteraction(
-                    expectedOutputs = listOf("Enter the amount spent from 'Wallet' [0.00, 200.00]: "),
-                    toInput = listOf("1.5"),
-                )
-                validateInteraction(
                     expectedOutputs = listOf(
-                        "Enter description of transaction [spending from 'Wallet']: ",
-                        "Use current time [Y]? ",
+                        "Enter the amount spent from 'Wallet' for 'Pepsi' [0.00, [1.50]]: ",
+                        "Enter description for 'Wallet' spend [Pepsi]: ",
                     ),
-                    toInput = listOf("Pepsi", ""),
+                    toInput = listOf("", ""),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
+                        """
+All sources prepared
+
+""",
                         """
                         |Spending from 'Wallet': 'Pepsi'
                         |Select a category that some of that money was spent on.  Left to cover: $1.50
@@ -511,16 +546,24 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Select real account money was spent from.
-                        | 1.   5,000.00 | Checking        | Account from which checks clear
-                        | 2.     198.50 | Wallet          | Cash on hand
-                        | 3. Back (b)
-                        | 4. Quit (q)
-                        |
-                    """.trimMargin(),
+Spending recorded
+
+""",
+                        """
+                            |Budget!
+                            | 1. $recordIncome (i)
+                            | 2. $makeAllowances (a)
+                            | 3. $recordSpending (s)
+                            | 4. $viewHistory (v)
+                            | 5. $writeOrClearChecks (ch)
+                            | 6. $useOrPayCreditCards (cr)
+                            | 7. $transfer (x)
+                            | 8. $setup (m)
+                            | 9. Quit (q)
+                            |""".trimMargin(),
                         "Enter selection: ",
                     ),
-                    toInput = listOf("3"),
+                    toInput = listOf(""),
                 )
             }
             "write a check to SuperMarket" {
@@ -612,6 +655,10 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
+Itemization prepared
+
+""",
+                        """
                         |Spending from 'Checking Drafts': 'SuperMarket'
                         |Select a category that some of that money was spent on.  Left to cover: $100.00
                         | 1.       0.00 | Education
@@ -639,6 +686,22 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                         "Enter description for 'Necessities' spend [SuperMarket]: ",
                     ),
                     toInput = listOf("100", ""),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+Spending recorded
+
+""",
+                        """
+                         | 1. Write a check on 'Checking Drafts'
+                         | 2. Record check cleared on 'Checking Drafts'
+                         | 3. Back (b)
+                         | 4. Quit (q)
+                         |""".trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf(""),
                 )
             }
             "check clears" {
@@ -857,6 +920,10 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
+New credit card account 'Costco Visa' created
+
+""",
+                        """
                          | 1. Create a New Category
                          | 2. Deactivate an Account
                          | 3. Create a Real Fund
@@ -956,6 +1023,10 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
+Itemization prepared
+
+""",
+                        """
                         |Spending from 'Costco Visa': 'Costco'
                         |Select a category that some of that money was spent on.  Left to cover: $10.00
                         | 1.       0.00 | Education
@@ -986,6 +1057,10 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
+                        """
+Spending recorded
+
+""",
                         """
                         | 1. Record spending on 'Costco Visa'
                         | 2. Pay 'Costco Visa' bill
@@ -1034,6 +1109,10 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
+                        """
+Spending recorded
+
+""",
                         """
                         | 1. Record spending on 'Costco Visa'
                         | 2. Pay 'Costco Visa' bill
@@ -1254,6 +1333,10 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
+Item prepared
+
+""",
+                        """
                         |Select all transactions from this 'Costco Visa' bill.  Amount to be covered: $5.00
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:08 |     -20.00 | Target
@@ -1321,6 +1404,10 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
+                        """
+Spending recorded
+
+""",
                         """
                         |Select all transactions from this 'Costco Visa' bill.  Amount to be covered: $5.00
                         |    Time Stamp          | Amount     | Description
@@ -1546,6 +1633,10 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
+                        """
+Real account 'Savings' created with balance ${'$'}1000.00
+
+""",
                         """
                          | 1. Create a New Category
                          | 2. Deactivate an Account

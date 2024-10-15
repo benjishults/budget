@@ -7,11 +7,13 @@ import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
+import bps.console.app.MenuSession
+import bps.console.app.TryAgainAtMostRecentMenuException
+import bps.console.inputs.PositiveSimpleEntryValidator
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
 import bps.console.menu.Menu
-import bps.console.menu.MenuSession
 import bps.console.menu.ScrollingSelectionMenu
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -22,22 +24,24 @@ fun WithIo.recordIncomeSelectionMenu(
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
     clock: Clock,
+    // TODO make this take the amount first and distribute among accounts?
 ): Menu = ScrollingSelectionMenu(
-    header = "Select account receiving the income:",
+    header = "Select account receiving the INCOME:",
     limit = userConfig.numberOfItemsInScrollingList,
     baseList = budgetData.realAccounts + budgetData.chargeAccounts,
     labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
 ) { _: MenuSession, realAccount: RealAccount ->
     val amount: BigDecimal =
         SimplePrompt(
-            "Enter the amount of income into '${realAccount.name}': ",
+            "Enter the amount of INCOME into '${realAccount.name}': ",
             inputReader = inputReader,
             outPrinter = outPrinter,
+            validator = PositiveSimpleEntryValidator,
         ) {
-            it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
+            it.toCurrencyAmountOrNull()!!
         }
             .getResult()
-            ?: BigDecimal.ZERO.setScale(2)
+            ?: throw TryAgainAtMostRecentMenuException("No amount entered.")
     if (amount <= BigDecimal.ZERO.setScale(2)) {
         outPrinter.important("Not recording non-positive income.")
     } else {
@@ -49,10 +53,12 @@ fun WithIo.recordIncomeSelectionMenu(
                 outPrinter = outPrinter,
             )
                 .getResult()
+                ?: throw TryAgainAtMostRecentMenuException("No description entered.")
         val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
         val income: Transaction = createIncomeTransaction(description, timestamp, amount, budgetData, realAccount)
         budgetData.commit(income)
         budgetDao.commit(income, budgetData.id)
+        outPrinter.important("Income recorded")
     }
 }
 

@@ -56,7 +56,10 @@ Enter the name for your "General" account [General] """,
                             | 9. Quit (q)
                             |""".trimMargin(),
                 "Enter selection: ",
-                "Quitting\n",
+                """
+Quitting
+
+""",
             )
             inputs shouldHaveSize 0
         }
@@ -94,7 +97,10 @@ Enter the name for your "General" account [General] """,
 //                        | 8. Quit (q)
 //                        |""".trimMargin(),
 //                    "Enter selection: ",
-//                    "Quitting\n",
+//                    """
+//            Quitting
+//
+//            """,
 //                )
 //                inputs shouldHaveSize 0
 //            }
@@ -139,7 +145,10 @@ Enter the name for your "General" account [General] """,
 //                        | 5. Quit (q)
 //                        |""".trimMargin(),
 //                    "Enter selection: ",
-//                    "Quitting\n",
+//                    """
+//Quitting
+//
+//""",
 //                )
 //                inputs shouldHaveSize 0
 //            }

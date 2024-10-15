@@ -1,7 +1,7 @@
 package bps.console
 
+import bps.console.app.MenuApplicationWithQuit
 import bps.console.menu.Menu
-import bps.console.menu.MenuApplicationWithQuit
 import bps.console.menu.popMenuItem
 import bps.console.menu.quitItem
 import bps.console.menu.takeAction
@@ -72,7 +72,10 @@ class MenuTest : FreeSpec(),
                       | 2. Quit (q)
                       |""".trimMargin(),
                 "Enter selection: ",
-                "Quitting\n",
+                """
+Quitting
+
+""",
             )
             inputs shouldHaveSize 0
         }
@@ -130,7 +133,10 @@ class MenuTest : FreeSpec(),
                       | 2. Quit (q)
                       |""".trimMargin(),
                 "Enter selection: ",
-                "Quitting\n",
+                """
+Quitting
+
+""",
             )
             inputs shouldHaveSize 0
         }

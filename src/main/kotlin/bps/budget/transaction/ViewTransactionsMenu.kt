@@ -10,11 +10,11 @@ import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
+import bps.console.app.MenuSession
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.OutPrinter
 import bps.console.menu.Menu
 import bps.console.menu.MenuItem
-import bps.console.menu.MenuSession
 import bps.console.menu.ScrollingSelectionMenu
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime

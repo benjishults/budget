@@ -19,12 +19,12 @@ import bps.budget.transaction.viewHistoryMenu
 import bps.budget.ui.ConsoleUiFacade
 import bps.budget.ui.UiFacade
 import bps.config.convertToPath
+import bps.console.app.MenuApplicationWithQuit
 import bps.console.io.DefaultInputReader
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
 import bps.console.menu.Menu
-import bps.console.menu.MenuApplicationWithQuit
 import bps.console.menu.pushMenu
 import bps.console.menu.quitItem
 import bps.console.menu.takeAction
@@ -118,11 +118,11 @@ fun WithIo.budgetMenu(
                 shortcut = "i",
                 to = { recordIncomeSelectionMenu(budgetData, budgetDao, userConfig, clock) },
             ) {
-                outPrinter(
+                outPrinter.important(
                     """
             |Enter the real fund account into which the money is going (e.g., savings).
             |The same amount of money will be automatically entered into the '${budgetData.generalAccount.name}' account.
-            |""".trimMargin(),
+                    """.trimMargin(),
                 )
             },
         )

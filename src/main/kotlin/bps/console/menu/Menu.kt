@@ -1,5 +1,7 @@
 package bps.console.menu
 
+import bps.console.app.CancelHandler
+import bps.console.app.TryAgainAtMostRecentMenu
 import bps.console.io.OutPrinter
 
 interface Menu {
@@ -12,6 +14,9 @@ interface Menu {
      */
     val itemsGenerator: () -> List<MenuItem> get() = { emptyList() }
     val shortcutMap: Map<String, MenuItem>
+
+    val cancelHandler: CancelHandler
+        get() = TryAgainAtMostRecentMenu
 
     fun List<MenuItem>.print(outPrinter: OutPrinter): List<MenuItem> =
         apply {

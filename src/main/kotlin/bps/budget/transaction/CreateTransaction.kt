@@ -4,15 +4,152 @@ import bps.budget.WithIo
 import bps.budget.min
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
+import bps.budget.model.ChargeAccount
+import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
+import bps.console.app.MenuSession
+import bps.console.app.TryAgainAtMostRecentMenuException
+import bps.console.inputs.InRangeInclusiveSimpleEntryValidator
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.menu.Menu
-import bps.console.menu.MenuSession
 import bps.console.menu.ScrollingSelectionMenu
 import java.math.BigDecimal
+
+fun WithIo.chooseRealAccountsThenCategories(
+    totalAmount: BigDecimal,
+    runningTotal: BigDecimal,
+    transactionBuilder: Transaction.Builder,
+    description: String,
+    budgetData: BudgetData,
+    budgetDao: BudgetDao,
+    userConfig: UserConfiguration,
+): Menu =
+    ScrollingSelectionMenu(
+        header = """
+            Spending $$totalAmount for '$description'
+            Select an account that some of that money was spent from.  Left to cover: $$runningTotal
+            """.trimIndent(),
+        limit = userConfig.numberOfItemsInScrollingList,
+        baseList = budgetData.realAccounts + budgetData.chargeAccounts,
+        labelGenerator = {
+            String.format(
+                "%,10.2f | %-15s | %s",
+                balance +
+                        // TODO this can be improved for performance, if needed
+                        transactionBuilder
+                            .realItemBuilders
+                            .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
+                                if (this == itemBuilder.realAccount)
+                                    runningValue + itemBuilder.amount!!
+                                else
+                                    runningValue
+                            } +
+                        transactionBuilder
+                            .chargeItemBuilders
+                            .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
+                                if (this == itemBuilder.chargeAccount)
+                                    runningValue + itemBuilder.amount!!
+                                else
+                                    runningValue
+                            },
+                name,
+                this.description,
+            )
+        },
+    ) { menuSession: MenuSession, selectedRealAccount: RealAccount ->
+        val max = min(
+            runningTotal,
+            selectedRealAccount.balance +
+                    // TODO this can be improved for performance, if needed
+                    transactionBuilder
+                        .realItemBuilders
+                        .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
+                            if (selectedRealAccount == itemBuilder.realAccount)
+                                runningValue + itemBuilder.amount!!
+                            else
+                                runningValue
+                        } +
+                    transactionBuilder
+                        .chargeItemBuilders
+                        .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
+                            if (selectedRealAccount == itemBuilder.chargeAccount)
+                                runningValue + itemBuilder.amount!!
+                            else
+                                runningValue
+                        },
+        )
+        val currentAmount: BigDecimal =
+            SimplePromptWithDefault(
+                "Enter the amount spent from '${selectedRealAccount.name}' for '$description' [0.00, [$max]]: ",
+                inputReader = inputReader,
+                outPrinter = outPrinter,
+                additionalValidation = InRangeInclusiveSimpleEntryValidator(BigDecimal.ZERO.setScale(2), max),
+                defaultValue = max,
+            ) {
+                it.toCurrencyAmountOrNull()!!
+            }
+                .getResult()
+                ?: throw TryAgainAtMostRecentMenuException("No amount entered")
+        if (currentAmount > BigDecimal.ZERO) {
+            val currentDescription: String =
+                SimplePromptWithDefault(
+                    "Enter description for '${selectedRealAccount.name}' spend [$description]: ",
+                    defaultValue = description,
+                    inputReader = inputReader,
+                    outPrinter = outPrinter,
+                )
+                    .getResult()
+                    ?: throw TryAgainAtMostRecentMenuException("No description entered")
+            when (selectedRealAccount) {
+                is ChargeAccount ->
+                    transactionBuilder.chargeItemBuilders.add(
+                        Transaction.ItemBuilder(
+                            amount = -currentAmount,
+                            description = if (currentDescription == description) null else currentDescription,
+                            chargeAccount = selectedRealAccount,
+                        ),
+                    )
+                else ->
+                    transactionBuilder.realItemBuilders.add(
+                        Transaction.ItemBuilder(
+                            amount = -currentAmount,
+                            description = if (currentDescription == description) null else currentDescription,
+                            realAccount = selectedRealAccount,
+                        ),
+                    )
+            }
+            menuSession.pop()
+            if (runningTotal - currentAmount > BigDecimal.ZERO) {
+                outPrinter.important("Itemization prepared")
+                menuSession.push(
+                    chooseRealAccountsThenCategories(
+                        totalAmount,
+                        runningTotal - currentAmount,
+                        transactionBuilder,
+                        description,
+                        budgetData,
+                        budgetDao,
+                        userConfig,
+                    ),
+                )
+            } else {
+                outPrinter.important("All sources prepared")
+                menuSession.push(
+                    allocateSpendingItemMenu(
+                        totalAmount,
+                        transactionBuilder,
+                        description,
+                        budgetData,
+                        budgetDao,
+                        userConfig,
+                    ),
+                )
+            }
+        }
+    }
 
 fun WithIo.allocateSpendingItemMenu(
     runningTotal: BigDecimal,
@@ -62,23 +199,19 @@ fun WithIo.allocateSpendingItemMenu(
                         },
         )
         val categoryAmount: BigDecimal =
-            SimplePromptWithDefault<BigDecimal>(
+            SimplePromptWithDefault(
                 "Enter the amount spent on '${selectedCategoryAccount.name}' for '$description' [0.00, [$max]]: ",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
+                additionalValidation = InRangeInclusiveSimpleEntryValidator(BigDecimal.ZERO.setScale(2), max),
                 defaultValue = max,
             ) {
-                (it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2))
-                    .let { entry: BigDecimal ->
-                        if (entry < BigDecimal.ZERO || entry > max)
-                            BigDecimal.ZERO.setScale(2)
-                        else
-                            entry
-                    }
+                it.toCurrencyAmountOrNull()!!
             }
                 .getResult()
+                ?: throw TryAgainAtMostRecentMenuException("No amount entered")
         if (categoryAmount > BigDecimal.ZERO) {
-            val categoryDescription =
+            val categoryDescription: String =
                 SimplePromptWithDefault(
                     "Enter description for '${selectedCategoryAccount.name}' spend [$description]: ",
                     defaultValue = description,
@@ -86,6 +219,7 @@ fun WithIo.allocateSpendingItemMenu(
                     outPrinter = outPrinter,
                 )
                     .getResult()
+                    ?: throw TryAgainAtMostRecentMenuException("No description entered")
             transactionBuilder.categoryItemBuilders.add(
                 Transaction.ItemBuilder(
                     amount = -categoryAmount,
@@ -95,6 +229,7 @@ fun WithIo.allocateSpendingItemMenu(
             )
             menuSession.pop()
             if (runningTotal - categoryAmount > BigDecimal.ZERO) {
+                outPrinter.important("Itemization prepared")
                 menuSession.push(
                     allocateSpendingItemMenu(
                         runningTotal - categoryAmount,
@@ -109,6 +244,7 @@ fun WithIo.allocateSpendingItemMenu(
                 val transaction = transactionBuilder.build()
                 budgetData.commit(transaction)
                 budgetDao.commit(transaction, budgetData.id)
+                outPrinter.important("Spending recorded")
             }
         }
     }

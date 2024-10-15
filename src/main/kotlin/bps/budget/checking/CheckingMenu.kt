@@ -10,6 +10,8 @@ import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.budget.transaction.ViewTransactionsMenu
 import bps.budget.transaction.allocateSpendingItemMenu
+import bps.console.app.TryAgainAtMostRecentMenuException
+import bps.console.inputs.InRangeInclusiveSimpleEntryValidator
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
@@ -49,18 +51,12 @@ fun WithIo.checksMenu(
                                 inputReader = inputReader,
                                 outPrinter = outPrinter,
                                 defaultValue = min,
-                                additionalValidation = { input: String ->
-                                    input
-                                        .toCurrencyAmountOrNull()
-                                        ?.let {
-                                            it in min..max
-                                        }
-                                        ?: false
-                                },
+                                additionalValidation = InRangeInclusiveSimpleEntryValidator(min, max),
                             ) {
-                                it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
+                                it.toCurrencyAmountOrNull()!!
                             }
                                 .getResult()
+                                ?: throw TryAgainAtMostRecentMenuException("No amount entered.")
                         if (amount > BigDecimal.ZERO) {
                             val description: String =
                                 SimplePrompt<String>(
@@ -69,6 +65,7 @@ fun WithIo.checksMenu(
                                     outPrinter = outPrinter,
                                 )
                                     .getResult()
+                                    ?: throw TryAgainAtMostRecentMenuException("No description entered.")
                             val timestamp: Instant =
                                 getTimestampFromUser(
                                     timeZone = budgetData.timeZone,

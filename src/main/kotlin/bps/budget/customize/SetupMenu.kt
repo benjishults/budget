@@ -13,11 +13,15 @@ import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
+import bps.console.app.MenuSession
+import bps.console.app.TryAgainAtMostRecentMenuException
+import bps.console.inputs.NonNegativeSimpleEntryValidator
+import bps.console.inputs.SimpleEntryValidator
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
+import bps.console.io.OutPrinter
 import bps.console.menu.Menu
-import bps.console.menu.MenuSession
 import bps.console.menu.ScrollingSelectionMenu
 import bps.console.menu.backItem
 import bps.console.menu.pushMenu
@@ -27,6 +31,16 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
 import kotlin.math.min
+
+// FIXME this needs to be unique even among deactivated accounts
+data class DistinctNameValidator(val existingAccounts: List<Account>) : SimpleEntryValidator {
+    override val errorMessage: String = "Name must be unique"
+
+    override fun invoke(input: String): Boolean =
+        existingAccounts.none { account ->
+            account.name == input
+        }
+}
 
 fun WithIo.customizeMenu(
     budgetData: BudgetData,
@@ -43,16 +57,11 @@ fun WithIo.customizeMenu(
                         "Enter a unique name for the new category: ",
                         inputReader,
                         outPrinter,
-                        validate = { input ->
-                            budgetData
-                                .categoryAccounts
-                                .none { account ->
-                                    account.name == input
-                                }
-                        },
+                        validator = DistinctNameValidator(budgetData.categoryAccounts),
                     )
                         .getResult()
-                        .trim()
+                        ?.trim()
+                        ?: throw TryAgainAtMostRecentMenuException("Unique name for account not entered.")
                 if (name.isNotBlank()) {
                     val description: String =
                         SimplePromptWithDefault(
@@ -62,9 +71,11 @@ fun WithIo.customizeMenu(
                             defaultValue = name,
                         )
                             .getResult()
-                            .trim()
+                            ?.trim()
+                            ?: throw TryAgainAtMostRecentMenuException("Description for the new category not entered.")
                     budgetData.addCategoryAccount(CategoryAccount(name, description))
                     budgetDao.save(budgetData, user)
+                    outPrinter.important("Category '$name' created")
                 }
             },
         )
@@ -73,22 +84,22 @@ fun WithIo.customizeMenu(
                 Menu("What kind af account do you want to delete?") {
                     add(
                         pushMenu("Category Account") {
-                            budgetData.deleteCategoryAccountMenu(userConfig)
+                            budgetData.deleteCategoryAccountMenu(userConfig, outPrinter)
                         },
                     )
                     add(
                         pushMenu("Real Account") {
-                            budgetData.deleteRealAccountMenu(userConfig)
+                            budgetData.deleteRealAccountMenu(userConfig, outPrinter)
                         },
                     )
                     add(
                         pushMenu("Charge Account") {
-                            budgetData.deleteChargeAccountMenu(userConfig)
+                            budgetData.deleteChargeAccountMenu(userConfig, outPrinter)
                         },
                     )
                     add(
                         pushMenu("Draft Account") {
-                            budgetData.deleteDraftAccountMenu(userConfig)
+                            budgetData.deleteDraftAccountMenu(userConfig, outPrinter)
                         },
                     )
                     add(backItem)
@@ -103,16 +114,11 @@ fun WithIo.customizeMenu(
                         "Enter a unique name for the real account: ",
                         inputReader,
                         outPrinter,
-                        validate = { input ->
-                            budgetData
-                                .realAccounts
-                                .none { account ->
-                                    account.name == input
-                                }
-                        },
+                        validator = DistinctNameValidator(budgetData.realAccounts),
                     )
                         .getResult()
-                        .trim()
+                        ?.trim()
+                        ?: throw TryAgainAtMostRecentMenuException("Description for the new account not entered.")
                 if (name.isNotBlank()) {
                     val accountDescription: String =
                         SimplePromptWithDefault(
@@ -122,7 +128,8 @@ fun WithIo.customizeMenu(
                             defaultValue = name,
                         )
                             .getResult()
-                            .trim()
+                            ?.trim()
+                            ?: throw TryAgainAtMostRecentMenuException("Description for the new account not entered.")
                     val isDraft: Boolean = SimplePromptWithDefault(
                         "Will you write checks on this account [y/N]? ",
                         inputReader = inputReader,
@@ -130,17 +137,18 @@ fun WithIo.customizeMenu(
                         defaultValue = false,
                     ) { it.trim() in listOf("Y", "y", "true", "yes") }
                         .getResult()
+                        ?: throw TryAgainAtMostRecentMenuException("No decision made on whether you are going to write checks on this account.")
                     val balance: BigDecimal = SimplePromptWithDefault(
                         basicPrompt = "Initial balance on account [0.00]:  (This amount will be added to your General account as well.) ",
                         defaultValue = BigDecimal.ZERO.setScale(2),
-                        additionalValidation = { !it.trim().startsWith("-") },
+                        additionalValidation = NonNegativeSimpleEntryValidator,
                         inputReader = inputReader,
                         outPrinter = outPrinter,
                     ) {
-                        it.toCurrencyAmountOrNull()
+                        it.toCurrencyAmountOrNull()!!
                     }
                         .getResult()
-                        ?: BigDecimal.ZERO.setScale(2)
+                        ?: throw TryAgainAtMostRecentMenuException("Invalid account balance")
                     val realAccount = RealAccount(name, accountDescription)
                     budgetData.addRealAccount(realAccount)
                     if (isDraft)
@@ -162,6 +170,7 @@ fun WithIo.customizeMenu(
                                         outPrinter = outPrinter,
                                     )
                                         .getResult()
+                                        ?: throw TryAgainAtMostRecentMenuException("No description entered.")
                                 outPrinter("Enter timestamp for '$incomeDescription' transaction\n")
                                 val timestamp: Instant = getTimestampFromUser(
                                     timeZone = budgetData.timeZone,
@@ -180,10 +189,11 @@ fun WithIo.customizeMenu(
                         if (incomeTransaction != null) {
                             budgetData.commit(incomeTransaction)
                             budgetDao.commit(incomeTransaction, budgetData.id)
+                            outPrinter.important("Real account '${realAccount.name}' created with balance $$balance")
                         }
                     } catch (ex: Exception) {
                         budgetDao.save(budgetData, user)
-                        outPrinter("\nSaved account with zero balance.\n\n")
+                        outPrinter.important("Saved account '${realAccount.name}' with zero balance.")
                     }
                 }
             },
@@ -195,16 +205,11 @@ fun WithIo.customizeMenu(
                         "Enter a unique name for the new credit card: ",
                         inputReader,
                         outPrinter,
-                        validate = { input ->
-                            budgetData
-                                .chargeAccounts
-                                .none { account ->
-                                    account.name == input
-                                }
-                        },
+                        validator = DistinctNameValidator(budgetData.chargeAccounts),
                     )
                         .getResult()
-                        .trim()
+                        ?.trim()
+                        ?: throw TryAgainAtMostRecentMenuException("No name entered.")
                 if (name.isNotBlank()) {
                     val description: String =
                         SimplePromptWithDefault(
@@ -214,9 +219,11 @@ fun WithIo.customizeMenu(
                             defaultValue = name,
                         )
                             .getResult()
-                            .trim()
+                            ?.trim()
+                            ?: throw TryAgainAtMostRecentMenuException("No description entered.")
                     budgetData.addChargeAccount(ChargeAccount(name, description))
                     budgetDao.save(budgetData, user)
+                    outPrinter.important("New credit card account '$name' created")
                 }
             },
         )
@@ -235,9 +242,10 @@ fun WithIo.customizeMenu(
         add(quitItem)
     }
 
-fun BudgetData.deleteCategoryAccountMenu(userConfig: UserConfiguration): Menu =
+fun BudgetData.deleteCategoryAccountMenu(userConfig: UserConfiguration, outPrinter: OutPrinter): Menu =
     deleteAccountMenu(
         userConfig,
+        outPrinter,
         deleter = { deleteCategoryAccount(it) },
     ) {
         (categoryAccounts - generalAccount).filter {
@@ -245,25 +253,28 @@ fun BudgetData.deleteCategoryAccountMenu(userConfig: UserConfiguration): Menu =
         }
     }
 
-fun BudgetData.deleteRealAccountMenu(userConfig: UserConfiguration): Menu =
+fun BudgetData.deleteRealAccountMenu(userConfig: UserConfiguration, outPrinter: OutPrinter): Menu =
     deleteAccountMenu(
         userConfig,
+        outPrinter,
         deleter = { deleteRealAccount(it) },
     ) {
         realAccounts.filter { it.balance == BigDecimal.ZERO.setScale(2) }
     }
 
-fun BudgetData.deleteChargeAccountMenu(userConfig: UserConfiguration): Menu =
+fun BudgetData.deleteChargeAccountMenu(userConfig: UserConfiguration, outPrinter: OutPrinter): Menu =
     deleteAccountMenu(
         userConfig,
+        outPrinter,
         deleter = { deleteChargeAccount(it) },
     ) {
         chargeAccounts.filter { it.balance == BigDecimal.ZERO.setScale(2) }
     }
 
-fun BudgetData.deleteDraftAccountMenu(userConfig: UserConfiguration): Menu =
+fun BudgetData.deleteDraftAccountMenu(userConfig: UserConfiguration, outPrinter: OutPrinter): Menu =
     deleteAccountMenu(
         userConfig,
+        outPrinter,
         deleter = { deleteDraftAccount(it) },
     ) {
         draftAccounts.filter { it.balance == BigDecimal.ZERO.setScale(2) }
@@ -271,6 +282,7 @@ fun BudgetData.deleteDraftAccountMenu(userConfig: UserConfiguration): Menu =
 
 fun <T : Account> deleteAccountMenu(
     userConfig: UserConfiguration,
+    outPrinter: OutPrinter,
     deleter: (T) -> Unit,
     deleteFrom: () -> List<T>,
 ): Menu =
@@ -287,4 +299,5 @@ fun <T : Account> deleteAccountMenu(
         labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
     ) { _: MenuSession, selectedAccount: T ->
         deleter(selectedAccount)
+        outPrinter.important("Deleted account '${selectedAccount.name}'")
     }

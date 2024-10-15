@@ -1,10 +1,11 @@
-package bps.console.menu
+package bps.console.app
 
-import bps.console.QuitException
 import bps.console.io.DefaultInputReader
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
+import bps.console.menu.Menu
+import bps.console.menu.MenuItem
 
 open class MenuApplicationWithQuit(
     topLevelMenu: Menu,
@@ -15,26 +16,31 @@ open class MenuApplicationWithQuit(
     private val menuSession: MenuSession = MenuSession(topLevelMenu)
 
     open fun quitAction(quitException: QuitException) {
-        outPrinter("${quitException.message!!}\n")
+        outPrinter.important(quitException.message!!)
     }
 
     /**
      * Automatically calls [close] when quit
      */
-    override fun run() = try { // TODO move this out of while
-        while (true) {
-            menuSession.current()
-                .run {// currentMenu: Menu ->
-                    val items: List<MenuItem> = itemsGenerator().print(outPrinter)
-                    getSelection(items)
-                        ?.action
-                        ?.invoke(menuSession)
-                        ?: this
+    override fun run() =
+        try {
+            while (true) {
+                try {
+                    menuSession.current()
+                        .run {// currentMenu: Menu ->
+                            val items: List<MenuItem> = itemsGenerator().print(outPrinter)
+                            getSelection(items)
+                                ?.action
+                                ?.invoke(menuSession)
+                        }
+                } catch (cancelException: CancelException) {
+                    outPrinter.important(cancelException.message!!)
+                    cancelException.handler(menuSession)
                 }
+            }
+        } catch (quit: QuitException) {
+            quitAction(quit)
         }
-    } catch (quit: QuitException) {
-        quitAction(quit)
-    }
 
     private fun Menu.getSelection(items: List<MenuItem>): MenuItem? =
         inputReader()

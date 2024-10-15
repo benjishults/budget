@@ -2,18 +2,17 @@ package bps.budget.spend
 
 import bps.budget.WithIo
 import bps.budget.model.BudgetData
-import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
-import bps.budget.transaction.allocateSpendingItemMenu
+import bps.budget.transaction.chooseRealAccountsThenCategories
+import bps.console.app.TryAgainAtMostRecentMenuException
+import bps.console.inputs.NonBlankSimpleEntryValidator
+import bps.console.inputs.PositiveSimpleEntryValidator
 import bps.console.inputs.SimplePrompt
-import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
 import bps.console.menu.Menu
-import bps.console.menu.MenuSession
-import bps.console.menu.ScrollingSelectionMenu
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
@@ -23,62 +22,42 @@ fun WithIo.recordSpendingMenu(
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
     clock: Clock,
-): Menu = ScrollingSelectionMenu(
-    header = "Select real account money was spent from.",
-    limit = userConfig.numberOfItemsInScrollingList,
-    baseList = budgetData.realAccounts,
-    labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
-) { menuSession: MenuSession, selectedRealAccount: RealAccount ->
-    val max = selectedRealAccount.balance
-    val min = BigDecimal.ZERO.setScale(2)
+): Menu {
+    // TODO move this up to the takeActionAndPush?  The intermediateAction would need to return the Transaction.Builder
+    //     and the amount, I guess?  If so, I could add that to a new TransactionContext class with a Transaction.Builder
+    //     and an amount.
     val amount: BigDecimal =
         SimplePrompt<BigDecimal>(
-            "Enter the amount spent from '${selectedRealAccount.name}' [$min, $max]: ",
+            "Enter the total amount spent: ",
             inputReader = inputReader,
             outPrinter = outPrinter,
-            validate = { input: String ->
-                input
-                    .toCurrencyAmountOrNull()
-                    ?.let {
-                        it in min..max
-                    }
-                    ?: false
-            },
+            validator = PositiveSimpleEntryValidator,
         ) {
             it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
         }
             .getResult()
-    if (amount > BigDecimal.ZERO) {
-        val description: String =
-            SimplePromptWithDefault(
-                "Enter description of transaction [spending from '${selectedRealAccount.name}']: ",
-                defaultValue = "spending from '${selectedRealAccount.name}'",
-                inputReader = inputReader,
-                outPrinter = outPrinter,
-            )
-                .getResult()
-        val timestamp: Instant =
-            getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
-        val transactionBuilder: Transaction.Builder =
-            Transaction.Builder(description, timestamp)
-                .apply {
-                    realItemBuilders.add(
-                        Transaction.ItemBuilder(
-                            amount = -amount,
-                            description = description,
-                            realAccount = selectedRealAccount,
-                        ),
-                    )
-                }
-        menuSession.push(
-            allocateSpendingItemMenu(
-                amount,
-                transactionBuilder,
-                description,
-                budgetData,
-                budgetDao,
-                userConfig,
-            ),
+            ?: throw TryAgainAtMostRecentMenuException("No amount entered.")
+    val description: String =
+        SimplePrompt<String>(
+            "Enter description of transaction: ",
+            inputReader = inputReader,
+            outPrinter = outPrinter,
+            validator = NonBlankSimpleEntryValidator,
         )
-    }
+            .getResult()
+            ?: throw TryAgainAtMostRecentMenuException("No description entered.")
+    val timestamp: Instant =
+        getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
+    return chooseRealAccountsThenCategories(
+        totalAmount = amount,
+        runningTotal = amount,
+        description = description,
+        budgetData = budgetData,
+        budgetDao = budgetDao,
+        userConfig = userConfig,
+        transactionBuilder = Transaction.Builder(
+            description,
+            timestamp,
+        ),
+    )
 }

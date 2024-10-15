@@ -1,6 +1,7 @@
 package bps.console.menu
 
-import bps.console.QuitException
+import bps.console.app.MenuSession
+import bps.console.app.QuitException
 
 fun interface MenuItemAction : (MenuSession) -> Unit
 fun interface IntermediateMenuItemAction<out T> : () -> T
@@ -86,16 +87,14 @@ fun takeAction(
 fun <T> takeActionAndPush(
     label: String,
     shortcut: String? = null,
-    to: ((T) -> Menu?)? = null,
+    to: (T) -> Menu? = { null },
     intermediateAction: IntermediateMenuItemAction<T>,
 ): MenuItem =
     item(label, shortcut) { menuSession: MenuSession ->
         val value: T = intermediateAction()
-        if (to !== null) {
-            val pushing: Menu? = to(value)
-            if (pushing !== null) {
-                menuSession.push(pushing)
-            }
+        val pushing: Menu? = to(value)
+        if (pushing !== null) {
+            menuSession.push(pushing)
         }
     }
 
@@ -117,8 +116,8 @@ val quitItem: MenuItem =
 
 val backItem: MenuItem = popMenuItem(shortcut = "b")
 
-val cancelItem: MenuItem =
-    item(
-        "Cancel", "c",
-    ) {}
-//    popMenuItem(label = "Cancel", shortcut = "c")
+//fun cancelItem(inProgress: () -> Transaction.Builder? = { null }): MenuItem =
+//    item(
+//        "Cancel", "c",
+//    ) { throw CancelException(workInProgress = inProgress()) }
+////    popMenuItem(label = "Cancel", shortcut = "c")

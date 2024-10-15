@@ -8,8 +8,10 @@ import bps.budget.model.defaultGeneralAccountDescription
 import bps.budget.model.defaultGeneralAccountName
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
-import bps.console.inputs.CompositePrompt
+import bps.console.app.QuitException
+import bps.console.inputs.EmailSimpleEntryValidator
 import bps.console.inputs.SelectionPrompt
+import bps.console.inputs.SimpleEntryValidator
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.io.DefaultInputReader
@@ -17,7 +19,6 @@ import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
 import kotlinx.datetime.TimeZone
-import org.apache.commons.validator.routines.EmailValidator
 import java.math.BigDecimal
 import java.util.UUID
 
@@ -84,26 +85,25 @@ class ConsoleUiFacade(
 
     override fun createGeneralAccount(budgetDao: BudgetDao): CategoryAccount {
         budgetDao.prepForFirstSave()
-        return CompositePrompt(
-            listOf(
-                SimplePromptWithDefault(
-                    "Enter the name for your \"General\" account [$defaultGeneralAccountName]: ",
-                    defaultGeneralAccountName,
-                    inputReader,
-                    outPrinter,
-                ),
-                SimplePromptWithDefault(
-                    "Enter the description for your \"General\" account [$defaultGeneralAccountDescription]: ",
-                    defaultGeneralAccountDescription,
-                    inputReader,
-                    outPrinter,
-                ),
-            ),
-        )
-        {
-            CategoryAccount(it[0] as String, it[1] as String)
-        }
-            .getResult()
+        val name: String =
+            SimplePromptWithDefault(
+                "Enter the name for your \"General\" account [$defaultGeneralAccountName]: ",
+                defaultGeneralAccountName,
+                inputReader,
+                outPrinter,
+            )
+                .getResult()
+                ?: throw QuitException()
+        val description: String =
+            SimplePromptWithDefault(
+                "Enter the description for your \"General\" account [$defaultGeneralAccountDescription]: ",
+                defaultGeneralAccountDescription,
+                inputReader,
+                outPrinter,
+            )
+                .getResult()
+                ?: throw QuitException()
+        return CategoryAccount(name, description)
     }
 
     override fun userWantsBasicAccounts(): Boolean =
@@ -115,6 +115,7 @@ class ConsoleUiFacade(
         )
         { it == "Y" || it == "y" || it.isBlank() }
             .getResult()
+            ?: throw QuitException()
 
     override fun announceFirstTime() {
         outPrinter("Looks like this is your first time running Budget.\n")
@@ -128,15 +129,23 @@ class ConsoleUiFacade(
             outPrinter,
         ) { BigDecimal(it).setScale(2) }
             .getResult()
+            ?: throw QuitException()
 
     override fun getDesiredTimeZone(): TimeZone =
         SimplePromptWithDefault(
+            // TODO should this be from the user's config?  Are we even checking that?
             "Select the time-zone you want dates to appear in [${TimeZone.currentSystemDefault().id}]: ",
             TimeZone.currentSystemDefault(),
             inputReader,
             outPrinter,
+            additionalValidation = object : SimpleEntryValidator {
+                override val errorMessage: String = "Must enter a valid time-zone."
+                override fun invoke(entry: String): Boolean =
+                    entry in TimeZone.availableZoneIds
+            },
         ) { TimeZone.of(it) }
             .getResult()
+            ?: throw QuitException()
 
     override fun info(infoMessage: String) {
         outPrinter("$infoMessage\n")
@@ -149,9 +158,10 @@ class ConsoleUiFacade(
                     "username: ",
                     inputReader = inputReader,
                     outPrinter = outPrinter,
-                    validate = { EmailValidator.getInstance().isValid(it) },
+                    validator = EmailSimpleEntryValidator,
                 )
                     .getResult()
+                    ?: throw QuitException("No valid email entered.")
             } else {
                 // for now, just use the configured one
                 userConfiguration.defaultLogin
@@ -196,6 +206,7 @@ class ConsoleUiFacade(
             .also {
                 outPrinter("We recommend you add this to your config file following the directions in the help.\n")
             }
+            ?: throw QuitException("No budget name entered.")
 
 
 }
