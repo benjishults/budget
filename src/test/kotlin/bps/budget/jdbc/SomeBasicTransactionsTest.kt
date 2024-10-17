@@ -60,7 +60,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                 budgetName = getBudgetNameFromPersistenceConfig(configurations.persistence)!!,
             )
             "record income" {
-                val amount = BigDecimal("1000.00")
+                val amount = BigDecimal("1000.00").setScale(2)
                 val income: Transaction =
                     Transaction
                         .Builder(
@@ -70,12 +70,14 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                         .apply {
                             categoryItemBuilders.add(
                                 Transaction.ItemBuilder(
+                                    UUID.randomUUID(),
                                     amount,
                                     categoryAccount = budgetData.generalAccount,
                                 ),
                             )
                             realItemBuilders.add(
                                 Transaction.ItemBuilder(
+                                    UUID.randomUUID(),
                                     amount,
                                     realAccount = budgetData.realAccounts.find {
                                         it.name == defaultCheckingAccountName
@@ -99,9 +101,16 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                         .apply {
                             categoryItemBuilders.addAll(
                                 buildList {
-                                    add(Transaction.ItemBuilder(-amount, categoryAccount = budgetData.generalAccount))
                                     add(
                                         Transaction.ItemBuilder(
+                                            UUID.randomUUID(),
+                                            -amount,
+                                            categoryAccount = budgetData.generalAccount,
+                                        ),
+                                    )
+                                    add(
+                                        Transaction.ItemBuilder(
+                                            UUID.randomUUID(),
                                             amount,
                                             categoryAccount = budgetData.categoryAccounts.find {
                                                 it.name == defaultFoodAccountName
@@ -125,6 +134,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                     .apply {
                         categoryItemBuilders.add(
                             Transaction.ItemBuilder(
+                                UUID.randomUUID(),
                                 -amount,
                                 categoryAccount = budgetData.categoryAccounts.find {
                                     it.name == defaultFoodAccountName
@@ -133,6 +143,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                         )
                         draftItemBuilders.add(
                             Transaction.ItemBuilder(
+                                UUID.randomUUID(),
                                 amount,
                                 draftAccount = budgetData.draftAccounts.find {
                                     it.name == defaultCheckingDraftsAccountName
@@ -191,6 +202,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                     .apply {
                         realItemBuilders.add(
                             Transaction.ItemBuilder(
+                                UUID.randomUUID(),
                                 -amount,
                                 realAccount = budgetData.realAccounts.find {
                                     it.name == defaultCheckingAccountName
@@ -199,6 +211,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                         )
                         draftItemBuilders.add(
                             Transaction.ItemBuilder(
+                                UUID.randomUUID(),
                                 -amount,
                                 draftAccount = budgetData.draftAccounts.find {
                                     it.name == defaultCheckingDraftsAccountName

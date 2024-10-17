@@ -48,6 +48,7 @@ data class Transaction private constructor(
     }
 
     inner class Item(
+        val id: UUID,
         val amount: BigDecimal,
         val description: String? = null,
         val categoryAccount: CategoryAccount? = null,
@@ -85,40 +86,27 @@ data class Transaction private constructor(
             if (this === other) return true
             if (other !is Item) return false
 
-            if (amount != other.amount) return false
-            if (categoryAccount != other.categoryAccount) return false
-            if (realAccount != other.realAccount) return false
-            if (chargeAccount != other.chargeAccount) return false
-            if (draftAccount != other.draftAccount) return false
-            if (transaction != other.transaction) return false
-
-            return true
+            return id != other.id
         }
 
-        override fun hashCode(): Int {
-            var result = amount.hashCode()
-            result = 31 * result + (categoryAccount?.hashCode() ?: 0)
-            result = 31 * result + (realAccount?.hashCode() ?: 0)
-            result = 31 * result + (chargeAccount?.hashCode() ?: 0)
-            result = 31 * result + (draftAccount?.hashCode() ?: 0)
-            result = 31 * result + transaction.hashCode()
-            return result
-        }
+        override fun hashCode(): Int = id.hashCode()
 
     }
 
     class ItemBuilder(
-        var amount: BigDecimal? = null,
+        val id: UUID,
+        val amount: BigDecimal,
         var description: String? = null,
         var categoryAccount: CategoryAccount? = null,
         var realAccount: RealAccount? = null,
         var chargeAccount: ChargeAccount? = null,
         var draftAccount: DraftAccount? = null,
-        var draftStatus: DraftStatus = DraftStatus.none,
+        val draftStatus: DraftStatus = DraftStatus.none,
     ) {
         fun build(transaction: Transaction): Item =
             transaction.Item(
-                amount!!,
+                id,
+                amount,
                 description,
                 categoryAccount,
                 realAccount,
@@ -126,6 +114,20 @@ data class Transaction private constructor(
                 draftAccount,
                 draftStatus,
             )
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is ItemBuilder) return false
+
+            if (id != other.id) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            return id.hashCode()
+        }
+
 
     }
 
@@ -155,7 +157,7 @@ data class Transaction private constructor(
                 populate(
                     this@Builder
                         .categoryItemBuilders
-                        .map { it.build(this) },
+                        .map { itemBuilder: ItemBuilder -> itemBuilder.build(this) },
                     this@Builder
                         .realItemBuilders
                         .map { it.build(this) },
@@ -226,6 +228,10 @@ data class Transaction private constructor(
 //
 //}
 
+/**
+ * [DraftAccount]s and [ChargeAccount]s have some transaction items that are outstanding and some that are cleared.
+ * [RealAccount]s have "clearing" transaction items that clear a check or pay a charge bill.
+ */
 enum class DraftStatus {
     none,
 

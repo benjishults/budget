@@ -828,16 +828,39 @@ Spending recorded
                     ),
                     toInput = listOf("2"),
                 )
+                // TODO https://github.com/benjishults/budget/issues/14
+//                validateInteraction(
+//                    expectedOutputs = listOf(
+//                        """
+//                        |2024-08-08 19:00:06
+//                        |SuperMarket
+//                        |Category Account | Amount     | Description
+//                        |Food             |    -200.00 |
+//                        |Necessities      |    -100.00 |
+//                        |     Real Items: | Amount     | Description
+//                        |Checking         |    -300.00 | SuperMarket
+//                        |""".trimMargin(),
+//                        """
+//                        |'Checking' Account Transactions
+//                        |    Time Stamp          | Amount     | Description
+//                        | 1. 2024-08-08 19:00:00 |   5,000.00 | income into '$defaultCheckingAccountName'
+//                        | 2. 2024-08-08 19:00:06 |    -300.00 | SuperMarket
+//                        | 3. Back (b)
+//                        | 4. Quit (q)
+//                        |""".trimMargin(),
+//                        "Select transaction for details: ",
+//                    ),
+//                    toInput = listOf("3"),
+//                )
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
                         |2024-08-08 19:00:06
                         |SuperMarket
-                        |Category Account | Amount     | Description
-                        |Food             |    -200.00 |
-                        |Necessities      |    -100.00 |
                         |     Real Items: | Amount     | Description
                         |Checking         |    -300.00 | SuperMarket
+                        |    Draft Items: | Amount     | Description
+                        |Checking Drafts  |    -300.00 | SuperMarket
                         |""".trimMargin(),
                         """
                         |'Checking' Account Transactions
@@ -1528,16 +1551,40 @@ Spending recorded
                     ),
                     toInput = listOf("2"),
                 )
+                // TODO https://github.com/benjishults/budget/issues/14
+//                validateInteraction(
+//                    expectedOutputs = listOf(
+//                        """
+//                        |2024-08-08 19:00:06
+//                        |SuperMarket
+//                        |Category Account | Amount     | Description
+//                        |Food             |    -200.00 |
+//                        |Necessities      |    -100.00 |
+//                        |     Real Items: | Amount     | Description
+//                        |Checking         |    -300.00 | SuperMarket
+//                        |""".trimMargin(),
+//                        """
+//                        |'Checking' Account Transactions
+//                        |    Time Stamp          | Amount     | Description
+//                        | 1. 2024-08-08 19:00:00 |   5,000.00 | income into '$defaultCheckingAccountName'
+//                        | 2. 2024-08-08 19:00:06 |    -300.00 | SuperMarket
+//                        | 3. 2024-08-08 19:00:09 |     -35.00 | pay 'Costco Visa' bill
+//                        | 4. Back (b)
+//                        | 5. Quit (q)
+//                        |""".trimMargin(),
+//                        "Select transaction for details: ",
+//                    ),
+//                    toInput = listOf("4"),
+//                )
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
                         |2024-08-08 19:00:06
                         |SuperMarket
-                        |Category Account | Amount     | Description
-                        |Food             |    -200.00 |
-                        |Necessities      |    -100.00 |
                         |     Real Items: | Amount     | Description
                         |Checking         |    -300.00 | SuperMarket
+                        |    Draft Items: | Amount     | Description
+                        |Checking Drafts  |    -300.00 | SuperMarket
                         |""".trimMargin(),
                         """
                         |'Checking' Account Transactions

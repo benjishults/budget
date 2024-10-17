@@ -40,6 +40,11 @@ interface JdbcFixture {
             .toInstant()
             .toKotlinInstant()
 
+    fun ResultSet.getInstantOrNull(columnLabel: String = "timestamp_utc"): Instant? =
+        getTimestamp(columnLabel)
+            ?.toInstant()
+            ?.toKotlinInstant()
+
     fun ResultSet.getCurrencyAmount(name: String): BigDecimal =
         getBigDecimal(name).setScale(2)
 

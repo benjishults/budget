@@ -3,7 +3,6 @@ package bps.budget.transaction
 import bps.budget.model.Account
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
-import bps.budget.model.Transaction
 import bps.budget.model.defaultGeneralAccountName
 import bps.budget.persistence.BudgetDao
 import bps.console.SimpleConsoleIoTestFixture
@@ -18,7 +17,7 @@ class TransactionsMenuTest : FreeSpec(),
     init {
         clearInputsAndOutputsBeforeEach()
 
-        val fetchTransactionsCallsExpected = mutableMapOf<Pair<Int, Int>, List<Transaction>>()
+        val fetchTransactionsCallsExpected = mutableMapOf<Pair<Int, Int>, List<BudgetDao.ExtendedTransactionItem>>()
         val fetchTransactionsCallsMade = mutableListOf<Pair<Int, Int>>()
 
         val selectedAccount = CategoryAccount(
@@ -29,12 +28,11 @@ class TransactionsMenuTest : FreeSpec(),
         )
 
         val budgetDao = object : BudgetDao {
-            override fun fetchTransactions(
-                account: Account,
-                data: BudgetData,
+            override fun Account.fetchTransactionItemsInvolvingAccount(
+                budgetData: BudgetData,
                 limit: Int,
                 offset: Int,
-            ): List<Transaction> {
+            ): List<BudgetDao.ExtendedTransactionItem> {
                 fetchTransactionsCallsMade.add(limit to offset)
                 return fetchTransactionsCallsExpected[limit to offset] ?: emptyList()
             }

@@ -18,6 +18,7 @@ import bps.console.menu.ScrollingSelectionMenu
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
+import java.util.UUID
 
 fun WithIo.makeAllowancesSelectionMenu(
     budgetData: BudgetData,
@@ -61,12 +62,14 @@ fun WithIo.makeAllowancesSelectionMenu(
             .apply {
                 categoryItemBuilders.add(
                     Transaction.ItemBuilder(
+                        UUID.randomUUID(),
                         -amount,
                         categoryAccount = budgetData.generalAccount,
                     ),
                 )
                 categoryItemBuilders.add(
                     Transaction.ItemBuilder(
+                        UUID.randomUUID(),
                         amount,
                         categoryAccount = selectedCategoryAccount,
                     ),

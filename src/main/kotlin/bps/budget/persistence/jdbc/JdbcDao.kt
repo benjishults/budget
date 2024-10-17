@@ -17,6 +17,7 @@ import bps.budget.persistence.JdbcConfig
 import bps.jdbc.JdbcFixture
 import bps.jdbc.transact
 import bps.jdbc.transactOrThrow
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinInstant
@@ -327,6 +328,7 @@ create index if not exists lookup_transaction_by_date
                     """
 create table if not exists transaction_items
 (
+    id                  uuid           not null unique,
     transaction_id      uuid           not null references transactions (id),
     description         varchar(110)   null,
     amount              numeric(30, 2) not null,
@@ -334,8 +336,9 @@ create table if not exists transaction_items
     real_account_id     uuid           null references real_accounts (id),
     charge_account_id   uuid           null references charge_accounts (id),
     draft_account_id    uuid           null references draft_accounts (id),
-    draft_status        varchar        not null default 'none', -- 'none' 'outstanding' 'cleared'
+    draft_status        varchar        not null default 'none', -- 'none' 'outstanding' 'cleared', 'clearing'
     budget_id           uuid           not null references budgets (id),
+    primary key (id, budget_id),
     constraint only_one_account_per_transaction_item check
         ((real_account_id is not null and
           category_account_id is null and
@@ -399,214 +402,448 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         }
     }
 
-    /**
-     * if
-     * 1. [account] is real
-     * 2. there is a single other item in the transaction
-     * 3. that item has status 'clearing'
-     * then
-     * 1. pull the category items from the transactions cleared by this transaction
-     * 2. replace the 'clearing' item with those items
-     */
-    override fun fetchTransactions(
-        account: Account,
-        data: BudgetData,
+//    /**
+//     * if
+//     * 1. [account] is real
+//     * 2. there is a single other item in the transaction
+//     * 3. that item has status 'clearing'
+//     * then
+//     * 1. pull the category items from the transactions cleared by this transaction
+//     * 2. replace the 'clearing' item with those items
+//     */
+//    @Deprecated("This doesn't really work")
+//    override fun fetchTransactionsInvolvingAccount(
+//        account: Account,
+//        data: BudgetData,
+//        limit: Int,
+//        offset: Int,
+//    ): List<Transaction> =
+//        connection.transactOrThrow {
+//            // TODO if it is a clearing transaction, then create the full transaction by combining the cleared category items
+//            //      with this.
+//            // FIXME this limit offset stuff won't work the way I want... especially when offset > 0.
+//            prepareStatement(
+//                """
+//                    |select t.timestamp_utc as timestamp_utc,
+//                    |       t.id as transaction_id,
+//                    |       t.description as description,
+//                    |       i.amount      as item_amount,
+//                    |       i.description as item_description,
+//                    |       i.category_account_id,
+//                    |       i.draft_account_id,
+//                    |       i.real_account_id,
+//                    |       i.charge_account_id,
+//                    |       i.draft_status
+//                    |from transactions t
+//                    |  join transaction_items i on i.transaction_id = t.id
+//                    |where t.budget_id = ?
+//                    |  and t.id in (select tr.id
+//                    |               from transactions tr
+//                    |                 join transaction_items ti
+//                    |                   on tr.id = ti.transaction_id
+//                    |               where ti.${
+//                    when (account) {
+//                        is CategoryAccount -> "category_account_id"
+//                        is ChargeAccount -> "charge_account_id"
+//                        is RealAccount -> "real_account_id"
+//                        is DraftAccount -> "draft_account_id"
+//                        else -> throw Error("Unknown account type ${account::class}")
+//                    }
+//                } = ?
+//                    |               order by tr.timestamp_utc desc, tr.id
+//                    |               limit ?
+//                    |               offset ?)
+//            """.trimMargin(),
+//            )
+//                .use { selectTransactionAndItemsForAccount: PreparedStatement ->
+//                    selectTransactionAndItemsForAccount
+//                        .apply {
+//                            setUuid(1, data.id)
+//                            setUuid(2, account.id)
+//                            setInt(3, limit)
+//                            setInt(4, offset)
+//                        }
+//                    // TODO boy, this code is a mess.  looks like I was focussed on getting something to work and
+//                    //      didn't clean it up after
+//                    selectTransactionAndItemsForAccount
+//                        .executeQuery()
+//                        .use { result: ResultSet ->
+//                            val returnValue: MutableList<Transaction> = mutableListOf()
+//                            // NOTE this will be a running transaction and will switch to the next when one is done
+//                            var runningTransactionId: UUID? = null
+//                            var transactionBuilder: Transaction.Builder? = null
+//                            while (result.next()) {
+//                                // for each transaction item...
+//                                result.getUuid("transaction_id")!!
+//                                    .let { uuid: UUID ->
+//                                        if (uuid != runningTransactionId) {
+//                                            conditionallyAddCompleteTransactionToList(
+//                                                runningTransactionId,
+//                                                returnValue,
+//                                                transactionBuilder,
+//                                            )
+//                                            runningTransactionId = uuid
+//                                            transactionBuilder = initializeTransactionBuilder(result, uuid)
+//                                        }
+//                                    }
+//                                val draftStatus: DraftStatus =
+//                                    DraftStatus.valueOf(result.getString("draft_status"))
+//                                if (draftStatus == DraftStatus.clearing) {
+//                                    prepareStatement(
+//                                        """
+//                                            |select t.*,
+//                                            |       i.amount      as item_amount,
+//                                            |       i.description as item_description,
+//                                            |       i.category_account_id
+//                                            |from transactions t
+//                                            |         join transaction_items i on i.transaction_id = t.id
+//                                            |where t.id in (select id
+//                                            |               from transactions
+//                                            |               where cleared_by_transaction_id = ?)
+//                                            |  and i.category_account_id is not null
+//                                        """.trimMargin(),
+//                                    )
+//                                        .use { preparedStatement: PreparedStatement ->
+//                                            preparedStatement.setUuid(1, runningTransactionId!!)
+//                                            preparedStatement.executeQuery()
+//                                                .use { result: ResultSet ->
+//                                                    while (result.next()) {
+//                                                        val itemAmount = result.getCurrencyAmount("item_amount")
+//                                                        val itemDescription: String? =
+//                                                            result.getString("item_description")
+//                                                        transactionBuilder!!
+//                                                            .categoryItemBuilders
+//                                                            .maybeAddItemBuilder(
+//                                                                result,
+//                                                                itemAmount,
+//                                                                itemDescription,
+//                                                                data,
+//                                                                "category",
+//                                                                DraftStatus.none,
+//                                                            ) { account: CategoryAccount ->
+//                                                                this.categoryAccount = account
+//                                                            }
+//                                                    }
+//                                                }
+//                                        }
+//                                } else {
+//                                    val itemAmount = result.getCurrencyAmount("item_amount")
+//                                    val itemDescription: String? = result.getString("item_description")
+//                                    transactionBuilder!!
+//                                        .categoryItemBuilders
+//                                        .maybeAddItemBuilder(
+//                                            result,
+//                                            itemAmount,
+//                                            itemDescription,
+//                                            data,
+//                                            "category",
+//                                            draftStatus,
+//                                        ) { account: CategoryAccount ->
+//                                            this.categoryAccount = account
+//                                        }
+//                                    transactionBuilder!!
+//                                        .realItemBuilders.maybeAddItemBuilder(
+//                                            result,
+//                                            itemAmount,
+//                                            itemDescription,
+//                                            data,
+//                                            "real",
+//                                            draftStatus,
+//                                        ) { account: RealAccount ->
+//                                            realAccount = account
+//                                        }
+//                                    transactionBuilder!!
+//                                        .chargeItemBuilders.maybeAddItemBuilder(
+//                                            result,
+//                                            itemAmount,
+//                                            itemDescription,
+//                                            data,
+//                                            "charge",
+//                                            draftStatus,
+//                                        ) { account: ChargeAccount ->
+//                                            chargeAccount = account
+//                                        }
+//                                    transactionBuilder!!
+//                                        .draftItemBuilders
+//                                        .maybeAddItemBuilder(
+//                                            result,
+//                                            itemAmount,
+//                                            itemDescription,
+//                                            data,
+//                                            "draft",
+//                                            draftStatus,
+//                                        ) { account: DraftAccount ->
+//                                            draftAccount = account
+//                                        }
+//                                }
+//                            }
+//                            conditionallyAddCompleteTransactionToList(
+//                                runningTransactionId,
+//                                returnValue,
+//                                transactionBuilder,
+//                            )
+//                            returnValue.toList()
+//                        }
+//                }
+//        }
+
+    override fun Account.fetchTransactionItemsInvolvingAccount(
+        budgetData: BudgetData,
         limit: Int,
         offset: Int,
-    ): List<Transaction> =
-        connection.transactOrThrow {
-            // TODO if it is a clearing transaction, then create the full transaction by combining the cleared category items
-            //      with this.
-            prepareStatement(
-                """
-                    |select t.timestamp_utc as timestamp_utc,
-                    |       t.id as transaction_id,
-                    |       t.description as description,
-                    |       i.amount      as item_amount,
-                    |       i.description as item_description,
-                    |       i.category_account_id,
-                    |       i.draft_account_id,
-                    |       i.real_account_id,
-                    |       i.charge_account_id,
+    ): List<BudgetDao.ExtendedTransactionItem> =
+        buildList {
+            connection.transactOrThrow {
+                // TODO if it is a clearing transaction, then create the full transaction by combining the cleared category items
+                //      with this.
+                prepareStatement(
+                    """
+                    |select t.id as transaction_id,
+                    |       t.description as transaction_description,
+                    |       t.timestamp_utc as transaction_timestamp,
+                    |       i.id,
+                    |       i.amount,
+                    |       i.description,
                     |       i.draft_status
                     |from transactions t
-                    |         join transaction_items i on i.transaction_id = t.id
+                    |         join transaction_items i
+                    |              on i.transaction_id = t.id
+                    |                  and t.budget_id = i.budget_id
                     |where t.budget_id = ?
-                    |  and t.id in (select tr.id
-                    |               from transactions tr
-                    |                        join transaction_items ti
-                    |                             on tr.id = ti.transaction_id
-                    |               where ti.${
-                    when (account) {
-                        is CategoryAccount -> "category_account_id"
-                        is ChargeAccount -> "charge_account_id"
-                        is RealAccount -> "real_account_id"
-                        is DraftAccount -> "draft_account_id"
-                        else -> throw Error("Unknown account type ${account::class}")
-                    }
-                } = ?
-                    |               order by tr.timestamp_utc desc
-                    |               limit ?
-                    |               offset ?)
+                    |  and i.${
+                        when (this@fetchTransactionItemsInvolvingAccount) {
+                            is CategoryAccount -> "category_account_id"
+                            is ChargeAccount -> "charge_account_id"
+                            is RealAccount -> "real_account_id"
+                            is DraftAccount -> "draft_account_id"
+                            else -> throw Error("Unknown account type ${this@fetchTransactionItemsInvolvingAccount::class.simpleName}")
+                        }
+                    } = ?
+                    |order by t.timestamp_utc desc, t.id
+                    |limit ?
+                    |offset ?
             """.trimMargin(),
-            )
-                .use { statement: PreparedStatement ->
-                    statement.setUuid(1, data.id)
-                    statement.setUuid(2, account.id)
-                    statement.setInt(3, limit)
-                    statement.setInt(4, offset)
-                    // TODO boy, this code is a mess.  looks like I was focussed on getting something to work and
-                    //      didn't clean it up after
-                    statement.executeQuery()
-                        .use { result: ResultSet ->
-                            val returnValue: MutableList<Transaction> = mutableListOf()
-                            var transactionId: UUID? = null
-                            var transactionBuilder: Transaction.Builder? = null
-                            while (result.next()) {
-                                result.getUuid("transaction_id")!!
-                                    .let { uuid: UUID ->
-                                        if (uuid != transactionId) {
-                                            conditionallyAddCompleteTransactionToList(
-                                                transactionId,
-                                                returnValue,
-                                                transactionBuilder,
-                                            )
-                                            transactionId = uuid
-                                            transactionBuilder = initializeTransactionBuilder(result, uuid)
-                                        }
+                )
+                    .use { selectExtendedTransactionItemsForAccount: PreparedStatement ->
+                        selectExtendedTransactionItemsForAccount
+                            .apply {
+                                setUuid(1, budgetData.id)
+                                setUuid(2, id)
+                                setInt(3, limit)
+                                setInt(4, offset)
+                            }
+                        selectExtendedTransactionItemsForAccount
+                            .executeQuery()
+                            .use { result: ResultSet ->
+                                with(result) {
+                                    while (next()) {
+                                        val transactionId: UUID = getUuid("transaction_id")!!
+                                        val transactionDescription: String = getString("transaction_description")!!
+                                        val transactionTimestamp: Instant = getInstant("transaction_timestamp")
+                                        val id: UUID = getUuid("id")!!
+                                        val amount: BigDecimal = getBigDecimal("amount")
+                                        val description: String? = getString("description")
+                                        val draftStatus: DraftStatus =
+                                            DraftStatus.valueOf(getString("draft_status"))
+//                                    if (draftStatus == DraftStatus.clearing) {
+//                                        prepareStatement(
+//                                            """
+//                                            |select t.*,
+//                                            |       i.amount      as item_amount,
+//                                            |       i.description as item_description,
+//                                            |       i.category_account_id
+//                                            |from transactions t
+//                                            |         join transaction_items i on i.transaction_id = t.id
+//                                            |where t.id in (select id
+//                                            |               from transactions
+//                                            |               where cleared_by_transaction_id = ?)
+//                                            |  and i.category_account_id is not null
+//                                        """.trimMargin(),
+//                                        )
+//                                            .use { selectClearedByExtendedTransactionItems: PreparedStatement ->
+//                                                selectClearedByExtendedTransactionItems.setUuid(1, runningTransactionId!!)
+//                                                selectClearedByExtendedTransactionItems.executeQuery()
+//                                                    .use { result: ResultSet ->
+//                                                        while (result.next()) {
+//                                                            val itemAmount = result.getCurrencyAmount("item_amount")
+//                                                            val itemDescription: String? =
+//                                                                result.getString("item_description")
+//                                                            transactionBuilder!!
+//                                                                .categoryItemBuilders
+//                                                                .maybeAddItemBuilder(
+//                                                                    result,
+//                                                                    itemAmount,
+//                                                                    itemDescription,
+//                                                                    data,
+//                                                                    "category",
+//                                                                    DraftStatus.none,
+//                                                                ) { account: CategoryAccount ->
+//                                                                    this.categoryAccount = account
+//                                                                }
+//                                                        }
+//                                                    }
+//                                            }
+//                                    } else {
+                                        add(
+                                            BudgetDao.ExtendedTransactionItem(
+                                                item = Transaction.ItemBuilder(
+                                                    id = id,
+                                                    amount = amount,
+                                                    description = description,
+                                                    draftStatus = draftStatus,
+                                                )
+                                                    .apply {
+                                                        when (this@fetchTransactionItemsInvolvingAccount) {
+                                                            is ChargeAccount -> chargeAccount =
+                                                                this@fetchTransactionItemsInvolvingAccount
+                                                            is RealAccount -> realAccount =
+                                                                this@fetchTransactionItemsInvolvingAccount
+                                                            is DraftAccount -> draftAccount =
+                                                                this@fetchTransactionItemsInvolvingAccount
+                                                            is CategoryAccount -> categoryAccount =
+                                                                this@fetchTransactionItemsInvolvingAccount
+                                                        }
+                                                    },
+                                                transactionId = transactionId,
+                                                transactionDescription = transactionDescription,
+                                                transactionTimestamp = transactionTimestamp,
+                                                budgetDao = this@JdbcDao,
+                                                budgetData = budgetData,
+                                            ),
+                                        )
                                     }
-                                val draftStatus: DraftStatus =
-                                    DraftStatus.valueOf(result.getString("draft_status"))
-                                if (draftStatus == DraftStatus.clearing) {
-                                    prepareStatement(
-                                        """
-                                            |select t.*,
-                                            |       i.amount      as item_amount,
-                                            |       i.description as item_description,
-                                            |       i.category_account_id
-                                            |from transactions t
-                                            |         join transaction_items i on i.transaction_id = t.id
-                                            |where t.id in (select id
-                                            |               from transactions
-                                            |               where cleared_by_transaction_id = ?)
-                                            |  and i.category_account_id is not null
-                                        """.trimMargin(),
-                                    )
-                                        .use { preparedStatement: PreparedStatement ->
-                                            preparedStatement.setUuid(1, transactionId!!)
-                                            preparedStatement.executeQuery()
-                                                .use { result: ResultSet ->
-                                                    while (result.next()) {
-                                                        val itemAmount = result.getCurrencyAmount("item_amount")
-                                                        val itemDescription: String? =
-                                                            result.getString("item_description")
-                                                        transactionBuilder!!
-                                                            .categoryItemBuilders
-                                                            .maybeAddItemBuilder(
-                                                                result,
-                                                                itemAmount,
-                                                                itemDescription,
-                                                                data,
-                                                                "category",
-                                                                DraftStatus.none,
-                                                            ) { account: CategoryAccount ->
-                                                                this.categoryAccount = account
-                                                            }
-                                                    }
-                                                }
-                                        }
-                                } else {
-                                    val itemAmount = result.getCurrencyAmount("item_amount")
-                                    val itemDescription: String? = result.getString("item_description")
-                                    transactionBuilder!!
-                                        .categoryItemBuilders
-                                        .maybeAddItemBuilder(
-                                            result,
-                                            itemAmount,
-                                            itemDescription,
-                                            data,
-                                            "category",
-                                            draftStatus,
-                                        ) { account: CategoryAccount ->
-                                            this.categoryAccount = account
-                                        }
-                                    transactionBuilder!!
-                                        .realItemBuilders.maybeAddItemBuilder(
-                                            result,
-                                            itemAmount,
-                                            itemDescription,
-                                            data,
-                                            "real",
-                                            draftStatus,
-                                        ) { account: RealAccount ->
-                                            realAccount = account
-                                        }
-                                    transactionBuilder!!
-                                        .chargeItemBuilders.maybeAddItemBuilder(
-                                            result,
-                                            itemAmount,
-                                            itemDescription,
-                                            data,
-                                            "charge",
-                                            draftStatus,
-                                        ) { account: ChargeAccount ->
-                                            chargeAccount = account
-                                        }
-                                    transactionBuilder!!
-                                        .draftItemBuilders
-                                        .maybeAddItemBuilder(
-                                            result,
-                                            itemAmount,
-                                            itemDescription,
-                                            data,
-                                            "draft",
-                                            draftStatus,
-                                        ) { account: DraftAccount ->
-                                            draftAccount = account
-                                        }
                                 }
                             }
-                            conditionallyAddCompleteTransactionToList(transactionId, returnValue, transactionBuilder)
-                            returnValue.toList()
+                    }
+            }
+        }
+
+    override fun getTransactionOrNull(transactionId: UUID, budgetData: BudgetData): Transaction? =
+        connection.transactOrThrow {
+            prepareStatement(
+                """
+                    |select t.description as transaction_description,
+                    |       t.timestamp_utc as transaction_timestamp,
+                    |       t.cleared_by_transaction_id,
+                    |       i.category_account_id,
+                    |       i.real_account_id,
+                    |       i.draft_account_id,
+                    |       i.charge_account_id,
+                    |       i.id,
+                    |       i.amount,
+                    |       i.description,
+                    |       i.draft_status
+                    |from transactions t
+                    |         join transaction_items i
+                    |              on i.transaction_id = t.id
+                    |                  and t.budget_id = i.budget_id
+                    |where t.budget_id = ?
+                    |  and t.id = ?
+                """.trimMargin(),
+            )
+                .use { selectTransactionAndItems: PreparedStatement ->
+                    selectTransactionAndItems
+                        .apply {
+                            setUuid(1, budgetData.id)
+                            setUuid(2, transactionId)
+                        }
+                        .executeQuery()
+                        .use { result: ResultSet ->
+                            if (result.next()) {
+                                val transactionBuilder =
+                                    initializeTransactionBuilderWithFirstItem(result, transactionId, budgetData)
+                                while (result.next()) {
+                                    // for each transaction item...
+                                    transactionBuilder.populateItem(result, budgetData)
+                                }
+                                transactionBuilder.build()
+                            } else
+                                null
                         }
                 }
         }
 
-    private fun <T : Account> MutableList<Transaction.ItemBuilder>.maybeAddItemBuilder(
+    private fun initializeTransactionBuilderWithFirstItem(
         result: ResultSet,
-        itemAmount: BigDecimal,
-        itemDescription: String?,
-        data: BudgetData,
-        type: String,
-        draftStatus: DraftStatus = DraftStatus.none,
-        setter: Transaction.ItemBuilder.(T) -> Unit,
+        transactionId: UUID,
+        budgetData: BudgetData,
+    ): Transaction.Builder =
+        Transaction
+            .Builder()
+            .apply {
+                id = transactionId
+                description = result.getString("transaction_description")
+                timestamp = result.getInstant("transaction_timestamp")
+                populateItem(result, budgetData)
+            }
+
+    private fun Transaction.Builder.populateItem(
+        result: ResultSet,
+        budgetData: BudgetData,
     ) {
-        result
-            .getObject("${type}_account_id", UUID::class.java)
-            ?.let { id: UUID ->
+        chargeItemBuilders
+            .maybePopulateItemOfType("charge", result) { uuid: UUID ->
+                chargeAccount = budgetData.getAccountByIdOrNull(uuid)!!
+            }
+        draftItemBuilders
+            .maybePopulateItemOfType("draft", result) { uuid: UUID ->
+                draftAccount = budgetData.getAccountByIdOrNull(uuid)!!
+            }
+        realItemBuilders
+            .maybePopulateItemOfType("real", result) { uuid: UUID ->
+                realAccount = budgetData.getAccountByIdOrNull(uuid)!!
+            }
+        categoryItemBuilders
+            .maybePopulateItemOfType("category", result) { uuid: UUID ->
+                categoryAccount = budgetData.getAccountByIdOrNull(uuid)!!
+            }
+    }
+
+    private fun MutableList<Transaction.ItemBuilder>.maybePopulateItemOfType(
+        type: String,
+        result: ResultSet,
+        itemAccountSetter: Transaction.ItemBuilder.(UUID) -> Unit,
+    ) {
+        result.getUuid("${type}_account_id")
+            ?.let { uuid ->
                 add(
                     Transaction.ItemBuilder(
-                        amount = itemAmount,
-                        description = itemDescription,
-                        draftStatus = draftStatus,
+                        id = result.getUuid("id")!!,
+                        amount = result.getCurrencyAmount("amount"),
+                        description = result.getString("description"),
+                        draftStatus = DraftStatus.valueOf(result.getString("draft_status")),
                     )
                         .apply {
-                            setter(data.getAccountByIdOrNull(id)!!)
+                            itemAccountSetter(uuid)
                         },
                 )
             }
     }
 
-    private fun initializeTransactionBuilder(
-        result: ResultSet,
-        uuid: UUID,
-    ): Transaction.Builder {
-        val transactionBuilder: Transaction.Builder = Transaction.Builder()
-        transactionBuilder.id = uuid
-        transactionBuilder.description = result.getString("description")
-        transactionBuilder.timestamp = result.getInstant()
-        return transactionBuilder
-    }
+//    private fun <T : Account> MutableList<Transaction.ItemBuilder>.maybeAddItemBuilder(
+//        result: ResultSet,
+//        itemAmount: BigDecimal,
+//        itemDescription: String?,
+//        data: BudgetData,
+//        type: String,
+//        draftStatus: DraftStatus = DraftStatus.none,
+//        setter: Transaction.ItemBuilder.(T) -> Unit,
+//    ) {
+//        result
+//            .getObject("${type}_account_id", UUID::class.java)
+//            ?.let { id: UUID ->
+//                add(
+//                    Transaction.ItemBuilder(
+//                        amount = itemAmount,
+//                        description = itemDescription,
+//                        draftStatus = draftStatus,
+//                    )
+//                        .apply {
+//                            setter(data.getAccountByIdOrNull(id)!!)
+//                        },
+//                )
+//            }
+//    }
 
     private fun conditionallyAddCompleteTransactionToList(
         transactionId: UUID?,
@@ -910,9 +1147,9 @@ where acc.budget_id = ?
      * @throws IllegalArgumentException if either the [clearedItems] or the [billPayTransaction] is not what
      * we expect
      */
-    // TODO allow checks to pay credit card bills
+// TODO allow checks to pay credit card bills
     override fun commitCreditCardPayment(
-        clearedItems: List<Transaction.Item>,
+        clearedItems: List<BudgetDao.ExtendedTransactionItem>,
         billPayTransaction: Transaction,
         budgetId: UUID,
     ) {
@@ -929,19 +1166,19 @@ where acc.budget_id = ?
         require(clearedItems.isNotEmpty())
         require(
             clearedItems.all {
-                it.chargeAccount == chargeAccount
+                it.item.chargeAccount == chargeAccount
             },
         )
         require(
             clearedItems
-                .fold(BigDecimal.ZERO.setScale(2)) { sum, transactionItem ->
-                    sum + transactionItem.amount
+                .fold(BigDecimal.ZERO.setScale(2)) { sum, transactionItem: BudgetDao.ExtendedTransactionItem ->
+                    sum + transactionItem.item.amount!!
                 } ==
                     -billPayChargeTransactionItem.amount,
         )
         connection.transactOrThrow {
             clearedItems
-                .forEach { chargeTransactionItem: Transaction.Item ->
+                .forEach { chargeTransactionItem: BudgetDao.ExtendedTransactionItem ->
                     prepareStatement(
                         """
                             |update transaction_items ti
@@ -954,8 +1191,8 @@ where acc.budget_id = ?
                     )
                         .use { statement ->
                             statement.setUuid(1, budgetId)
-                            statement.setUuid(2, chargeTransactionItem.transaction.id)
-                            statement.setUuid(3, chargeTransactionItem.chargeAccount!!.id)
+                            statement.setUuid(2, chargeTransactionItem.transactionId)
+                            statement.setUuid(3, chargeTransactionItem.item.chargeAccount!!.id)
                             if (statement.executeUpdate() != 1)
                                 throw IllegalStateException("Charge being cleared not found in DB")
                         }
@@ -969,7 +1206,7 @@ where acc.budget_id = ?
                     )
                         .use { statement ->
                             statement.setUuid(1, billPayTransaction.id)
-                            statement.setUuid(2, chargeTransactionItem.transaction.id)
+                            statement.setUuid(2, chargeTransactionItem.transactionId)
                             statement.setUuid(3, budgetId)
                             statement.executeUpdate()
                         }
@@ -1087,11 +1324,11 @@ where acc.budget_id = ?
             transaction.categoryItems.size + transaction.realItems.size + transaction.draftItems.size + transaction.chargeItems.size
         val insertSql = buildString {
             var counter = transactionItemCounter
-            append("insert into transaction_items (transaction_id, description, amount, draft_status, budget_id, category_account_id, real_account_id, charge_account_id, draft_account_id) values ")
+            append("insert into transaction_items (id, transaction_id, description, amount, draft_status, budget_id, category_account_id, real_account_id, charge_account_id, draft_account_id) values ")
             if (counter-- > 0) {
-                append("(?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                append("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
                 while (counter-- > 0) {
-                    append(", (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                    append(", (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
                 }
             }
         }
@@ -1163,12 +1400,13 @@ where acc.budget_id = ?
         transactionItem: Transaction.Item,
         budgetId: UUID,
     ): Int {
-        transactionItemInsert.setUuid(parameterIndex, transaction.id)
-        transactionItemInsert.setString(parameterIndex + 1, transactionItem.description)
-        transactionItemInsert.setBigDecimal(parameterIndex + 2, transactionItem.amount)
-        transactionItemInsert.setString(parameterIndex + 3, transactionItem.draftStatus.name)
-        transactionItemInsert.setUuid(parameterIndex + 4, budgetId)
-        return 5
+        transactionItemInsert.setUuid(parameterIndex, transactionItem.id)
+        transactionItemInsert.setUuid(parameterIndex + 1, transaction.id)
+        transactionItemInsert.setString(parameterIndex + 2, transactionItem.description)
+        transactionItemInsert.setBigDecimal(parameterIndex + 3, transactionItem.amount)
+        transactionItemInsert.setString(parameterIndex + 4, transactionItem.draftStatus.name)
+        transactionItemInsert.setUuid(parameterIndex + 5, budgetId)
+        return 6
     }
 
     private fun Connection.insertTransactionPreparedStatement(

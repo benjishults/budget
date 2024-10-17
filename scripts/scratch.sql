@@ -165,6 +165,7 @@ create index if not exists lookup_transaction_by_date
 
 create table if not exists transaction_items
 (
+    id                  uuid           not null unique,
     transaction_id      uuid           not null references transactions (id),
     description         varchar(110)   null,
     amount              numeric(30, 2) not null,
@@ -172,8 +173,9 @@ create table if not exists transaction_items
     real_account_id     uuid           null references real_accounts (id),
     charge_account_id   uuid           null references charge_accounts (id),
     draft_account_id    uuid           null references draft_accounts (id),
-    draft_status        varchar        not null default 'none', -- 'none' 'outstanding' 'cleared'
+    draft_status        varchar        not null default 'none', -- 'none' 'outstanding' 'cleared', 'clearing'
     budget_id           uuid           not null references budgets (id),
+    primary key (id, budget_id),
     constraint only_one_account_per_transaction_item check
         ((real_account_id is not null and
           category_account_id is null and
@@ -396,6 +398,26 @@ from transaction_items;
 select *
 from transactions
 where id = 'd94137d7-d771-4d66-95cb-fb21ba90c964';
+
+select t.id            as transaction_id,
+       t.description   as transaction_description,
+       t.timestamp_utc as transaction_timestamp,
+       i.amount,
+       i.description,
+       i.category_account_id,
+       i.draft_account_id,
+       i.real_account_id,
+       i.charge_account_id,
+       i.draft_status
+from transactions t
+         join transaction_items i
+              on i.transaction_id = t.id
+                  and t.budget_id = i.budget_id
+where t.budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47'
+  and i.category_account_id = '1d5221d6-acb3-4377-8fa1-bc3289fa75ca'
+order by t.timestamp_utc desc, t.id
+limit 30
+;
 
 select t.*,
        i.amount      as item_amount,

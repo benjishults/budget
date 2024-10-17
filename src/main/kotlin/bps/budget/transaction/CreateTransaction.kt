@@ -17,6 +17,7 @@ import bps.console.inputs.SimplePromptWithDefault
 import bps.console.menu.Menu
 import bps.console.menu.ScrollingSelectionMenu
 import java.math.BigDecimal
+import java.util.UUID
 
 fun WithIo.chooseRealAccountsThenCategories(
     totalAmount: BigDecimal,
@@ -107,6 +108,7 @@ fun WithIo.chooseRealAccountsThenCategories(
                 is ChargeAccount ->
                     transactionBuilder.chargeItemBuilders.add(
                         Transaction.ItemBuilder(
+                            id = UUID.randomUUID(),
                             amount = -currentAmount,
                             description = if (currentDescription == description) null else currentDescription,
                             chargeAccount = selectedRealAccount,
@@ -115,6 +117,7 @@ fun WithIo.chooseRealAccountsThenCategories(
                 else ->
                     transactionBuilder.realItemBuilders.add(
                         Transaction.ItemBuilder(
+                            id = UUID.randomUUID(),
                             amount = -currentAmount,
                             description = if (currentDescription == description) null else currentDescription,
                             realAccount = selectedRealAccount,
@@ -223,6 +226,7 @@ fun WithIo.allocateSpendingItemMenu(
                     ?: throw TryAgainAtMostRecentMenuException("No description entered")
             transactionBuilder.categoryItemBuilders.add(
                 Transaction.ItemBuilder(
+                    id = UUID.randomUUID(),
                     amount = -categoryAmount,
                     description = if (categoryDescription == description) null else categoryDescription,
                     categoryAccount = selectedCategoryAccount,

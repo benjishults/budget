@@ -24,6 +24,7 @@ import bps.console.menu.takeAction
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
+import java.util.UUID
 
 fun WithIo.checksMenu(
     budgetData: BudgetData,
@@ -76,6 +77,7 @@ fun WithIo.checksMenu(
                                     .apply {
                                         draftItemBuilders.add(
                                             Transaction.ItemBuilder(
+                                                id = UUID.randomUUID(),
                                                 amount = amount,
                                                 description = description,
                                                 draftAccount = draftAccount,
@@ -99,7 +101,7 @@ fun WithIo.checksMenu(
                 add(
                     pushMenu("Record check cleared on '${draftAccount.name}'") {
                         ViewTransactionsMenu(
-                            filter = { it.draftStatus === DraftStatus.outstanding },
+                            filter = { it.item.draftStatus === DraftStatus.outstanding },
                             header = "Select the check that cleared on '${draftAccount.name}'",
                             prompt = "Select the check that cleared: ",
                             account = draftAccount,
@@ -107,7 +109,7 @@ fun WithIo.checksMenu(
                             budgetData = budgetData,
                             limit = userConfig.numberOfItemsInScrollingList,
                             outPrinter = outPrinter,
-                        ) { _, draftTransactionItem ->
+                        ) { _, draftTransactionItem: BudgetDao.ExtendedTransactionItem ->
                             val timestamp: Instant =
                                 getTimestampFromUser(
                                     "Did the check clear just now [Y]? ",
@@ -116,13 +118,14 @@ fun WithIo.checksMenu(
                                 )
                             val clearingTransaction =
                                 Transaction.Builder(
-                                    draftTransactionItem.transaction.description,
+                                    draftTransactionItem.transactionDescription,
                                     timestamp,
                                 )
                                     .apply {
                                         draftItemBuilders.add(
                                             Transaction.ItemBuilder(
-                                                amount = -draftTransactionItem.amount,
+                                                id = UUID.randomUUID(),
+                                                amount = -draftTransactionItem.item.amount,
                                                 description = description,
                                                 draftAccount = draftAccount,
                                                 draftStatus = DraftStatus.clearing,
@@ -130,16 +133,19 @@ fun WithIo.checksMenu(
                                         )
                                         realItemBuilders.add(
                                             Transaction.ItemBuilder(
-                                                amount = -draftTransactionItem.amount,
+                                                id = UUID.randomUUID(),
+                                                amount = -draftTransactionItem.item.amount,
                                                 description = description,
-                                                realAccount = draftTransactionItem.draftAccount!!.realCompanion,
+                                                realAccount = draftTransactionItem.item.draftAccount!!.realCompanion,
                                             ),
                                         )
                                     }
                                     .build()
                             budgetData.commit(clearingTransaction)
                             budgetDao.clearCheck(
-                                draftTransactionItem,
+                                draftTransactionItem
+                                    .item
+                                    .build(draftTransactionItem.transaction!!),
                                 clearingTransaction,
                                 budgetData.id,
                             )

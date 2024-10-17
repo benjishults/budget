@@ -26,6 +26,7 @@ import bps.console.menu.takeAction
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
+import java.util.UUID
 
 fun WithIo.creditCardMenu(
     budgetData: BudgetData,
@@ -75,7 +76,7 @@ fun WithIo.creditCardMenu(
                             budgetDao = budgetDao,
                             budgetData = budgetData,
                             limit = userConfig.numberOfItemsInScrollingList,
-                            filter = { it.draftStatus === DraftStatus.outstanding },
+                            filter = { it.item.draftStatus === DraftStatus.outstanding },
                             header = "Unpaid transactions on '${chargeAccount.name}'",
                             prompt = "Select transaction to view details: ",
                             outPrinter = outPrinter,
@@ -134,6 +135,7 @@ private fun WithIo.payCreditCardBill(
                         .apply {
                             realItemBuilders.add(
                                 Transaction.ItemBuilder(
+                                    id = UUID.randomUUID(),
                                     amount = -amountOfBill,
                                     description = description,
                                     realAccount = selectedRealAccount,
@@ -141,6 +143,7 @@ private fun WithIo.payCreditCardBill(
                             )
                             chargeItemBuilders.add(
                                 Transaction.ItemBuilder(
+                                    id = UUID.randomUUID(),
                                     amount = amountOfBill,
                                     description = description,
                                     chargeAccount = chargeAccount,
@@ -155,7 +158,6 @@ private fun WithIo.payCreditCardBill(
                         amountOfBill = amountOfBill,
                         billPayTransaction = billPayTransaction,
                         chargeAccount = chargeAccount,
-                        selectedItems = emptyList(),
                         budgetData = budgetData,
                         budgetDao = budgetDao,
                         userConfig = userConfig,
@@ -175,7 +177,6 @@ private fun WithIo.selectOrCreateChargeTransactionsForBill(
     amountOfBill: BigDecimal,
     billPayTransaction: Transaction,
     chargeAccount: ChargeAccount,
-    selectedItems: List<Transaction.Item>,
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
@@ -186,7 +187,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBill(
     runningTotal = amountOfBill,
     billPayTransaction = billPayTransaction,
     chargeAccount = chargeAccount,
-    selectedItems = selectedItems,
+    selectedItems = emptyList(),
     budgetData = budgetData,
     budgetDao = budgetDao,
     userConfig = userConfig,
@@ -196,22 +197,21 @@ private fun WithIo.selectOrCreateChargeTransactionsForBill(
 
 private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
     amountOfBill: BigDecimal,
-    // TODO use a helper to make this less error prone for the original call
     runningTotal: BigDecimal,
     billPayTransaction: Transaction,
     chargeAccount: ChargeAccount,
-    selectedItems: List<Transaction.Item>,
+    selectedItems: List<BudgetDao.ExtendedTransactionItem>,
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
     menuSession: MenuSession,
     clock: Clock,
 ): Menu = ViewTransactionsMenu(
-    filter = { it.draftStatus === DraftStatus.outstanding && it !in selectedItems },
+    filter = { it.item.draftStatus === DraftStatus.outstanding && it !in selectedItems },
     header = "Select all transactions from this '${chargeAccount.name}' bill.  Amount to be covered: $${
         amountOfBill +
                 selectedItems.fold(BigDecimal.ZERO) { sum, item ->
-                    sum + item.amount
+                    sum + item.item.amount
                 }
     }",
     prompt = "Select a transaction covered in this bill: ",
@@ -233,10 +233,10 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
     limit = userConfig.numberOfItemsInScrollingList,
     outPrinter = outPrinter,
 ) { _, chargeTransactionItem ->
-    val allSelectedItems: List<Transaction.Item> = selectedItems + chargeTransactionItem
+    val allSelectedItems: List<BudgetDao.ExtendedTransactionItem> = selectedItems + chargeTransactionItem
     // FIXME if the selected amount is greater than allowed, then give a "denied" message
     //       ... or don't show such items in the first place
-    val remainingToBeCovered: BigDecimal = runningTotal + chargeTransactionItem.amount
+    val remainingToBeCovered: BigDecimal = runningTotal + chargeTransactionItem.item.amount
     when {
         remainingToBeCovered == BigDecimal.ZERO.setScale(2) -> {
             menuSession.pop()
@@ -308,6 +308,7 @@ private fun WithIo.spendOnACreditCard(
                 .apply {
                     chargeItemBuilders.add(
                         Transaction.ItemBuilder(
+                            id = UUID.randomUUID(),
                             amount = -amount,
                             description = description,
                             chargeAccount = chargeAccount,

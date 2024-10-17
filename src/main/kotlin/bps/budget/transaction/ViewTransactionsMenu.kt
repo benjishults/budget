@@ -3,10 +3,6 @@ package bps.budget.transaction
 import bps.budget.WithIo
 import bps.budget.model.Account
 import bps.budget.model.BudgetData
-import bps.budget.model.CategoryAccount
-import bps.budget.model.ChargeAccount
-import bps.budget.model.DraftAccount
-import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
@@ -32,15 +28,18 @@ open class ViewTransactionsMenu(
     private val budgetData: BudgetData,
     limit: Int = 30,
     offset: Int = 0,
-    private val filter: (Transaction.Item) -> Boolean = { true },
+    private val filter: (BudgetDao.ExtendedTransactionItem) -> Boolean = { true },
     header: String? = "'${account.name}' Account Transactions",
     prompt: String = "Select transaction for details: ",
     val outPrinter: OutPrinter = DefaultOutPrinter,
     extraItems: List<MenuItem> = emptyList(),
-    actOnSelectedItem: (MenuSession, Transaction.Item) -> Unit = { _, transactionItem: Transaction.Item ->
-        outPrinter.showTransactionDetailsAction(transactionItem.transaction, budgetData)
+    actOnSelectedItem: (MenuSession, BudgetDao.ExtendedTransactionItem) -> Unit = { _, extendedTransactionItem: BudgetDao.ExtendedTransactionItem ->
+        outPrinter.showTransactionDetailsAction(
+            extendedTransactionItem.transaction!!,
+            budgetData,
+        )
     },
-) : ScrollingSelectionMenu<Transaction.Item>(
+) : ScrollingSelectionMenu<BudgetDao.ExtendedTransactionItem>(
     header + TRANSACTIONS_TABLE_HEADER,
     prompt,
     limit,
@@ -49,8 +48,7 @@ open class ViewTransactionsMenu(
     labelGenerator = {
         String.format(
             "%s | %,10.2f | %s",
-            transaction
-                .timestamp
+            transactionTimestamp
                 .toLocalDateTime(budgetData.timeZone)
                 .format(
                     LocalDateTime.Format {
@@ -75,54 +73,20 @@ open class ViewTransactionsMenu(
                         )
                     },
                 ),
-            amount,
-            description ?: transaction.description,
+            item.amount,
+            item.description ?: transactionDescription,
         )
     },
     itemListGenerator = { selectedLimit: Int, selectedOffset: Int ->
-        budgetDao
-            .fetchTransactions(
-                account = account,
-                data = budgetData,
+        with(budgetDao) {
+            account.fetchTransactionItemsInvolvingAccount(
+                budgetData = budgetData,
                 limit = selectedLimit,
                 offset = selectedOffset,
             )
-            .flatMap { transaction: Transaction ->
-                when (account) {
-                    is CategoryAccount -> {
-                        transaction.categoryItems
-                    }
-                    is ChargeAccount -> {
-                        transaction.chargeItems
-                    }
-                    is RealAccount -> {
-                        transaction.realItems
-                    }
-                    is DraftAccount -> {
-                        transaction.draftItems
-                    }
-                    else -> throw Error("Unknown account type ${account::class}")
-                }
-                    .filter { item: Transaction.Item ->
-                        when (account) {
-                            is CategoryAccount -> {
-                                item.categoryAccount
-                            }
-                            is ChargeAccount -> {
-                                item.chargeAccount
-                            }
-                            is RealAccount -> {
-                                item.realAccount
-                            }
-                            is DraftAccount -> {
-                                item.draftAccount
-                            }
-                            else -> throw Error("Unknown account type ${account::class}")
-                        } == account
-                    }
-                    .filter(filter)
-            }
-            .sorted()
+                .filter(filter)
+                .sorted()
+        }
     },
     actOnSelectedItem = actOnSelectedItem,
 ) {
@@ -188,7 +152,7 @@ private fun StringBuilder.appendItems(
                 append(
                     String.format(
                         "%-16s | %10.2f |%s",
-                        accountGetter(transactionItem).name,
+                        transactionItem.accountGetter().name,
                         transactionItem.amount,
                         transactionItem
                             .description

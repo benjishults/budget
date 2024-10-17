@@ -18,6 +18,7 @@ import bps.console.menu.ScrollingSelectionMenu
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
+import java.util.UUID
 
 fun WithIo.recordIncomeSelectionMenu(
     budgetData: BudgetData,
@@ -55,9 +56,10 @@ fun WithIo.recordIncomeSelectionMenu(
                 .getResult()
                 ?: throw TryAgainAtMostRecentMenuException("No description entered.")
         val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
-        val income: Transaction = createIncomeTransaction(description, timestamp, amount, budgetData, realAccount)
-        budgetData.commit(income)
-        budgetDao.commit(income, budgetData.id)
+        val incomeTransaction: Transaction =
+            createIncomeTransaction(description, timestamp, amount, budgetData, realAccount)
+        budgetData.commit(incomeTransaction)
+        budgetDao.commit(incomeTransaction, budgetData.id)
         outPrinter.important("Income recorded")
     }
 }
@@ -72,10 +74,11 @@ fun createIncomeTransaction(
     .apply {
         categoryItemBuilders.add(
             Transaction.ItemBuilder(
+                UUID.randomUUID(),
                 amount,
                 categoryAccount = budgetData.generalAccount,
             ),
         )
-        realItemBuilders.add(Transaction.ItemBuilder(amount, realAccount = realAccount))
+        realItemBuilders.add(Transaction.ItemBuilder(UUID.randomUUID(), amount, realAccount = realAccount))
     }
     .build()
