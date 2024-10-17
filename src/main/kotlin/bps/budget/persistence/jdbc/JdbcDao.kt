@@ -442,6 +442,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                         is ChargeAccount -> "charge_account_id"
                         is RealAccount -> "real_account_id"
                         is DraftAccount -> "draft_account_id"
+                        else -> throw Error("Unknown account type ${account::class}")
                     }
                 } = ?
                     |               order by tr.timestamp_utc desc
@@ -1407,7 +1408,7 @@ where id = ?
                     selectAllAccounts.executeQuery()
                         .use { resultSet: ResultSet ->
                             while (resultSet.next()) {
-                                add(resultSet.getUuid("account_id") to resultSet.getUuid("activity_id"))
+                                add(resultSet.getUuid("account_id")!! to resultSet.getUuid("activity_id")!!)
                             }
                         }
                 }

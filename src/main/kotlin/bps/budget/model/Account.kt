@@ -40,7 +40,7 @@ const val defaultWorkAccountDescription = "Work-related expenses (possibly to be
 const val defaultCheckingDraftsAccountName = "Checking Drafts"
 const val defaultCheckingDraftsAccountDescription = "Records checks being written or clearing"
 
-sealed class Account(
+open class Account(
     override var name: String,
     override var description: String = "",
     override var id: UUID = UUID.randomUUID(),

@@ -1,7 +1,0 @@
-persistence:
-  type: FILE
-  file:
-    dataDirectory: src/test/resources/noData
-
-#budgetUser: {}
-#  defaultLogin: test@test.com

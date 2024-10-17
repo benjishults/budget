@@ -101,6 +101,7 @@ open class ViewTransactionsMenu(
                     is DraftAccount -> {
                         transaction.draftItems
                     }
+                    else -> throw Error("Unknown account type ${account::class}")
                 }
                     .filter { item: Transaction.Item ->
                         when (account) {
@@ -116,6 +117,7 @@ open class ViewTransactionsMenu(
                             is DraftAccount -> {
                                 item.draftAccount
                             }
+                            else -> throw Error("Unknown account type ${account::class}")
                         } == account
                     }
                     .filter(filter)

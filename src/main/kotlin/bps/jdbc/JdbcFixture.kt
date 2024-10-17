@@ -59,7 +59,7 @@ interface JdbcFixture {
 inline fun <T> Connection.transactOrThrow(
     block: Connection.() -> T,
 ): T =
-    transact({ throw it }, block)!!
+    transact({ throw it }, block)
 
 /**
  * commits after running [block].
