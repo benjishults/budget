@@ -4,7 +4,7 @@ import bps.budget.BudgetConfigurations
 import bps.budget.persistence.jdbc.JdbcDao
 import bps.budget.persistence.jdbc.toLocalDateTime
 import bps.jdbc.JdbcFixture
-import bps.jdbc.transactOrNull
+import bps.jdbc.transactOrThrow
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
@@ -26,7 +26,7 @@ class TimeZoneTest : FreeSpec(), BaseJdbcTestFixture, JdbcFixture {
             dropTables(connection, configurations.persistence.jdbc!!.schema)
         }
         "create table" - {
-            connection.transactOrNull {
+            connection.transactOrThrow {
                 createStatement().use { statement ->
                     statement.execute(
                         """
@@ -44,7 +44,7 @@ class TimeZoneTest : FreeSpec(), BaseJdbcTestFixture, JdbcFixture {
                 val now = Instant.parse("2024-08-09T00:00:00.00Z")
                 val nowAmericaChicago = "2024-08-08T19:00"
                 val label2 = "basic test"
-                connection.transactOrNull {
+                connection.transactOrThrow {
                     prepareStatement(
                         """
                         insert into timestamps (timestamp_utc, timestamp_with_timezone, label)
@@ -59,7 +59,7 @@ class TimeZoneTest : FreeSpec(), BaseJdbcTestFixture, JdbcFixture {
                         }
                 }
                 "read timestamps with bps.budget.persistence.jdbc.JdbcDaoKt.toLocalDateTime(java.sql.Timestamp, java.util.TimeZone) and validate" {
-                    connection.transactOrNull {
+                    connection.transactOrThrow {
                         prepareStatement("select timestamp_utc, timestamp_with_timezone from timestamps where label = ?")
                             .use { statement ->
                                 statement.setString(1, label2)

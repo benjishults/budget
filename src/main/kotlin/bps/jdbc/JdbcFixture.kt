@@ -43,7 +43,7 @@ interface JdbcFixture {
     fun ResultSet.getCurrencyAmount(name: String): BigDecimal =
         getBigDecimal(name).setScale(2)
 
-    fun ResultSet.getUuid(name: String): UUID =
+    fun ResultSet.getUuid(name: String): UUID? =
         getObject(name, UUID::class.java)
 
     fun PreparedStatement.setUuid(parameterIndex: Int, uuid: UUID) =
@@ -54,25 +54,22 @@ interface JdbcFixture {
 }
 
 /**
- * commits after running [block].
- * @returns the value of executing [onRollback] if the transaction was rolled back otherwise the result of [block]
- * @param onRollback defaults to throwing the exception
+ * commits after running [block].  Throws exception on rollback.
  */
-inline fun <T : Any> Connection.transactOrThrow(
-    onRollback: (Exception) -> T = { throw it },
+inline fun <T> Connection.transactOrThrow(
     block: Connection.() -> T,
 ): T =
-    transactOrNull(onRollback, block)!!
+    transact({ throw it }, block)!!
 
 /**
  * commits after running [block].
  * @returns the value of executing [onRollback] if the transaction was rolled back otherwise the result of [block]
  * @param onRollback defaults to throwing the exception but could do something like returning `null`.
  */
-inline fun <T : Any> Connection.transactOrNull(
-    onRollback: (Exception) -> T? = { throw it },
-    block: Connection.() -> T?,
-): T? =
+inline fun <T> Connection.transact(
+    onRollback: (Exception) -> T = { throw it },
+    block: Connection.() -> T,
+): T =
     try {
         block()
             .also {

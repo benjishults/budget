@@ -522,18 +522,18 @@ All sources prepared
                         """
                         |Spending from 'Wallet': 'Pepsi'
                         |Select a category that some of that money was spent on.  Left to cover: $1.50
-                        | 1.       0.00 | Education
-                        | 2.       0.00 | Entertainment
-                        | 3.     300.00 | Food
-                        | 4.       0.00 | Hobby
-                        | 5.       0.00 | Home Upkeep
-                        | 6.       0.00 | Housing
-                        | 7.       0.00 | Medical
-                        | 8.     200.00 | Necessities
-                        | 9.       0.00 | Network
-                        |10.       0.00 | Transportation
-                        |11.       0.00 | Travel
-                        |12.       0.00 | Work
+                        | 1.       0.00 | Education       | Tuition, books, etc.
+                        | 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+                        | 3.     300.00 | Food            | Food other than what's covered in entertainment
+                        | 4.       0.00 | Hobby           | Expenses related to a hobby
+                        | 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+                        | 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+                        | 7.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+                        | 8.     200.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+                        | 9.       0.00 | Network         | Mobile plan, routers, internet access
+                        |10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+                        |11.       0.00 | Travel          | Travel expenses for vacation
+                        |12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
                         |13. Back (b)
                         |14. Quit (q)
                         |""".trimMargin(),
@@ -626,18 +626,18 @@ Spending recorded
                         """
                         |Spending from 'Checking Drafts': 'SuperMarket'
                         |Select a category that some of that money was spent on.  Left to cover: $300.00
-                        | 1.       0.00 | Education
-                        | 2.       0.00 | Entertainment
-                        | 3.     298.50 | Food
-                        | 4.       0.00 | Hobby
-                        | 5.       0.00 | Home Upkeep
-                        | 6.       0.00 | Housing
-                        | 7.       0.00 | Medical
-                        | 8.     200.00 | Necessities
-                        | 9.       0.00 | Network
-                        |10.       0.00 | Transportation
-                        |11.       0.00 | Travel
-                        |12.       0.00 | Work
+                        | 1.       0.00 | Education       | Tuition, books, etc.
+                        | 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+                        | 3.     298.50 | Food            | Food other than what's covered in entertainment
+                        | 4.       0.00 | Hobby           | Expenses related to a hobby
+                        | 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+                        | 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+                        | 7.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+                        | 8.     200.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+                        | 9.       0.00 | Network         | Mobile plan, routers, internet access
+                        |10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+                        |11.       0.00 | Travel          | Travel expenses for vacation
+                        |12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
                         |13. Back (b)
                         |14. Quit (q)
                         |""".trimMargin(),
@@ -661,18 +661,18 @@ Itemization prepared
                         """
                         |Spending from 'Checking Drafts': 'SuperMarket'
                         |Select a category that some of that money was spent on.  Left to cover: $100.00
-                        | 1.       0.00 | Education
-                        | 2.       0.00 | Entertainment
-                        | 3.      98.50 | Food
-                        | 4.       0.00 | Hobby
-                        | 5.       0.00 | Home Upkeep
-                        | 6.       0.00 | Housing
-                        | 7.       0.00 | Medical
-                        | 8.     200.00 | Necessities
-                        | 9.       0.00 | Network
-                        |10.       0.00 | Transportation
-                        |11.       0.00 | Travel
-                        |12.       0.00 | Work
+                        | 1.       0.00 | Education       | Tuition, books, etc.
+                        | 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+                        | 3.      98.50 | Food            | Food other than what's covered in entertainment
+                        | 4.       0.00 | Hobby           | Expenses related to a hobby
+                        | 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+                        | 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+                        | 7.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+                        | 8.     200.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+                        | 9.       0.00 | Network         | Mobile plan, routers, internet access
+                        |10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+                        |11.       0.00 | Travel          | Travel expenses for vacation
+                        |12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
                         |13. Back (b)
                         |14. Quit (q)
                         |""".trimMargin(),
@@ -994,18 +994,18 @@ New credit card account 'Costco Visa' created
                         """
                         |Spending from 'Costco Visa': 'Costco'
                         |Select a category that some of that money was spent on.  Left to cover: $30.00
-                        | 1.       0.00 | Education
-                        | 2.       0.00 | Entertainment
-                        | 3.      98.50 | Food
-                        | 4.       0.00 | Hobby
-                        | 5.       0.00 | Home Upkeep
-                        | 6.       0.00 | Housing
-                        | 7.       0.00 | Medical
-                        | 8.     100.00 | Necessities
-                        | 9.       0.00 | Network
-                        |10.       0.00 | Transportation
-                        |11.       0.00 | Travel
-                        |12.       0.00 | Work
+                        | 1.       0.00 | Education       | Tuition, books, etc.
+                        | 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+                        | 3.      98.50 | Food            | Food other than what's covered in entertainment
+                        | 4.       0.00 | Hobby           | Expenses related to a hobby
+                        | 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+                        | 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+                        | 7.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+                        | 8.     100.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+                        | 9.       0.00 | Network         | Mobile plan, routers, internet access
+                        |10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+                        |11.       0.00 | Travel          | Travel expenses for vacation
+                        |12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
                         |13. Back (b)
                         |14. Quit (q)
                         |""".trimMargin(),
@@ -1029,18 +1029,18 @@ Itemization prepared
                         """
                         |Spending from 'Costco Visa': 'Costco'
                         |Select a category that some of that money was spent on.  Left to cover: $10.00
-                        | 1.       0.00 | Education
-                        | 2.       0.00 | Entertainment
-                        | 3.      78.50 | Food
-                        | 4.       0.00 | Hobby
-                        | 5.       0.00 | Home Upkeep
-                        | 6.       0.00 | Housing
-                        | 7.       0.00 | Medical
-                        | 8.     100.00 | Necessities
-                        | 9.       0.00 | Network
-                        |10.       0.00 | Transportation
-                        |11.       0.00 | Travel
-                        |12.       0.00 | Work
+                        | 1.       0.00 | Education       | Tuition, books, etc.
+                        | 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+                        | 3.      78.50 | Food            | Food other than what's covered in entertainment
+                        | 4.       0.00 | Hobby           | Expenses related to a hobby
+                        | 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+                        | 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+                        | 7.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+                        | 8.     100.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+                        | 9.       0.00 | Network         | Mobile plan, routers, internet access
+                        |10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+                        |11.       0.00 | Travel          | Travel expenses for vacation
+                        |12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
                         |13. Back (b)
                         |14. Quit (q)
                         |""".trimMargin(),
@@ -1086,18 +1086,18 @@ Spending recorded
                         """
                         |Spending from 'Costco Visa': 'Target'
                         |Select a category that some of that money was spent on.  Left to cover: $20.00
-                        | 1.       0.00 | Education
-                        | 2.       0.00 | Entertainment
-                        | 3.      78.50 | Food
-                        | 4.       0.00 | Hobby
-                        | 5.       0.00 | Home Upkeep
-                        | 6.       0.00 | Housing
-                        | 7.       0.00 | Medical
-                        | 8.      90.00 | Necessities
-                        | 9.       0.00 | Network
-                        |10.       0.00 | Transportation
-                        |11.       0.00 | Travel
-                        |12.       0.00 | Work
+                        | 1.       0.00 | Education       | Tuition, books, etc.
+                        | 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+                        | 3.      78.50 | Food            | Food other than what's covered in entertainment
+                        | 4.       0.00 | Hobby           | Expenses related to a hobby
+                        | 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+                        | 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+                        | 7.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+                        | 8.      90.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+                        | 9.       0.00 | Network         | Mobile plan, routers, internet access
+                        |10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+                        |11.       0.00 | Travel          | Travel expenses for vacation
+                        |12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
                         |13. Back (b)
                         |14. Quit (q)
                         |""".trimMargin(),
@@ -1381,18 +1381,18 @@ Item prepared
                         """
                         |Spending from 'Costco Visa': 'Brausen's'
                         |Select a category that some of that money was spent on.  Left to cover: $5.00
-                        | 1.       0.00 | Education
-                        | 2.       0.00 | Entertainment
-                        | 3.      78.50 | Food
-                        | 4.       0.00 | Hobby
-                        | 5.       0.00 | Home Upkeep
-                        | 6.       0.00 | Housing
-                        | 7.       0.00 | Medical
-                        | 8.      70.00 | Necessities
-                        | 9.       0.00 | Network
-                        |10.       0.00 | Transportation
-                        |11.       0.00 | Travel
-                        |12.       0.00 | Work
+                        | 1.       0.00 | Education       | Tuition, books, etc.
+                        | 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+                        | 3.      78.50 | Food            | Food other than what's covered in entertainment
+                        | 4.       0.00 | Hobby           | Expenses related to a hobby
+                        | 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+                        | 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+                        | 7.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+                        | 8.      70.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+                        | 9.       0.00 | Network         | Mobile plan, routers, internet access
+                        |10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+                        |11.       0.00 | Travel          | Travel expenses for vacation
+                        |12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
                         |13. Back (b)
                         |14. Quit (q)
                         |""".trimMargin(),

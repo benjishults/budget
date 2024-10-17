@@ -4,14 +4,14 @@ package bps.budget.jdbc
 
 import bps.jdbc.JdbcFixture
 import bps.jdbc.JdbcFixture.Companion.setUuid
-import bps.jdbc.transactOrNull
+import bps.jdbc.transactOrThrow
 import java.math.BigDecimal
 import java.sql.Connection
 import java.util.UUID
 
 fun dropTables(connection: Connection, schema: String) {
     require(schema == "clean_after_test")
-    connection.transactOrNull {
+    connection.transactOrThrow {
         createStatement()
             .use { statement ->
                 statement.execute("drop table if exists transaction_items")
@@ -21,6 +21,8 @@ fun dropTables(connection: Connection, schema: String) {
                 statement.execute("drop table if exists staged_real_accounts")
                 statement.execute("drop table if exists staged_charge_accounts")
                 statement.execute("drop table if exists staged_category_accounts")
+                statement.execute("drop table if exists staged_accounts")
+                statement.execute("drop table if exists accounts")
                 statement.execute("drop table if exists draft_accounts")
                 statement.execute("drop table if exists charge_accounts")
                 statement.execute("drop table if exists checking_accounts")
@@ -40,7 +42,7 @@ fun dropTables(connection: Connection, schema: String) {
 fun deleteAccounts(budgetId: UUID, connection: Connection) =
     with(JdbcFixture) {
         cleanupTransactions(budgetId, connection)
-        connection.transactOrNull {
+        connection.transactOrThrow {
             prepareStatement("delete from account_active_periods where budget_id = ?")
                 .use {
                     it.setUuid(1, budgetId)
@@ -71,7 +73,7 @@ fun deleteAccounts(budgetId: UUID, connection: Connection) =
 
 fun cleanupTransactions(budgetId: UUID, connection: Connection) =
     with(JdbcFixture) {
-        connection.transactOrNull {
+        connection.transactOrThrow {
             zeroBalance(budgetId, "category_accounts")
             zeroBalance(budgetId, "real_accounts")
             zeroBalance(budgetId, "charge_accounts")

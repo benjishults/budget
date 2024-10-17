@@ -172,7 +172,7 @@ fun WithIo.allocateSpendingItemMenu(
         baseList = budgetData.categoryAccounts - budgetData.generalAccount,
         labelGenerator = {
             String.format(
-                "%,10.2f | %s",
+                "%,10.2f | %-15s | %s",
                 balance +
                         transactionBuilder
                             .categoryItemBuilders
@@ -183,6 +183,7 @@ fun WithIo.allocateSpendingItemMenu(
                                     runningValue
                             },
                 name,
+                this.description,
             )
         },
     ) { menuSession: MenuSession, selectedCategoryAccount: CategoryAccount ->

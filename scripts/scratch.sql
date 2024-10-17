@@ -6,6 +6,8 @@ drop table if exists checking_accounts;
 drop table if exists charge_accounts;
 drop table if exists real_accounts;
 drop table if exists category_accounts;
+drop table if exists accounts;
+drop table if exists staged_accounts;
 drop table if exists staged_draft_accounts;
 drop table if exists staged_real_accounts;
 drop table if exists staged_category_accounts;

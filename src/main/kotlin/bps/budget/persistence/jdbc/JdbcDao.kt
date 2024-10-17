@@ -15,7 +15,7 @@ import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.DataConfigurationException
 import bps.budget.persistence.JdbcConfig
 import bps.jdbc.JdbcFixture
-import bps.jdbc.transactOrNull
+import bps.jdbc.transact
 import bps.jdbc.transactOrThrow
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -83,7 +83,7 @@ class JdbcDao(
             }
 
     override fun getUserByLogin(login: String): User? =
-        connection.transactOrNull {
+        connection.transactOrThrow {
             prepareStatement(
                 """
                 |select *
@@ -124,7 +124,7 @@ class JdbcDao(
     override fun createUser(login: String, password: String): UUID =
         UUID.randomUUID()
             .also { uuid: UUID ->
-                connection.transactOrNull {
+                connection.transactOrThrow {
                     prepareStatement("insert into users (login, id) values(?, ?)")
                         .use {
                             it.setString(1, login)
@@ -135,7 +135,7 @@ class JdbcDao(
             }
 
     override fun prepForFirstLoad() {
-        connection.transactOrNull {
+        connection.transactOrThrow {
             createStatement().use { createTablesStatement: Statement ->
                 createTablesStatement.executeUpdate(
                     """
@@ -454,13 +454,15 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                     statement.setUuid(2, account.id)
                     statement.setInt(3, limit)
                     statement.setInt(4, offset)
+                    // TODO boy, this code is a mess.  looks like I was focussed on getting something to work and
+                    //      didn't clean it up after
                     statement.executeQuery()
                         .use { result: ResultSet ->
                             val returnValue: MutableList<Transaction> = mutableListOf()
                             var transactionId: UUID? = null
                             var transactionBuilder: Transaction.Builder? = null
                             while (result.next()) {
-                                result.getUuid("transaction_id")
+                                result.getUuid("transaction_id")!!
                                     .let { uuid: UUID ->
                                         if (uuid != transactionId) {
                                             conditionallyAddCompleteTransactionToList(
@@ -587,7 +589,9 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                         description = itemDescription,
                         draftStatus = draftStatus,
                     )
-                        .apply { setter(data.getAccountByIdOrNull(id)!!) },
+                        .apply {
+                            setter(data.getAccountByIdOrNull(id)!!)
+                        },
                 )
             }
     }
@@ -664,7 +668,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
      */
     override fun load(budgetId: UUID, userId: UUID): BudgetData =
         try {
-            connection.transactOrNull(
+            connection.transact(
                 onRollback = { ex ->
                     throw DataConfigurationException(ex.message, ex)
                 },
@@ -853,7 +857,7 @@ where acc.budget_id = ?
                 } ==
                     -realTransactionItem.amount,
         )
-        connection.transactOrNull {
+        connection.transactOrThrow {
             draftTransactionItems
                 .forEach { draftTransactionItem ->
                     prepareStatement(
@@ -934,7 +938,7 @@ where acc.budget_id = ?
                 } ==
                     -billPayChargeTransactionItem.amount,
         )
-        connection.transactOrNull {
+        connection.transactOrThrow {
             clearedItems
                 .forEach { chargeTransactionItem: Transaction.Item ->
                     prepareStatement(
@@ -986,7 +990,7 @@ where acc.budget_id = ?
      * Inserts the transaction records and updates the account balances in the DB.
      */
     override fun commit(transaction: Transaction, budgetId: UUID) {
-        connection.transactOrNull {
+        connection.transactOrThrow {
             insertTransactionPreparedStatement(transaction, budgetId)
                 .use { insertTransaction: PreparedStatement ->
                     insertTransaction.executeUpdate()
@@ -1186,7 +1190,7 @@ where acc.budget_id = ?
     override fun save(data: BudgetData, user: User) {
         require(data.validate())
         // create user and budget if it isn't there
-        connection.transactOrNull {
+        connection.transactOrThrow {
             val generalAccountId: UUID = data.generalAccount.id
             prepareStatement(
                 """
@@ -1236,7 +1240,7 @@ where acc.budget_id = ?
     }
 
     override fun deleteUser(userId: UUID) {
-        connection.transactOrNull {
+        connection.transactOrThrow {
             prepareStatement("delete from budget_access where user_id = ?")
                 .use { statement: PreparedStatement ->
                     statement.setUuid(1, userId)
@@ -1252,7 +1256,7 @@ where acc.budget_id = ?
 
 
     override fun deleteUserByLogin(login: String) {
-        connection.transactOrNull {
+        connection.transactOrThrow {
             getUserIdByLogin(login)
                 ?.let { userId: UUID ->
                     prepareStatement("delete from budget_access where user_id = ?")
@@ -1283,7 +1287,7 @@ where acc.budget_id = ?
             }
 
     override fun deleteBudget(budgetId: UUID) {
-        connection.transactOrNull {
+        connection.transactOrThrow {
             prepareStatement("delete from budget_access where budget_id = ?")
                 .use { statement: PreparedStatement ->
                     statement.setUuid(1, budgetId)
