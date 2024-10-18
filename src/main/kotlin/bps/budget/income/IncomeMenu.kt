@@ -18,7 +18,6 @@ import bps.console.menu.ScrollingSelectionMenu
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
-import java.util.UUID
 
 fun WithIo.recordIncomeSelectionMenu(
     budgetData: BudgetData,
@@ -72,13 +71,11 @@ fun createIncomeTransaction(
     realAccount: RealAccount,
 ) = Transaction.Builder(description, timestamp)
     .apply {
-        categoryItemBuilders.add(
-            Transaction.ItemBuilder(
-                UUID.randomUUID(),
-                amount,
-                categoryAccount = budgetData.generalAccount,
-            ),
-        )
-        realItemBuilders.add(Transaction.ItemBuilder(UUID.randomUUID(), amount, realAccount = realAccount))
+        with(budgetData.generalAccount) {
+            addItem(amount)
+        }
+        with(realAccount) {
+            addItem(amount)
+        }
     }
     .build()

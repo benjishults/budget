@@ -18,7 +18,6 @@ import bps.console.menu.ScrollingSelectionMenu
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
-import java.util.UUID
 
 fun WithIo.makeAllowancesSelectionMenu(
     budgetData: BudgetData,
@@ -26,13 +25,13 @@ fun WithIo.makeAllowancesSelectionMenu(
     userConfig: UserConfiguration,
     clock: Clock,
 ): Menu = ScrollingSelectionMenu(
-    header = "Select account to ALLOCATE money into from '${budgetData.generalAccount.name}': ",
+    header = "Select account to ALLOCATE money into from '${budgetData.generalAccount.name}'",
     limit = userConfig.numberOfItemsInScrollingList,
     baseList = budgetData.categoryAccounts - budgetData.generalAccount,
     labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
 ) { _: MenuSession, selectedCategoryAccount: CategoryAccount ->
     val max = budgetData.generalAccount.balance
-    val min = BigDecimal.ZERO.setScale(2)
+    val min = BigDecimal("0.01").setScale(2)
     val amount: BigDecimal =
         SimplePrompt<BigDecimal>(
             "Enter the amount to ALLOCATE into '${selectedCategoryAccount.name}' [$min, $max]: ",
@@ -60,20 +59,12 @@ fun WithIo.makeAllowancesSelectionMenu(
             timestamp,
         )
             .apply {
-                categoryItemBuilders.add(
-                    Transaction.ItemBuilder(
-                        UUID.randomUUID(),
-                        -amount,
-                        categoryAccount = budgetData.generalAccount,
-                    ),
-                )
-                categoryItemBuilders.add(
-                    Transaction.ItemBuilder(
-                        UUID.randomUUID(),
-                        amount,
-                        categoryAccount = selectedCategoryAccount,
-                    ),
-                )
+                with(budgetData.generalAccount) {
+                    addItem(-amount)
+                }
+                with(selectedCategoryAccount) {
+                    addItem(amount)
+                }
             }
             .build()
         budgetData.commit(allocate)

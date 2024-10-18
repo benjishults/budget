@@ -16,6 +16,7 @@ import bps.budget.persistence.getBudgetNameFromPersistenceConfig
 import bps.budget.persistence.loadOrBuildBudgetData
 import bps.budget.spend.recordSpendingMenu
 import bps.budget.transaction.viewHistoryMenu
+import bps.budget.transfer.transferMenu
 import bps.budget.ui.ConsoleUiFacade
 import bps.budget.ui.UiFacade
 import bps.config.convertToPath
@@ -159,12 +160,7 @@ fun WithIo.budgetMenu(
         )
         add(
             takeAction(transfer, "x") {
-                outPrinter(
-                    """
-            |The user should be able to record transfers between read fund accounts
-            |(e.g., a cash withdrawal is a transfer from savings to pocket) and transfers between category fund accounts
-            |(e.g., when a big expenditure comes up under entertainment, you may need to transfer money from the school account.)""".trimMargin(),
-                )
+                transferMenu(budgetData, budgetDao, userConfig, clock)
             },
         )
         add(

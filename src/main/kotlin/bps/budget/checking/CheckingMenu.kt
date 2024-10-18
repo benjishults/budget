@@ -24,7 +24,6 @@ import bps.console.menu.takeAction
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
-import java.util.UUID
 
 fun WithIo.checksMenu(
     budgetData: BudgetData,
@@ -45,7 +44,7 @@ fun WithIo.checksMenu(
                         // TODO enter check number if checking account
                         // NOTE this is why we have separate draft accounts -- to easily know the real vs draft balance
                         val max = draftAccount.realCompanion.balance - draftAccount.balance
-                        val min = BigDecimal.ZERO.setScale(2)
+                        val min = BigDecimal("0.01").setScale(2)
                         val amount: BigDecimal =
                             SimplePromptWithDefault<BigDecimal>(
                                 "Enter the amount of check on '${draftAccount.name}' [$min, $max]: ",
@@ -75,15 +74,9 @@ fun WithIo.checksMenu(
                             val transactionBuilder: Transaction.Builder =
                                 Transaction.Builder(description, timestamp)
                                     .apply {
-                                        draftItemBuilders.add(
-                                            Transaction.ItemBuilder(
-                                                id = UUID.randomUUID(),
-                                                amount = amount,
-                                                description = description,
-                                                draftAccount = draftAccount,
-                                                draftStatus = DraftStatus.outstanding,
-                                            ),
-                                        )
+                                        with(draftAccount) {
+                                            addItem(amount, description, DraftStatus.outstanding)
+                                        }
                                     }
                             menuSession.push(
                                 allocateSpendingItemMenu(
@@ -122,23 +115,16 @@ fun WithIo.checksMenu(
                                     timestamp,
                                 )
                                     .apply {
-                                        draftItemBuilders.add(
-                                            Transaction.ItemBuilder(
-                                                id = UUID.randomUUID(),
-                                                amount = -draftTransactionItem.item.amount,
-                                                description = description,
-                                                draftAccount = draftAccount,
-                                                draftStatus = DraftStatus.clearing,
-                                            ),
-                                        )
-                                        realItemBuilders.add(
-                                            Transaction.ItemBuilder(
-                                                id = UUID.randomUUID(),
-                                                amount = -draftTransactionItem.item.amount,
-                                                description = description,
-                                                realAccount = draftTransactionItem.item.draftAccount!!.realCompanion,
-                                            ),
-                                        )
+                                        with(draftAccount) {
+                                            addItem(
+                                                -draftTransactionItem.item.amount,
+                                                this@apply.description,
+                                                DraftStatus.clearing,
+                                            )
+                                        }
+                                        with(draftTransactionItem.item.draftAccount!!.realCompanion) {
+                                            addItem(-draftTransactionItem.item.amount, this@apply.description)
+                                        }
                                     }
                                     .build()
                             budgetData.commit(clearingTransaction)

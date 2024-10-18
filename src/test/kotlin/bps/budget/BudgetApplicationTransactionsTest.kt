@@ -271,7 +271,7 @@ Deleted account 'Cosmetics'
                 validateInteraction(
                     expectedOutputs = listOf(
                         "Every month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n",
-                        "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}': " + """
+                        "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}'" + """
  1.       0.00 | Education       | Tuition, books, etc.
  2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
  3.       0.00 | Food            | Food other than what's covered in entertainment
@@ -293,7 +293,7 @@ Deleted account 'Cosmetics'
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Enter the amount to ALLOCATE into '$defaultFoodAccountName' [0.00, 5200.00]: ",
+                        "Enter the amount to ALLOCATE into '$defaultFoodAccountName' [0.01, 5200.00]: ",
                         "Enter description of transaction [allowance into '$defaultFoodAccountName']: ",
                         "Use current time [Y]? ",
                     ),
@@ -305,7 +305,7 @@ Deleted account 'Cosmetics'
 Allowance recorded
 
 """,
-                        "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}': " + """
+                        "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}'" + """
  1.       0.00 | Education       | Tuition, books, etc.
  2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
  3.     300.00 | Food            | Food other than what's covered in entertainment
@@ -327,14 +327,14 @@ Allowance recorded
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Enter the amount to ALLOCATE into '$defaultNecessitiesAccountName' [0.00, 4900.00]: ",
+                        "Enter the amount to ALLOCATE into '$defaultNecessitiesAccountName' [0.01, 4900.00]: ",
                         "Enter description of transaction [allowance into '$defaultNecessitiesAccountName']: ",
                         "Use current time [Y]? ",
                         """
 Allowance recorded
 
 """,
-                        "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}': " + """
+                        "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}'" + """
  1.       0.00 | Education       | Tuition, books, etc.
  2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
  3.     300.00 | Food            | Food other than what's covered in entertainment
@@ -508,7 +508,7 @@ Allowance recorded
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Enter the amount spent from 'Wallet' for 'Pepsi' [0.00, [1.50]]: ",
+                        "Enter the amount spent from 'Wallet' for 'Pepsi' [0.01, [1.50]]: ",
                         "Enter description for 'Wallet' spend [Pepsi]: ",
                     ),
                     toInput = listOf("", ""),
@@ -538,7 +538,7 @@ All sources prepared
                         |14. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
-                        "Enter the amount spent on 'Food' for 'Pepsi' [0.00, [1.50]]: ",
+                        "Enter the amount spent on 'Food' for 'Pepsi' [0.01, [1.50]]: ",
                         "Enter description for 'Food' spend [Pepsi]: ",
                     ),
                     toInput = listOf("3", "", ""),
@@ -611,7 +611,7 @@ Spending recorded
                     toInput = listOf("1"),
                 )
                 validateInteraction(
-                    expectedOutputs = listOf("Enter the amount of check on 'Checking Drafts' [0.00, 5000.00]: "),
+                    expectedOutputs = listOf("Enter the amount of check on 'Checking Drafts' [0.01, 5000.00]: "),
                     toInput = listOf("300"),
                 )
                 validateInteraction(
@@ -647,7 +647,7 @@ Spending recorded
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Enter the amount spent on 'Food' for 'SuperMarket' [0.00, [298.50]]: ",
+                        "Enter the amount spent on 'Food' for 'SuperMarket' [0.01, [298.50]]: ",
                         "Enter description for 'Food' spend [SuperMarket]: ",
                     ),
                     toInput = listOf("200", ""),
@@ -682,7 +682,7 @@ Itemization prepared
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Enter the amount spent on 'Necessities' for 'SuperMarket' [0.00, [100.00]]: ",
+                        "Enter the amount spent on 'Necessities' for 'SuperMarket' [0.01, [100.00]]: ",
                         "Enter description for 'Necessities' spend [SuperMarket]: ",
                     ),
                     toInput = listOf("100", ""),
@@ -1038,7 +1038,7 @@ New credit card account 'Costco Visa' created
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Enter the amount spent on 'Food' for 'Costco' [0.00, [30.00]]: ",
+                        "Enter the amount spent on 'Food' for 'Costco' [0.01, [30.00]]: ",
                         "Enter description for 'Food' spend [Costco]: ",
                     ),
                     toInput = listOf("20", ""),
@@ -1073,7 +1073,7 @@ Itemization prepared
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Enter the amount spent on 'Necessities' for 'Costco' [0.00, [10.00]]: ",
+                        "Enter the amount spent on 'Necessities' for 'Costco' [0.01, [10.00]]: ",
                         "Enter description for 'Necessities' spend [Costco]: ",
                     ),
                     toInput = listOf("10", ""),
@@ -1125,7 +1125,7 @@ Spending recorded
                         |14. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
-                        "Enter the amount spent on 'Necessities' for 'Target' [0.00, [20.00]]: ",
+                        "Enter the amount spent on 'Necessities' for 'Target' [0.01, [20.00]]: ",
                         "Enter description for 'Necessities' spend [Target]: ",
                     ),
                     toInput = listOf("8", "", ""),
@@ -1420,7 +1420,7 @@ Item prepared
                         |14. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
-                        "Enter the amount spent on 'Necessities' for 'Brausen's' [0.00, [5.00]]: ",
+                        "Enter the amount spent on 'Necessities' for 'Brausen's' [0.01, [5.00]]: ",
                         "Enter description for 'Necessities' spend [Brausen's]: ",
                     ),
                     toInput = listOf("8", "", ""),

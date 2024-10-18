@@ -693,15 +693,8 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                                                     draftStatus = draftStatus,
                                                 )
                                                     .apply {
-                                                        when (this@fetchTransactionItemsInvolvingAccount) {
-                                                            is ChargeAccount -> chargeAccount =
-                                                                this@fetchTransactionItemsInvolvingAccount
-                                                            is RealAccount -> realAccount =
-                                                                this@fetchTransactionItemsInvolvingAccount
-                                                            is DraftAccount -> draftAccount =
-                                                                this@fetchTransactionItemsInvolvingAccount
-                                                            is CategoryAccount -> categoryAccount =
-                                                                this@fetchTransactionItemsInvolvingAccount
+                                                        with(this@fetchTransactionItemsInvolvingAccount) {
+                                                            itemBuilderSetter()
                                                         }
                                                     },
                                                 transactionId = transactionId,
@@ -781,42 +774,20 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         result: ResultSet,
         budgetData: BudgetData,
     ) {
-        chargeItemBuilders
-            .maybePopulateItemOfType("charge", result) { uuid: UUID ->
-                chargeAccount = budgetData.getAccountByIdOrNull(uuid)!!
-            }
-        draftItemBuilders
-            .maybePopulateItemOfType("draft", result) { uuid: UUID ->
-                draftAccount = budgetData.getAccountByIdOrNull(uuid)!!
-            }
-        realItemBuilders
-            .maybePopulateItemOfType("real", result) { uuid: UUID ->
-                realAccount = budgetData.getAccountByIdOrNull(uuid)!!
-            }
-        categoryItemBuilders
-            .maybePopulateItemOfType("category", result) { uuid: UUID ->
-                categoryAccount = budgetData.getAccountByIdOrNull(uuid)!!
-            }
-    }
-
-    private fun MutableList<Transaction.ItemBuilder>.maybePopulateItemOfType(
-        type: String,
-        result: ResultSet,
-        itemAccountSetter: Transaction.ItemBuilder.(UUID) -> Unit,
-    ) {
-        result.getUuid("${type}_account_id")
-            ?.let { uuid ->
-                add(
-                    Transaction.ItemBuilder(
-                        id = result.getUuid("id")!!,
-                        amount = result.getCurrencyAmount("amount"),
-                        description = result.getString("description"),
-                        draftStatus = DraftStatus.valueOf(result.getString("draft_status")),
+        (result.getUuid("category_account_id")
+            ?: result.getUuid("real_account_id")
+            ?: result.getUuid("charge_account_id")
+            ?: result.getUuid("draft_account_id")!!)
+            .let { uuid ->
+                val account: Account = budgetData.getAccountByIdOrNull(uuid)!!
+                with(account) {
+                    addItem(
+                        result.getCurrencyAmount("amount"),
+                        result.getString("description"),
+                        DraftStatus.valueOf(result.getString("draft_status")),
+                        result.getUuid("id")!!,
                     )
-                        .apply {
-                            itemAccountSetter(uuid)
-                        },
-                )
+                }
             }
     }
 

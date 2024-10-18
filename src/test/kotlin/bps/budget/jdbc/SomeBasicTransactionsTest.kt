@@ -68,23 +68,17 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                             timestamp = clock.now(),
                         )
                         .apply {
-                            categoryItemBuilders.add(
-                                Transaction.ItemBuilder(
-                                    UUID.randomUUID(),
-                                    amount,
-                                    categoryAccount = budgetData.generalAccount,
-                                ),
-                            )
-                            realItemBuilders.add(
-                                Transaction.ItemBuilder(
-                                    UUID.randomUUID(),
-                                    amount,
-                                    realAccount = budgetData.realAccounts.find {
+                            with(budgetData.generalAccount) {
+                                addItem(amount)
+                            }
+                            with(
+                                budgetData.realAccounts
+                                    .find {
                                         it.name == defaultCheckingAccountName
                                     }!!,
-                                ),
-                            )
-
+                            ) {
+                                addItem(amount)
+                            }
                         }
                         .build()
                 budgetData.commit(income)
@@ -99,27 +93,16 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                             timestamp = clock.now(),
                         )
                         .apply {
-                            categoryItemBuilders.addAll(
-                                buildList {
-                                    add(
-                                        Transaction.ItemBuilder(
-                                            UUID.randomUUID(),
-                                            -amount,
-                                            categoryAccount = budgetData.generalAccount,
-                                        ),
-                                    )
-                                    add(
-                                        Transaction.ItemBuilder(
-                                            UUID.randomUUID(),
-                                            amount,
-                                            categoryAccount = budgetData.categoryAccounts.find {
-                                                it.name == defaultFoodAccountName
-                                            }!!,
-                                        ),
-                                    )
-                                },
-                            )
-
+                            with(budgetData.generalAccount) {
+                                addItem(-amount)
+                            }
+                            with(
+                                budgetData.categoryAccounts.find {
+                                    it.name == defaultFoodAccountName
+                                }!!,
+                            ) {
+                                addItem(amount)
+                            }
                         }
                         .build()
                 budgetData.commit(allocate)
@@ -132,24 +115,20 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                     timestamp = clock.now(),
                 )
                     .apply {
-                        categoryItemBuilders.add(
-                            Transaction.ItemBuilder(
-                                UUID.randomUUID(),
-                                -amount,
-                                categoryAccount = budgetData.categoryAccounts.find {
-                                    it.name == defaultFoodAccountName
-                                }!!,
-                            ),
-                        )
-                        draftItemBuilders.add(
-                            Transaction.ItemBuilder(
-                                UUID.randomUUID(),
-                                amount,
-                                draftAccount = budgetData.draftAccounts.find {
-                                    it.name == defaultCheckingDraftsAccountName
-                                }!!,
-                            ),
-                        )
+                        with(
+                            budgetData.categoryAccounts.find {
+                                it.name == defaultFoodAccountName
+                            }!!,
+                        ) {
+                            addItem(-amount)
+                        }
+                        with(
+                            budgetData.draftAccounts.find {
+                                it.name == defaultCheckingDraftsAccountName
+                            }!!,
+                        ) {
+                            addItem(amount)
+                        }
                     }
                     .build()
                 budgetData.commit(writeCheck)
@@ -200,25 +179,20 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                     timestamp = clock.now(),
                 )
                     .apply {
-                        realItemBuilders.add(
-                            Transaction.ItemBuilder(
-                                UUID.randomUUID(),
-                                -amount,
-                                realAccount = budgetData.realAccounts.find {
-                                    it.name == defaultCheckingAccountName
-                                }!!,
-                            ),
-                        )
-                        draftItemBuilders.add(
-                            Transaction.ItemBuilder(
-                                UUID.randomUUID(),
-                                -amount,
-                                draftAccount = budgetData.draftAccounts.find {
-                                    it.name == defaultCheckingDraftsAccountName
-                                }!!,
-                            ),
-                        )
-
+                        with(
+                            budgetData.realAccounts.find {
+                                it.name == defaultCheckingAccountName
+                            }!!,
+                        ) {
+                            addItem(-amount)
+                        }
+                        with(
+                            budgetData.draftAccounts.find {
+                                it.name == defaultCheckingDraftsAccountName
+                            }!!,
+                        ) {
+                            addItem(-amount)
+                        }
                     }
                     .build()
                 budgetData.commit(writeCheck)

@@ -2,6 +2,7 @@ package bps.budget.persistence.migration
 
 import bps.budget.BudgetConfigurations
 import bps.budget.model.Account
+import bps.budget.model.Transaction
 import bps.budget.persistence.jdbc.JdbcDao
 import bps.config.convertToPath
 import bps.jdbc.JdbcFixture
@@ -310,12 +311,21 @@ create index if not exists lookup_account_transaction_items_by_account
                         statement.executeQuery().use { resultSet ->
                             while (resultSet.next()) {
                                 add(
-                                    Account(
+                                    object : Account(
                                         name = resultSet.getString("name"),
                                         description = resultSet.getString("description"),
                                         id = resultSet.getUuid("id")!!,
                                         balance = resultSet.getCurrencyAmount("balance"),
-                                    )
+                                        type = type,
+                                    ) {
+                                        override fun Transaction.ItemBuilder.itemBuilderSetter(): Transaction.ItemBuilder {
+                                            TODO("Not yet implemented")
+                                        }
+
+                                        override fun Transaction.Builder.addForAccount(itemBuilder: Transaction.ItemBuilder) {
+                                            TODO("Not yet implemented")
+                                        }
+                                    }
                                             to resultSet.getUuid("budget_id")!!
                                             to
                                             if (type == "draft")

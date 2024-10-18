@@ -4,7 +4,6 @@ import bps.budget.WithIo
 import bps.budget.min
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
-import bps.budget.model.ChargeAccount
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
@@ -17,7 +16,6 @@ import bps.console.inputs.SimplePromptWithDefault
 import bps.console.menu.Menu
 import bps.console.menu.ScrollingSelectionMenu
 import java.math.BigDecimal
-import java.util.UUID
 
 fun WithIo.chooseRealAccountsThenCategories(
     totalAmount: BigDecimal,
@@ -84,10 +82,10 @@ fun WithIo.chooseRealAccountsThenCategories(
         )
         val currentAmount: BigDecimal =
             SimplePromptWithDefault(
-                "Enter the amount spent from '${selectedRealAccount.name}' for '$description' [0.00, [$max]]: ",
+                "Enter the amount spent from '${selectedRealAccount.name}' for '$description' [0.01, [$max]]: ",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
-                additionalValidation = InRangeInclusiveSimpleEntryValidator(BigDecimal.ZERO.setScale(2), max),
+                additionalValidation = InRangeInclusiveSimpleEntryValidator(BigDecimal("0.01").setScale(2), max),
                 defaultValue = max,
             ) {
                 it.toCurrencyAmountOrNull()!!
@@ -104,25 +102,16 @@ fun WithIo.chooseRealAccountsThenCategories(
                 )
                     .getResult()
                     ?: throw TryAgainAtMostRecentMenuException("No description entered")
-            when (selectedRealAccount) {
-                is ChargeAccount ->
-                    transactionBuilder.chargeItemBuilders.add(
-                        Transaction.ItemBuilder(
-                            id = UUID.randomUUID(),
-                            amount = -currentAmount,
-                            description = if (currentDescription == description) null else currentDescription,
-                            chargeAccount = selectedRealAccount,
-                        ),
+            with(transactionBuilder) {
+                with(selectedRealAccount) {
+                    addItem(
+                        -currentAmount,
+                        if (currentDescription == description)
+                            null
+                        else
+                            currentDescription,
                     )
-                else ->
-                    transactionBuilder.realItemBuilders.add(
-                        Transaction.ItemBuilder(
-                            id = UUID.randomUUID(),
-                            amount = -currentAmount,
-                            description = if (currentDescription == description) null else currentDescription,
-                            realAccount = selectedRealAccount,
-                        ),
-                    )
+                }
             }
             menuSession.pop()
             if (runningTotal - currentAmount > BigDecimal.ZERO) {
@@ -204,10 +193,10 @@ fun WithIo.allocateSpendingItemMenu(
         )
         val categoryAmount: BigDecimal =
             SimplePromptWithDefault(
-                "Enter the amount spent on '${selectedCategoryAccount.name}' for '$description' [0.00, [$max]]: ",
+                "Enter the amount spent on '${selectedCategoryAccount.name}' for '$description' [0.01, [$max]]: ",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
-                additionalValidation = InRangeInclusiveSimpleEntryValidator(BigDecimal.ZERO.setScale(2), max),
+                additionalValidation = InRangeInclusiveSimpleEntryValidator(BigDecimal("0.01").setScale(2), max),
                 defaultValue = max,
             ) {
                 it.toCurrencyAmountOrNull()!!
@@ -224,14 +213,17 @@ fun WithIo.allocateSpendingItemMenu(
                 )
                     .getResult()
                     ?: throw TryAgainAtMostRecentMenuException("No description entered")
-            transactionBuilder.categoryItemBuilders.add(
-                Transaction.ItemBuilder(
-                    id = UUID.randomUUID(),
-                    amount = -categoryAmount,
-                    description = if (categoryDescription == description) null else categoryDescription,
-                    categoryAccount = selectedCategoryAccount,
-                ),
-            )
+            with(transactionBuilder) {
+                with(selectedCategoryAccount) {
+                    addItem(
+                        -categoryAmount,
+                        if (categoryDescription === description)
+                            null
+                        else
+                            categoryDescription,
+                    )
+                }
+            }
             menuSession.pop()
             if (runningTotal - categoryAmount > BigDecimal.ZERO) {
                 outPrinter.important("Itemization prepared")

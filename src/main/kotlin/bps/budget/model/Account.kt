@@ -40,18 +40,45 @@ const val defaultWorkAccountDescription = "Work-related expenses (possibly to be
 const val defaultCheckingDraftsAccountName = "Checking Drafts"
 const val defaultCheckingDraftsAccountDescription = "Records checks being written or clearing"
 
-open class Account(
+abstract class Account(
+    // TODO why are these vars?
     override var name: String,
     override var description: String = "",
     override var id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
+    val type: String,
 ) : AccountData {
 
     override var balance: BigDecimal = balance
         protected set
 
+    abstract fun Transaction.ItemBuilder.itemBuilderSetter(): Transaction.ItemBuilder
+
+    /**
+     * add this [Account] to the appropriate list of [Transaction.ItemBuilder]s within the [Transaction.Builder].
+     */
+    abstract fun Transaction.Builder.addForAccount(itemBuilder: Transaction.ItemBuilder): Unit
+
     fun commit(item: Transaction.Item) {
         balance += item.amount
+    }
+
+    fun Transaction.Builder.addItem(
+        amount: BigDecimal,
+        description: String? = null,
+        draftStatus: DraftStatus = DraftStatus.none,
+        id: UUID = UUID.randomUUID(),
+    ) {
+        addForAccount(
+            Transaction
+                .ItemBuilder(
+                    id,
+                    amount,
+                    description,
+                    draftStatus = draftStatus,
+                )
+                .itemBuilderSetter(),
+        )
     }
 
     override fun toString(): String {
@@ -81,14 +108,37 @@ class CategoryAccount(
     description: String = "",
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
-) : Account(name, description, id, balance)
+    type: String = "category",
+) : Account(name, description, id, balance, type) {
+
+    override fun Transaction.ItemBuilder.itemBuilderSetter(): Transaction.ItemBuilder {
+        categoryAccount = this@CategoryAccount
+        return this
+    }
+
+    override fun Transaction.Builder.addForAccount(itemBuilder: Transaction.ItemBuilder) {
+        categoryItemBuilders.add(itemBuilder)
+    }
+
+}
 
 open class RealAccount(
     name: String,
     description: String = "",
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
-) : Account(name, description, id, balance)
+    type: String = "real",
+) : Account(name, description, id, balance, type) {
+
+    override fun Transaction.ItemBuilder.itemBuilderSetter(): Transaction.ItemBuilder {
+        realAccount = this@RealAccount
+        return this
+    }
+
+    override fun Transaction.Builder.addForAccount(itemBuilder: Transaction.ItemBuilder) {
+        realItemBuilders.add(itemBuilder)
+    }
+}
 
 /**
  * A separate [DraftAccount] is useful for quickly determining the outstanding balance.  One only has to look at the
@@ -100,11 +150,32 @@ class DraftAccount(
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
     val realCompanion: RealAccount,
-) : Account(name, description, id, balance)
+    type: String = "draft",
+) : Account(name, description, id, balance, type) {
+
+    override fun Transaction.ItemBuilder.itemBuilderSetter(): Transaction.ItemBuilder {
+        draftAccount = this@DraftAccount
+        return this
+    }
+
+    override fun Transaction.Builder.addForAccount(itemBuilder: Transaction.ItemBuilder) {
+        draftItemBuilders.add(itemBuilder)
+    }
+}
 
 class ChargeAccount(
     name: String,
     description: String = "",
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
-) : RealAccount(name, description, id, balance)
+    type: String = "charge",
+) : RealAccount(name, description, id, balance, type) {
+    override fun Transaction.ItemBuilder.itemBuilderSetter(): Transaction.ItemBuilder {
+        chargeAccount = this@ChargeAccount
+        return this
+    }
+
+    override fun Transaction.Builder.addForAccount(itemBuilder: Transaction.ItemBuilder) {
+        chargeItemBuilders.add(itemBuilder)
+    }
+}

@@ -26,7 +26,6 @@ import bps.console.menu.takeAction
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
-import java.util.UUID
 
 fun WithIo.creditCardMenu(
     budgetData: BudgetData,
@@ -133,23 +132,12 @@ private fun WithIo.payCreditCardBill(
                 val billPayTransaction: Transaction =
                     Transaction.Builder(description, timestamp)
                         .apply {
-                            realItemBuilders.add(
-                                Transaction.ItemBuilder(
-                                    id = UUID.randomUUID(),
-                                    amount = -amountOfBill,
-                                    description = description,
-                                    realAccount = selectedRealAccount,
-                                ),
-                            )
-                            chargeItemBuilders.add(
-                                Transaction.ItemBuilder(
-                                    id = UUID.randomUUID(),
-                                    amount = amountOfBill,
-                                    description = description,
-                                    chargeAccount = chargeAccount,
-                                    draftStatus = DraftStatus.clearing,
-                                ),
-                            )
+                            with(selectedRealAccount) {
+                                addItem(-amountOfBill, description)
+                            }
+                            with(chargeAccount) {
+                                addItem(amountOfBill, description, DraftStatus.clearing)
+                            }
                         }
                         .build()
                 //
@@ -306,15 +294,9 @@ private fun WithIo.spendOnACreditCard(
         val transactionBuilder: Transaction.Builder =
             Transaction.Builder(description, timestamp)
                 .apply {
-                    chargeItemBuilders.add(
-                        Transaction.ItemBuilder(
-                            id = UUID.randomUUID(),
-                            amount = -amount,
-                            description = description,
-                            chargeAccount = chargeAccount,
-                            draftStatus = DraftStatus.outstanding,
-                        ),
-                    )
+                    with(chargeAccount) {
+                        addItem(-amount, description, DraftStatus.outstanding)
+                    }
                 }
         menuSession.push(
             allocateSpendingItemMenu(
