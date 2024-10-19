@@ -42,3 +42,15 @@ budgetUser:
     defaultTimeZone: America/New_York # your time zone
 
 ```
+
+## Troubleshooting
+
+To connect to the PostgresQL DB running in the docker container, do
+
+```shell
+psql -U budget -h 127.0.0.1 -d budget
+```
+
+Data migrations can be run using `bps.budget.persistence.migration.DataMigrations`.
+
+Run

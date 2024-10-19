@@ -82,7 +82,7 @@ abstract class Account(
     }
 
     override fun toString(): String {
-        return "${javaClass.name}('$name', $balance)"
+        return "${javaClass.name}('$name', $id, $balance)"
     }
 
     override fun equals(other: Any?): Boolean =

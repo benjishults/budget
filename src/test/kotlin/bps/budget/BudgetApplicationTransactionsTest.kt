@@ -1786,6 +1786,115 @@ Real account 'Savings' created with balance ${'$'}1000.00
                     toInput = listOf("18"),
                 )
             }
+            "transfer from Savings to Checking" {
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                            |Budget!
+                            | 1. $recordIncome (i)
+                            | 2. $makeAllowances (a)
+                            | 3. $recordSpending (s)
+                            | 4. $viewHistory (v)
+                            | 5. $writeOrClearChecks (ch)
+                            | 6. $useOrPayCreditCards (cr)
+                            | 7. $transfer (x)
+                            | 8. $setup (m)
+                            | 9. Quit (q)
+                            |""".trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("x"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                |Select account to TRANSFER money FROM
+                | 1.   4,665.00 | Checking        | Account from which checks clear
+                | 2.   1,000.00 | Savings         | Savings account at My Bank
+                | 3.     198.50 | Wallet          | Cash on hand
+                | 4.       0.00 | Education       | Tuition, books, etc.
+                | 5.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+                | 6.      78.50 | Food            | Food other than what's covered in entertainment
+                | 7.       0.00 | Hobby           | Expenses related to a hobby
+                | 8.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+                | 9.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+                |10.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+                |11.      65.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+                |12.       0.00 | Network         | Mobile plan, routers, internet access
+                |13.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+                |14.       0.00 | Travel          | Travel expenses for vacation
+                |15.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+                |16. Back (b)
+                |17. Quit (q)
+                |
+            """.trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("2"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                |Select account to TRANSFER money TO (from 'Savings')
+                | 1.   4,665.00 | Checking        | Account from which checks clear
+                | 2.     198.50 | Wallet          | Cash on hand
+                | 3. Back (b)
+                | 4. Quit (q)
+                |
+            """.trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("1"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        "Enter the amount to TRANSFER from 'Savings' into 'Checking' [0.01, 1000.00]: ",
+                        "Enter description of transaction [transfer from 'Savings' into 'Checking']: ",
+                        "Use current time [Y]? ",
+                    ),
+                    toInput = listOf("500", "", ""),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+Transfer recorded
+
+""",
+                        """
+                |Select account to TRANSFER money TO (from 'Savings')
+                | 1.   5,165.00 | Checking        | Account from which checks clear
+                | 2.     198.50 | Wallet          | Cash on hand
+                | 3. Back (b)
+                | 4. Quit (q)
+                |
+            """.trimMargin(),
+                        "Enter selection: ",
+                        """
+                |Select account to TRANSFER money FROM
+                | 1.   5,165.00 | Checking        | Account from which checks clear
+                | 2.     500.00 | Savings         | Savings account at My Bank
+                | 3.     198.50 | Wallet          | Cash on hand
+                | 4.       0.00 | Education       | Tuition, books, etc.
+                | 5.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+                | 6.      78.50 | Food            | Food other than what's covered in entertainment
+                | 7.       0.00 | Hobby           | Expenses related to a hobby
+                | 8.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+                | 9.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+                |10.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+                |11.      65.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+                |12.       0.00 | Network         | Mobile plan, routers, internet access
+                |13.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+                |14.       0.00 | Travel          | Travel expenses for vacation
+                |15.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+                |16. Back (b)
+                |17. Quit (q)
+                |
+            """.trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("b", "b"),
+                )
+            }
             "!ensure user can back out of a transaction without saving" - {
                 "should be asked to confirm if transaction is in progress" {}
                 "should NOT be asked to confirm if transaction is in progress" {}

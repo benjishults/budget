@@ -28,7 +28,6 @@ import bps.console.io.OutPrinter
 import bps.console.menu.Menu
 import bps.console.menu.pushMenu
 import bps.console.menu.quitItem
-import bps.console.menu.takeAction
 import bps.console.menu.takeActionAndPush
 import kotlinx.datetime.Clock
 import java.math.BigDecimal
@@ -159,7 +158,7 @@ fun WithIo.budgetMenu(
             },
         )
         add(
-            takeAction(transfer, "x") {
+            pushMenu(transfer, "x") {
                 transferMenu(budgetData, budgetDao, userConfig, clock)
             },
         )

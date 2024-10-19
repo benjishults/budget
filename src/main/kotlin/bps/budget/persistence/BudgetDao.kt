@@ -103,6 +103,10 @@ interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
         override fun hashCode(): Int {
             return item.hashCode()
         }
+
+        override fun toString(): String {
+            return "ExtendedTransactionItem(transactionId=$transactionId, item=$item, budgetData=$budgetData)"
+        }
     }
 
     fun Account.fetchTransactionItemsInvolvingAccount(

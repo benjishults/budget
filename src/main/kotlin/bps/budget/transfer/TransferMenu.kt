@@ -43,8 +43,7 @@ fun WithIo.transferMenu(
                 else -> budgetData.realAccounts - transferFromAccount
             },
             labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
-
-            ) { _: MenuSession, transferToAccount: Account ->
+        ) { _: MenuSession, transferToAccount: Account ->
             val max = transferFromAccount.balance
             val min = BigDecimal("0.01").setScale(2)
             val amount: BigDecimal =
@@ -84,9 +83,9 @@ fun WithIo.transferMenu(
                     .build()
                 budgetData.commit(transferTransaction)
                 budgetDao.commit(transferTransaction, budgetData.id)
-                outPrinter.important("Allowance recorded")
+                outPrinter.important("Transfer recorded")
             } else {
-                outPrinter.important("Must allow a positive amount.")
+                outPrinter.important("Must transfer a positive amount.")
             }
 
         },

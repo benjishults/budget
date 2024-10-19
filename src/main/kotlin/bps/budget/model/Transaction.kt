@@ -103,6 +103,7 @@ data class Transaction private constructor(
         var draftAccount: DraftAccount? = null,
         val draftStatus: DraftStatus = DraftStatus.none,
     ) {
+        // TODO make this an extension function of Transaction?
         fun build(transaction: Transaction): Item =
             transaction.Item(
                 id,
@@ -128,6 +129,9 @@ data class Transaction private constructor(
             return id.hashCode()
         }
 
+        override fun toString(): String {
+            return "ItemBuilder(description=$description, amount=$amount, id=$id, draftStatus=$draftStatus)"
+        }
 
     }
 
