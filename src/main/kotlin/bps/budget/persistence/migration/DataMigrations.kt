@@ -2,14 +2,24 @@ package bps.budget.persistence.migration
 
 import bps.budget.BudgetConfigurations
 import bps.budget.model.Account
+import bps.budget.model.BudgetData
+import bps.budget.model.CategoryAccount
+import bps.budget.model.ChargeAccount
+import bps.budget.model.DraftAccount
+import bps.budget.model.DraftStatus
+import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
+import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.jdbc.JdbcDao
 import bps.config.convertToPath
 import bps.jdbc.JdbcFixture
 import bps.jdbc.transactOrThrow
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
 import java.math.BigDecimal
 import java.sql.Connection
+import java.sql.ResultSet
 import java.sql.Types.OTHER
 import java.sql.Types.VARCHAR
 import java.util.UUID
@@ -23,7 +33,7 @@ class DataMigrations {
             val typeIndex = argsList.indexOfFirst { it == "-type" } + 1
             if ("-type" !in argsList || argsList.size <= typeIndex) {
                 println("Usage: java DataMigrations -type <type> [-schema <schema>]")
-                println("Migration types: new-account_active_periods-table, move-to-single-account-table")
+                println("Migration types: new-account_active_periods-table, add-transaction-item-id, move-to-single-account-table")
             } else {
                 val configurations =
                     BudgetConfigurations(
@@ -36,79 +46,225 @@ class DataMigrations {
                 val migrationType = argsList[typeIndex]
                 with(jdbcDao.connection) {
                     when (migrationType) {
-                        "move-to-single-account-table" -> {
-                            jdbcDao.use {
-                                transactOrThrow {
-                                    prepareStatement(
-                                        """
-create table if not exists accounts
-(
-    id                   uuid           not null unique,
-    name                 varchar(50)    not null,
-    type                 varchar(20)    not null,
-    description          varchar(110)   not null default '',
-    balance              numeric(30, 2) not null default 0.0,
-    companion_account_id uuid           null references accounts (id),
-    budget_id            uuid           not null references budgets (id),
-    primary key (id, budget_id),
-    unique (name, type, budget_id),
-    unique (companion_account_id, budget_id)
-)
-                                    """.trimIndent(),
-                                    )
-                                        .use { statement ->
-                                            statement.execute()
-                                        }
-                                    prepareStatement(
-                                        """
-create index if not exists accounts_by_type
-    on accounts (budget_id, type)
-                                    """.trimIndent(),
-                                    )
-                                        .use { statement ->
-                                            statement.execute()
-                                        }
-                                    migrateAccountsToSingleTable("category")
-                                    migrateAccountsToSingleTable("real")
-                                    migrateAccountsToSingleTable("charge")
-                                    migrateAccountsToSingleTable("draft")
-                                    migrateActivePeriods()
-                                    migrateTransactions()
-                                }
-                            }
+                        "add-transaction-item-id" -> {
+                            addTransactionItemIds(jdbcDao)
                         }
-                        "new-account_active_periods-table" ->
-                            jdbcDao.use {
-                                try {
-                                    transactOrThrow {
-                                        prepareStatement(
-                                            """
-                            select ba.budget_id
-                            from users u
-                            join budget_access ba on u.id = ba.user_id
-                            where ba.budget_name = ?
-                            and u.login = ?
-                            """.trimIndent(),
-                                        )
-                                            .use { statement ->
-                                                statement.setString(1, configurations.persistence.jdbc!!.budgetName)
-                                                statement.setString(2, configurations.user.defaultLogin)
-                                                statement.executeQuery().use { resultSet ->
-                                                    resultSet.next()
-                                                    val budgetId: UUID = resultSet.getUuid("budget_id")!!
-                                                    migrateAccountsToActivityPeriodTable("category", budgetId)
-                                                    migrateAccountsToActivityPeriodTable("real", budgetId)
-                                                    migrateAccountsToActivityPeriodTable("charge", budgetId)
-                                                    migrateAccountsToActivityPeriodTable("draft", budgetId)
-                                                }
-                                            }
-                                    }
-                                } catch (ex: Throwable) {
-                                    ex.printStackTrace()
-                                }
-                            }
+                        "move-to-single-account-table" -> {
+                            moveToSingleAccountTable(jdbcDao)
+                        }
+                        "new-account_active_periods-table" -> {
+                            addAccountActivePeriodTable(jdbcDao, configurations)
+                        }
                         else -> throw IllegalArgumentException("Unknown migration type: $migrationType")
                     }
+                }
+            }
+        }
+
+        private fun Connection.addAccountActivePeriodTable(
+            jdbcDao: JdbcDao,
+            configurations: BudgetConfigurations,
+        ) {
+            jdbcDao.use {
+                try {
+                    transactOrThrow {
+                        prepareStatement(
+                            """
+                                    select ba.budget_id
+                                    from users u
+                                    join budget_access ba on u.id = ba.user_id
+                                    where ba.budget_name = ?
+                                    and u.login = ?
+                                    """.trimIndent(),
+                        )
+                            .use { statement ->
+                                statement.setString(1, configurations.persistence.jdbc!!.budgetName)
+                                statement.setString(2, configurations.user.defaultLogin)
+                                statement.executeQuery().use { resultSet ->
+                                    resultSet.next()
+                                    val budgetId: UUID = resultSet.getUuid("budget_id")!!
+                                    migrateAccountsToActivityPeriodTable("category", budgetId)
+                                    migrateAccountsToActivityPeriodTable("real", budgetId)
+                                    migrateAccountsToActivityPeriodTable("charge", budgetId)
+                                    migrateAccountsToActivityPeriodTable("draft", budgetId)
+                                }
+                            }
+                    }
+                } catch (ex: Throwable) {
+                    ex.printStackTrace()
+                }
+            }
+        }
+
+        private fun Connection.moveToSingleAccountTable(jdbcDao: JdbcDao) {
+            jdbcDao.use {
+                transactOrThrow {
+                    prepareStatement(
+                        """
+        create table if not exists accounts
+        (
+            id                   uuid           not null unique,
+            name                 varchar(50)    not null,
+            type                 varchar(20)    not null,
+            description          varchar(110)   not null default '',
+            balance              numeric(30, 2) not null default 0.0,
+            companion_account_id uuid           null references accounts (id),
+            budget_id            uuid           not null references budgets (id),
+            primary key (id, budget_id),
+            unique (name, type, budget_id),
+            unique (companion_account_id, budget_id)
+        )
+                                            """.trimIndent(),
+                    )
+                        .use { statement ->
+                            statement.execute()
+                        }
+                    prepareStatement(
+                        """
+        create index if not exists accounts_by_type
+            on accounts (budget_id, type)
+                                            """.trimIndent(),
+                    )
+                        .use { statement ->
+                            statement.execute()
+                        }
+                    migrateAccountsToSingleTable("category")
+                    migrateAccountsToSingleTable("real")
+                    migrateAccountsToSingleTable("charge")
+                    migrateAccountsToSingleTable("draft")
+                    migrateActivePeriods()
+                    migrateTransactions()
+                }
+            }
+        }
+
+        private fun Connection.addTransactionItemIds(jdbcDao: JdbcDao) {
+            jdbcDao.use {
+                transactOrThrow {
+                    // TODO alter table add nullable id column
+                    prepareStatement(
+                        """
+                            alter table transaction_items
+                            add id uuid null
+                        """.trimIndent(),
+                    )
+                        .use {
+                            it.execute()
+                        }
+                    // TODO populate ids
+                    buildList {
+                        prepareStatement("select * from transaction_items")
+                            .use {
+                                it.executeQuery()
+                                    .use { resultSet: ResultSet ->
+                                        val now = Clock.System.now()
+                                        val generalAccount = CategoryAccount("")
+                                        val categoryAccounts = listOf(generalAccount)
+                                        while (resultSet.next()) {
+                                            add(
+                                                BudgetDao.ExtendedTransactionItem(
+                                                    item = Transaction.ItemBuilder(
+                                                        UUID.randomUUID(),
+                                                        amount = resultSet.getCurrencyAmount("amount"),
+                                                        description = resultSet.getString("description"),
+                                                        categoryAccount = resultSet.getUuid("category_account_id")
+                                                            ?.let {
+                                                                CategoryAccount("", id = it)
+                                                            },
+                                                        realAccount = resultSet.getUuid("real_account_id")
+                                                            ?.let {
+                                                                RealAccount("", id = it)
+                                                            },
+                                                        chargeAccount = resultSet.getUuid("charge_account_id")
+                                                            ?.let {
+                                                                ChargeAccount("", id = it)
+                                                            },
+                                                        draftAccount = resultSet.getUuid("draft_account_id")
+                                                            ?.let {
+                                                                DraftAccount(
+                                                                    "",
+                                                                    id = it,
+                                                                    realCompanion = RealAccount(""),
+                                                                )
+                                                            },
+                                                        draftStatus = DraftStatus.valueOf(
+                                                            resultSet.getString("draft_status")!!,
+                                                        ),
+                                                    ),
+                                                    transactionId = resultSet.getUuid("transaction_id")!!,
+                                                    transactionDescription = "",
+                                                    transactionTimestamp = now,
+                                                    budgetDao = jdbcDao,
+                                                    budgetData = BudgetData(
+                                                        id = resultSet.getUuid("budget_id")!!,
+                                                        name = "",
+                                                        timeZone = TimeZone.currentSystemDefault(),
+                                                        generalAccount = generalAccount,
+                                                        categoryAccounts = categoryAccounts,
+                                                        realAccounts = emptyList(),
+                                                        chargeAccounts = emptyList(),
+                                                        draftAccounts = emptyList(),
+                                                    ),
+                                                ),
+                                            )
+                                        }
+                                    }
+                            }
+                    }
+                        .forEach { transactionItem: BudgetDao.ExtendedTransactionItem ->
+                            prepareStatement(
+                                """
+                                                |update transaction_items
+                                                |set id = ?
+                                                |where budget_id = ?
+                                                |  and transaction_id = ?
+                                                |  and amount = ?
+                                                |  and ${
+                                    transactionItem.item.categoryAccount
+                                        ?.let { "category_account_id = ?" }
+                                        ?: transactionItem.item.realAccount
+                                            ?.let { "real_account_id = ?" }
+                                        ?: transactionItem.item.chargeAccount
+                                            ?.let { "charge_account_id = ?" }
+                                        ?: transactionItem.item.draftAccount
+                                            ?.let { "draft_account_id = ?" }
+                                }
+                                                |  and draft_status = ?
+                                                |  and ${if (transactionItem.item.description == null) "description is null" else "description = ?"}
+                                                """.trimMargin(),
+                            )
+                                .use { statement ->
+                                    statement.setUuid(1, transactionItem.item.id)
+                                    statement.setUuid(2, transactionItem.budgetData.id)
+                                    statement.setUuid(3, transactionItem.transactionId)
+                                    statement.setBigDecimal(4, transactionItem.item.amount)
+                                    statement.setUuid(
+                                        5,
+                                        transactionItem.item.categoryAccount?.id
+                                            ?: transactionItem.item.realAccount?.id
+                                            ?: transactionItem.item.chargeAccount?.id
+                                            ?: transactionItem.item.draftAccount?.id!!,
+                                    )
+                                    statement.setString(6, transactionItem.item.draftStatus.name)
+                                    transactionItem.item.description
+                                        ?.let { description ->
+                                            statement.setString(7, description)
+                                        }
+                                    if (statement.executeUpdate() != 1)
+                                        throw IllegalStateException(
+                                            """
+                                            |Should have updated a row!
+                                            |$transactionItem
+                                        """.trimMargin(),
+                                        )
+                                }
+                        }
+                }
+                transactOrThrow {
+                    // TODO alter table add not null unique to id and add primary key (id, budget_id)
+                    prepareStatement("alter table transaction_items alter id set not null").use { it.execute() }
+                    prepareStatement("alter table transaction_items add unique (id)").use { it.execute() }
+                    prepareStatement("alter table transaction_items add primary key  (id, budget_id)").use { it.execute() }
                 }
             }
         }
