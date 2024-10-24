@@ -2,7 +2,6 @@ package bps.budget.persistence.migration
 
 import bps.budget.BudgetConfigurations
 import bps.budget.model.Account
-import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.ChargeAccount
 import bps.budget.model.DraftAccount
@@ -16,7 +15,6 @@ import bps.jdbc.JdbcFixture
 import bps.jdbc.transactOrThrow
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
 import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.ResultSet
@@ -33,7 +31,7 @@ class DataMigrations {
             val typeIndex = argsList.indexOfFirst { it == "-type" } + 1
             if ("-type" !in argsList || argsList.size <= typeIndex) {
                 println("Usage: java DataMigrations -type <type> [-schema <schema>]")
-                println("Migration types: new-account_active_periods-table, add-transaction-item-id, move-to-single-account-table")
+                println("Migration types: new-account_active_periods-table, add-transaction-item-id, move-to-single-account-table, customer-fix")
             } else {
                 val configurations =
                     BudgetConfigurations(
@@ -46,6 +44,9 @@ class DataMigrations {
                 val migrationType = argsList[typeIndex]
                 with(jdbcDao.connection) {
                     when (migrationType) {
+                        "customer-fix" -> {
+                            customerFix(jdbcDao)
+                        }
                         "add-transaction-item-id" -> {
                             addTransactionItemIds(jdbcDao)
                         }
@@ -138,6 +139,37 @@ class DataMigrations {
             }
         }
 
+        private fun Connection.customerFix(jdbcDao: JdbcDao) {
+            jdbcDao.use { dao ->
+//                transactOrThrow {
+//                    val budgetId = UUID.fromString("91eca65d-7c6d-46dd-b3a2-1eb992b4bf83")
+//                    val budgetData = dao.load(
+//                        budgetId,
+//                        UUID.fromString("ed7a8350-f108-458e-b492-5564cf455aee"),
+//                    )
+//                    val hongyiCash = budgetData.realAccounts.find { it.name == "Hongyi's Cash" }!!
+//                    val wallet = budgetData.realAccounts.find { it.name == "Wallet" }!!
+//                    dao.commit(
+//                        Transaction.Builder(
+//                            "transfer from '${hongyiCash.name}' to '${wallet.name}'",
+//                            Clock.System.now(),
+//                        )
+//                            .apply {
+//                                val amount = BigDecimal("40.00").setScale(2)
+//                                with(hongyiCash) {
+//                                    addItem(-amount)
+//                                }
+//                                with(wallet) {
+//                                    addItem(amount)
+//                                }
+//                            }
+//                            .build(),
+//                        budgetId, false,
+//                    )
+//                }
+            }
+        }
+
         private fun Connection.addTransactionItemIds(jdbcDao: JdbcDao) {
             jdbcDao.use {
                 transactOrThrow {
@@ -158,9 +190,10 @@ class DataMigrations {
                                 it.executeQuery()
                                     .use { resultSet: ResultSet ->
                                         val now = Clock.System.now()
-                                        val generalAccount = CategoryAccount("")
-                                        val categoryAccounts = listOf(generalAccount)
+//                                        val generalAccount = CategoryAccount("", budgetId = UUID.randomUUID())
+//                                        val categoryAccounts = listOf(generalAccount)
                                         while (resultSet.next()) {
+                                            val budgetId = resultSet.getUuid("budget_id")!!
                                             add(
                                                 BudgetDao.ExtendedTransactionItem(
                                                     item = Transaction.ItemBuilder(
@@ -169,23 +202,28 @@ class DataMigrations {
                                                         description = resultSet.getString("description"),
                                                         categoryAccount = resultSet.getUuid("category_account_id")
                                                             ?.let {
-                                                                CategoryAccount("", id = it)
+                                                                CategoryAccount("", id = it, budgetId = budgetId)
                                                             },
                                                         realAccount = resultSet.getUuid("real_account_id")
                                                             ?.let {
-                                                                RealAccount("", id = it)
+                                                                RealAccount("", id = it, budgetId = budgetId)
                                                             },
                                                         chargeAccount = resultSet.getUuid("charge_account_id")
                                                             ?.let {
-                                                                ChargeAccount("", id = it)
+                                                                ChargeAccount("", id = it, budgetId = budgetId)
                                                             },
                                                         draftAccount = resultSet.getUuid("draft_account_id")
                                                             ?.let {
                                                                 DraftAccount(
                                                                     "",
                                                                     id = it,
-                                                                    realCompanion = RealAccount(""),
-                                                                )
+                                                                    realCompanion = RealAccount(
+                                                                        "",
+                                                                        budgetId = budgetId,
+                                                                    ),
+                                                                    budgetId = budgetId,
+
+                                                                    )
                                                             },
                                                         draftStatus = DraftStatus.valueOf(
                                                             resultSet.getString("draft_status")!!,
@@ -195,16 +233,8 @@ class DataMigrations {
                                                     transactionDescription = "",
                                                     transactionTimestamp = now,
                                                     budgetDao = jdbcDao,
-                                                    budgetData = BudgetData(
-                                                        id = resultSet.getUuid("budget_id")!!,
-                                                        name = "",
-                                                        timeZone = TimeZone.currentSystemDefault(),
-                                                        generalAccount = generalAccount,
-                                                        categoryAccounts = categoryAccounts,
-                                                        realAccounts = emptyList(),
-                                                        chargeAccounts = emptyList(),
-                                                        draftAccounts = emptyList(),
-                                                    ),
+                                                    budgetId = budgetId,
+                                                    accountBalanceAfterItem = BigDecimal.ZERO.setScale(2),
                                                 ),
                                             )
                                         }
@@ -235,7 +265,7 @@ class DataMigrations {
                             )
                                 .use { statement ->
                                     statement.setUuid(1, transactionItem.item.id)
-                                    statement.setUuid(2, transactionItem.budgetData.id)
+                                    statement.setUuid(2, transactionItem.budgetId)
                                     statement.setUuid(3, transactionItem.transactionId)
                                     statement.setBigDecimal(4, transactionItem.item.amount)
                                     statement.setUuid(
@@ -259,8 +289,6 @@ class DataMigrations {
                                         )
                                 }
                         }
-                }
-                transactOrThrow {
                     // TODO alter table add not null unique to id and add primary key (id, budget_id)
                     prepareStatement("alter table transaction_items alter id set not null").use { it.execute() }
                     prepareStatement("alter table transaction_items add unique (id)").use { it.execute() }
@@ -473,6 +501,7 @@ create index if not exists lookup_account_transaction_items_by_account
                                         id = resultSet.getUuid("id")!!,
                                         balance = resultSet.getCurrencyAmount("balance"),
                                         type = type,
+                                        budgetId = resultSet.getUuid("budget_id")!!,
                                     ) {
                                         override fun Transaction.ItemBuilder.itemBuilderSetter(): Transaction.ItemBuilder {
                                             TODO("Not yet implemented")

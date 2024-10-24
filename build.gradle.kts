@@ -1,16 +1,21 @@
 val kotestVersion = "5.9.1"
-val jacksonVersion = "2.17.2"
+val jacksonVersion = "2.18.0"
 val konfVersion = "2.1.0"
 val mockkVersion = "1.13.12"
 
 plugins {
-    kotlin("jvm") version "2.0.0"
+    kotlin("jvm") version "2.0.21"
+    kotlin("plugin.allopen") version "2.0.21"
     application
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
-group = "benjishults"
+group = "bps"
 version = "1.0-SNAPSHOT"
+
+allOpen {
+    annotations("bps.kotlin.Instrumentable")
+}
 
 application {
     mainClass = "bps.budget.Budget"
@@ -54,7 +59,7 @@ dependencies {
     }
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
-//    testImplementation("io.mockk:mockk-jvm:$mockkVersion")
+    testImplementation("io.mockk:mockk-jvm:$mockkVersion")
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
     testImplementation("org.junit.jupiter:junit-jupiter")

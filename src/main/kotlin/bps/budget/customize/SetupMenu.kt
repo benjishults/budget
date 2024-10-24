@@ -73,7 +73,7 @@ fun WithIo.customizeMenu(
                             .getResult()
                             ?.trim()
                             ?: throw TryAgainAtMostRecentMenuException("Description for the new category not entered.")
-                    budgetData.addCategoryAccount(CategoryAccount(name, description))
+                    budgetData.addCategoryAccount(CategoryAccount(name, description, budgetId = budgetData.id))
                     budgetDao.save(budgetData, user)
                     outPrinter.important("Category '$name' created")
                 }
@@ -149,7 +149,7 @@ fun WithIo.customizeMenu(
                     }
                         .getResult()
                         ?: throw TryAgainAtMostRecentMenuException("Invalid account balance")
-                    val realAccount = RealAccount(name, accountDescription)
+                    val realAccount = RealAccount(name, accountDescription, budgetId = budgetData.id)
                     budgetData.addRealAccount(realAccount)
                     if (isDraft)
                         budgetData.addDraftAccount(
@@ -157,6 +157,7 @@ fun WithIo.customizeMenu(
                                 name,
                                 accountDescription,
                                 realCompanion = realAccount,
+                                budgetId = budgetData.id,
                             ),
                         )
                     try {
@@ -221,7 +222,7 @@ fun WithIo.customizeMenu(
                             .getResult()
                             ?.trim()
                             ?: throw TryAgainAtMostRecentMenuException("No description entered.")
-                    budgetData.addChargeAccount(ChargeAccount(name, description))
+                    budgetData.addChargeAccount(ChargeAccount(name, description, budgetId = budgetData.id))
                     budgetDao.save(budgetData, user)
                     outPrinter.important("New credit card account '$name' created")
                 }

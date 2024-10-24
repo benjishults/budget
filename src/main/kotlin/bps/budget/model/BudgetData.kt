@@ -40,6 +40,9 @@ class BudgetData(
                 it.id
             }
 
+    val accountIdToAccountMap: Map<UUID, Account>
+        get() = byId
+
     @Suppress("UNCHECKED_CAST")
     fun <T : Account> getAccountByIdOrNull(id: UUID): T? =
         byId[id] as T?
@@ -149,44 +152,99 @@ class BudgetData(
             checkingBalance: BigDecimal = BigDecimal.ZERO.setScale(2),
             walletBalance: BigDecimal = BigDecimal.ZERO.setScale(2),
             generalAccountId: UUID? = null,
-            budgetId: UUID? = null,
+            budgetId: UUID = UUID.randomUUID(),
         ): BudgetData {
             val checkingAccount = RealAccount(
                 name = defaultCheckingAccountName,
                 description = defaultCheckingAccountDescription,
                 balance = checkingBalance,
+                budgetId = budgetId,
             )
             val generalAccount = CategoryAccount(
                 name = defaultGeneralAccountName,
                 description = defaultGeneralAccountDescription,
                 id = generalAccountId ?: UUID.randomUUID(),
                 balance = checkingBalance + walletBalance,
+                budgetId = budgetId,
             )
             val wallet = RealAccount(
                 name = defaultWalletAccountName,
                 description = defaultWalletAccountDescription,
                 balance = walletBalance,
+                budgetId = budgetId,
             )
             return BudgetData(
-                id = budgetId ?: UUID.randomUUID(),
+                id = budgetId,
                 name = budgetName,
                 timeZone = timeZone,
                 generalAccount = generalAccount,
                 categoryAccounts = listOf(
                     generalAccount,
-                    CategoryAccount(defaultCosmeticsAccountName, defaultCosmeticsAccountDescription),
-                    CategoryAccount(defaultEducationAccountName, defaultEducationAccountDescription),
-                    CategoryAccount(defaultEntertainmentAccountName, defaultEntertainmentAccountDescription),
-                    CategoryAccount(defaultFoodAccountName, defaultFoodAccountDescription),
-                    CategoryAccount(defaultHobbyAccountName, defaultHobbyAccountDescription),
-                    CategoryAccount(defaultHomeAccountName, defaultHomeAccountDescription),
-                    CategoryAccount(defaultHousingAccountName, defaultHousingAccountDescription),
-                    CategoryAccount(defaultMedicalAccountName, defaultMedicalAccountDescription),
-                    CategoryAccount(defaultNecessitiesAccountName, defaultNecessitiesAccountDescription),
-                    CategoryAccount(defaultNetworkAccountName, defaultNetworkAccountDescription),
-                    CategoryAccount(defaultTransportationAccountName, defaultTransportationAccountDescription),
-                    CategoryAccount(defaultTravelAccountName, defaultTravelAccountDescription),
-                    CategoryAccount(defaultWorkAccountName, defaultWorkAccountDescription),
+                    CategoryAccount(
+                        defaultCosmeticsAccountName,
+                        defaultCosmeticsAccountDescription,
+                        budgetId = budgetId,
+                    ),
+                    CategoryAccount(
+                        defaultEducationAccountName,
+                        defaultEducationAccountDescription,
+                        budgetId = budgetId,
+                    ),
+                    CategoryAccount(
+                        defaultEntertainmentAccountName,
+                        defaultEntertainmentAccountDescription,
+                        budgetId = budgetId,
+                    ),
+                    CategoryAccount(
+                        defaultFoodAccountName,
+                        defaultFoodAccountDescription,
+                        budgetId = budgetId,
+                    ),
+                    CategoryAccount(
+                        defaultHobbyAccountName,
+                        defaultHobbyAccountDescription,
+                        budgetId = budgetId,
+                    ),
+                    CategoryAccount(
+                        defaultHomeAccountName,
+                        defaultHomeAccountDescription,
+                        budgetId = budgetId,
+                    ),
+                    CategoryAccount(
+                        defaultHousingAccountName,
+                        defaultHousingAccountDescription,
+                        budgetId = budgetId,
+                    ),
+                    CategoryAccount(
+                        defaultMedicalAccountName,
+                        defaultMedicalAccountDescription,
+                        budgetId = budgetId,
+                    ),
+                    CategoryAccount(
+                        defaultNecessitiesAccountName,
+                        defaultNecessitiesAccountDescription,
+                        budgetId = budgetId,
+                    ),
+                    CategoryAccount(
+                        defaultNetworkAccountName,
+                        defaultNetworkAccountDescription,
+                        budgetId = budgetId,
+                    ),
+                    CategoryAccount(
+                        defaultTransportationAccountName,
+                        defaultTransportationAccountDescription,
+                        budgetId = budgetId,
+                    ),
+                    CategoryAccount(
+                        defaultTravelAccountName,
+                        defaultTravelAccountDescription,
+                        budgetId = budgetId,
+                    ),
+                    CategoryAccount(
+                        defaultWorkAccountName,
+                        defaultWorkAccountDescription,
+                        budgetId = budgetId,
+                    ),
                 ),
                 realAccounts = listOf(
                     wallet,
@@ -197,6 +255,7 @@ class BudgetData(
                         name = defaultCheckingDraftsAccountName,
                         description = defaultCheckingDraftsAccountDescription,
                         realCompanion = checkingAccount,
+                        budgetId = budgetId,
                     ),
                 ),
             )

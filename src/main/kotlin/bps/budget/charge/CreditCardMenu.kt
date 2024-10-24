@@ -73,7 +73,9 @@ fun WithIo.creditCardMenu(
                         ViewTransactionsMenu(
                             account = chargeAccount,
                             budgetDao = budgetDao,
-                            budgetData = budgetData,
+                            budgetId = budgetData.id,
+                            accountIdToAccountMap = budgetData.accountIdToAccountMap,
+                            timeZone = budgetData.timeZone,
                             limit = userConfig.numberOfItemsInScrollingList,
                             filter = { it.item.draftStatus === DraftStatus.outstanding },
                             header = "Unpaid transactions on '${chargeAccount.name}'",
@@ -195,7 +197,11 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
     menuSession: MenuSession,
     clock: Clock,
 ): Menu = ViewTransactionsMenu(
-    filter = { it.item.draftStatus === DraftStatus.outstanding && it !in selectedItems },
+    account = chargeAccount,
+    budgetDao = budgetDao,
+    budgetId = budgetData.id,
+    accountIdToAccountMap = budgetData.accountIdToAccountMap,
+    timeZone = budgetData.timeZone,
     header = "Select all transactions from this '${chargeAccount.name}' bill.  Amount to be covered: $${
         amountOfBill +
                 selectedItems.fold(BigDecimal.ZERO) { sum, item ->
@@ -203,6 +209,9 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
                 }
     }",
     prompt = "Select a transaction covered in this bill: ",
+    limit = userConfig.numberOfItemsInScrollingList,
+    filter = { it.item.draftStatus === DraftStatus.outstanding && it !in selectedItems },
+    outPrinter = outPrinter,
     extraItems = listOf(
         takeAction("Record a missing transaction from this '${chargeAccount.name}' bill") {
             spendOnACreditCard(
@@ -215,11 +224,6 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
             )
         },
     ),
-    account = chargeAccount,
-    budgetDao = budgetDao,
-    budgetData = budgetData,
-    limit = userConfig.numberOfItemsInScrollingList,
-    outPrinter = outPrinter,
 ) { _, chargeTransactionItem ->
     val allSelectedItems: List<BudgetDao.ExtendedTransactionItem> = selectedItems + chargeTransactionItem
     // FIXME if the selected amount is greater than allowed, then give a "denied" message

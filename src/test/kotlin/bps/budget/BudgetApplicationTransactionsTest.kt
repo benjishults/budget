@@ -403,17 +403,17 @@ Allowance recorded
                     expectedOutputs = listOf(
                         """
                         |'General' Account Transactions
-                        |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:00 |   5,000.00 | income into '$defaultCheckingAccountName'
-                        | 2. 2024-08-08 19:00:01 |     200.00 | income into '$defaultWalletAccountName'
-                        | 3. 2024-08-08 19:00:02 |    -300.00 | allowance into '$defaultFoodAccountName'
-                        | 4. 2024-08-08 19:00:03 |    -200.00 | allowance into '$defaultNecessitiesAccountName'
+                        |    Time Stamp          | Amount     | Balance    | Description
+                        | 1. 2024-08-08 19:00:03 |    -200.00 |   4,700.00 | allowance into 'Necessities'
+                        | 2. 2024-08-08 19:00:02 |    -300.00 |   4,900.00 | allowance into 'Food'
+                        | 3. 2024-08-08 19:00:01 |     200.00 |   5,200.00 | income into 'Wallet'
+                        | 4. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
                         | 5. Back (b)
                         | 6. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
-                    toInput = listOf("3"),
+                    toInput = listOf("2"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -426,11 +426,11 @@ Allowance recorded
                         |""".trimMargin(),
                         """
                         |'General' Account Transactions
-                        |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:00 |   5,000.00 | income into '$defaultCheckingAccountName'
-                        | 2. 2024-08-08 19:00:01 |     200.00 | income into '$defaultWalletAccountName'
-                        | 3. 2024-08-08 19:00:02 |    -300.00 | allowance into '$defaultFoodAccountName'
-                        | 4. 2024-08-08 19:00:03 |    -200.00 | allowance into '$defaultNecessitiesAccountName'
+                        |    Time Stamp          | Amount     | Balance    | Description
+                        | 1. 2024-08-08 19:00:03 |    -200.00 |   4,700.00 | allowance into 'Necessities'
+                        | 2. 2024-08-08 19:00:02 |    -300.00 |   4,900.00 | allowance into 'Food'
+                        | 3. 2024-08-08 19:00:01 |     200.00 |   5,200.00 | income into 'Wallet'
+                        | 4. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
                         | 5. Back (b)
                         | 6. Quit (q)
                         |""".trimMargin(),
@@ -721,8 +721,8 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                         |Select the check that cleared on 'Checking Drafts'
-                        |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:05 |     300.00 | SuperMarket
+                        |    Time Stamp          | Amount     | Balance    | Description
+                        | 1. 2024-08-08 19:00:05 |     300.00 |     300.00 | SuperMarket
                         | 2. Back (b)
                         | 3. Quit (q)
                         |""".trimMargin(),
@@ -735,7 +735,7 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                         |Select the check that cleared on 'Checking Drafts'
-                        |    Time Stamp          | Amount     | Description
+                        |    Time Stamp          | Amount     | Balance    | Description
                         | 1. Back (b)
                         | 2. Quit (q)
                         |""".trimMargin(),
@@ -818,15 +818,15 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                         |'Checking' Account Transactions
-                        |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:00 |   5,000.00 | income into '$defaultCheckingAccountName'
-                        | 2. 2024-08-08 19:00:06 |    -300.00 | SuperMarket
+                        |    Time Stamp          | Amount     | Balance    | Description
+                        | 1. 2024-08-08 19:00:06 |    -300.00 |   4,700.00 | SuperMarket
+                        | 2. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
                         | 3. Back (b)
                         | 4. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
-                    toInput = listOf("2"),
+                    toInput = listOf("1"),
                 )
                 // TODO https://github.com/benjishults/budget/issues/14
 //                validateInteraction(
@@ -864,9 +864,9 @@ Spending recorded
                         |""".trimMargin(),
                         """
                         |'Checking' Account Transactions
-                        |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:00 |   5,000.00 | income into '$defaultCheckingAccountName'
-                        | 2. 2024-08-08 19:00:06 |    -300.00 | SuperMarket
+                        |    Time Stamp          | Amount     | Balance    | Description
+                        | 1. 2024-08-08 19:00:06 |    -300.00 |   4,700.00 | SuperMarket
+                        | 2. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
                         | 3. Back (b)
                         | 4. Quit (q)
                         |""".trimMargin(),
@@ -1211,17 +1211,17 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                         |'Food' Account Transactions
-                        |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:02 |     300.00 | allowance into '$defaultFoodAccountName'
-                        | 2. 2024-08-08 19:00:04 |      -1.50 | Pepsi
-                        | 3. 2024-08-08 19:00:05 |    -200.00 | SuperMarket
-                        | 4. 2024-08-08 19:00:07 |     -20.00 | Costco
+                        |    Time Stamp          | Amount     | Balance    | Description
+                        | 1. 2024-08-08 19:00:07 |     -20.00 |      78.50 | Costco
+                        | 2. 2024-08-08 19:00:05 |    -200.00 |      98.50 | SuperMarket
+                        | 3. 2024-08-08 19:00:04 |      -1.50 |     298.50 | Pepsi
+                        | 4. 2024-08-08 19:00:02 |     300.00 |     300.00 | allowance into 'Food'
                         | 5. Back (b)
                         | 6. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
-                    toInput = listOf("4"),
+                    toInput = listOf("1"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -1236,11 +1236,11 @@ Spending recorded
                         |""".trimMargin(),
                         """
                         |'$defaultFoodAccountName' Account Transactions
-                        |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:02 |     300.00 | allowance into 'Food'
-                        | 2. 2024-08-08 19:00:04 |      -1.50 | Pepsi
-                        | 3. 2024-08-08 19:00:05 |    -200.00 | SuperMarket
-                        | 4. 2024-08-08 19:00:07 |     -20.00 | Costco
+                        |    Time Stamp          | Amount     | Balance    | Description
+                        | 1. 2024-08-08 19:00:07 |     -20.00 |      78.50 | Costco
+                        | 2. 2024-08-08 19:00:05 |    -200.00 |      98.50 | SuperMarket
+                        | 3. 2024-08-08 19:00:04 |      -1.50 |     298.50 | Pepsi
+                        | 4. 2024-08-08 19:00:02 |     300.00 |     300.00 | allowance into 'Food'
                         | 5. Back (b)
                         | 6. Quit (q)
                         |""".trimMargin(),
@@ -1341,9 +1341,9 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                         |Select all transactions from this 'Costco Visa' bill.  Amount to be covered: $35.00
-                        |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:07 |     -30.00 | Costco
-                        | 2. 2024-08-08 19:00:08 |     -20.00 | Target
+                        |    Time Stamp          | Amount     | Balance    | Description
+                        | 1. 2024-08-08 19:00:08 |     -20.00 |     -50.00 | Target
+                        | 2. 2024-08-08 19:00:07 |     -30.00 |     -30.00 | Costco
                         | 3. Record a missing transaction from this 'Costco Visa' bill
                         | 4. Back (b)
                         | 5. Quit (q)
@@ -1351,7 +1351,7 @@ Spending recorded
                     """.trimMargin(),
                         "Select a transaction covered in this bill: ",
                     ),
-                    toInput = listOf("1"),
+                    toInput = listOf("2"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -1361,8 +1361,8 @@ Item prepared
 """,
                         """
                         |Select all transactions from this 'Costco Visa' bill.  Amount to be covered: $5.00
-                        |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:08 |     -20.00 | Target
+                        |    Time Stamp          | Amount     | Balance    | Description
+                        | 1. 2024-08-08 19:00:08 |     -20.00 |     -50.00 | Target
                         | 2. Record a missing transaction from this 'Costco Visa' bill
                         | 3. Back (b)
                         | 4. Quit (q)
@@ -1381,8 +1381,8 @@ Item prepared
 """.trimMargin(),
                         """
                         |Select all transactions from this 'Costco Visa' bill.  Amount to be covered: $5.00
-                        |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:08 |     -20.00 | Target
+                        |    Time Stamp          | Amount     | Balance    | Description
+                        | 1. 2024-08-08 19:00:08 |     -20.00 |     -30.00 | Target
                         | 2. Record a missing transaction from this 'Costco Visa' bill
                         | 3. Back (b)
                         | 4. Quit (q)
@@ -1433,16 +1433,16 @@ Spending recorded
 """,
                         """
                         |Select all transactions from this 'Costco Visa' bill.  Amount to be covered: $5.00
-                        |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:08 |     -20.00 | Target
-                        | 2. 2024-08-08 19:00:10 |      -5.00 | Brausen's
+                        |    Time Stamp          | Amount     | Balance    | Description
+                        | 1. 2024-08-08 19:00:10 |      -5.00 |     -10.00 | Brausen's
+                        | 2. 2024-08-08 19:00:08 |     -20.00 |      -5.00 | Target
                         | 3. Record a missing transaction from this 'Costco Visa' bill
                         | 4. Back (b)
                         | 5. Quit (q)
                         |""".trimMargin(),
                         "Select a transaction covered in this bill: ",
                     ),
-                    toInput = listOf("2"),
+                    toInput = listOf("1"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -1540,10 +1540,10 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                         |'Checking' Account Transactions
-                        |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:00 |   5,000.00 | income into '$defaultCheckingAccountName'
-                        | 2. 2024-08-08 19:00:06 |    -300.00 | SuperMarket
-                        | 3. 2024-08-08 19:00:09 |     -35.00 | pay 'Costco Visa' bill
+                        |    Time Stamp          | Amount     | Balance    | Description
+                        | 1. 2024-08-08 19:00:09 |     -35.00 |   4,665.00 | pay 'Costco Visa' bill
+                        | 2. 2024-08-08 19:00:06 |    -300.00 |   4,700.00 | SuperMarket
+                        | 3. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
                         | 4. Back (b)
                         | 5. Quit (q)
                         |""".trimMargin(),
@@ -1588,10 +1588,10 @@ Spending recorded
                         |""".trimMargin(),
                         """
                         |'Checking' Account Transactions
-                        |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:00 |   5,000.00 | income into '$defaultCheckingAccountName'
-                        | 2. 2024-08-08 19:00:06 |    -300.00 | SuperMarket
-                        | 3. 2024-08-08 19:00:09 |     -35.00 | pay 'Costco Visa' bill
+                        |    Time Stamp          | Amount     | Balance    | Description
+                        | 1. 2024-08-08 19:00:09 |     -35.00 |   4,665.00 | pay 'Costco Visa' bill
+                        | 2. 2024-08-08 19:00:06 |    -300.00 |   4,700.00 | SuperMarket
+                        | 3. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
                         | 4. Back (b)
                         | 5. Quit (q)
                         |""".trimMargin(),
@@ -1745,12 +1745,12 @@ Real account 'Savings' created with balance ${'$'}1000.00
                     expectedOutputs = listOf(
                         """
                         |'General' Account Transactions
-                        |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:00 |   5,000.00 | income into '$defaultCheckingAccountName'
-                        | 2. 2024-08-08 19:00:01 |     200.00 | income into '$defaultWalletAccountName'
-                        | 3. 2024-08-08 19:00:02 |    -300.00 | allowance into '$defaultFoodAccountName'
-                        | 4. 2024-08-08 19:00:03 |    -200.00 | allowance into '$defaultNecessitiesAccountName'
-                        | 5. 2024-08-08 19:00:11 |   1,000.00 | initial balance in 'Savings'
+                        |    Time Stamp          | Amount     | Balance    | Description
+                        | 1. 2024-08-08 19:00:11 |   1,000.00 |   5,700.00 | initial balance in 'Savings'
+                        | 2. 2024-08-08 19:00:03 |    -200.00 |   4,700.00 | allowance into 'Necessities'
+                        | 3. 2024-08-08 19:00:02 |    -300.00 |   4,900.00 | allowance into 'Food'
+                        | 4. 2024-08-08 19:00:01 |     200.00 |   5,200.00 | income into 'Wallet'
+                        | 5. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
                         | 6. Back (b)
                         | 7. Quit (q)
                         |""".trimMargin(),

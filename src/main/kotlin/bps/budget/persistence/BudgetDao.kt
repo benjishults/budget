@@ -5,6 +5,7 @@ import bps.budget.model.Account
 import bps.budget.model.BudgetData
 import bps.budget.model.Transaction
 import kotlinx.datetime.Instant
+import java.math.BigDecimal
 import java.util.UUID
 
 /**
@@ -14,6 +15,7 @@ interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
 //    val config: C
 
     fun getUserByLogin(login: String): User? = null
+
     fun createUser(login: String, password: String): UUID =
         UUID.randomUUID()
 
@@ -23,13 +25,21 @@ interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
      * @throws DataConfigurationException if data isn't found.
      */
     fun load(budgetId: UUID, userId: UUID): BudgetData = TODO()
+
     fun prepForFirstSave() {}
 
     /**
      * Save top-level account data.  Persist adding and deleting accounts
      */
     fun save(data: BudgetData, user: User) {}
-    fun commit(transaction: Transaction, budgetId: UUID) {}
+
+    fun commit(
+        transaction: Transaction,
+        budgetId: UUID,
+        saveBalances: Boolean = true,
+    ) {
+    }
+
     fun clearCheck(
         draftTransactionItems: List<Transaction.Item>,
         clearingTransaction: Transaction,
@@ -57,11 +67,12 @@ interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
 
     class ExtendedTransactionItem(
         val item: Transaction.ItemBuilder,
+        val accountBalanceAfterItem: BigDecimal,
         val transactionId: UUID,
         val transactionDescription: String,
         val transactionTimestamp: Instant,
         val budgetDao: BudgetDao,
-        val budgetData: BudgetData,
+        val budgetId: UUID,
     ) : Comparable<ExtendedTransactionItem> {
 
         /**
@@ -71,16 +82,17 @@ interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
          *
          * The value cannot actually be `null`.
          */
-        var transaction: Transaction? = null
-            get() =
-                field
-                    ?: run {
-                        budgetDao.getTransactionOrNull(transactionId, budgetData)!!
-                            .also {
-                                field = it
-                            }
-                    }
+        fun transaction(budgetId: UUID, accountIdToAccountMap: Map<UUID, Account>): Transaction =
+            transaction
+                ?: run {
+                    budgetDao.getTransactionOrNull(transactionId, budgetId, accountIdToAccountMap)!!
+                        .also {
+                            transaction = it
+                        }
+                }
 
+        // TODO be sure the protect this if we go multithreaded
+        private var transaction: Transaction? = null
 
         override fun compareTo(other: ExtendedTransactionItem): Int =
             this.transactionTimestamp.compareTo(other.transactionTimestamp)
@@ -105,18 +117,29 @@ interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
         }
 
         override fun toString(): String {
-            return "ExtendedTransactionItem(transactionId=$transactionId, item=$item, budgetData=$budgetData)"
+            return "ExtendedTransactionItem(transactionId=$transactionId, item=$item, accountBalanceAfterItem=$accountBalanceAfterItem)"
         }
     }
 
-    fun Account.fetchTransactionItemsInvolvingAccount(
-        budgetData: BudgetData,
+    /**
+     * @param balanceAtEndOfPage must be provided unless [offset] is `0`.
+     * If not provided, then the balance from the account will be used.
+     * Its value should be the balance of the account at the point when this page of results ended.
+     */
+    fun fetchTransactionItemsInvolvingAccount(
+        account: Account,
         limit: Int = 30,
         offset: Int = 0,
+        balanceAtEndOfPage: BigDecimal =
+            require(offset == 0) { "balanceAtEndOfPage must be provided unless offset is 0." }
+                .let { account.balance },
     ): List<ExtendedTransactionItem> =
         emptyList()
 
     override fun close() {}
-    fun getTransactionOrNull(transactionId: UUID, budgetData: BudgetData): Transaction? = null
-
+    fun getTransactionOrNull(
+        transactionId: UUID,
+        budgetId: UUID,
+        accountIdToAccountMap: Map<UUID, Account>,
+    ): Transaction?
 }

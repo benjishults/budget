@@ -60,7 +60,6 @@ data class Transaction private constructor(
 
         val transaction = this@Transaction
 
-        // TODO this is really not careful and won't be compatible with a careful equals method
         override fun compareTo(other: Item): Int =
             transaction.timestamp
                 .compareTo(other.transaction.timestamp)

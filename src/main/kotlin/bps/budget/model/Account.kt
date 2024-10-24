@@ -46,7 +46,8 @@ abstract class Account(
     override var description: String = "",
     override var id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
-    val type: String,
+    open val type: String,
+    val budgetId: UUID,
 ) : AccountData {
 
     override var balance: BigDecimal = balance
@@ -82,7 +83,7 @@ abstract class Account(
     }
 
     override fun toString(): String {
-        return "${javaClass.name}('$name', $id, $balance)"
+        return "${javaClass.name}('$name', $balance, id=$id, budgetId=$budgetId)"
     }
 
     override fun equals(other: Any?): Boolean =
@@ -108,8 +109,8 @@ class CategoryAccount(
     description: String = "",
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
-    type: String = "category",
-) : Account(name, description, id, balance, type) {
+    budgetId: UUID,
+) : Account(name, description, id, balance, "category", budgetId) {
 
     override fun Transaction.ItemBuilder.itemBuilderSetter(): Transaction.ItemBuilder {
         categoryAccount = this@CategoryAccount
@@ -127,8 +128,8 @@ open class RealAccount(
     description: String = "",
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
-    type: String = "real",
-) : Account(name, description, id, balance, type) {
+    budgetId: UUID,
+) : Account(name, description, id, balance, "real", budgetId) {
 
     override fun Transaction.ItemBuilder.itemBuilderSetter(): Transaction.ItemBuilder {
         realAccount = this@RealAccount
@@ -150,8 +151,8 @@ class DraftAccount(
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
     val realCompanion: RealAccount,
-    type: String = "draft",
-) : Account(name, description, id, balance, type) {
+    budgetId: UUID,
+) : Account(name, description, id, balance, "draft", budgetId) {
 
     override fun Transaction.ItemBuilder.itemBuilderSetter(): Transaction.ItemBuilder {
         draftAccount = this@DraftAccount
@@ -168,8 +169,9 @@ class ChargeAccount(
     description: String = "",
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
-    type: String = "charge",
-) : RealAccount(name, description, id, balance, type) {
+    budgetId: UUID,
+) : RealAccount(name, description, id, balance, budgetId) {
+    override val type: String = "charge"
     override fun Transaction.ItemBuilder.itemBuilderSetter(): Transaction.ItemBuilder {
         chargeAccount = this@ChargeAccount
         return this

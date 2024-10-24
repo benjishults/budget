@@ -53,7 +53,6 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                 kotlinx.datetime.Instant.parse(String.format("2024-08-09T00:00:%02dZ", secondCount++))
         }
         "with data from config" - {
-//            val uiFunctions = ConsoleUiFacade()
             val budgetData = loadBudgetData(
                 user = jdbcDao.getUserByLogin(configurations.user.defaultLogin!!)!!,
                 budgetDao = jdbcDao,

@@ -103,7 +103,7 @@ class ConsoleUiFacade(
             )
                 .getResult()
                 ?: throw QuitException()
-        return CategoryAccount(name, description)
+        return CategoryAccount(name, description, budgetId = UUID.randomUUID())
     }
 
     override fun userWantsBasicAccounts(): Boolean =

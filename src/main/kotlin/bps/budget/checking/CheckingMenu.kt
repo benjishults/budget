@@ -99,7 +99,9 @@ fun WithIo.checksMenu(
                             prompt = "Select the check that cleared: ",
                             account = draftAccount,
                             budgetDao = budgetDao,
-                            budgetData = budgetData,
+                            budgetId = budgetData.id,
+                            accountIdToAccountMap = budgetData.accountIdToAccountMap,
+                            timeZone = budgetData.timeZone,
                             limit = userConfig.numberOfItemsInScrollingList,
                             outPrinter = outPrinter,
                         ) { _, draftTransactionItem: BudgetDao.ExtendedTransactionItem ->
@@ -131,7 +133,12 @@ fun WithIo.checksMenu(
                             budgetDao.clearCheck(
                                 draftTransactionItem
                                     .item
-                                    .build(draftTransactionItem.transaction!!),
+                                    .build(
+                                        draftTransactionItem.transaction(
+                                            budgetId = budgetData.id,
+                                            accountIdToAccountMap = budgetData.accountIdToAccountMap,
+                                        ),
+                                    ),
                                 clearingTransaction,
                                 budgetData.id,
                             )

@@ -1,5 +1,6 @@
 drop table if exists account_active_periods;
 drop table if exists transaction_items;
+drop table if exists timestamps;
 drop table if exists transactions;
 drop table if exists draft_accounts;
 drop table if exists checking_accounts;

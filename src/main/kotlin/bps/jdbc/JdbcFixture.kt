@@ -13,16 +13,7 @@ import java.sql.Timestamp
 import java.sql.Types.OTHER
 import java.util.UUID
 
-// TODO since I want to use an inline function here, probably better if this isn't an interface
 interface JdbcFixture {
-//    val connection: Connection
-//
-//    /**
-//     * Closes the connection.
-//     */
-//    override fun close() {
-//        connection.close()
-//    }
 
     fun PreparedStatement.setTimestamp(parameterIndex: Int, timestamp: Instant) {
         setTimestamp(parameterIndex, Timestamp(timestamp.toEpochMilliseconds()))

@@ -17,6 +17,7 @@ import bps.budget.persistence.JdbcConfig
 import bps.jdbc.JdbcFixture
 import bps.jdbc.transact
 import bps.jdbc.transactOrThrow
+import bps.kotlin.Instrumentable
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -35,6 +36,7 @@ import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
+@Instrumentable
 class JdbcDao(
     val config: JdbcConfig,
 ) : BudgetDao, JdbcFixture {
@@ -47,8 +49,7 @@ class JdbcDao(
             )
         }?currentSchema=${URLEncoder.encode(config.schema, "utf-8")}"
 
-    @Volatile
-    var connection: Connection = startConnection()
+    final var connection: Connection = startConnection()
         private set
     private val keepAliveSingleThreadScheduledExecutor = Executors
         .newSingleThreadScheduledExecutor()
@@ -60,7 +61,7 @@ class JdbcDao(
                 scheduleWithFixedDelay(
                     {
                         if (!connection.isValid(4_000)) {
-//                                println("DB connection died.  Restarting...")
+                            // TODO log this
                             connection = startConnection()
                         }
                     },
@@ -402,6 +403,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
         }
     }
 
+    // TODO https://github.com/benjishults/budget/issues/14
 //    /**
 //     * if
 //     * 1. [account] is real
@@ -587,10 +589,12 @@ create index if not exists lookup_draft_account_transaction_items_by_account
 //                }
 //        }
 
-    override fun Account.fetchTransactionItemsInvolvingAccount(
-        budgetData: BudgetData,
+    override fun fetchTransactionItemsInvolvingAccount(
+        account: Account,
         limit: Int,
         offset: Int,
+//        accountIdToAccountMap: Map<UUID, Account>,
+        balanceAtEndOfPage: BigDecimal,
     ): List<BudgetDao.ExtendedTransactionItem> =
         buildList {
             connection.transactOrThrow {
@@ -601,24 +605,16 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                     |select t.id as transaction_id,
                     |       t.description as transaction_description,
                     |       t.timestamp_utc as transaction_timestamp,
-                    |       i.id,
+                    |       i.id as item_id,
                     |       i.amount,
                     |       i.description,
                     |       i.draft_status
                     |from transactions t
                     |         join transaction_items i
-                    |              on i.transaction_id = t.id
-                    |                  and t.budget_id = i.budget_id
+                    |            on i.transaction_id = t.id
+                    |                and t.budget_id = i.budget_id
                     |where t.budget_id = ?
-                    |  and i.${
-                        when (this@fetchTransactionItemsInvolvingAccount) {
-                            is CategoryAccount -> "category_account_id"
-                            is ChargeAccount -> "charge_account_id"
-                            is RealAccount -> "real_account_id"
-                            is DraftAccount -> "draft_account_id"
-                            else -> throw Error("Unknown account type ${this@fetchTransactionItemsInvolvingAccount::class.simpleName}")
-                        }
-                    } = ?
+                    |  and i.${account.type}_account_id = ?
                     |order by t.timestamp_utc desc, t.id
                     |limit ?
                     |offset ?
@@ -627,8 +623,8 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                     .use { selectExtendedTransactionItemsForAccount: PreparedStatement ->
                         selectExtendedTransactionItemsForAccount
                             .apply {
-                                setUuid(1, budgetData.id)
-                                setUuid(2, id)
+                                setUuid(1, account.budgetId)
+                                setUuid(2, account.id)
                                 setInt(3, limit)
                                 setInt(4, offset)
                             }
@@ -636,15 +632,39 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                             .executeQuery()
                             .use { result: ResultSet ->
                                 with(result) {
+                                    var runningBalance = balanceAtEndOfPage
                                     while (next()) {
                                         val transactionId: UUID = getUuid("transaction_id")!!
                                         val transactionDescription: String = getString("transaction_description")!!
                                         val transactionTimestamp: Instant = getInstant("transaction_timestamp")
-                                        val id: UUID = getUuid("id")!!
-                                        val amount: BigDecimal = getBigDecimal("amount")
+                                        val id: UUID = getUuid("item_id")!!
+                                        val amount: BigDecimal = getCurrencyAmount("amount")
                                         val description: String? = getString("description")
                                         val draftStatus: DraftStatus =
                                             DraftStatus.valueOf(getString("draft_status"))
+                                        this@buildList.add(
+                                            BudgetDao.ExtendedTransactionItem(
+                                                item = Transaction.ItemBuilder(
+                                                    id = id,
+                                                    amount = amount,
+                                                    description = description,
+                                                    draftStatus = draftStatus,
+                                                )
+                                                    .apply {
+                                                        with(account) {
+                                                            this@apply.itemBuilderSetter()
+                                                        }
+                                                    },
+                                                transactionId = transactionId,
+                                                transactionDescription = transactionDescription,
+                                                transactionTimestamp = transactionTimestamp,
+                                                budgetDao = this@JdbcDao,
+                                                budgetId = account.budgetId,
+                                                accountBalanceAfterItem = runningBalance,
+                                            ),
+                                        )
+                                        runningBalance -= amount
+                                        // TODO https://github.com/benjishults/budget/issues/14
 //                                    if (draftStatus == DraftStatus.clearing) {
 //                                        prepareStatement(
 //                                            """
@@ -684,26 +704,6 @@ create index if not exists lookup_draft_account_transaction_items_by_account
 //                                                    }
 //                                            }
 //                                    } else {
-                                        add(
-                                            BudgetDao.ExtendedTransactionItem(
-                                                item = Transaction.ItemBuilder(
-                                                    id = id,
-                                                    amount = amount,
-                                                    description = description,
-                                                    draftStatus = draftStatus,
-                                                )
-                                                    .apply {
-                                                        with(this@fetchTransactionItemsInvolvingAccount) {
-                                                            itemBuilderSetter()
-                                                        }
-                                                    },
-                                                transactionId = transactionId,
-                                                transactionDescription = transactionDescription,
-                                                transactionTimestamp = transactionTimestamp,
-                                                budgetDao = this@JdbcDao,
-                                                budgetData = budgetData,
-                                            ),
-                                        )
                                     }
                                 }
                             }
@@ -711,7 +711,11 @@ create index if not exists lookup_draft_account_transaction_items_by_account
             }
         }
 
-    override fun getTransactionOrNull(transactionId: UUID, budgetData: BudgetData): Transaction? =
+    override fun getTransactionOrNull(
+        transactionId: UUID,
+        budgetId: UUID,
+        accountIdToAccountMap: Map<UUID, Account>,
+    ): Transaction? =
         connection.transactOrThrow {
             prepareStatement(
                 """
@@ -737,17 +741,21 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                 .use { selectTransactionAndItems: PreparedStatement ->
                     selectTransactionAndItems
                         .apply {
-                            setUuid(1, budgetData.id)
+                            setUuid(1, budgetId)
                             setUuid(2, transactionId)
                         }
                         .executeQuery()
                         .use { result: ResultSet ->
                             if (result.next()) {
                                 val transactionBuilder =
-                                    initializeTransactionBuilderWithFirstItem(result, transactionId, budgetData)
+                                    initializeTransactionBuilderWithFirstItem(
+                                        result,
+                                        transactionId,
+                                        accountIdToAccountMap,
+                                    )
                                 while (result.next()) {
                                     // for each transaction item...
-                                    transactionBuilder.populateItem(result, budgetData)
+                                    transactionBuilder.populateItem(result, accountIdToAccountMap)
                                 }
                                 transactionBuilder.build()
                             } else
@@ -759,7 +767,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
     private fun initializeTransactionBuilderWithFirstItem(
         result: ResultSet,
         transactionId: UUID,
-        budgetData: BudgetData,
+        accountIdToAccountMap: Map<UUID, Account>,
     ): Transaction.Builder =
         Transaction
             .Builder()
@@ -767,19 +775,19 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                 id = transactionId
                 description = result.getString("transaction_description")
                 timestamp = result.getInstant("transaction_timestamp")
-                populateItem(result, budgetData)
+                populateItem(result, accountIdToAccountMap)
             }
 
     private fun Transaction.Builder.populateItem(
         result: ResultSet,
-        budgetData: BudgetData,
+        accountIdToAccountMap: Map<UUID, Account>,
     ) {
         (result.getUuid("category_account_id")
             ?: result.getUuid("real_account_id")
             ?: result.getUuid("charge_account_id")
             ?: result.getUuid("draft_account_id")!!)
             .let { uuid ->
-                val account: Account = budgetData.getAccountByIdOrNull(uuid)!!
+                val account: Account = accountIdToAccountMap.get(uuid)!!
                 with(account) {
                     addItem(
                         result.getCurrencyAmount("amount"),
@@ -789,41 +797,6 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                     )
                 }
             }
-    }
-
-//    private fun <T : Account> MutableList<Transaction.ItemBuilder>.maybeAddItemBuilder(
-//        result: ResultSet,
-//        itemAmount: BigDecimal,
-//        itemDescription: String?,
-//        data: BudgetData,
-//        type: String,
-//        draftStatus: DraftStatus = DraftStatus.none,
-//        setter: Transaction.ItemBuilder.(T) -> Unit,
-//    ) {
-//        result
-//            .getObject("${type}_account_id", UUID::class.java)
-//            ?.let { id: UUID ->
-//                add(
-//                    Transaction.ItemBuilder(
-//                        amount = itemAmount,
-//                        description = itemDescription,
-//                        draftStatus = draftStatus,
-//                    )
-//                        .apply {
-//                            setter(data.getAccountByIdOrNull(id)!!)
-//                        },
-//                )
-//            }
-//    }
-
-    private fun conditionallyAddCompleteTransactionToList(
-        transactionId: UUID?,
-        returnValue: MutableList<Transaction>,
-        transactionBuilder: Transaction.Builder?,
-    ) {
-        if (transactionId != null) {
-            returnValue.add(transactionBuilder!!.build())
-        }
     }
 
     private fun Connection.createStagingDraftAccountsTable() {
@@ -898,18 +871,16 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                             getBudget.setUuid(2, userId)
                             getBudget.executeQuery()
                                 .use { result: ResultSet ->
-                                    result.next()
-                                        .also { hadNext ->
-                                            if (!hadNext)
-                                                throw DataConfigurationException("Budget data not found for name: ${config.budgetName}")
-                                        }
-                                    BudgetDataInfo(
-                                        result.getObject("general_account_id", UUID::class.java),
-                                        result.getString("time_zone")
-                                            ?.let { timeZone -> TimeZone.of(timeZone) }
-                                            ?: TimeZone.currentSystemDefault(),
-                                        result.getString("budget_name"),
-                                    )
+                                    if (result.next()) {
+                                        BudgetDataInfo(
+                                            result.getObject("general_account_id", UUID::class.java),
+                                            result.getString("time_zone")
+                                                ?.let { timeZone -> TimeZone.of(timeZone) }
+                                                ?: TimeZone.currentSystemDefault(),
+                                            result.getString("budget_name"),
+                                        )
+                                    } else
+                                        throw DataConfigurationException("Budget data not found for name: ${config.budgetName}")
                                 }
                         }
                 // TODO pull out duplicate code in these next three sections
@@ -953,6 +924,7 @@ where acc.budget_id = ?
                                                             "real_account_id",
                                                         )
                                                     }!!,
+                                                    budgetId,
                                                 ),
                                             )
                                         }
@@ -981,7 +953,7 @@ where acc.budget_id = ?
     private fun <T : Account> Connection.getAccounts(
         tablePrefix: String,
         budgetId: UUID,
-        factory: (String, String, UUID, BigDecimal) -> T,
+        factory: (String, String, UUID, BigDecimal, UUID) -> T,
     ): List<T> =
         prepareStatement(
             """
@@ -1007,6 +979,7 @@ where acc.budget_id = ?
                                         result.getString("description"),
                                         result.getObject("id", UUID::class.java),
                                         result.getCurrencyAmount("balance"),
+                                        budgetId,
                                     ),
                                 )
                             }
@@ -1198,7 +1171,11 @@ where acc.budget_id = ?
     /**
      * Inserts the transaction records and updates the account balances in the DB.
      */
-    override fun commit(transaction: Transaction, budgetId: UUID) {
+    override fun commit(
+        transaction: Transaction,
+        budgetId: UUID,
+        saveBalances: Boolean,
+    ) {
         connection.transactOrThrow {
             insertTransactionPreparedStatement(transaction, budgetId)
                 .use { insertTransaction: PreparedStatement ->
@@ -1208,7 +1185,7 @@ where acc.budget_id = ?
                 .use { insertTransactionItem: PreparedStatement ->
                     insertTransactionItem.executeUpdate()
                 }
-            updateBalances(transaction, budgetId)
+            if (saveBalances) updateBalances(transaction, budgetId)
         }
     }
 
@@ -1638,11 +1615,6 @@ where id = ?
     }
 
 }
-
-//fun Instant.toLocalDateTime(timeZone: TimeZone): LocalDateTime =
-//    ZonedDateTime
-//        .ofInstant(this, timeZone.toZoneId())
-//        .toLocalDateTime()
 
 /**
  * This assumes that the DB [Timestamp] is stored in UTC.
