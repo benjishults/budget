@@ -721,8 +721,8 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                         |Select the check that cleared on 'Checking Drafts'
-                        |    Time Stamp          | Amount     | Balance    | Description
-                        | 1. 2024-08-08 19:00:05 |     300.00 |     300.00 | SuperMarket
+                        |    Time Stamp          | Amount     | Description
+                        | 1. 2024-08-08 19:00:05 |     300.00 | SuperMarket
                         | 2. Back (b)
                         | 3. Quit (q)
                         |""".trimMargin(),
@@ -735,7 +735,7 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                         |Select the check that cleared on 'Checking Drafts'
-                        |    Time Stamp          | Amount     | Balance    | Description
+                        |    Time Stamp          | Amount     | Description
                         | 1. Back (b)
                         | 2. Quit (q)
                         |""".trimMargin(),
@@ -1341,9 +1341,9 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                         |Select all transactions from this 'Costco Visa' bill.  Amount to be covered: $35.00
-                        |    Time Stamp          | Amount     | Balance    | Description
-                        | 1. 2024-08-08 19:00:08 |     -20.00 |     -50.00 | Target
-                        | 2. 2024-08-08 19:00:07 |     -30.00 |     -30.00 | Costco
+                        |    Time Stamp          | Amount     | Description
+                        | 1. 2024-08-08 19:00:08 |     -20.00 | Target
+                        | 2. 2024-08-08 19:00:07 |     -30.00 | Costco
                         | 3. Record a missing transaction from this 'Costco Visa' bill
                         | 4. Back (b)
                         | 5. Quit (q)
@@ -1361,8 +1361,8 @@ Item prepared
 """,
                         """
                         |Select all transactions from this 'Costco Visa' bill.  Amount to be covered: $5.00
-                        |    Time Stamp          | Amount     | Balance    | Description
-                        | 1. 2024-08-08 19:00:08 |     -20.00 |     -50.00 | Target
+                        |    Time Stamp          | Amount     | Description
+                        | 1. 2024-08-08 19:00:08 |     -20.00 | Target
                         | 2. Record a missing transaction from this 'Costco Visa' bill
                         | 3. Back (b)
                         | 4. Quit (q)
@@ -1381,8 +1381,8 @@ Item prepared
 """.trimMargin(),
                         """
                         |Select all transactions from this 'Costco Visa' bill.  Amount to be covered: $5.00
-                        |    Time Stamp          | Amount     | Balance    | Description
-                        | 1. 2024-08-08 19:00:08 |     -20.00 |     -30.00 | Target
+                        |    Time Stamp          | Amount     | Description
+                        | 1. 2024-08-08 19:00:08 |     -20.00 | Target
                         | 2. Record a missing transaction from this 'Costco Visa' bill
                         | 3. Back (b)
                         | 4. Quit (q)
@@ -1433,9 +1433,9 @@ Spending recorded
 """,
                         """
                         |Select all transactions from this 'Costco Visa' bill.  Amount to be covered: $5.00
-                        |    Time Stamp          | Amount     | Balance    | Description
-                        | 1. 2024-08-08 19:00:10 |      -5.00 |     -10.00 | Brausen's
-                        | 2. 2024-08-08 19:00:08 |     -20.00 |      -5.00 | Target
+                        |    Time Stamp          | Amount     | Description
+                        | 1. 2024-08-08 19:00:10 |      -5.00 | Brausen's
+                        | 2. 2024-08-08 19:00:08 |     -20.00 | Target
                         | 3. Record a missing transaction from this 'Costco Visa' bill
                         | 4. Back (b)
                         | 5. Quit (q)

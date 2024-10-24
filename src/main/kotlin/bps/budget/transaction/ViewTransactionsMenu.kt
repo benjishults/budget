@@ -8,14 +8,13 @@ import bps.console.app.MenuSession
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.OutPrinter
 import bps.console.menu.MenuItem
-import bps.console.menu.ScrollingSelectionMenu
 import bps.console.menu.ScrollingSelectionWithContextMenu
 import kotlinx.datetime.TimeZone
 import java.math.BigDecimal
 import java.util.UUID
 import kotlin.math.max
 
-const val TRANSACTIONS_TABLE_HEADER = "    Time Stamp          | Amount     | Balance    | Description"
+private const val TRANSACTIONS_TABLE_HEADER = "    Time Stamp          | Amount     | Balance    | Description"
 
 open class ViewTransactionsMenu(
     private val account: Account,
@@ -83,19 +82,17 @@ open class ViewTransactionsMenu(
         require(limit > 0) { "Limit must be positive: $limit" }
     }
 
-    fun priorBalance(): BigDecimal = contextStack.last()
-
     /**
      * Add the current context to the stack immediately when the list is generated.
      */
     override fun List<BudgetDao.ExtendedTransactionItem>.produceCurrentContext(): BigDecimal =
         lastOrNull()
             ?.run {
-                accountBalanceAfterItem - item.amount
+                accountBalanceAfterItem!! - item.amount
             }
             ?: account.balance
 
-    override fun nextPageMenuProducer(): ScrollingSelectionMenu<BudgetDao.ExtendedTransactionItem> =
+    override fun nextPageMenuProducer(): ViewTransactionsMenu =
         ViewTransactionsMenu(
             account = account,
             budgetDao = budgetDao,

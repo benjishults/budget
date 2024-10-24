@@ -67,7 +67,7 @@ interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
 
     class ExtendedTransactionItem(
         val item: Transaction.ItemBuilder,
-        val accountBalanceAfterItem: BigDecimal,
+        val accountBalanceAfterItem: BigDecimal?,
         val transactionId: UUID,
         val transactionDescription: String,
         val transactionTimestamp: Instant,
@@ -130,7 +130,7 @@ interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
         account: Account,
         limit: Int = 30,
         offset: Int = 0,
-        balanceAtEndOfPage: BigDecimal =
+        balanceAtEndOfPage: BigDecimal? =
             require(offset == 0) { "balanceAtEndOfPage must be provided unless offset is 0." }
                 .let { account.balance },
     ): List<ExtendedTransactionItem> =

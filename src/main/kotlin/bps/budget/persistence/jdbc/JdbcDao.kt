@@ -12,6 +12,7 @@ import bps.budget.model.DraftStatus
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.BudgetDao.ExtendedTransactionItem
 import bps.budget.persistence.DataConfigurationException
 import bps.budget.persistence.JdbcConfig
 import bps.jdbc.JdbcFixture
@@ -589,13 +590,16 @@ create index if not exists lookup_draft_account_transaction_items_by_account
 //                }
 //        }
 
+    /**
+     * @param balanceAtEndOfPage is the balance of the account after the latest transaction on the page being requested.
+     * If `null`, then [ExtendedTransactionItem.accountBalanceAfterItem] will be `null` for each [ExtendedTransactionItem] returned.
+     */
     override fun fetchTransactionItemsInvolvingAccount(
         account: Account,
         limit: Int,
         offset: Int,
-//        accountIdToAccountMap: Map<UUID, Account>,
-        balanceAtEndOfPage: BigDecimal,
-    ): List<BudgetDao.ExtendedTransactionItem> =
+        balanceAtEndOfPage: BigDecimal?,
+    ): List<ExtendedTransactionItem> =
         buildList {
             connection.transactOrThrow {
                 // TODO if it is a clearing transaction, then create the full transaction by combining the cleared category items
@@ -643,7 +647,7 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                                         val draftStatus: DraftStatus =
                                             DraftStatus.valueOf(getString("draft_status"))
                                         this@buildList.add(
-                                            BudgetDao.ExtendedTransactionItem(
+                                            ExtendedTransactionItem(
                                                 item = Transaction.ItemBuilder(
                                                     id = id,
                                                     amount = amount,
@@ -663,7 +667,8 @@ create index if not exists lookup_draft_account_transaction_items_by_account
                                                 accountBalanceAfterItem = runningBalance,
                                             ),
                                         )
-                                        runningBalance -= amount
+                                        if (runningBalance !== null)
+                                            runningBalance -= amount
                                         // TODO https://github.com/benjishults/budget/issues/14
 //                                    if (draftStatus == DraftStatus.clearing) {
 //                                        prepareStatement(
@@ -1093,7 +1098,7 @@ where acc.budget_id = ?
      */
 // TODO allow checks to pay credit card bills
     override fun commitCreditCardPayment(
-        clearedItems: List<BudgetDao.ExtendedTransactionItem>,
+        clearedItems: List<ExtendedTransactionItem>,
         billPayTransaction: Transaction,
         budgetId: UUID,
     ) {
@@ -1115,14 +1120,14 @@ where acc.budget_id = ?
         )
         require(
             clearedItems
-                .fold(BigDecimal.ZERO.setScale(2)) { sum, transactionItem: BudgetDao.ExtendedTransactionItem ->
+                .fold(BigDecimal.ZERO.setScale(2)) { sum, transactionItem: ExtendedTransactionItem ->
                     sum + transactionItem.item.amount!!
                 } ==
                     -billPayChargeTransactionItem.amount,
         )
         connection.transactOrThrow {
             clearedItems
-                .forEach { chargeTransactionItem: BudgetDao.ExtendedTransactionItem ->
+                .forEach { chargeTransactionItem: ExtendedTransactionItem ->
                     prepareStatement(
                         """
                             |update transaction_items ti

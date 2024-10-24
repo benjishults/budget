@@ -8,7 +8,7 @@ import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
-import bps.budget.transaction.ViewTransactionsMenu
+import bps.budget.transaction.ViewTransactionsWithoutBalancesMenu
 import bps.budget.transaction.allocateSpendingItemMenu
 import bps.console.app.TryAgainAtMostRecentMenuException
 import bps.console.inputs.InRangeInclusiveSimpleEntryValidator
@@ -93,7 +93,7 @@ fun WithIo.checksMenu(
                 )
                 add(
                     pushMenu("Record check cleared on '${draftAccount.name}'") {
-                        ViewTransactionsMenu(
+                        ViewTransactionsWithoutBalancesMenu(
                             filter = { it.item.draftStatus === DraftStatus.outstanding },
                             header = "Select the check that cleared on '${draftAccount.name}'",
                             prompt = "Select the check that cleared: ",

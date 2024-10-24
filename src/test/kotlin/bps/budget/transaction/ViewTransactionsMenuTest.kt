@@ -45,7 +45,7 @@ class ViewTransactionsMenuTest : FreeSpec(),
                 account: Account,
                 limit: Int,
                 offset: Int,
-                balanceAtEndOfPage: BigDecimal,
+                balanceAtEndOfPage: BigDecimal?,
             ): List<BudgetDao.ExtendedTransactionItem> {
                 fetchTransactionsCallsMade.add(limit to offset)
                 return fetchTransactionsCallsExpected[limit to offset] ?: emptyList()

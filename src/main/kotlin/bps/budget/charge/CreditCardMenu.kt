@@ -10,6 +10,7 @@ import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.budget.transaction.ViewTransactionsMenu
+import bps.budget.transaction.ViewTransactionsWithoutBalancesMenu
 import bps.budget.transaction.allocateSpendingItemMenu
 import bps.console.app.MenuSession
 import bps.console.app.TryAgainAtMostRecentMenuException
@@ -196,7 +197,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
     userConfig: UserConfiguration,
     menuSession: MenuSession,
     clock: Clock,
-): Menu = ViewTransactionsMenu(
+): Menu = ViewTransactionsWithoutBalancesMenu(
     account = chargeAccount,
     budgetDao = budgetDao,
     budgetId = budgetData.id,
