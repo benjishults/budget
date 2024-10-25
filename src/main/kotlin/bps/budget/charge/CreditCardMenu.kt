@@ -9,7 +9,7 @@ import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
-import bps.budget.transaction.ViewTransactionsMenu
+import bps.budget.transaction.ViewTransactionFixture
 import bps.budget.transaction.ViewTransactionsWithoutBalancesMenu
 import bps.budget.transaction.allocateSpendingItemMenu
 import bps.console.app.MenuSession
@@ -71,7 +71,7 @@ fun WithIo.creditCardMenu(
                 )
                 add(
                     pushMenu("View unpaid transactions on '${chargeAccount.name}'") {
-                        ViewTransactionsMenu(
+                        ViewTransactionsWithoutBalancesMenu(
                             account = chargeAccount,
                             budgetDao = budgetDao,
                             budgetId = budgetData.id,
@@ -83,7 +83,17 @@ fun WithIo.creditCardMenu(
                             prompt = "Select transaction to view details: ",
                             outPrinter = outPrinter,
                             extraItems = listOf(), // TODO toggle cleared/outstanding
-                        )
+                        ) { _, extendedTransactionItem ->
+                            with(ViewTransactionFixture) {
+                                outPrinter.showTransactionDetailsAction(
+                                    extendedTransactionItem.transaction(
+                                        budgetData.id,
+                                        budgetData.accountIdToAccountMap,
+                                    ),
+                                    budgetData.timeZone,
+                                )
+                            }
+                        }
                     },
                 )
                 add(backItem)

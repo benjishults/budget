@@ -29,7 +29,6 @@ open class ViewTransactionsMenu(
      * In the [produceCurrentContext] method, we add the balance prior to the page to [contextStack].
      */
     contextStack: MutableList<BigDecimal> = mutableListOf(),
-    private val filter: (BudgetDao.ExtendedTransactionItem) -> Boolean = { true },
     header: String? = "'${account.name}' Account Transactions",
     prompt: String = "Select transaction for details: ",
     val outPrinter: OutPrinter = DefaultOutPrinter,
@@ -37,10 +36,12 @@ open class ViewTransactionsMenu(
     actOnSelectedItem: (MenuSession, BudgetDao.ExtendedTransactionItem) -> Unit = { _, extendedTransactionItem: BudgetDao.ExtendedTransactionItem ->
         // NOTE this is needed so that when this menu is re-displayed, it will be where it started
         contextStack.removeLast()
-        outPrinter.showTransactionDetailsAction(
-            extendedTransactionItem.transaction(budgetId, accountIdToAccountMap),
-            timeZone,
-        )
+        with(ViewTransactionFixture) {
+            outPrinter.showTransactionDetailsAction(
+                extendedTransactionItem.transaction(budgetId, accountIdToAccountMap),
+                timeZone,
+            )
+        }
     },
 ) : ScrollingSelectionWithContextMenu<BudgetDao.ExtendedTransactionItem, BigDecimal>(
     """
@@ -70,7 +71,6 @@ open class ViewTransactionsMenu(
                 offset = selectedOffset,
                 balanceAtEndOfPage = contextStack.lastOrNull() ?: account.balance,
             )
-                .filter(filter)
                 .sortedWith { o1, o2 -> -o1.compareTo(o2) }
         }
     },
@@ -106,7 +106,6 @@ open class ViewTransactionsMenu(
             contextStack = contextStack,
             extraItems = extraItems,
             outPrinter = outPrinter,
-            filter = filter,
             actOnSelectedItem = actOnSelectedItem,
         )
 
@@ -125,57 +124,56 @@ open class ViewTransactionsMenu(
                 .apply { removeLast() },
             extraItems = extraItems,
             outPrinter = outPrinter,
-            filter = filter,
             actOnSelectedItem = actOnSelectedItem,
         )
 
-    companion object {
+}
 
-        private fun OutPrinter.showTransactionDetailsAction(transaction: Transaction, timeZone: TimeZone) {
-            invoke(
-                buildString {
+object ViewTransactionFixture {
+
+    fun OutPrinter.showTransactionDetailsAction(transaction: Transaction, timeZone: TimeZone) {
+        invoke(
+            buildString {
+                append(
+                    transaction
+                        .timestamp
+                        .format(timeZone),
+                )
+                append("\n")
+                append(transaction.description)
+                append("\n")
+                appendItems("Category Account", transaction.categoryItems) { categoryAccount!! }
+                appendItems("Real Items:", transaction.realItems) { realAccount!! }
+                appendItems("Credit Card Items:", transaction.chargeItems) { chargeAccount!! }
+                appendItems("Draft Items:", transaction.draftItems) { draftAccount!! }
+            },
+        )
+    }
+
+    fun StringBuilder.appendItems(
+        accountColumnLabel: String,
+        items: List<Transaction.Item>,
+        accountGetter: Transaction.Item.() -> Account,
+    ) {
+        if (items.isNotEmpty()) {
+            append(String.format("%16s | Amount     | Description\n", accountColumnLabel))
+            items
+                .sorted()
+                .forEach { transactionItem: Transaction.Item ->
                     append(
-                        transaction
-                            .timestamp
-                            .format(timeZone),
+                        String.format(
+                            "%-16s | %10.2f |%s",
+                            transactionItem.accountGetter().name,
+                            transactionItem.amount,
+                            transactionItem
+                                .description
+                                ?.let { " $it" }
+                                ?: "",
+                        ),
                     )
                     append("\n")
-                    append(transaction.description)
-                    append("\n")
-                    appendItems("Category Account", transaction.categoryItems) { categoryAccount!! }
-                    appendItems("Real Items:", transaction.realItems) { realAccount!! }
-                    appendItems("Credit Card Items:", transaction.chargeItems) { chargeAccount!! }
-                    appendItems("Draft Items:", transaction.draftItems) { draftAccount!! }
-                },
-            )
+                }
         }
-
-        private fun StringBuilder.appendItems(
-            accountColumnLabel: String,
-            items: List<Transaction.Item>,
-            accountGetter: Transaction.Item.() -> Account,
-        ) {
-            if (items.isNotEmpty()) {
-                append(String.format("%16s | Amount     | Description\n", accountColumnLabel))
-                items
-                    .sorted()
-                    .forEach { transactionItem: Transaction.Item ->
-                        append(
-                            String.format(
-                                "%-16s | %10.2f |%s",
-                                transactionItem.accountGetter().name,
-                                transactionItem.amount,
-                                transactionItem
-                                    .description
-                                    ?.let { " $it" }
-                                    ?: "",
-                            ),
-                        )
-                        append("\n")
-                    }
-            }
-        }
-
     }
 
 }
