@@ -11,8 +11,7 @@ import java.util.UUID
 /**
  * @param C the [BudgetConfig] type determining how the data is found in the first place.
  */
-interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
-//    val config: C
+interface BudgetDao : AutoCloseable {
 
     fun getUserByLogin(login: String): User? = null
 

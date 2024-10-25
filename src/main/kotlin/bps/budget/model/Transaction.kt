@@ -160,7 +160,7 @@ data class Transaction private constructor(
                 populate(
                     this@Builder
                         .categoryItemBuilders
-                        .map { itemBuilder: ItemBuilder -> itemBuilder.build(this) },
+                        .map { it.build(this) },
                     this@Builder
                         .realItemBuilders
                         .map { it.build(this) },
@@ -174,62 +174,6 @@ data class Transaction private constructor(
             }
     }
 }
-
-//interface TransactionBehaviors {
-//    fun Transaction.Builder.toContextDescription()
-//}
-//
-// NOTE, at this point, we have no reason to persist this as part of a transaction since it is only used when the
-//       transaction is being created
-//
-//enum class TransactionType : TransactionBehaviors {
-//    SPENDING {
-//        override fun Transaction.Builder.toContextDescription() {
-//            TODO("")
-//        }
-//    },
-//    ALLOWANCE {
-//        override fun Transaction.Builder.toContextDescription() {
-//            TODO("")
-//        }
-//    },
-//    INCOME {
-//        override fun Transaction.Builder.toContextDescription() {
-//            TODO("")
-//        }
-//    },
-//    CHECK_WRITTEN {
-//        override fun Transaction.Builder.toContextDescription() {
-//            TODO("")
-//        }
-//    },
-//    CHECK_CLEARED {
-//        override fun Transaction.Builder.toContextDescription() {
-//            TODO("")
-//        }
-//    },
-//    CREDIT_SPENDING {
-//        override fun Transaction.Builder.toContextDescription() {
-//            TODO("")
-//        }
-//    },
-//    CREDIT_PAYMENT {
-//        override fun Transaction.Builder.toContextDescription() {
-//            TODO("")
-//        }
-//    },
-//    CATEGORY_TRANSFER {
-//        override fun Transaction.Builder.toContextDescription() {
-//            TODO("")
-//        }
-//    }, // TODO allowed?
-//    REAL_TRANSFER {
-//        override fun Transaction.Builder.toContextDescription() {
-//            TODO("")
-//        }
-//    };
-//
-//}
 
 /**
  * [DraftAccount]s and [ChargeAccount]s have some transaction items that are outstanding and some that are cleared.
