@@ -32,7 +32,7 @@ fun WithIo.chooseRealAccountsThenCategories(
             Select an account that some of that money was spent from.  Left to cover: $$runningTotal
             """.trimIndent(),
         limit = userConfig.numberOfItemsInScrollingList,
-        baseList = budgetData.realAccounts + budgetData.chargeAccounts,
+        baseList = budgetData.realAccounts,
         labelGenerator = {
             String.format(
                 "%,10.2f | %-15s | %s",
@@ -42,14 +42,6 @@ fun WithIo.chooseRealAccountsThenCategories(
                             .realItemBuilders
                             .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
                                 if (this == itemBuilder.realAccount)
-                                    runningValue + itemBuilder.amount!!
-                                else
-                                    runningValue
-                            } +
-                        transactionBuilder
-                            .chargeItemBuilders
-                            .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
-                                if (this == itemBuilder.chargeAccount)
                                     runningValue + itemBuilder.amount!!
                                 else
                                     runningValue
@@ -67,14 +59,6 @@ fun WithIo.chooseRealAccountsThenCategories(
                         .realItemBuilders
                         .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
                             if (selectedRealAccount == itemBuilder.realAccount)
-                                runningValue + itemBuilder.amount!!
-                            else
-                                runningValue
-                        } +
-                    transactionBuilder
-                        .chargeItemBuilders
-                        .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
-                            if (selectedRealAccount == itemBuilder.chargeAccount)
                                 runningValue + itemBuilder.amount!!
                             else
                                 runningValue

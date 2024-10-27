@@ -509,3 +509,14 @@ where t.budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47'
                order by tr.timestamp_utc desc
                limit ('30'::int4) offset ('0'::int4))
 ;
+
+select ti.id, ti.description, ti.amount, ti.draft_status, ca.name, t.description as transaction_descirption, t.timestamp_utc
+from transaction_items ti
+join charge_accounts ca on ti.charge_account_id = ca.id and ti.budget_id = ca.budget_id
+join transactions t on t.id = ti.transaction_id and t.budget_id = ti.budget_id
+where ti.budget_id = '91eca65d-7c6d-46dd-b3a2-1eb992b4bf83'
+  and charge_account_id is not null;
+
+update transaction_items
+set draft_status = 'outstanding'
+where draft_status = 'none';
