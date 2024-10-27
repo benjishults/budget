@@ -41,16 +41,16 @@ fun WithIo.chooseRealAccountsThenCategories(
                         transactionBuilder
                             .realItemBuilders
                             .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
-                                if (this == itemBuilder.realAccount)
-                                    runningValue + itemBuilder.amount!!
+                                if (this == itemBuilder.account)
+                                    runningValue + itemBuilder.amount
                                 else
                                     runningValue
                             } +
                         transactionBuilder
                             .chargeItemBuilders
                             .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
-                                if (this == itemBuilder.chargeAccount)
-                                    runningValue + itemBuilder.amount!!
+                                if (this == itemBuilder.account)
+                                    runningValue + itemBuilder.amount
                                 else
                                     runningValue
                             },
@@ -66,16 +66,16 @@ fun WithIo.chooseRealAccountsThenCategories(
                     transactionBuilder
                         .realItemBuilders
                         .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
-                            if (selectedRealAccount == itemBuilder.realAccount)
-                                runningValue + itemBuilder.amount!!
+                            if (selectedRealAccount == itemBuilder.account)
+                                runningValue + itemBuilder.amount
                             else
                                 runningValue
                         } +
                     transactionBuilder
                         .chargeItemBuilders
                         .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
-                            if (selectedRealAccount == itemBuilder.chargeAccount)
-                                runningValue + itemBuilder.amount!!
+                            if (selectedRealAccount == itemBuilder.account)
+                                runningValue + itemBuilder.amount
                             else
                                 runningValue
                         },
@@ -104,7 +104,7 @@ fun WithIo.chooseRealAccountsThenCategories(
                     ?: throw TryAgainAtMostRecentMenuException("No description entered")
             with(transactionBuilder) {
                 with(selectedRealAccount) {
-                    addItem(
+                    addItemBuilderTo(
                         -currentAmount,
                         if (currentDescription == description)
                             null
@@ -154,9 +154,9 @@ fun WithIo.allocateSpendingItemMenu(
     ScrollingSelectionMenu(
         header = """
             Spending from '${
-            transactionBuilder.realItemBuilders.getOrNull(0)?.realAccount?.name
-                ?: transactionBuilder.chargeItemBuilders.getOrNull(0)?.chargeAccount?.name
-                ?: transactionBuilder.draftItemBuilders.getOrNull(0)?.draftAccount?.name
+            transactionBuilder.realItemBuilders.getOrNull(0)?.account?.name
+                ?: transactionBuilder.chargeItemBuilders.getOrNull(0)?.account?.name
+                ?: transactionBuilder.draftItemBuilders.getOrNull(0)?.account?.name
         }': '$description'
             Select a category that some of that money was spent on.  Left to cover: ${"$"}$runningTotal
             """.trimIndent(),
@@ -169,8 +169,8 @@ fun WithIo.allocateSpendingItemMenu(
                         transactionBuilder
                             .categoryItemBuilders
                             .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
-                                if (this == itemBuilder.categoryAccount)
-                                    runningValue + itemBuilder.amount!!
+                                if (this == itemBuilder.account)
+                                    runningValue + itemBuilder.amount
                                 else
                                     runningValue
                             },
@@ -185,8 +185,8 @@ fun WithIo.allocateSpendingItemMenu(
                     transactionBuilder
                         .categoryItemBuilders
                         .fold(BigDecimal.ZERO.setScale(2)) { runningValue, itemBuilder ->
-                            if (selectedCategoryAccount == itemBuilder.categoryAccount)
-                                runningValue + itemBuilder.amount!!
+                            if (selectedCategoryAccount == itemBuilder.account)
+                                runningValue + itemBuilder.amount
                             else
                                 runningValue
                         },
@@ -215,7 +215,7 @@ fun WithIo.allocateSpendingItemMenu(
                     ?: throw TryAgainAtMostRecentMenuException("No description entered")
             with(transactionBuilder) {
                 with(selectedCategoryAccount) {
-                    addItem(
+                    addItemBuilderTo(
                         -categoryAmount,
                         if (categoryDescription === description)
                             null

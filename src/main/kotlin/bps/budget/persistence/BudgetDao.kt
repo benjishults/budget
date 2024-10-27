@@ -3,6 +3,8 @@ package bps.budget.persistence
 import bps.budget.auth.User
 import bps.budget.model.Account
 import bps.budget.model.BudgetData
+import bps.budget.model.ChargeAccount
+import bps.budget.model.DraftAccount
 import bps.budget.model.Transaction
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
@@ -41,20 +43,20 @@ interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
     }
 
     fun clearCheck(
-        draftTransactionItems: List<Transaction.Item>,
+        draftTransactionItems: List<Transaction.Item<DraftAccount>>,
         clearingTransaction: Transaction,
         budgetId: UUID,
     ) = Unit
 
     fun clearCheck(
-        draftTransactionItem: Transaction.Item,
+        draftTransactionItem: Transaction.Item<DraftAccount>,
         clearingTransaction: Transaction,
         budgetId: UUID,
     ) =
         clearCheck(listOf(draftTransactionItem), clearingTransaction, budgetId)
 
     fun commitCreditCardPayment(
-        clearedItems: List<ExtendedTransactionItem>,
+        clearedItems: List<ExtendedTransactionItem<ChargeAccount>>,
         billPayTransaction: Transaction,
         budgetId: UUID,
     ) {
@@ -65,15 +67,15 @@ interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
     fun deleteUser(userId: UUID) {}
     fun deleteUserByLogin(login: String) {}
 
-    class ExtendedTransactionItem(
-        val item: Transaction.ItemBuilder,
+    class ExtendedTransactionItem<out A : Account>(
+        val item: Transaction.ItemBuilder<A>,
         val accountBalanceAfterItem: BigDecimal?,
         val transactionId: UUID,
         val transactionDescription: String,
         val transactionTimestamp: Instant,
         val budgetDao: BudgetDao,
         val budgetId: UUID,
-    ) : Comparable<ExtendedTransactionItem> {
+    ) : Comparable<ExtendedTransactionItem<*>> {
 
         /**
          * The first time this is referenced, a call will be made to the DB to fetch the entire transaction.
@@ -94,7 +96,7 @@ interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
         // TODO be sure the protect this if we go multithreaded
         private var transaction: Transaction? = null
 
-        override fun compareTo(other: ExtendedTransactionItem): Int =
+        override fun compareTo(other: ExtendedTransactionItem<*>): Int =
             this.transactionTimestamp.compareTo(other.transactionTimestamp)
                 .let {
                     when (it) {
@@ -105,7 +107,7 @@ interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
-            if (other !is ExtendedTransactionItem) return false
+            if (other !is ExtendedTransactionItem<*>) return false
 
             if (item != other.item) return false
 
@@ -126,20 +128,22 @@ interface BudgetDao/*<out C : BudgetConfigLookup>*/ : AutoCloseable {
      * If not provided, then the balance from the account will be used.
      * Its value should be the balance of the account at the point when this page of results ended.
      */
-    fun fetchTransactionItemsInvolvingAccount(
-        account: Account,
+    fun <A : Account> fetchTransactionItemsInvolvingAccount(
+        account: A,
         limit: Int = 30,
         offset: Int = 0,
         balanceAtEndOfPage: BigDecimal? =
             require(offset == 0) { "balanceAtEndOfPage must be provided unless offset is 0." }
                 .let { account.balance },
-    ): List<ExtendedTransactionItem> =
+    ): List<ExtendedTransactionItem<A>> =
         emptyList()
 
     override fun close() {}
+
     fun getTransactionOrNull(
         transactionId: UUID,
         budgetId: UUID,
         accountIdToAccountMap: Map<UUID, Account>,
     ): Transaction?
+
 }

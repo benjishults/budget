@@ -17,6 +17,7 @@ fun dropTables(connection: Connection, schema: String) {
                 statement.execute("drop table if exists transaction_items")
                 statement.execute("drop table if exists transactions")
                 statement.execute("drop table if exists account_active_periods")
+                statement.execute("drop table if exists account_active_periods_temp")
                 statement.execute("drop table if exists staged_draft_accounts")
                 statement.execute("drop table if exists staged_real_accounts")
                 statement.execute("drop table if exists staged_charge_accounts")
@@ -48,22 +49,7 @@ fun deleteAccounts(budgetId: UUID, connection: Connection) =
                     it.setUuid(1, budgetId)
                     it.executeUpdate()
                 }
-            prepareStatement("delete from draft_accounts where budget_id = ?")
-                .use {
-                    it.setUuid(1, budgetId)
-                    it.executeUpdate()
-                }
-            prepareStatement("delete from real_accounts where budget_id = ?")
-                .use {
-                    it.setUuid(1, budgetId)
-                    it.executeUpdate()
-                }
-            prepareStatement("delete from charge_accounts where budget_id = ?")
-                .use {
-                    it.setUuid(1, budgetId)
-                    it.executeUpdate()
-                }
-            prepareStatement("delete from category_accounts where budget_id = ?")
+            prepareStatement("delete from accounts where budget_id = ?")
                 .use {
                     it.setUuid(1, budgetId)
                     it.executeUpdate()
@@ -74,10 +60,7 @@ fun deleteAccounts(budgetId: UUID, connection: Connection) =
 fun cleanupTransactions(budgetId: UUID, connection: Connection) =
     with(JdbcFixture) {
         connection.transactOrThrow {
-            zeroBalance(budgetId, "category_accounts")
-            zeroBalance(budgetId, "real_accounts")
-            zeroBalance(budgetId, "charge_accounts")
-            zeroBalance(budgetId, "draft_accounts")
+            zeroBalance(budgetId)
             prepareStatement("delete from transaction_items where budget_id = ?")
                 .use {
                     it.setUuid(1, budgetId)
@@ -91,8 +74,8 @@ fun cleanupTransactions(budgetId: UUID, connection: Connection) =
         }
     }
 
-private fun Connection.zeroBalance(budgetId: UUID, tableName: String) {
-    prepareStatement("update $tableName set balance = ? where budget_id = ?")
+private fun Connection.zeroBalance(budgetId: UUID) {
+    prepareStatement("update accounts set balance = ? where budget_id = ?")
         .use {
             it.setBigDecimal(1, BigDecimal.ZERO.setScale(2))
             it.setUuid(2, budgetId)

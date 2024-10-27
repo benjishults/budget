@@ -48,27 +48,11 @@ class BudgetData(
         byId[id] as T?
 
     fun commit(transaction: Transaction) {
-        transaction.categoryItems
-            .forEach { item: Transaction.Item ->
-                getAccountByIdOrNull<CategoryAccount>(item.categoryAccount!!.id)!!
+        transaction.allItems()
+            .forEach { item: Transaction.Item<*> ->
+                getAccountByIdOrNull<Account>(item.account.id)!!
                     .commit(item)
             }
-        transaction.realItems
-            .forEach { item: Transaction.Item ->
-                getAccountByIdOrNull<RealAccount>(item.realAccount!!.id)!!
-                    .commit(item)
-            }
-        transaction.chargeItems
-            .forEach { item: Transaction.Item ->
-                getAccountByIdOrNull<ChargeAccount>(item.chargeAccount!!.id)!!
-                    .commit(item)
-            }
-        transaction.draftItems
-            .forEach { item: Transaction.Item ->
-                getAccountByIdOrNull<DraftAccount>(item.draftAccount!!.id)!!
-                    .commit(item)
-            }
-
     }
 
     /**

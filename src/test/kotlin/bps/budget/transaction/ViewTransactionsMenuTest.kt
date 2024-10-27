@@ -28,7 +28,7 @@ class ViewTransactionsMenuTest : FreeSpec(),
             override fun now(): Instant =
                 Instant.parse(String.format("2024-08-09T00:00:%02d.500Z", secondCount++))
         }
-        val fetchTransactionsCallsExpected = mutableMapOf<Pair<Int, Int>, List<BudgetDao.ExtendedTransactionItem>>()
+        val fetchTransactionsCallsExpected = mutableMapOf<Pair<Int, Int>, List<BudgetDao.ExtendedTransactionItem<*>>>()
         val fetchTransactionsCallsMade = mutableListOf<Pair<Int, Int>>()
 
         val budgetId = UUID.randomUUID()
@@ -41,14 +41,16 @@ class ViewTransactionsMenuTest : FreeSpec(),
         )
 
         val budgetDao = object : BudgetDao {
-            override fun fetchTransactionItemsInvolvingAccount(
-                account: Account,
+            @Suppress("UNCHECKED_CAST")
+            override fun <A : Account> fetchTransactionItemsInvolvingAccount(
+                account: A,
                 limit: Int,
                 offset: Int,
                 balanceAtEndOfPage: BigDecimal?,
-            ): List<BudgetDao.ExtendedTransactionItem> {
+            ): List<BudgetDao.ExtendedTransactionItem<A>> {
                 fetchTransactionsCallsMade.add(limit to offset)
-                return fetchTransactionsCallsExpected[limit to offset] ?: emptyList()
+                return (fetchTransactionsCallsExpected[limit to offset]
+                    ?: emptyList()) as List<BudgetDao.ExtendedTransactionItem<A>>
             }
 
             override fun close() {
@@ -89,7 +91,7 @@ class ViewTransactionsMenuTest : FreeSpec(),
                         id = UUID.randomUUID(),
                         amount = 5.toBigDecimal().setScale(2),
                         description = "first",
-                        categoryAccount = selectedAccount,
+                        account = selectedAccount,
                     ),
                     accountBalanceAfterItem = selectedAccount.balance - (7.toBigDecimal() + 6.toBigDecimal()),
                     transactionId = UUID.randomUUID(),
@@ -103,7 +105,7 @@ class ViewTransactionsMenuTest : FreeSpec(),
                         id = UUID.randomUUID(),
                         amount = 6.toBigDecimal().setScale(2),
                         description = "second",
-                        categoryAccount = selectedAccount,
+                        account = selectedAccount,
                     ),
                     accountBalanceAfterItem = selectedAccount.balance - 7.toBigDecimal(),
                     transactionId = UUID.randomUUID(),
@@ -117,7 +119,7 @@ class ViewTransactionsMenuTest : FreeSpec(),
                         id = UUID.randomUUID(),
                         amount = 7.toBigDecimal().setScale(2),
                         description = "third",
-                        categoryAccount = selectedAccount,
+                        account = selectedAccount,
                     ),
                     accountBalanceAfterItem = selectedAccount.balance,
                     transactionId = UUID.randomUUID(),

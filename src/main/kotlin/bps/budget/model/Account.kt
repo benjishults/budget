@@ -1,5 +1,8 @@
 package bps.budget.model
 
+import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.BudgetDao.ExtendedTransactionItem
+import kotlinx.datetime.Instant
 import java.math.BigDecimal
 import java.util.UUID
 
@@ -53,33 +56,35 @@ abstract class Account(
     override var balance: BigDecimal = balance
         protected set
 
-    abstract fun Transaction.ItemBuilder.itemBuilderSetter(): Transaction.ItemBuilder
-
-    /**
-     * add this [Account] to the appropriate list of [Transaction.ItemBuilder]s within the [Transaction.Builder].
-     */
-    abstract fun Transaction.Builder.addForAccount(itemBuilder: Transaction.ItemBuilder): Unit
-
-    fun commit(item: Transaction.Item) {
-        balance += item.amount
-    }
-
-    fun Transaction.Builder.addItem(
+    open fun Transaction.Builder.addItemBuilderTo(
         amount: BigDecimal,
         description: String? = null,
         draftStatus: DraftStatus = DraftStatus.none,
         id: UUID = UUID.randomUUID(),
-    ) {
-        addForAccount(
-            Transaction
-                .ItemBuilder(
-                    id,
-                    amount,
-                    description,
-                    draftStatus = draftStatus,
-                )
-                .itemBuilderSetter(),
-        )
+    ): Unit = TODO()
+
+    open fun itemBuilderFactory(
+        id: UUID,
+        amount: BigDecimal,
+        description: String?,
+        draftStatus: DraftStatus,
+    ): Transaction.ItemBuilder<*> =
+        TODO()
+
+    open fun BudgetDao.extendedTransactionItemFactory(
+        id: UUID,
+        amount: BigDecimal,
+        description: String?,
+        draftStatus: DraftStatus,
+        transactionId: UUID,
+        transactionDescription: String,
+        transactionTimestamp: Instant,
+        accountBalanceAfterItem: BigDecimal?,
+    ): ExtendedTransactionItem<*> =
+        TODO()
+
+    fun commit(item: Transaction.Item<*>) {
+        balance += item.amount
     }
 
     override fun toString(): String {
@@ -112,14 +117,53 @@ class CategoryAccount(
     budgetId: UUID,
 ) : Account(name, description, id, balance, "category", budgetId) {
 
-    override fun Transaction.ItemBuilder.itemBuilderSetter(): Transaction.ItemBuilder {
-        categoryAccount = this@CategoryAccount
-        return this
+    override fun Transaction.Builder.addItemBuilderTo(
+        amount: BigDecimal,
+        description: String?,
+        draftStatus: DraftStatus,
+        id: UUID,
+    ) {
+        categoryItemBuilders.add(itemBuilderFactory(id, amount, description, draftStatus))
     }
 
-    override fun Transaction.Builder.addForAccount(itemBuilder: Transaction.ItemBuilder) {
-        categoryItemBuilders.add(itemBuilder)
-    }
+    override fun itemBuilderFactory(
+        id: UUID,
+        amount: BigDecimal,
+        description: String?,
+        draftStatus: DraftStatus,
+    ): Transaction.ItemBuilder<CategoryAccount> =
+        Transaction.ItemBuilder(
+            account = this,
+            id = id,
+            amount = amount,
+            description = description,
+            draftStatus = draftStatus,
+        )
+
+    override fun BudgetDao.extendedTransactionItemFactory(
+        id: UUID,
+        amount: BigDecimal,
+        description: String?,
+        draftStatus: DraftStatus,
+        transactionId: UUID,
+        transactionDescription: String,
+        transactionTimestamp: Instant,
+        accountBalanceAfterItem: BigDecimal?,
+    ): ExtendedTransactionItem<CategoryAccount> =
+        ExtendedTransactionItem(
+            item = itemBuilderFactory(
+                id = id,
+                amount = amount,
+                description = description,
+                draftStatus = draftStatus,
+            ),
+            transactionId = transactionId,
+            transactionDescription = transactionDescription,
+            transactionTimestamp = transactionTimestamp,
+            budgetDao = this,
+            budgetId = this@CategoryAccount.budgetId,
+            accountBalanceAfterItem = accountBalanceAfterItem,
+        )
 
 }
 
@@ -131,14 +175,54 @@ open class RealAccount(
     budgetId: UUID,
 ) : Account(name, description, id, balance, "real", budgetId) {
 
-    override fun Transaction.ItemBuilder.itemBuilderSetter(): Transaction.ItemBuilder {
-        realAccount = this@RealAccount
-        return this
+    override fun Transaction.Builder.addItemBuilderTo(
+        amount: BigDecimal,
+        description: String?,
+        draftStatus: DraftStatus,
+        id: UUID,
+    ) {
+        realItemBuilders.add(itemBuilderFactory(id, amount, description, draftStatus))
     }
 
-    override fun Transaction.Builder.addForAccount(itemBuilder: Transaction.ItemBuilder) {
-        realItemBuilders.add(itemBuilder)
-    }
+    override fun BudgetDao.extendedTransactionItemFactory(
+        id: UUID,
+        amount: BigDecimal,
+        description: String?,
+        draftStatus: DraftStatus,
+        transactionId: UUID,
+        transactionDescription: String,
+        transactionTimestamp: Instant,
+        accountBalanceAfterItem: BigDecimal?,
+    ): ExtendedTransactionItem<RealAccount> =
+        ExtendedTransactionItem(
+            item = itemBuilderFactory(
+                id = id,
+                amount = amount,
+                description = description,
+                draftStatus = draftStatus,
+            ),
+            transactionId = transactionId,
+            transactionDescription = transactionDescription,
+            transactionTimestamp = transactionTimestamp,
+            budgetDao = this,
+            budgetId = this@RealAccount.budgetId,
+            accountBalanceAfterItem = accountBalanceAfterItem,
+        )
+
+    override fun itemBuilderFactory(
+        id: UUID,
+        amount: BigDecimal,
+        description: String?,
+        draftStatus: DraftStatus,
+    ): Transaction.ItemBuilder<RealAccount> =
+        Transaction.ItemBuilder(
+            account = this,
+            id = id,
+            amount = amount,
+            description = description,
+            draftStatus = draftStatus,
+        )
+
 }
 
 /**
@@ -154,14 +238,54 @@ class DraftAccount(
     budgetId: UUID,
 ) : Account(name, description, id, balance, "draft", budgetId) {
 
-    override fun Transaction.ItemBuilder.itemBuilderSetter(): Transaction.ItemBuilder {
-        draftAccount = this@DraftAccount
-        return this
+    override fun Transaction.Builder.addItemBuilderTo(
+        amount: BigDecimal,
+        description: String?,
+        draftStatus: DraftStatus,
+        id: UUID,
+    ) {
+        draftItemBuilders.add(itemBuilderFactory(id, amount, description, draftStatus))
     }
 
-    override fun Transaction.Builder.addForAccount(itemBuilder: Transaction.ItemBuilder) {
-        draftItemBuilders.add(itemBuilder)
-    }
+    override fun BudgetDao.extendedTransactionItemFactory(
+        id: UUID,
+        amount: BigDecimal,
+        description: String?,
+        draftStatus: DraftStatus,
+        transactionId: UUID,
+        transactionDescription: String,
+        transactionTimestamp: Instant,
+        accountBalanceAfterItem: BigDecimal?,
+    ): ExtendedTransactionItem<DraftAccount> =
+        ExtendedTransactionItem(
+            item = itemBuilderFactory(
+                id = id,
+                amount = amount,
+                description = description,
+                draftStatus = draftStatus,
+            ),
+            transactionId = transactionId,
+            transactionDescription = transactionDescription,
+            transactionTimestamp = transactionTimestamp,
+            budgetDao = this,
+            budgetId = this@DraftAccount.budgetId,
+            accountBalanceAfterItem = accountBalanceAfterItem,
+        )
+
+    override fun itemBuilderFactory(
+        id: UUID,
+        amount: BigDecimal,
+        description: String?,
+        draftStatus: DraftStatus,
+    ): Transaction.ItemBuilder<DraftAccount> =
+        Transaction.ItemBuilder(
+            account = this,
+            id = id,
+            amount = amount,
+            description = description,
+            draftStatus = draftStatus,
+        )
+
 }
 
 class ChargeAccount(
@@ -171,13 +295,55 @@ class ChargeAccount(
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
     budgetId: UUID,
 ) : RealAccount(name, description, id, balance, budgetId) {
+
     override val type: String = "charge"
-    override fun Transaction.ItemBuilder.itemBuilderSetter(): Transaction.ItemBuilder {
-        chargeAccount = this@ChargeAccount
-        return this
+
+    override fun Transaction.Builder.addItemBuilderTo(
+        amount: BigDecimal,
+        description: String?,
+        draftStatus: DraftStatus,
+        id: UUID,
+    ) {
+        chargeItemBuilders.add(itemBuilderFactory(id, amount, description, draftStatus))
     }
 
-    override fun Transaction.Builder.addForAccount(itemBuilder: Transaction.ItemBuilder) {
-        chargeItemBuilders.add(itemBuilder)
-    }
+    override fun itemBuilderFactory(
+        id: UUID,
+        amount: BigDecimal,
+        description: String?,
+        draftStatus: DraftStatus,
+    ): Transaction.ItemBuilder<ChargeAccount> =
+        Transaction.ItemBuilder(
+            account = this,
+            id = id,
+            amount = amount,
+            description = description,
+            draftStatus = draftStatus,
+        )
+
+    override fun BudgetDao.extendedTransactionItemFactory(
+        id: UUID,
+        amount: BigDecimal,
+        description: String?,
+        draftStatus: DraftStatus,
+        transactionId: UUID,
+        transactionDescription: String,
+        transactionTimestamp: Instant,
+        accountBalanceAfterItem: BigDecimal?,
+    ): ExtendedTransactionItem<ChargeAccount> =
+        ExtendedTransactionItem(
+            item = itemBuilderFactory(
+                id = id,
+                amount = amount,
+                description = description,
+                draftStatus = draftStatus,
+            ),
+            transactionId = transactionId,
+            transactionDescription = transactionDescription,
+            transactionTimestamp = transactionTimestamp,
+            budgetDao = this,
+            budgetId = this@ChargeAccount.budgetId,
+            accountBalanceAfterItem = accountBalanceAfterItem,
+        )
+
 }

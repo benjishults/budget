@@ -68,7 +68,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                         )
                         .apply {
                             with(budgetData.generalAccount) {
-                                addItem(amount)
+                                addItemBuilderTo(amount)
                             }
                             with(
                                 budgetData.realAccounts
@@ -76,7 +76,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                                         it.name == defaultCheckingAccountName
                                     }!!,
                             ) {
-                                addItem(amount)
+                                addItemBuilderTo(amount)
                             }
                         }
                         .build()
@@ -93,14 +93,14 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                         )
                         .apply {
                             with(budgetData.generalAccount) {
-                                addItem(-amount)
+                                addItemBuilderTo(-amount)
                             }
                             with(
                                 budgetData.categoryAccounts.find {
                                     it.name == defaultFoodAccountName
                                 }!!,
                             ) {
-                                addItem(amount)
+                                addItemBuilderTo(amount)
                             }
                         }
                         .build()
@@ -119,14 +119,14 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                                 it.name == defaultFoodAccountName
                             }!!,
                         ) {
-                            addItem(-amount)
+                            addItemBuilderTo(-amount)
                         }
                         with(
                             budgetData.draftAccounts.find {
                                 it.name == defaultCheckingDraftsAccountName
                             }!!,
                         ) {
-                            addItem(amount)
+                            addItemBuilderTo(amount)
                         }
                     }
                     .build()
@@ -183,14 +183,14 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                                 it.name == defaultCheckingAccountName
                             }!!,
                         ) {
-                            addItem(-amount)
+                            addItemBuilderTo(-amount)
                         }
                         with(
                             budgetData.draftAccounts.find {
                                 it.name == defaultCheckingDraftsAccountName
                             }!!,
                         ) {
-                            addItem(-amount)
+                            addItemBuilderTo(-amount)
                         }
                     }
                     .build()

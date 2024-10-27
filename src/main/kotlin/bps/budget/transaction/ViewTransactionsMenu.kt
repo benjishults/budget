@@ -16,8 +16,8 @@ import kotlin.math.max
 
 private const val TRANSACTIONS_TABLE_HEADER = "    Time Stamp          | Amount     | Balance    | Description"
 
-open class ViewTransactionsMenu(
-    private val account: Account,
+open class ViewTransactionsMenu<A : Account>(
+    private val account: A,
     private val budgetDao: BudgetDao,
     private val budgetId: UUID,
     private val accountIdToAccountMap: Map<UUID, Account>,
@@ -33,7 +33,7 @@ open class ViewTransactionsMenu(
     prompt: String = "Select transaction for details: ",
     val outPrinter: OutPrinter = DefaultOutPrinter,
     extraItems: List<MenuItem> = emptyList(),
-    actOnSelectedItem: (MenuSession, BudgetDao.ExtendedTransactionItem) -> Unit = { _, extendedTransactionItem: BudgetDao.ExtendedTransactionItem ->
+    actOnSelectedItem: (MenuSession, BudgetDao.ExtendedTransactionItem<A>) -> Unit = { _, extendedTransactionItem: BudgetDao.ExtendedTransactionItem<A> ->
         // NOTE this is needed so that when this menu is re-displayed, it will be where it started
         contextStack.removeLast()
         with(ViewTransactionFixture) {
@@ -43,7 +43,7 @@ open class ViewTransactionsMenu(
             )
         }
     },
-) : ScrollingSelectionWithContextMenu<BudgetDao.ExtendedTransactionItem, BigDecimal>(
+) : ScrollingSelectionWithContextMenu<BudgetDao.ExtendedTransactionItem<A>, BigDecimal>(
     """
         |$header
         |$TRANSACTIONS_TABLE_HEADER
@@ -85,14 +85,14 @@ open class ViewTransactionsMenu(
     /**
      * Add the current context to the stack immediately when the list is generated.
      */
-    override fun List<BudgetDao.ExtendedTransactionItem>.produceCurrentContext(): BigDecimal =
+    override fun List<BudgetDao.ExtendedTransactionItem<A>>.produceCurrentContext(): BigDecimal =
         lastOrNull()
             ?.run {
                 accountBalanceAfterItem!! - item.amount
             }
             ?: account.balance
 
-    override fun nextPageMenuProducer(): ViewTransactionsMenu =
+    override fun nextPageMenuProducer(): ViewTransactionsMenu<A> =
         ViewTransactionsMenu(
             account = account,
             budgetDao = budgetDao,
@@ -109,7 +109,7 @@ open class ViewTransactionsMenu(
             actOnSelectedItem = actOnSelectedItem,
         )
 
-    override fun previousPageMenuProducer(): ViewTransactionsMenu =
+    override fun previousPageMenuProducer(): ViewTransactionsMenu<A> =
         ViewTransactionsMenu(
             account = account,
             budgetDao = budgetDao,
@@ -142,28 +142,27 @@ object ViewTransactionFixture {
                 append("\n")
                 append(transaction.description)
                 append("\n")
-                appendItems("Category Account", transaction.categoryItems) { categoryAccount!! }
-                appendItems("Real Items:", transaction.realItems) { realAccount!! }
-                appendItems("Credit Card Items:", transaction.chargeItems) { chargeAccount!! }
-                appendItems("Draft Items:", transaction.draftItems) { draftAccount!! }
+                appendItems("Category Account", transaction.categoryItems)
+                appendItems("Real Items:", transaction.realItems)
+                appendItems("Credit Card Items:", transaction.chargeItems)
+                appendItems("Draft Items:", transaction.draftItems)
             },
         )
     }
 
     fun StringBuilder.appendItems(
         accountColumnLabel: String,
-        items: List<Transaction.Item>,
-        accountGetter: Transaction.Item.() -> Account,
+        items: List<Transaction.Item<*>>,
     ) {
         if (items.isNotEmpty()) {
             append(String.format("%16s | Amount     | Description\n", accountColumnLabel))
             items
                 .sorted()
-                .forEach { transactionItem: Transaction.Item ->
+                .forEach { transactionItem: Transaction.Item<*> ->
                     append(
                         String.format(
                             "%-16s | %10.2f |%s",
-                            transactionItem.accountGetter().name,
+                            transactionItem.account.name,
                             transactionItem.amount,
                             transactionItem
                                 .description

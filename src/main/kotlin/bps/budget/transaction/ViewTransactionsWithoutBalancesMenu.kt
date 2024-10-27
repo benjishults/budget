@@ -14,27 +14,27 @@ import kotlin.math.max
 private const val TRANSACTIONS_WITHOUT_BALANCES_TABLE_HEADER =
     "    Time Stamp          | Amount     | Description"
 
-open class ViewTransactionsWithoutBalancesMenu(
-    private val account: Account,
+open class ViewTransactionsWithoutBalancesMenu<A : Account>(
+    private val account: A,
     private val budgetDao: BudgetDao,
     private val budgetId: UUID,
     private val accountIdToAccountMap: Map<UUID, Account>,
     private val timeZone: TimeZone,
     limit: Int = 30,
     offset: Int = 0,
-    private val filter: (BudgetDao.ExtendedTransactionItem) -> Boolean = { true },
+    private val filter: (BudgetDao.ExtendedTransactionItem<A>) -> Boolean = { true },
     header: String? = "'${account.name}' Account Transactions",
     prompt: String,
     val outPrinter: OutPrinter,
     extraItems: List<MenuItem> = emptyList(),
-    actOnSelectedItem: (MenuSession, BudgetDao.ExtendedTransactionItem) -> Unit,
+    actOnSelectedItem: (MenuSession, BudgetDao.ExtendedTransactionItem<A>) -> Unit,
     /* = { _, extendedTransactionItem: BudgetDao.ExtendedTransactionItem ->
         outPrinter.showTransactionDetailsAction(
             extendedTransactionItem.transaction(budgetId, accountIdToAccountMap),
             timeZone,
         )
     }*/
-) : ScrollingSelectionMenu<BudgetDao.ExtendedTransactionItem>(
+) : ScrollingSelectionMenu<BudgetDao.ExtendedTransactionItem<A>>(
     """
         |$header
         |$TRANSACTIONS_WITHOUT_BALANCES_TABLE_HEADER
@@ -72,7 +72,7 @@ open class ViewTransactionsWithoutBalancesMenu(
         require(limit > 0) { "Limit must be positive: $limit" }
     }
 
-    override fun nextPageMenuProducer(): ViewTransactionsWithoutBalancesMenu =
+    override fun nextPageMenuProducer(): ViewTransactionsWithoutBalancesMenu<A> =
         ViewTransactionsWithoutBalancesMenu(
             account = account,
             budgetDao = budgetDao,
@@ -89,7 +89,7 @@ open class ViewTransactionsWithoutBalancesMenu(
             actOnSelectedItem = actOnSelectedItem,
         )
 
-    override fun previousPageMenuProducer(): ViewTransactionsWithoutBalancesMenu =
+    override fun previousPageMenuProducer(): ViewTransactionsWithoutBalancesMenu<A> =
         ViewTransactionsWithoutBalancesMenu(
             account = account,
             budgetDao = budgetDao,
