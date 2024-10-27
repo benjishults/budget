@@ -74,10 +74,10 @@ fun WithIo.transferMenu(
                 )
                     .apply {
                         with(transferFromAccount) {
-                            addItem(-amount)
+                            addItemBuilderTo(-amount)
                         }
                         with(transferToAccount) {
-                            addItem(amount)
+                            addItemBuilderTo(amount)
                         }
                     }
                     .build()

@@ -75,7 +75,7 @@ fun WithIo.checksMenu(
                                 Transaction.Builder(description, timestamp)
                                     .apply {
                                         with(draftAccount) {
-                                            addItem(amount, description, DraftStatus.outstanding)
+                                            addItemBuilderTo(amount, description, DraftStatus.outstanding)
                                         }
                                     }
                             menuSession.push(
@@ -94,7 +94,7 @@ fun WithIo.checksMenu(
                 add(
                     pushMenu("Record check cleared on '${draftAccount.name}'") {
                         ViewTransactionsWithoutBalancesMenu(
-                            filter = { it.item.draftStatus === DraftStatus.outstanding },
+                            filter = { transaction -> transaction.item.draftStatus === DraftStatus.outstanding },
                             header = "Select the check that cleared on '${draftAccount.name}'",
                             prompt = "Select the check that cleared: ",
                             account = draftAccount,
@@ -104,7 +104,7 @@ fun WithIo.checksMenu(
                             timeZone = budgetData.timeZone,
                             limit = userConfig.numberOfItemsInScrollingList,
                             outPrinter = outPrinter,
-                        ) { _, draftTransactionItem: BudgetDao.ExtendedTransactionItem ->
+                        ) { _, draftTransactionItem: BudgetDao.ExtendedTransactionItem<DraftAccount> ->
                             val timestamp: Instant =
                                 getTimestampFromUser(
                                     "Did the check clear just now [Y]? ",
@@ -118,14 +118,14 @@ fun WithIo.checksMenu(
                                 )
                                     .apply {
                                         with(draftAccount) {
-                                            addItem(
+                                            addItemBuilderTo(
                                                 -draftTransactionItem.item.amount,
                                                 this@apply.description,
                                                 DraftStatus.clearing,
                                             )
                                         }
-                                        with(draftTransactionItem.item.draftAccount!!.realCompanion) {
-                                            addItem(-draftTransactionItem.item.amount, this@apply.description)
+                                        with(draftTransactionItem.item.account.realCompanion) {
+                                            addItemBuilderTo(-draftTransactionItem.item.amount, this@apply.description)
                                         }
                                     }
                                     .build()

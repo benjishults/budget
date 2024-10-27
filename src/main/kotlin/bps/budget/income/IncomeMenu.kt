@@ -72,10 +72,10 @@ fun createIncomeTransaction(
 ) = Transaction.Builder(description, timestamp)
     .apply {
         with(budgetData.generalAccount) {
-            addItem(amount)
+            addItemBuilderTo(amount)
         }
         with(realAccount) {
-            addItem(amount)
+            addItemBuilderTo(amount)
         }
     }
     .build()

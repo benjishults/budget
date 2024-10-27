@@ -11,34 +11,36 @@ data class Transaction private constructor(
     val clears: Transaction? = null,
 ) {
 
-    lateinit var categoryItems: List<Item>
+    lateinit var categoryItems: List<Item<CategoryAccount>>
         private set
-    lateinit var realItems: List<Item>
+    lateinit var realItems: List<Item<RealAccount>>
         private set
-    lateinit var chargeItems: List<Item>
+    lateinit var chargeItems: List<Item<ChargeAccount>>
         private set
-    lateinit var draftItems: List<Item>
+    lateinit var draftItems: List<Item<DraftAccount>>
         private set
+
+    fun allItems(): Sequence<Item<*>> = categoryItems.asSequence() + realItems + chargeItems + draftItems
 
     private fun validate(): Boolean {
         val categoryAndDraftSum: BigDecimal =
             (categoryItems + draftItems)
-                .fold(BigDecimal.ZERO.setScale(2)) { sum: BigDecimal, item: Item ->
+                .fold(BigDecimal.ZERO.setScale(2)) { sum: BigDecimal, item: Item<*> ->
                     sum + item.amount
                 }
         val realSum: BigDecimal =
             (realItems + chargeItems)
-                .fold(BigDecimal.ZERO.setScale(2)) { sum: BigDecimal, item: Item ->
+                .fold(BigDecimal.ZERO.setScale(2)) { sum: BigDecimal, item: Item<*> ->
                     sum + item.amount
                 }
         return categoryAndDraftSum == realSum
     }
 
     private fun populate(
-        categoryItems: List<Item>,
-        realItems: List<Item>,
-        chargeItems: List<Item>,
-        draftItems: List<Item>,
+        categoryItems: List<Item<CategoryAccount>>,
+        realItems: List<Item<RealAccount>>,
+        chargeItems: List<Item<ChargeAccount>>,
+        draftItems: List<Item<DraftAccount>>,
     ) {
         this.categoryItems = categoryItems
         this.realItems = realItems
@@ -47,34 +49,28 @@ data class Transaction private constructor(
         require(validate()) { "attempt was made to create invalid transaction: $this" }
     }
 
-    inner class Item(
+    inner class Item<out A : Account>(
         val id: UUID,
         val amount: BigDecimal,
         val description: String? = null,
-        val categoryAccount: CategoryAccount? = null,
-        val realAccount: RealAccount? = null,
-        val chargeAccount: ChargeAccount? = null,
-        val draftAccount: DraftAccount? = null,
+        val account: A,
         val draftStatus: DraftStatus = DraftStatus.none,
-    ) : Comparable<Item> {
+    ) : Comparable<Item<*>> {
 
         val transaction = this@Transaction
 
-        override fun compareTo(other: Item): Int =
+        override fun compareTo(other: Item<*>): Int =
             transaction.timestamp
                 .compareTo(other.transaction.timestamp)
                 .takeIf { it != 0 }
-                ?: (draftAccount ?: realAccount ?: chargeAccount ?: categoryAccount)!!.name
-                    .compareTo(
-                        (other.draftAccount ?: other.realAccount ?: other.chargeAccount
-                        ?: other.categoryAccount)!!.name,
-                    )
+                ?: account.name
+                    .compareTo(other.account.name)
                     .takeIf { it != 0 }
                 ?: (description ?: transaction.description)
                     .compareTo(other.description ?: other.transaction.description)
 
         override fun toString(): String =
-            "TransactionItem(${categoryAccount ?: realAccount ?: chargeAccount ?: draftAccount}, $amount${
+            "TransactionItem($account, $amount${
                 if (description?.isNotBlank() == true)
                     ", '$description'"
                 else
@@ -83,7 +79,7 @@ data class Transaction private constructor(
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
-            if (other !is Item) return false
+            if (other !is Item<*>) return false
 
             return id != other.id
         }
@@ -92,32 +88,26 @@ data class Transaction private constructor(
 
     }
 
-    class ItemBuilder(
+    class ItemBuilder<out A : Account>(
         val id: UUID,
         val amount: BigDecimal,
         var description: String? = null,
-        var categoryAccount: CategoryAccount? = null,
-        var realAccount: RealAccount? = null,
-        var chargeAccount: ChargeAccount? = null,
-        var draftAccount: DraftAccount? = null,
-        val draftStatus: DraftStatus = DraftStatus.none,
+        val account: A,
+        var draftStatus: DraftStatus = DraftStatus.none,
     ) {
         // TODO make this an extension function of Transaction?
-        fun build(transaction: Transaction): Item =
+        fun build(transaction: Transaction): Item<A> =
             transaction.Item(
                 id,
                 amount,
                 description,
-                categoryAccount,
-                realAccount,
-                chargeAccount,
-                draftAccount,
+                account,
                 draftStatus,
             )
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
-            if (other !is ItemBuilder) return false
+            if (other !is ItemBuilder<*>) return false
 
             if (id != other.id) return false
 
@@ -140,15 +130,10 @@ data class Transaction private constructor(
         var id: UUID? = null,
         var clears: Transaction? = null,
     ) {
-        val categoryItemBuilders: MutableList<ItemBuilder> = mutableListOf()
-        val realItemBuilders: MutableList<ItemBuilder> = mutableListOf()
-        val chargeItemBuilders: MutableList<ItemBuilder> = mutableListOf()
-        val draftItemBuilders: MutableList<ItemBuilder> = mutableListOf()
-
-//        fun toContextString(type: String): String =
-//            """
-//
-//            """.trimIndent()
+        val categoryItemBuilders: MutableList<ItemBuilder<CategoryAccount>> = mutableListOf()
+        val realItemBuilders: MutableList<ItemBuilder<RealAccount>> = mutableListOf()
+        val chargeItemBuilders: MutableList<ItemBuilder<ChargeAccount>> = mutableListOf()
+        val draftItemBuilders: MutableList<ItemBuilder<DraftAccount>> = mutableListOf()
 
         fun build(): Transaction = Transaction(
             id = this@Builder.id ?: UUID.randomUUID(),

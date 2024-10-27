@@ -60,10 +60,10 @@ fun WithIo.makeAllowancesSelectionMenu(
         )
             .apply {
                 with(budgetData.generalAccount) {
-                    addItem(-amount)
+                    addItemBuilderTo(-amount)
                 }
                 with(selectedCategoryAccount) {
-                    addItem(amount)
+                    addItemBuilderTo(amount)
                 }
             }
             .build()

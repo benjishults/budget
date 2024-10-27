@@ -1,4 +1,5 @@
 drop table if exists account_active_periods;
+drop table if exists account_active_periods_temp;
 drop table if exists transaction_items;
 drop table if exists timestamps;
 drop table if exists transactions;
@@ -47,108 +48,90 @@ create table if not exists budget_access
 create index if not exists lookup_budget_access_by_user
     on budget_access (user_id);
 
-create table if not exists access_details
-(
-    budget_access_id uuid    not null references budget_access (id),
-    fine_access      varchar not null
-);
+-- create table if not exists access_details
+-- (
+--     budget_access_id uuid    not null references budget_access (id),
+--     fine_access      varchar not null
+-- );
 
-create index if not exists lookup_access_details_by_budget_access
-    on access_details (budget_access_id);
+-- create index if not exists lookup_access_details_by_budget_access
+--     on access_details (budget_access_id);
 
-create table if not exists category_accounts
+-- create table if not exists category_accounts
+-- (
+--     id          uuid           not null unique,
+--     name        varchar(50)    not null,
+--     description varchar(110)   not null default '',
+--     balance     numeric(30, 2) not null default 0.0,
+--     budget_id   uuid           not null references budgets (id),
+--     primary key (id, budget_id),
+--     unique (name, budget_id)
+-- );
+--
+-- create table if not exists real_accounts
+-- (
+--     id          uuid           not null unique,
+--     name        varchar(50)    not null,
+--     description varchar(110)   not null default '',
+--     balance     numeric(30, 2) not null default 0.0,
+--     budget_id   uuid           not null references budgets (id),
+--     primary key (id, budget_id),
+--     unique (name, budget_id)
+-- );
+
+-- create table if not exists draft_accounts
+-- (
+--     id              uuid           not null unique,
+--     name            varchar(50)    not null,
+--     description     varchar(110)   not null default '',
+--     balance         numeric(30, 2) not null default 0.0,
+--     real_account_id uuid           not null references real_accounts (id),
+--     budget_id       uuid           not null references budgets (id),
+--     primary key (id, budget_id),
+--     unique (name, budget_id),
+--     unique (real_account_id, budget_id)
+-- );
+--
+-- create table if not exists charge_accounts
+-- (
+--     id          uuid           not null unique,
+--     name        varchar(50)    not null,
+--     description varchar(110)   not null default '',
+--     balance     numeric(30, 2) not null default 0.0,
+--     budget_id   uuid           not null references budgets (id),
+--     primary key (id, budget_id),
+--     unique (name, budget_id)
+-- );
+
+create table if not exists accounts
 (
-    id          uuid           not null unique,
-    name        varchar(50)    not null,
-    description varchar(110)   not null default '',
-    balance     numeric(30, 2) not null default 0.0,
-    budget_id   uuid           not null references budgets (id),
+    id                   uuid           not null unique,
+    name                 varchar(50)    not null,
+    type                 varchar(20)    not null,
+    description          varchar(110)   not null default '',
+    balance              numeric(30, 2) not null default 0.0,
+    companion_account_id uuid           null references accounts (id),
+    budget_id            uuid           not null references budgets (id),
     primary key (id, budget_id),
-    unique (name, budget_id)
+    unique (name, type, budget_id),
+    unique (companion_account_id, budget_id)
 );
 
-create table if not exists real_accounts
-(
-    id          uuid           not null unique,
-    name        varchar(50)    not null,
-    description varchar(110)   not null default '',
-    balance     numeric(30, 2) not null default 0.0,
-    budget_id   uuid           not null references budgets (id),
-    primary key (id, budget_id),
-    unique (name, budget_id)
-);
-
-create table if not exists draft_accounts
-(
-    id              uuid           not null unique,
-    name            varchar(50)    not null,
-    description     varchar(110)   not null default '',
-    balance         numeric(30, 2) not null default 0.0,
-    real_account_id uuid           not null references real_accounts (id),
-    budget_id       uuid           not null references budgets (id),
-    primary key (id, budget_id),
-    unique (name, budget_id),
-    unique (real_account_id, budget_id)
-);
-
-create table if not exists checking_accounts
-(
-    id          uuid           not null unique,
-    name        varchar(50)    not null,
-    description varchar(110)   not null default '',
-    balance     numeric(30, 2) not null default 0.0,
-    budget_id   uuid           not null references budgets (id),
-    primary key (id, budget_id),
-    unique (name, budget_id)
-);
-
-create table if not exists charge_accounts
-(
-    id          uuid           not null unique,
-    name        varchar(50)    not null,
-    description varchar(110)   not null default '',
-    balance     numeric(30, 2) not null default 0.0,
-    budget_id   uuid           not null references budgets (id),
-    primary key (id, budget_id),
-    unique (name, budget_id)
-);
+create index if not exists accounts_by_type
+    on accounts (budget_id, type);
 
 create table if not exists account_active_periods
 (
-    id                  uuid      not null unique,
-    start_date_utc      timestamp not null default '0001-01-01T00:00:00Z',
-    end_date_utc        timestamp not null default '9999-12-31T23:59:59.999Z',
-    category_account_id uuid      null references category_accounts (id),
-    real_account_id     uuid      null references real_accounts (id),
-    charge_account_id   uuid      null references charge_accounts (id),
-    draft_account_id    uuid      null references draft_accounts (id),
-    budget_id           uuid      not null references budgets (id)
-        constraint only_one_account_per_period check
-            ((real_account_id is not null and
-              (category_account_id is null and draft_account_id is null and charge_account_id is null)) or
-             (category_account_id is not null and
-              (real_account_id is null and draft_account_id is null and charge_account_id is null)) or
-             (charge_account_id is not null and
-              (real_account_id is null and draft_account_id is null and category_account_id is null)) or
-             (draft_account_id is not null and
-              (category_account_id is null and real_account_id is null and charge_account_id is null))),
-    unique (start_date_utc, draft_account_id, budget_id),
-    unique (start_date_utc, category_account_id, budget_id),
-    unique (start_date_utc, charge_account_id, budget_id),
-    unique (start_date_utc, real_account_id, budget_id)
+    id             uuid      not null unique,
+    start_date_utc timestamp not null default '0001-01-01T00:00:00Z',
+    end_date_utc   timestamp not null default '9999-12-31T23:59:59.999Z',
+    account_id     uuid      not null references accounts (id),
+    budget_id      uuid      not null references budgets (id),
+    unique (start_date_utc, account_id, budget_id)
 );
 
-create index if not exists lookup_account_active_periods_by_category_account_id
-    on account_active_periods (category_account_id, budget_id);
-
-create index if not exists lookup_account_active_periods_by_draft_account_id
-    on account_active_periods (draft_account_id, budget_id);
-
-create index if not exists lookup_account_active_periods_by_real_account_id
-    on account_active_periods (real_account_id, budget_id);
-
-create index if not exists lookup_account_active_periods_by_charge_account_id
-    on account_active_periods (charge_account_id, budget_id);
+create index if not exists lookup_account_active_periods_by_account_id
+    on account_active_periods (account_id, budget_id);
 
 create table if not exists transactions
 (
@@ -166,55 +149,17 @@ create index if not exists lookup_transaction_by_date
 
 create table if not exists transaction_items
 (
-    id                  uuid           not null unique,
-    transaction_id      uuid           not null references transactions (id),
-    description         varchar(110)   null,
-    amount              numeric(30, 2) not null,
-    category_account_id uuid           null references category_accounts (id),
-    real_account_id     uuid           null references real_accounts (id),
-    charge_account_id   uuid           null references charge_accounts (id),
-    draft_account_id    uuid           null references draft_accounts (id),
-    draft_status        varchar        not null default 'none', -- 'none' 'outstanding' 'cleared', 'clearing'
-    budget_id           uuid           not null references budgets (id),
-    primary key (id, budget_id),
-    constraint only_one_account_per_transaction_item check
-        ((real_account_id is not null and
-          category_account_id is null and
-          draft_account_id is null and
-          charge_account_id is null
-             ) or
-         (category_account_id is not null and
-          real_account_id is null and
-          draft_account_id is null and
-          charge_account_id is null
-             ) or
-         (draft_account_id is not null and
-          real_account_id is null and
-          category_account_id is null and
-          charge_account_id is null
-             ) or
-         (charge_account_id is not null and
-          real_account_id is null and
-          draft_account_id is null and
-          category_account_id is null))
+    id             uuid           not null unique,
+    transaction_id uuid           not null references transactions (id),
+    description    varchar(110)   null,
+    amount         numeric(30, 2) not null,
+    account_id     uuid           not null references accounts (id),
+    draft_status   varchar        not null default 'none', -- 'none' 'outstanding' 'cleared'
+    budget_id      uuid           not null references budgets (id)
 );
 
-create index if not exists lookup_category_account_transaction_items_by_account
-    on transaction_items (category_account_id, budget_id)
-    where category_account_id is not null;
-
-create index if not exists lookup_real_account_transaction_items_by_account
-    on transaction_items (real_account_id, budget_id)
-    where real_account_id is not null;
-
-create index if not exists lookup_charge_account_transaction_items_by_account
-    on transaction_items (charge_account_id, budget_id)
-    where charge_account_id is not null;
-
-create index if not exists lookup_draft_account_transaction_items_by_account
-    on transaction_items (draft_account_id, budget_id)
-    where draft_account_id is not null;
-
+create index if not exists lookup_account_transaction_items_by_account
+    on transaction_items (account_id, budget_id);
 
 insert into users (id, login)
 VALUES ('d9073256-0c5e-472e-bf3b-41ed1c1e5c35', 'fake@fake.com');
@@ -233,29 +178,29 @@ VALUES ('a11a93df-6110-430e-ba76-08c1da364530', 'd9073256-0c5e-472e-bf3b-41ed1c1
 -- where 1 = 1;
 
 -- create accounts
-insert into category_accounts (id, name, budget_id)
-VALUES ('1d5221d6-acb3-4377-8fa1-bc3289fa75ca', 'General', 'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
-insert into account_active_periods (id, category_account_id, budget_id)
+insert into accounts (id, name, type, budget_id)
+VALUES ('1d5221d6-acb3-4377-8fa1-bc3289fa75ca', 'General', 'category', 'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
+insert into account_active_periods (id, account_id, budget_id)
 values ('f9b5abad-7eba-4dbc-8d46-7339fbb51a0b', '1d5221d6-acb3-4377-8fa1-bc3289fa75ca',
         'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
-insert into category_accounts (id, name, budget_id)
-VALUES ('bea7965c-6f6a-4c80-ad3f-b9c1367664c0', 'Food', 'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
-insert into account_active_periods (id, category_account_id, budget_id)
+insert into accounts (id, name, type, budget_id)
+VALUES ('bea7965c-6f6a-4c80-ad3f-b9c1367664c0', 'Food', 'category', 'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
+insert into account_active_periods (id, account_id, budget_id)
 values ('d3d04d1f-a6cf-43b9-bf9e-eea0c5068a90', 'bea7965c-6f6a-4c80-ad3f-b9c1367664c0',
         'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
-insert into category_accounts (id, name, budget_id)
-VALUES ('0aa01c8e-9944-45de-866b-388261010045', 'Necessities', 'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
-insert into account_active_periods (id, category_account_id, budget_id)
+insert into accounts (id, name, type, budget_id)
+VALUES ('0aa01c8e-9944-45de-866b-388261010045', 'Necessities', 'category', 'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
+insert into account_active_periods (id, account_id, budget_id)
 values ('a2ef365b-d27b-4521-ad77-1eaf1d54c2f1', '0aa01c8e-9944-45de-866b-388261010045',
         'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
-insert into real_accounts (id, name, budget_id)
-VALUES ('76ea4bb9-ad3e-4aff-832a-3d3b907713ba', 'Wallet', 'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
-insert into account_active_periods (id, real_account_id, budget_id)
+insert into accounts (id, name, type, budget_id)
+VALUES ('76ea4bb9-ad3e-4aff-832a-3d3b907713ba', 'Wallet', 'real', 'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
+insert into account_active_periods (id, account_id, budget_id)
 values ('ad697e12-9e4f-44d3-b02e-673e488c9234', '76ea4bb9-ad3e-4aff-832a-3d3b907713ba',
         'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
-insert into real_accounts (id, name, budget_id)
-VALUES ('5bf25e8c-275d-40a8-a43f-0967697cf87c', 'Checking', 'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
-insert into account_active_periods (id, real_account_id, budget_id)
+insert into accounts (id, name, type, budget_id)
+VALUES ('5bf25e8c-275d-40a8-a43f-0967697cf87c', 'Checking', 'real', 'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
+insert into account_active_periods (id, account_id, budget_id)
 values ('fa72ccf5-077e-474c-a93e-113aa88ba1fe', '5bf25e8c-275d-40a8-a43f-0967697cf87c',
         'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
 -- insert into draft_accounts (id, name, description, balance, real_account_id, budget_id)
@@ -267,24 +212,44 @@ values ('fa72ccf5-077e-474c-a93e-113aa88ba1fe', '5bf25e8c-275d-40a8-a43f-0967697
 --                                     budget_id)
 -- values (null, null, null, '1d5221d6-acb3-4377-8fa1-bc3289fa75ca', 'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
 
+select t.*,
+       i.amount      as item_amount,
+       i.description as item_description,
+       i.account_id
+from transactions t
+         join transaction_items i
+              on i.transaction_id = t.id
+                  and i.budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47'
+         join accounts acc
+              on i.account_id = acc.id
+                  and acc.budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47'
+                  and acc.type = 'category'
+where t.id in (select id
+               from transactions
+--                where cleared_by_transaction_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47'
+--                  and budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47'
+               );
+
 select *
-from category_accounts cat
+from accounts acc
          join account_active_periods aap
-              on cat.id = aap.category_account_id
-                  and cat.budget_id = aap.budget_id
-where cat.budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47';
+              on acc.id = aap.account_id
+                  and acc.budget_id = aap.budget_id
+where acc.budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47'
+  and acc.type = 'category';
 select *
-from category_accounts cat
+from accounts acc
          join account_active_periods aap
-              on cat.id = aap.category_account_id
-                  and cat.budget_id = aap.budget_id
-where cat.budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47'
+              on acc.id = aap.account_id
+                  and acc.budget_id = aap.budget_id
+where acc.budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47'
+  and acc.type = 'category'
   and now() > aap.start_date_utc
   and now() < aap.end_date_utc;
 
 update account_active_periods
 set end_date_utc = now()
-where category_account_id = '0aa01c8e-9944-45de-866b-388261010045'
+where account_id = '0aa01c8e-9944-45de-866b-388261010045'
   and budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47';
 
 update account_active_periods
@@ -292,26 +257,28 @@ set end_date_utc = now()
 -- from -- account_active_periods aap,
 --      category_accounts acc
 where budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47'
-  and category_account_id not in
+  and account_id not in
       (select id
-       from category_accounts
+       from accounts
        where budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47'
+         and type = 'category'
          and (id = '1d5221d6-acb3-4377-8fa1-bc3289fa75ca'
            or id = 'bea7965c-6f6a-4c80-ad3f-b9c1367664c0'))
   and exists
     (select 1
-     from category_accounts acc
+     from accounts acc
      --               join account_active_periods aap
 --                    on acc.id = aap.category_account_id
 --                        and acc.budget_id = aap.budget_id
-     where acc.budget_id = ?
-       and acc.id = category_account_id
+     where acc.budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47'
+       and acc.type = 'category'
+       and acc.id = account_id
        and acc.budget_id = budget_id
        and now() > start_date_utc
        and now() < end_date_utc)
 ;
 
-insert into account_active_periods (id, start_date_utc, category_account_id, budget_id)
+insert into account_active_periods (id, start_date_utc, account_id, budget_id)
 values ('94c7bee3-80d6-4c8f-ba55-28b8f98dac7a', now(), '0aa01c8e-9944-45de-866b-388261010045',
         'ccac6f53-04f3-4da5-a2ea-de39c6843e47');
 

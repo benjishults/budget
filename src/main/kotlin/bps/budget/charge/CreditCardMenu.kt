@@ -146,10 +146,10 @@ private fun WithIo.payCreditCardBill(
                     Transaction.Builder(description, timestamp)
                         .apply {
                             with(selectedRealAccount) {
-                                addItem(-amountOfBill, description)
+                                addItemBuilderTo(-amountOfBill, description)
                             }
                             with(chargeAccount) {
-                                addItem(amountOfBill, description, DraftStatus.clearing)
+                                addItemBuilderTo(amountOfBill, description, DraftStatus.clearing)
                             }
                         }
                         .build()
@@ -201,7 +201,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
     runningTotal: BigDecimal,
     billPayTransaction: Transaction,
     chargeAccount: ChargeAccount,
-    selectedItems: List<BudgetDao.ExtendedTransactionItem>,
+    selectedItems: List<BudgetDao.ExtendedTransactionItem<ChargeAccount>>,
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
@@ -236,7 +236,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
         },
     ),
 ) { _, chargeTransactionItem ->
-    val allSelectedItems: List<BudgetDao.ExtendedTransactionItem> = selectedItems + chargeTransactionItem
+    val allSelectedItems: List<BudgetDao.ExtendedTransactionItem<ChargeAccount>> = selectedItems + chargeTransactionItem
     // FIXME if the selected amount is greater than allowed, then give a "denied" message
     //       ... or don't show such items in the first place
     val remainingToBeCovered: BigDecimal = runningTotal + chargeTransactionItem.item.amount
@@ -310,7 +310,7 @@ private fun WithIo.spendOnACreditCard(
             Transaction.Builder(description, timestamp)
                 .apply {
                     with(chargeAccount) {
-                        addItem(-amount, description, DraftStatus.outstanding)
+                        addItemBuilderTo(-amount, description, DraftStatus.outstanding)
                     }
                 }
         menuSession.push(
