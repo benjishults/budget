@@ -2,13 +2,19 @@ package bps.budget.persistence.migration
 
 import bps.budget.BudgetConfigurations
 import bps.budget.model.Account
+import bps.budget.model.CategoryAccount
+import bps.budget.model.DraftStatus
+import bps.budget.model.Transaction
+import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.jdbc.JdbcDao
 import bps.config.convertToPath
 import bps.jdbc.JdbcFixture
 import bps.jdbc.transactOrThrow
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
 import java.sql.Connection
+import java.sql.ResultSet
 import java.sql.Types.OTHER
 import java.sql.Types.VARCHAR
 import java.util.UUID
@@ -38,9 +44,9 @@ class DataMigrations {
 //                        "customer-fix" -> {
 //                            customerFix(jdbcDao)
 //                        }
-//                        "add-transaction-item-id" -> {
-//                            addTransactionItemIds(jdbcDao)
-//                        }
+                        "add-transaction-item-id" -> {
+                            addTransactionItemIds(jdbcDao)
+                        }
                         "move-to-single-account-table" -> {
                             moveToSingleAccountTable(jdbcDao)
                         }
@@ -49,6 +55,96 @@ class DataMigrations {
                         }
                         else -> throw IllegalArgumentException("Unknown migration type: $migrationType")
                     }
+                }
+            }
+        }
+
+        private fun Connection.addTransactionItemIds(jdbcDao: JdbcDao) {
+            jdbcDao.use {
+                transactOrThrow {
+                    // TODO alter table add nullable id column
+                    prepareStatement(
+                        """
+                            alter table transaction_items
+                            add id uuid null
+                        """.trimIndent(),
+                    )
+                        .use {
+                            it.execute()
+                        }
+                    // TODO populate ids
+                    buildList {
+                        prepareStatement("select * from transaction_items")
+                            .use {
+                                it.executeQuery()
+                                    .use { resultSet: ResultSet ->
+                                        val now = Clock.System.now()
+                                        while (resultSet.next()) {
+                                            val budgetId = resultSet.getUuid("budget_id")!!
+                                            add(
+                                                BudgetDao.ExtendedTransactionItem(
+                                                    item = Transaction.ItemBuilder(
+                                                        UUID.randomUUID(),
+                                                        amount = resultSet.getCurrencyAmount("amount"),
+                                                        description = resultSet.getString("description"),
+                                                        account = CategoryAccount(
+                                                            "",
+                                                            id = resultSet.getUuid("account_id")!!,
+                                                            budgetId = budgetId,
+                                                        ),
+                                                        draftStatus = DraftStatus.valueOf(
+                                                            resultSet.getString("draft_status")!!,
+                                                        ),
+                                                    ),
+                                                    transactionId = resultSet.getUuid("transaction_id")!!,
+                                                    transactionDescription = "",
+                                                    transactionTimestamp = now,
+                                                    budgetDao = jdbcDao,
+                                                    budgetId = budgetId,
+                                                    accountBalanceAfterItem = BigDecimal.ZERO.setScale(2),
+                                                ),
+                                            )
+                                        }
+                                    }
+                            }
+                    }
+                        .forEach { transactionItem: BudgetDao.ExtendedTransactionItem<*> ->
+                            prepareStatement(
+                                """
+                                                |update transaction_items
+                                                |set id = ?
+                                                |where budget_id = ?
+                                                |  and transaction_id = ?
+                                                |  and amount = ?
+                                                |  and account_id = ?
+                                                |  and draft_status = ?
+                                                |  and ${if (transactionItem.item.description == null) "description is null" else "description = ?"}
+                                                """.trimMargin(),
+                            )
+                                .use { statement ->
+                                    statement.setUuid(1, transactionItem.item.id)
+                                    statement.setUuid(2, transactionItem.budgetId)
+                                    statement.setUuid(3, transactionItem.transactionId)
+                                    statement.setBigDecimal(4, transactionItem.item.amount)
+                                    statement.setUuid(5, transactionItem.item.account.id)
+                                    statement.setString(6, transactionItem.item.draftStatus.name)
+                                    transactionItem.item.description
+                                        ?.let { description ->
+                                            statement.setString(7, description)
+                                        }
+                                    if (statement.executeUpdate() != 1)
+                                        throw IllegalStateException(
+                                            """
+                                            |Should have updated a row!
+                                            |$transactionItem
+                                        """.trimMargin(),
+                                        )
+                                }
+                        }
+                    // TODO alter table add not null unique to id and add primary key (id, budget_id)
+                    prepareStatement("alter table transaction_items alter id set not null").use { it.execute() }
+                    prepareStatement("alter table transaction_items add unique (id)").use { it.execute() }
+                    prepareStatement("alter table transaction_items add primary key  (id, budget_id)").use { it.execute() }
                 }
             }
         }
@@ -191,6 +287,7 @@ create index if not exists lookup_account_active_periods_by_account_id
 
         private fun Connection.migrateTransactions() {
             data class TransactionItem(
+                val id: UUID,
                 val transactionId: UUID,
                 val budgetId: UUID,
                 val description: String?,
@@ -209,6 +306,7 @@ create index if not exists lookup_account_active_periods_by_account_id
                                 while (resultSet.next()) {
                                     add(
                                         TransactionItem(
+                                            id = resultSet.getUuid("id")!!,
                                             transactionId = resultSet.getUuid("transaction_id")!!,
                                             budgetId = resultSet.getUuid("budget_id")!!,
                                             description = resultSet.getString("description"),
@@ -230,6 +328,7 @@ create index if not exists lookup_account_active_periods_by_account_id
                         """
 create table if not exists transaction_items_temp
 (
+    id                  uuid           not null unique,
     transaction_id      uuid           not null references transactions (id),
     description         varchar(110)   null,
     amount              numeric(30, 2) not null,
@@ -244,8 +343,8 @@ create table if not exists transaction_items_temp
                         }
                     prepareStatement(
                         """
-create index if not exists lookup_account_transaction_items_by_account
-    on transaction_items_temp (account_id, budget_id)
+create index if not exists lookup_transaction_items_by_transaction
+    on transaction_items_temp (transaction_id, budget_id)
                         """.trimIndent(),
                     )
                         .use { it.executeUpdate() }
@@ -253,8 +352,8 @@ create index if not exists lookup_account_transaction_items_by_account
                     transactionItems.forEach { transactionItem: TransactionItem ->
                         prepareStatement(
                             """
-                            insert into transaction_items_temp (transaction_id, description, amount, account_id, draft_status, budget_id)
-                            values (?, ?, ?, ?, ?, ?)
+                            insert into transaction_items_temp (transaction_id, description, amount, account_id, draft_status, budget_id, id)
+                            values (?, ?, ?, ?, ?, ?, ?)
                         """.trimIndent(),
                         )
                             .use { statement ->
@@ -274,6 +373,7 @@ create index if not exists lookup_account_transaction_items_by_account
                                     ?.let { statement.setString(5, it) }
                                     ?: statement.setNull(5, VARCHAR)
                                 statement.setUuid(6, transactionItem.budgetId)
+                                statement.setUuid(7, UUID.randomUUID())
                                 statement.executeUpdate()
                             }
                     }
@@ -439,133 +539,6 @@ create index if not exists lookup_account_transaction_items_by_account
 //                            .build(),
 //                        budgetId, false,
 //                    )
-//                }
-//            }
-//        }
-
-//        private fun Connection.addTransactionItemIds(jdbcDao: JdbcDao) {
-//            jdbcDao.use {
-//                transactOrThrow {
-//                    // TODO alter table add nullable id column
-//                    prepareStatement(
-//                        """
-//                            alter table transaction_items
-//                            add id uuid null
-//                        """.trimIndent(),
-//                    )
-//                        .use {
-//                            it.execute()
-//                        }
-//                    // TODO populate ids
-//                    buildList {
-//                        prepareStatement("select * from transaction_items")
-//                            .use {
-//                                it.executeQuery()
-//                                    .use { resultSet: ResultSet ->
-//                                        val now = Clock.System.now()
-////                                        val generalAccount = CategoryAccount("", budgetId = UUID.randomUUID())
-////                                        val categoryAccounts = listOf(generalAccount)
-//                                        while (resultSet.next()) {
-//                                            val budgetId = resultSet.getUuid("budget_id")!!
-//                                            add(
-//                                                BudgetDao.ExtendedTransactionItem(
-//                                                    item = Transaction.ItemBuilder(
-//                                                        UUID.randomUUID(),
-//                                                        amount = resultSet.getCurrencyAmount("amount"),
-//                                                        description = resultSet.getString("description"),
-//                                                        categoryAccount = resultSet.getUuid("category_account_id")
-//                                                            ?.let {
-//                                                                CategoryAccount("", id = it, budgetId = budgetId)
-//                                                            },
-//                                                        realAccount = resultSet.getUuid("real_account_id")
-//                                                            ?.let {
-//                                                                RealAccount("", id = it, budgetId = budgetId)
-//                                                            },
-//                                                        chargeAccount = resultSet.getUuid("charge_account_id")
-//                                                            ?.let {
-//                                                                ChargeAccount("", id = it, budgetId = budgetId)
-//                                                            },
-//                                                        draftAccount = resultSet.getUuid("draft_account_id")
-//                                                            ?.let {
-//                                                                DraftAccount(
-//                                                                    "",
-//                                                                    id = it,
-//                                                                    realCompanion = RealAccount(
-//                                                                        "",
-//                                                                        budgetId = budgetId,
-//                                                                    ),
-//                                                                    budgetId = budgetId,
-//
-//                                                                    )
-//                                                            },
-//                                                        draftStatus = DraftStatus.valueOf(
-//                                                            resultSet.getString("draft_status")!!,
-//                                                        ),
-//                                                    ),
-//                                                    transactionId = resultSet.getUuid("transaction_id")!!,
-//                                                    transactionDescription = "",
-//                                                    transactionTimestamp = now,
-//                                                    budgetDao = jdbcDao,
-//                                                    budgetId = budgetId,
-//                                                    accountBalanceAfterItem = BigDecimal.ZERO.setScale(2),
-//                                                ),
-//                                            )
-//                                        }
-//                                    }
-//                            }
-//                    }
-//                        .forEach { transactionItem: BudgetDao.ExtendedTransactionItem ->
-//                            prepareStatement(
-//                                """
-//                                                |update transaction_items
-//                                                |set id = ?
-//                                                |where budget_id = ?
-//                                                |  and transaction_id = ?
-//                                                |  and amount = ?
-//                                                |  and ${
-//                                    transactionItem.item.categoryAccount
-//                                        ?.let { "category_account_id = ?" }
-//                                        ?: transactionItem.item.realAccount
-//                                            ?.let { "real_account_id = ?" }
-//                                        ?: transactionItem.item.chargeAccount
-//                                            ?.let { "charge_account_id = ?" }
-//                                        ?: transactionItem.item.draftAccount
-//                                            ?.let { "draft_account_id = ?" }
-//                                }
-//                                                |  and draft_status = ?
-//                                                |  and ${if (transactionItem.item.description == null) "description is null" else "description = ?"}
-//                                                """.trimMargin(),
-//                            )
-//                                .use { statement ->
-//                                    statement.setUuid(1, transactionItem.item.id)
-//                                    statement.setUuid(2, transactionItem.budgetId)
-//                                    statement.setUuid(3, transactionItem.transactionId)
-//                                    statement.setBigDecimal(4, transactionItem.item.amount)
-//                                    statement.setUuid(
-//                                        5,
-//                                        transactionItem.item.categoryAccount?.id
-//                                            ?: transactionItem.item.realAccount?.id
-//                                            ?: transactionItem.item.chargeAccount?.id
-//                                            ?: transactionItem.item.draftAccount?.id!!,
-//                                    )
-//                                    statement.setString(6, transactionItem.item.draftStatus.name)
-//                                    transactionItem.item.description
-//                                        ?.let { description ->
-//                                            statement.setString(7, description)
-//                                        }
-//                                    if (statement.executeUpdate() != 1)
-//                                        throw IllegalStateException(
-//                                            """
-//                                            |Should have updated a row!
-//                                            |$transactionItem
-//                                        """.trimMargin(),
-//                                        )
-//                                }
-//                        }
-//                    // TODO alter table add not null unique to id and add primary key (id, budget_id)
-//                    prepareStatement("alter table transaction_items alter id set not null").use { it.execute() }
-//                    prepareStatement("alter table transaction_items add unique (id)").use { it.execute() }
-//                    prepareStatement("alter table transaction_items add primary key  (id, budget_id)").use { it.execute() }
 //                }
 //            }
 //        }

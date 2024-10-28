@@ -265,8 +265,8 @@ create table if not exists transaction_items
                     )
                     createStatement.executeUpdate(
                         """
-create index if not exists lookup_account_transaction_items_by_account
-    on transaction_items (account_id, budget_id)
+create index if not exists lookup_transaction_items_by_transaction
+    on transaction_items (transaction_id, budget_id)
                     """.trimIndent(),
                     )
                 }
