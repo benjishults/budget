@@ -84,6 +84,18 @@ class JdbcDao(
                 autoCommit = false
             }
 
+    // NOTE be sure to make this volatile if we go multithreaded
+    final var errorState: Throwable? = null
+        private set
+
+    fun <T> catchCommitErrorState(block: () -> T): T =
+        try {
+            block()
+        } catch (e: Throwable) {
+            errorState = e
+            throw e
+        }
+
     override fun getUserByLogin(login: String): User? =
         connection.transactOrThrow {
             prepareStatement(
@@ -124,17 +136,19 @@ class JdbcDao(
         }
 
     override fun createUser(login: String, password: String): UUID =
-        UUID.randomUUID()
-            .also { uuid: UUID ->
-                connection.transactOrThrow {
-                    prepareStatement("insert into users (login, id) values(?, ?)")
-                        .use {
-                            it.setString(1, login)
-                            it.setUuid(2, uuid)
-                            it.executeUpdate()
-                        }
+        catchCommitErrorState {
+            UUID.randomUUID()
+                .also { uuid: UUID ->
+                    connection.transactOrThrow {
+                        prepareStatement("insert into users (login, id) values(?, ?)")
+                            .use {
+                                it.setString(1, login)
+                                it.setUuid(2, uuid)
+                                it.executeUpdate()
+                            }
+                    }
                 }
-            }
+        }
 
     override fun prepForFirstLoad() {
         connection.transactOrThrow {
@@ -824,55 +838,56 @@ where acc.budget_id = ?
         draftTransactionItems: List<Transaction.Item<DraftAccount>>,
         clearingTransaction: Transaction,
         budgetId: UUID,
-    ) {
-        // require clearTransaction is a simple draft transaction(s) clearing transaction
-        require(clearingTransaction.draftItems.isNotEmpty())
-        require(clearingTransaction.categoryItems.isEmpty())
-        require(clearingTransaction.chargeItems.isEmpty())
-        require(clearingTransaction.realItems.size == 1)
-        val realTransactionItem: Transaction.Item<RealAccount> = clearingTransaction.realItems.first()
-        val realAccount: RealAccount = realTransactionItem.account
-        require(
-            clearingTransaction
-                .draftItems
-                .first()
-                .account
-                .realCompanion == realAccount,
-        )
-        // require draftTransactionItems to be what we expect
-        require(draftTransactionItems.isNotEmpty())
-        require(
-            draftTransactionItems.all {
-                it.account
-                    .realCompanion == realAccount
-                        &&
-                        with(it.transaction) {
-                            realItems.isEmpty()
-                                    &&
-                                    chargeItems.isEmpty()
-                                    &&
-                                    draftItems.size == 1
-                        }
-            },
-        )
-        require(
-            draftTransactionItems
-                .mapTo(mutableSetOf()) { it.transaction }
-                .size ==
-                    draftTransactionItems.size,
-        )
-        require(
-            draftTransactionItems
-                .fold(BigDecimal.ZERO.setScale(2)) { sum, transactionItem ->
-                    sum + transactionItem.amount
-                } ==
-                    -realTransactionItem.amount,
-        )
-        connection.transactOrThrow {
-            draftTransactionItems
-                .forEach { draftTransactionItem ->
-                    prepareStatement(
-                        """
+    ) =
+        catchCommitErrorState {
+            // require clearTransaction is a simple draft transaction(s) clearing transaction
+            require(clearingTransaction.draftItems.isNotEmpty())
+            require(clearingTransaction.categoryItems.isEmpty())
+            require(clearingTransaction.chargeItems.isEmpty())
+            require(clearingTransaction.realItems.size == 1)
+            val realTransactionItem: Transaction.Item<RealAccount> = clearingTransaction.realItems.first()
+            val realAccount: RealAccount = realTransactionItem.account
+            require(
+                clearingTransaction
+                    .draftItems
+                    .first()
+                    .account
+                    .realCompanion == realAccount,
+            )
+            // require draftTransactionItems to be what we expect
+            require(draftTransactionItems.isNotEmpty())
+            require(
+                draftTransactionItems.all {
+                    it.account
+                        .realCompanion == realAccount
+                            &&
+                            with(it.transaction) {
+                                realItems.isEmpty()
+                                        &&
+                                        chargeItems.isEmpty()
+                                        &&
+                                        draftItems.size == 1
+                            }
+                },
+            )
+            require(
+                draftTransactionItems
+                    .mapTo(mutableSetOf()) { it.transaction }
+                    .size ==
+                        draftTransactionItems.size,
+            )
+            require(
+                draftTransactionItems
+                    .fold(BigDecimal.ZERO.setScale(2)) { sum, transactionItem ->
+                        sum + transactionItem.amount
+                    } ==
+                        -realTransactionItem.amount,
+            )
+            connection.transactOrThrow {
+                draftTransactionItems
+                    .forEach { draftTransactionItem ->
+                        prepareStatement(
+                            """
                             |update transaction_items ti
                             |set draft_status = 'cleared'
                             |where ti.budget_id = ?
@@ -880,41 +895,40 @@ where acc.budget_id = ?
                             |and ti.account_id = ?
                             |and ti.draft_status = 'outstanding'
                         """.trimMargin(),
-                    )
-                        .use { statement ->
-                            statement.setUuid(1, budgetId)
-                            statement.setUuid(2, draftTransactionItem.transaction.id)
-                            statement.setUuid(3, draftTransactionItem.account.id)
-                            if (statement.executeUpdate() != 1)
-                                throw IllegalStateException("Check being cleared not found in DB")
-                        }
-                    prepareStatement(
-                        """
+                        )
+                            .use { statement ->
+                                statement.setUuid(1, budgetId)
+                                statement.setUuid(2, draftTransactionItem.transaction.id)
+                                statement.setUuid(3, draftTransactionItem.account.id)
+                                if (statement.executeUpdate() != 1)
+                                    throw IllegalStateException("Check being cleared not found in DB")
+                            }
+                        prepareStatement(
+                            """
                             |update transactions t
                             |set cleared_by_transaction_id = ?
                             |where t.id = ?
                             |and t.budget_id = ?
                         """.trimMargin(),
-                    )
-                        .use { statement ->
-                            statement.setUuid(1, clearingTransaction.id)
-                            statement.setUuid(2, draftTransactionItem.transaction.id)
-                            statement.setUuid(3, budgetId)
-                            statement.executeUpdate()
-                        }
-                }
-            insertTransactionPreparedStatement(clearingTransaction, budgetId)
-                .use { insertTransaction: PreparedStatement ->
-                    insertTransaction.executeUpdate()
-                }
-            insertTransactionItemsPreparedStatement(clearingTransaction, budgetId)
-                .use { insertTransactionItem: PreparedStatement ->
-                    insertTransactionItem.executeUpdate()
-                }
-            updateBalances(clearingTransaction, budgetId)
+                        )
+                            .use { statement ->
+                                statement.setUuid(1, clearingTransaction.id)
+                                statement.setUuid(2, draftTransactionItem.transaction.id)
+                                statement.setUuid(3, budgetId)
+                                statement.executeUpdate()
+                            }
+                    }
+                insertTransactionPreparedStatement(clearingTransaction, budgetId)
+                    .use { insertTransaction: PreparedStatement ->
+                        insertTransaction.executeUpdate()
+                    }
+                insertTransactionItemsPreparedStatement(clearingTransaction, budgetId)
+                    .use { insertTransactionItem: PreparedStatement ->
+                        insertTransactionItem.executeUpdate()
+                    }
+                updateBalances(clearingTransaction, budgetId)
+            }
         }
-
-    }
 
     /**
      * @throws IllegalArgumentException if either the [clearedItems] or the [billPayTransaction] is not what
@@ -925,35 +939,36 @@ where acc.budget_id = ?
         clearedItems: List<ExtendedTransactionItem<ChargeAccount>>,
         billPayTransaction: Transaction,
         budgetId: UUID,
-    ) {
-        // require billPayTransaction is a simple real transfer
-        require(billPayTransaction.draftItems.isEmpty())
-        require(billPayTransaction.categoryItems.isEmpty())
-        require(billPayTransaction.chargeItems.size == 1)
-        require(billPayTransaction.realItems.size == 1)
-        val billPayChargeTransactionItem: Transaction.Item<ChargeAccount> =
-            billPayTransaction.chargeItems.first()
-        val chargeAccount: ChargeAccount =
-            billPayChargeTransactionItem.account
-        // require clearedItems to be what we expect
-        require(clearedItems.isNotEmpty())
-        require(
-            clearedItems.all {
-                it.item.account == chargeAccount
-            },
-        )
-        require(
-            clearedItems
-                .fold(BigDecimal.ZERO.setScale(2)) { sum, transactionItem: ExtendedTransactionItem<ChargeAccount> ->
-                    sum + transactionItem.item.amount
-                } ==
-                    -billPayChargeTransactionItem.amount,
-        )
-        connection.transactOrThrow {
-            clearedItems
-                .forEach { chargeTransactionItem: ExtendedTransactionItem<ChargeAccount> ->
-                    prepareStatement(
-                        """
+    ) =
+        catchCommitErrorState {
+            // require billPayTransaction is a simple real transfer
+            require(billPayTransaction.draftItems.isEmpty())
+            require(billPayTransaction.categoryItems.isEmpty())
+            require(billPayTransaction.chargeItems.size == 1)
+            require(billPayTransaction.realItems.size == 1)
+            val billPayChargeTransactionItem: Transaction.Item<ChargeAccount> =
+                billPayTransaction.chargeItems.first()
+            val chargeAccount: ChargeAccount =
+                billPayChargeTransactionItem.account
+            // require clearedItems to be what we expect
+            require(clearedItems.isNotEmpty())
+            require(
+                clearedItems.all {
+                    it.item.account == chargeAccount
+                },
+            )
+            require(
+                clearedItems
+                    .fold(BigDecimal.ZERO.setScale(2)) { sum, transactionItem: ExtendedTransactionItem<ChargeAccount> ->
+                        sum + transactionItem.item.amount
+                    } ==
+                        -billPayChargeTransactionItem.amount,
+            )
+            connection.transactOrThrow {
+                clearedItems
+                    .forEach { chargeTransactionItem: ExtendedTransactionItem<ChargeAccount> ->
+                        prepareStatement(
+                            """
                             |update transaction_items ti
                             |set draft_status = 'cleared'
                             |where ti.budget_id = ?
@@ -961,41 +976,41 @@ where acc.budget_id = ?
                             |and ti.account_id = ?
                             |and ti.draft_status = 'outstanding'
                         """.trimMargin(),
-                    )
-                        .use { statement ->
-                            statement.setUuid(1, budgetId)
-                            statement.setUuid(2, chargeTransactionItem.transactionId)
-                            statement.setUuid(3, chargeTransactionItem.item.account.id)
-                            if (statement.executeUpdate() != 1)
-                                throw IllegalStateException("Charge being cleared not found in DB")
-                        }
-                    prepareStatement(
-                        """
+                        )
+                            .use { statement ->
+                                statement.setUuid(1, budgetId)
+                                statement.setUuid(2, chargeTransactionItem.transactionId)
+                                statement.setUuid(3, chargeTransactionItem.item.account.id)
+                                if (statement.executeUpdate() != 1)
+                                    throw IllegalStateException("Charge being cleared not found in DB")
+                            }
+                        prepareStatement(
+                            """
                             |update transactions t
                             |set cleared_by_transaction_id = ?
                             |where t.id = ?
                             |and t.budget_id = ?
                         """.trimMargin(),
-                    )
-                        .use { statement ->
-                            statement.setUuid(1, billPayTransaction.id)
-                            statement.setUuid(2, chargeTransactionItem.transactionId)
-                            statement.setUuid(3, budgetId)
-                            statement.executeUpdate()
-                        }
-                }
-            insertTransactionPreparedStatement(billPayTransaction, budgetId)
-                .use { insertTransaction: PreparedStatement ->
-                    insertTransaction.executeUpdate()
-                }
-            insertTransactionItemsPreparedStatement(billPayTransaction, budgetId)
-                .use { insertTransactionItem: PreparedStatement ->
-                    insertTransactionItem.executeUpdate()
-                }
-            updateBalances(billPayTransaction, budgetId)
-        }
+                        )
+                            .use { statement ->
+                                statement.setUuid(1, billPayTransaction.id)
+                                statement.setUuid(2, chargeTransactionItem.transactionId)
+                                statement.setUuid(3, budgetId)
+                                statement.executeUpdate()
+                            }
+                    }
+                insertTransactionPreparedStatement(billPayTransaction, budgetId)
+                    .use { insertTransaction: PreparedStatement ->
+                        insertTransaction.executeUpdate()
+                    }
+                insertTransactionItemsPreparedStatement(billPayTransaction, budgetId)
+                    .use { insertTransactionItem: PreparedStatement ->
+                        insertTransactionItem.executeUpdate()
+                    }
+                updateBalances(billPayTransaction, budgetId)
+            }
 
-    }
+        }
 
     /**
      * Inserts the transaction records and updates the account balances in the DB.
@@ -1004,19 +1019,20 @@ where acc.budget_id = ?
         transaction: Transaction,
         budgetId: UUID,
         saveBalances: Boolean,
-    ) {
-        connection.transactOrThrow {
-            insertTransactionPreparedStatement(transaction, budgetId)
-                .use { insertTransaction: PreparedStatement ->
-                    insertTransaction.executeUpdate()
-                }
-            insertTransactionItemsPreparedStatement(transaction, budgetId)
-                .use { insertTransactionItem: PreparedStatement ->
-                    insertTransactionItem.executeUpdate()
-                }
-            if (saveBalances) updateBalances(transaction, budgetId)
+    ) =
+        catchCommitErrorState {
+            connection.transactOrThrow {
+                insertTransactionPreparedStatement(transaction, budgetId)
+                    .use { insertTransaction: PreparedStatement ->
+                        insertTransaction.executeUpdate()
+                    }
+                insertTransactionItemsPreparedStatement(transaction, budgetId)
+                    .use { insertTransactionItem: PreparedStatement ->
+                        insertTransactionItem.executeUpdate()
+                    }
+                if (saveBalances) updateBalances(transaction, budgetId)
+            }
         }
-    }
 
     private fun Connection.updateBalances(transaction: Transaction, budgetId: UUID) {
         buildList {
@@ -1110,89 +1126,97 @@ where acc.budget_id = ?
         return insertTransaction
     }
 
+    /**
+     * Saves only if we have not had an error trying to commit.
+     */
     override fun save(data: BudgetData, user: User) {
         require(data.validate())
-        // create user and budget if it isn't there
-        connection.transactOrThrow {
-            val generalAccountId: UUID = data.generalAccount.id
-            prepareStatement(
-                """
+        errorState
+            ?: connection.transactOrThrow {
+                val generalAccountId: UUID = data.generalAccount.id
+                // create user and budget if it isn't there
+                prepareStatement(
+                    """
                 insert into users (id, login)
                 values (?, ?) on conflict do nothing""",
-            )
-                .use { createBudgetStatement: PreparedStatement ->
-                    createBudgetStatement.setUuid(1, user.id)
-                    createBudgetStatement.setString(2, user.login)
-                    createBudgetStatement.executeUpdate()
-                }
-            prepareStatement(
-                """
+                )
+                    .use { createBudgetStatement: PreparedStatement ->
+                        createBudgetStatement.setUuid(1, user.id)
+                        createBudgetStatement.setString(2, user.login)
+                        createBudgetStatement.executeUpdate()
+                    }
+                prepareStatement(
+                    """
                 insert into budgets (id, general_account_id)
                 values (?, ?) on conflict do nothing""",
-            )
-                .use { createBudgetStatement: PreparedStatement ->
-                    createBudgetStatement.setUuid(1, data.id)
-                    createBudgetStatement.setUuid(2, generalAccountId)
-                    createBudgetStatement.executeUpdate()
-                }
-            prepareStatement(
-                """
+                )
+                    .use { createBudgetStatement: PreparedStatement ->
+                        createBudgetStatement.setUuid(1, data.id)
+                        createBudgetStatement.setUuid(2, generalAccountId)
+                        createBudgetStatement.executeUpdate()
+                    }
+                prepareStatement(
+                    """
                 insert into budget_access (id, budget_id, user_id, time_zone, budget_name)
                 values (?, ?, ?, ?, ?) on conflict do nothing""".trimIndent(),
-            )
-                .use { createBudgetStatement: PreparedStatement ->
-                    createBudgetStatement.setUuid(1, UUID.randomUUID())
-                    createBudgetStatement.setUuid(2, data.id)
-                    createBudgetStatement.setUuid(3, user.id)
-                    createBudgetStatement.setString(4, data.timeZone.id)
-                    createBudgetStatement.setString(5, config.budgetName)
-                    createBudgetStatement.executeUpdate()
-                }
-            // create accounts that aren't there and update those that are
-            createStagingAccountsTable()
-            upsertAccountData(data.categoryAccounts, "category", data.id)
-            createStagingAccountsTable()
-            upsertAccountData(data.realAccounts, "real", data.id)
-            createStagingAccountsTable()
-            upsertAccountData(data.chargeAccounts, "charge", data.id)
-            createStagingAccountsTable()
-            upsertAccountData(data.draftAccounts, "draft", data.id)
-            // TODO mark deleted accounts as in-active
-            //      see account_active_periods which is currently unused
-        }
+                )
+                    .use { createBudgetStatement: PreparedStatement ->
+                        createBudgetStatement.setUuid(1, UUID.randomUUID())
+                        createBudgetStatement.setUuid(2, data.id)
+                        createBudgetStatement.setUuid(3, user.id)
+                        createBudgetStatement.setString(4, data.timeZone.id)
+                        createBudgetStatement.setString(5, config.budgetName)
+                        createBudgetStatement.executeUpdate()
+                    }
+                // create accounts that aren't there and update those that are
+                createStagingAccountsTable()
+                upsertAccountData(data.categoryAccounts, "category", data.id)
+                createStagingAccountsTable()
+                upsertAccountData(data.realAccounts, "real", data.id)
+                createStagingAccountsTable()
+                upsertAccountData(data.chargeAccounts, "charge", data.id)
+                createStagingAccountsTable()
+                upsertAccountData(data.draftAccounts, "draft", data.id)
+                // TODO mark deleted accounts as in-active
+                //      see account_active_periods which is currently unused
+            }
     }
 
     override fun deleteUser(userId: UUID) {
-        connection.transactOrThrow {
-            prepareStatement("delete from budget_access where user_id = ?")
-                .use { statement: PreparedStatement ->
-                    statement.setUuid(1, userId)
-                    statement.executeUpdate()
-                }
-            prepareStatement("delete from users where id = ?")
-                .use { statement: PreparedStatement ->
-                    statement.setUuid(1, userId)
-                    statement.executeUpdate()
-                }
+        catchCommitErrorState {
+            connection.transactOrThrow {
+                prepareStatement("delete from budget_access where user_id = ?")
+                    .use { statement: PreparedStatement ->
+                        statement.setUuid(1, userId)
+                        statement.executeUpdate()
+                    }
+                prepareStatement("delete from users where id = ?")
+                    .use { statement: PreparedStatement ->
+                        statement.setUuid(1, userId)
+                        statement.executeUpdate()
+                    }
+            }
         }
     }
 
 
     override fun deleteUserByLogin(login: String) {
-        connection.transactOrThrow {
-            getUserIdByLogin(login)
-                ?.let { userId: UUID ->
-                    prepareStatement("delete from budget_access where user_id = ?")
-                        .use { statement: PreparedStatement ->
-                            statement.setUuid(1, userId)
-                            statement.executeUpdate()
-                        }
-                    prepareStatement("delete from users where login = ?")
-                        .use { statement: PreparedStatement ->
-                            statement.setString(1, login)
-                            statement.executeUpdate()
-                        }
-                }
+        catchCommitErrorState {
+            connection.transactOrThrow {
+                getUserIdByLogin(login)
+                    ?.let { userId: UUID ->
+                        prepareStatement("delete from budget_access where user_id = ?")
+                            .use { statement: PreparedStatement ->
+                                statement.setUuid(1, userId)
+                                statement.executeUpdate()
+                            }
+                        prepareStatement("delete from users where login = ?")
+                            .use { statement: PreparedStatement ->
+                                statement.setString(1, login)
+                                statement.executeUpdate()
+                            }
+                    }
+            }
         }
     }
 
@@ -1210,17 +1234,19 @@ where acc.budget_id = ?
             }
 
     override fun deleteBudget(budgetId: UUID) {
-        connection.transactOrThrow {
-            prepareStatement("delete from budget_access where budget_id = ?")
-                .use { statement: PreparedStatement ->
-                    statement.setUuid(1, budgetId)
-                    statement.executeUpdate()
-                }
-            prepareStatement("delete from budgets where id = ?")
-                .use { statement: PreparedStatement ->
-                    statement.setUuid(1, budgetId)
-                    statement.executeUpdate()
-                }
+        catchCommitErrorState {
+            connection.transactOrThrow {
+                prepareStatement("delete from budget_access where budget_id = ?")
+                    .use { statement: PreparedStatement ->
+                        statement.setUuid(1, budgetId)
+                        statement.executeUpdate()
+                    }
+                prepareStatement("delete from budgets where id = ?")
+                    .use { statement: PreparedStatement ->
+                        statement.setUuid(1, budgetId)
+                        statement.executeUpdate()
+                    }
+            }
         }
     }
 

@@ -66,6 +66,9 @@ interface BudgetDao : AutoCloseable {
     fun deleteUser(userId: UUID) {}
     fun deleteUserByLogin(login: String) {}
 
+    /**
+     * See src/test/kotlin/bps/kotlin/GenericFunctionTest.kt for a discussion of how I want to improve this
+     */
     class ExtendedTransactionItem<out A : Account>(
         val item: Transaction.ItemBuilder<A>,
         val accountBalanceAfterItem: BigDecimal?,

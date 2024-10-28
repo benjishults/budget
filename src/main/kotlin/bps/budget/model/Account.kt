@@ -43,6 +43,9 @@ const val defaultWorkAccountDescription = "Work-related expenses (possibly to be
 const val defaultCheckingDraftsAccountName = "Checking Drafts"
 const val defaultCheckingDraftsAccountDescription = "Records checks being written or clearing"
 
+/**
+ * See src/test/kotlin/bps/kotlin/GenericFunctionTest.kt for a discussion of how I want to improve this
+ */
 abstract class Account(
     // TODO why are these vars?
     override var name: String,

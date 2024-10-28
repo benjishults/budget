@@ -4,6 +4,7 @@ import kotlinx.datetime.Instant
 import java.math.BigDecimal
 import java.util.UUID
 
+@Suppress("DataClassPrivateConstructor")
 data class Transaction private constructor(
     val id: UUID,
     val description: String,
@@ -49,6 +50,9 @@ data class Transaction private constructor(
         require(validate()) { "attempt was made to create invalid transaction: $this" }
     }
 
+    /**
+     * See src/test/kotlin/bps/kotlin/GenericFunctionTest.kt for a discussion of how I want to improve this
+     */
     inner class Item<out A : Account>(
         val id: UUID,
         val amount: BigDecimal,
@@ -88,6 +92,9 @@ data class Transaction private constructor(
 
     }
 
+    /**
+     * See src/test/kotlin/bps/kotlin/GenericFunctionTest.kt for a discussion of how I want to improve this
+     */
     class ItemBuilder<out A : Account>(
         val id: UUID,
         val amount: BigDecimal,
