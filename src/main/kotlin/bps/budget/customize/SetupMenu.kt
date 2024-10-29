@@ -81,25 +81,45 @@ fun WithIo.customizeMenu(
         )
         add(
             pushMenu("Deactivate an Account") {
-                Menu("What kind af account do you want to delete?") {
+                Menu("What kind af account do you want to deactivate?") {
                     add(
                         pushMenu("Category Account") {
-                            budgetData.deleteCategoryAccountMenu(budgetDao, userConfig, outPrinter)
+                            deleteCategoryAccountMenu(
+                                budgetData,
+                                budgetDao,
+                                userConfig.numberOfItemsInScrollingList,
+                                outPrinter,
+                            )
                         },
                     )
                     add(
                         pushMenu("Real Account") {
-                            budgetData.deleteRealAccountMenu(budgetDao, userConfig, outPrinter)
+                            deleteRealAccountMenu(
+                                budgetData,
+                                budgetDao,
+                                userConfig.numberOfItemsInScrollingList,
+                                outPrinter,
+                            )
                         },
                     )
                     add(
                         pushMenu("Charge Account") {
-                            budgetData.deleteChargeAccountMenu(budgetDao, userConfig, outPrinter)
+                            deleteChargeAccountMenu(
+                                budgetData,
+                                budgetDao,
+                                userConfig.numberOfItemsInScrollingList,
+                                outPrinter,
+                            )
                         },
                     )
                     add(
                         pushMenu("Draft Account") {
-                            budgetData.deleteDraftAccountMenu(budgetDao, userConfig, outPrinter)
+                            deleteDraftAccountMenu(
+                                budgetData,
+                                budgetDao,
+                                userConfig.numberOfItemsInScrollingList,
+                                outPrinter,
+                            )
                         },
                     )
                     add(backItem)
@@ -243,91 +263,89 @@ fun WithIo.customizeMenu(
         add(quitItem)
     }
 
-fun BudgetData.deleteCategoryAccountMenu(
+fun deleteCategoryAccountMenu(
+    budgetData: BudgetData,
     budgetDao: BudgetDao,
-    userConfig: UserConfiguration,
+    limit: Int,
     outPrinter: OutPrinter,
 ): Menu =
     deleteAccountMenu(
-        userConfig,
+        budgetData,
+        budgetDao,
+        limit,
         outPrinter,
-        deleter = { account: CategoryAccount ->
-            this.deleteCategoryAccount(account)
-            budgetDao.deactivateAccount(account)
-        },
     ) {
-        (categoryAccounts - generalAccount)
+        (budgetData.categoryAccounts - budgetData.generalAccount)
             .filter {
                 it.balance == BigDecimal.ZERO.setScale(2)
             }
     }
 
-fun BudgetData.deleteRealAccountMenu(
+fun deleteRealAccountMenu(
+    budgetData: BudgetData,
     budgetDao: BudgetDao,
-    userConfig: UserConfiguration,
+    limit: Int,
     outPrinter: OutPrinter,
 ): Menu =
     deleteAccountMenu(
-        userConfig,
+        budgetData,
+        budgetDao,
+        limit,
         outPrinter,
-        deleter = { account: RealAccount ->
-            this.deleteRealAccount(account)
-            budgetDao.deactivateAccount(account)
-        },
     ) {
-        realAccounts.filter { it.balance == BigDecimal.ZERO.setScale(2) }
+        budgetData.realAccounts.filter { it.balance == BigDecimal.ZERO.setScale(2) }
     }
 
-fun BudgetData.deleteChargeAccountMenu(
+fun deleteChargeAccountMenu(
+    budgetData: BudgetData,
     budgetDao: BudgetDao,
-    userConfig: UserConfiguration,
+    limit: Int,
     outPrinter: OutPrinter,
 ): Menu =
     deleteAccountMenu(
-        userConfig,
+        budgetData,
+        budgetDao,
+        limit,
         outPrinter,
-        deleter = { account: ChargeAccount ->
-            deleteChargeAccount(account)
-            budgetDao.deactivateAccount(account)
-        },
     ) {
-        chargeAccounts.filter { it.balance == BigDecimal.ZERO.setScale(2) }
+        budgetData.chargeAccounts.filter { it.balance == BigDecimal.ZERO.setScale(2) }
     }
 
-fun BudgetData.deleteDraftAccountMenu(
+fun deleteDraftAccountMenu(
+    budgetData: BudgetData,
     budgetDao: BudgetDao,
-    userConfig: UserConfiguration,
+    limit: Int,
     outPrinter: OutPrinter,
 ): Menu =
     deleteAccountMenu(
-        userConfig,
+        budgetData,
+        budgetDao,
+        limit,
         outPrinter,
-        deleter = { account: DraftAccount ->
-            deleteDraftAccount(account)
-            budgetDao.deactivateAccount(account)
-        },
     ) {
-        draftAccounts.filter { it.balance == BigDecimal.ZERO.setScale(2) }
+        budgetData.draftAccounts.filter { it.balance == BigDecimal.ZERO.setScale(2) }
     }
 
 fun <T : Account> deleteAccountMenu(
-    userConfig: UserConfiguration,
+    budgetData: BudgetData,
+    budgetDao: BudgetDao,
+    limit: Int,
     outPrinter: OutPrinter,
-    deleter: (T) -> Unit,
     deleteFrom: () -> List<T>,
 ): Menu =
     ScrollingSelectionMenu(
-        header = "Select account to delete",
-        limit = userConfig.numberOfItemsInScrollingList,
-        itemListGenerator = { limit, offset ->
+        header = "Select account to deactivate",
+        limit = limit,
+        itemListGenerator = { lim, offset ->
             val baseList = deleteFrom()
             baseList.subList(
                 offset,
-                min(baseList.size, offset + limit),
+                min(baseList.size, offset + lim),
             )
         },
         labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
-    ) { _: MenuSession, selectedAccount: T ->
-        deleter(selectedAccount)
-        outPrinter.important("Deleted account '${selectedAccount.name}'")
+    ) { _: MenuSession, account: T ->
+        budgetData.deleteAccount(account)
+        budgetDao.deactivateAccount(account)
+        outPrinter.important("Deactivated account '${account.name}'")
     }

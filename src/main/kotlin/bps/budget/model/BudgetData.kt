@@ -103,28 +103,23 @@ class BudgetData(
         byId[draftAccount.id] = draftAccount
     }
 
-    fun deleteChargeAccount(chargeAccount: ChargeAccount) {
-        require(chargeAccount.balance == BigDecimal.ZERO.setScale(2)) { "chargeAccount balance must be zero" }
-        chargeAccounts = chargeAccounts - chargeAccount
-        byId.remove(chargeAccount.id)
-    }
-
-    fun deleteRealAccount(realAccount: RealAccount) {
-        require(realAccount.balance == BigDecimal.ZERO.setScale(2)) { "realAccount balance must be zero" }
-        realAccounts = realAccounts - realAccount
-        byId.remove(realAccount.id)
-    }
-
-    fun deleteCategoryAccount(categoryAccount: CategoryAccount) {
-        require(categoryAccount.balance == BigDecimal.ZERO.setScale(2)) { "categoryAccount balance must be zero" }
-        categoryAccounts = categoryAccounts - categoryAccount
-        byId.remove(categoryAccount.id)
-    }
-
-    fun deleteDraftAccount(draftAccount: DraftAccount) {
-        require(draftAccount.balance == BigDecimal.ZERO.setScale(2)) { "draftAccount balance must be zero" }
-        draftAccounts = draftAccounts - draftAccount
-        byId.remove(draftAccount.id)
+    fun deleteAccount(account: Account) {
+        require(account.balance == BigDecimal.ZERO.setScale(2)) { "account balance must be zero before being deleted" }
+        byId.remove(account.id)
+        when (account) {
+            is CategoryAccount -> {
+                categoryAccounts = categoryAccounts - account
+            }
+            is ChargeAccount -> {
+                chargeAccounts = chargeAccounts - account
+            }
+            is RealAccount -> {
+                realAccounts = realAccounts - account
+            }
+            is DraftAccount -> {
+                draftAccounts = draftAccounts - account
+            }
+        }
     }
 
     companion object {

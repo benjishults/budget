@@ -180,7 +180,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
  6. Quit (q)
 """,
                         "Enter selection: ",
-                        """What kind af account do you want to delete?
+                        """What kind af account do you want to deactivate?
  1. Category Account
  2. Real Account
  3. Charge Account
@@ -189,7 +189,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
  6. Quit (q)
 """,
                         "Enter selection: ",
-                        """Select account to delete
+                        """Select account to deactivate
  1.       0.00 | Cosmetics       | Cosmetics, procedures, pampering, and accessories
  2.       0.00 | Education       | Tuition, books, etc.
  3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
@@ -208,10 +208,10 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
 """,
                         "Enter selection: ",
                         """
-Deleted account 'Cosmetics'
+Deactivated account 'Cosmetics'
 
 """,
-                        """Select account to delete
+                        """Select account to deactivate
  1.       0.00 | Education       | Tuition, books, etc.
  2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
  3.       0.00 | Food            | Food other than what's covered in entertainment
@@ -228,7 +228,7 @@ Deleted account 'Cosmetics'
 14. Quit (q)
 """,
                         "Enter selection: ",
-                        """What kind af account do you want to delete?
+                        """What kind af account do you want to deactivate?
  1. Category Account
  2. Real Account
  3. Charge Account
