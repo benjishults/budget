@@ -82,7 +82,7 @@ fun WithIo.transferMenu(
                     }
                     .build()
                 budgetData.commit(transferTransaction)
-                budgetDao.commit(transferTransaction, budgetData.id)
+                budgetDao.transactionDao.commit(transferTransaction, budgetData.id)
                 outPrinter.important("Transfer recorded")
             } else {
                 outPrinter.important("Must transfer a positive amount.")

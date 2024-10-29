@@ -175,12 +175,13 @@ class ConsoleUiFacade(
 //                    .getResult()
             }
         return budgetDao
+            .userBudgetDao
             .getUserByLogin(login)
             ?: run {
                 outPrinter("Unknown user.  Creating new account.")
                 User(
                     login = login,
-                    id = budgetDao.createUser(login, "a"),
+                    id = budgetDao.userBudgetDao.createUser(login, "a"),
                 )
             }
     }

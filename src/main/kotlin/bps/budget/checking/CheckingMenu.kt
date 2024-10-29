@@ -6,6 +6,7 @@ import bps.budget.model.DraftAccount
 import bps.budget.model.DraftStatus
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.budget.transaction.ViewTransactionsWithoutBalancesMenu
@@ -104,7 +105,7 @@ fun WithIo.checksMenu(
                             timeZone = budgetData.timeZone,
                             limit = userConfig.numberOfItemsInScrollingList,
                             outPrinter = outPrinter,
-                        ) { _, draftTransactionItem: BudgetDao.ExtendedTransactionItem<DraftAccount> ->
+                        ) { _, draftTransactionItem: TransactionDao.ExtendedTransactionItem<DraftAccount> ->
                             val timestamp: Instant =
                                 getTimestampFromUser(
                                     "Did the check clear just now [Y]? ",
@@ -130,7 +131,7 @@ fun WithIo.checksMenu(
                                     }
                                     .build()
                             budgetData.commit(clearingTransaction)
-                            budgetDao.clearCheck(
+                            budgetDao.transactionDao.clearCheck(
                                 draftTransactionItem
                                     .item
                                     .build(

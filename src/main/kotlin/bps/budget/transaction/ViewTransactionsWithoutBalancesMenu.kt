@@ -2,6 +2,7 @@ package bps.budget.transaction
 
 import bps.budget.model.Account
 import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.TransactionDao
 import bps.budget.ui.format
 import bps.console.app.MenuSession
 import bps.console.io.OutPrinter
@@ -22,19 +23,19 @@ open class ViewTransactionsWithoutBalancesMenu<A : Account>(
     private val timeZone: TimeZone,
     limit: Int = 30,
     offset: Int = 0,
-    private val filter: (BudgetDao.ExtendedTransactionItem<A>) -> Boolean = { true },
+    private val filter: (TransactionDao.ExtendedTransactionItem<A>) -> Boolean = { true },
     header: String? = "'${account.name}' Account Transactions",
     prompt: String,
     val outPrinter: OutPrinter,
     extraItems: List<MenuItem> = emptyList(),
-    actOnSelectedItem: (MenuSession, BudgetDao.ExtendedTransactionItem<A>) -> Unit,
-    /* = { _, extendedTransactionItem: BudgetDao.ExtendedTransactionItem ->
+    actOnSelectedItem: (MenuSession, TransactionDao.ExtendedTransactionItem<A>) -> Unit,
+    /* = { _, extendedTransactionItem: TransactionDao.ExtendedTransactionItem ->
         outPrinter.showTransactionDetailsAction(
             extendedTransactionItem.transaction(budgetId, accountIdToAccountMap),
             timeZone,
         )
     }*/
-) : ScrollingSelectionMenu<BudgetDao.ExtendedTransactionItem<A>>(
+) : ScrollingSelectionMenu<TransactionDao.ExtendedTransactionItem<A>>(
     """
         |$header
         |$TRANSACTIONS_WITHOUT_BALANCES_TABLE_HEADER
@@ -53,7 +54,7 @@ open class ViewTransactionsWithoutBalancesMenu<A : Account>(
         )
     },
     itemListGenerator = { selectedLimit: Int, selectedOffset: Int ->
-        with(budgetDao) {
+        with(budgetDao.transactionDao) {
             fetchTransactionItemsInvolvingAccount(
                 account = account,
                 limit = selectedLimit,

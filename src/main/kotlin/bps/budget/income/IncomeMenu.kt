@@ -58,7 +58,7 @@ fun WithIo.recordIncomeSelectionMenu(
         val incomeTransaction: Transaction =
             createIncomeTransaction(description, timestamp, amount, budgetData, realAccount)
         budgetData.commit(incomeTransaction)
-        budgetDao.commit(incomeTransaction, budgetData.id)
+        budgetDao.transactionDao.commit(incomeTransaction, budgetData.id)
         outPrinter.important("Income recorded")
     }
 }

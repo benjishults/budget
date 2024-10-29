@@ -1,7 +1,6 @@
 package bps.budget.model
 
-import bps.budget.persistence.BudgetDao
-import bps.budget.persistence.BudgetDao.ExtendedTransactionItem
+import bps.budget.persistence.TransactionDao
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
 import java.util.UUID
@@ -74,7 +73,7 @@ abstract class Account(
     ): Transaction.ItemBuilder<*> =
         TODO()
 
-    open fun BudgetDao.extendedTransactionItemFactory(
+    open fun TransactionDao.extendedTransactionItemFactory(
         id: UUID,
         amount: BigDecimal,
         description: String?,
@@ -83,7 +82,7 @@ abstract class Account(
         transactionDescription: String,
         transactionTimestamp: Instant,
         accountBalanceAfterItem: BigDecimal?,
-    ): ExtendedTransactionItem<*> =
+    ): TransactionDao.ExtendedTransactionItem<*> =
         TODO()
 
     fun commit(item: Transaction.Item<*>) {
@@ -143,7 +142,7 @@ class CategoryAccount(
             draftStatus = draftStatus,
         )
 
-    override fun BudgetDao.extendedTransactionItemFactory(
+    override fun TransactionDao.extendedTransactionItemFactory(
         id: UUID,
         amount: BigDecimal,
         description: String?,
@@ -152,8 +151,8 @@ class CategoryAccount(
         transactionDescription: String,
         transactionTimestamp: Instant,
         accountBalanceAfterItem: BigDecimal?,
-    ): ExtendedTransactionItem<CategoryAccount> =
-        ExtendedTransactionItem(
+    ): TransactionDao.ExtendedTransactionItem<CategoryAccount> =
+        TransactionDao.ExtendedTransactionItem(
             item = itemBuilderFactory(
                 id = id,
                 amount = amount,
@@ -163,7 +162,7 @@ class CategoryAccount(
             transactionId = transactionId,
             transactionDescription = transactionDescription,
             transactionTimestamp = transactionTimestamp,
-            budgetDao = this,
+            transactionDao = this,
             budgetId = this@CategoryAccount.budgetId,
             accountBalanceAfterItem = accountBalanceAfterItem,
         )
@@ -187,7 +186,7 @@ open class RealAccount(
         realItemBuilders.add(itemBuilderFactory(id, amount, description, draftStatus))
     }
 
-    override fun BudgetDao.extendedTransactionItemFactory(
+    override fun TransactionDao.extendedTransactionItemFactory(
         id: UUID,
         amount: BigDecimal,
         description: String?,
@@ -196,8 +195,8 @@ open class RealAccount(
         transactionDescription: String,
         transactionTimestamp: Instant,
         accountBalanceAfterItem: BigDecimal?,
-    ): ExtendedTransactionItem<RealAccount> =
-        ExtendedTransactionItem(
+    ): TransactionDao.ExtendedTransactionItem<RealAccount> =
+        TransactionDao.ExtendedTransactionItem(
             item = itemBuilderFactory(
                 id = id,
                 amount = amount,
@@ -207,7 +206,7 @@ open class RealAccount(
             transactionId = transactionId,
             transactionDescription = transactionDescription,
             transactionTimestamp = transactionTimestamp,
-            budgetDao = this,
+            transactionDao = this,
             budgetId = this@RealAccount.budgetId,
             accountBalanceAfterItem = accountBalanceAfterItem,
         )
@@ -250,7 +249,7 @@ class DraftAccount(
         draftItemBuilders.add(itemBuilderFactory(id, amount, description, draftStatus))
     }
 
-    override fun BudgetDao.extendedTransactionItemFactory(
+    override fun TransactionDao.extendedTransactionItemFactory(
         id: UUID,
         amount: BigDecimal,
         description: String?,
@@ -259,8 +258,8 @@ class DraftAccount(
         transactionDescription: String,
         transactionTimestamp: Instant,
         accountBalanceAfterItem: BigDecimal?,
-    ): ExtendedTransactionItem<DraftAccount> =
-        ExtendedTransactionItem(
+    ): TransactionDao.ExtendedTransactionItem<DraftAccount> =
+        TransactionDao.ExtendedTransactionItem(
             item = itemBuilderFactory(
                 id = id,
                 amount = amount,
@@ -270,7 +269,7 @@ class DraftAccount(
             transactionId = transactionId,
             transactionDescription = transactionDescription,
             transactionTimestamp = transactionTimestamp,
-            budgetDao = this,
+            transactionDao = this,
             budgetId = this@DraftAccount.budgetId,
             accountBalanceAfterItem = accountBalanceAfterItem,
         )
@@ -324,7 +323,7 @@ class ChargeAccount(
             draftStatus = draftStatus,
         )
 
-    override fun BudgetDao.extendedTransactionItemFactory(
+    override fun TransactionDao.extendedTransactionItemFactory(
         id: UUID,
         amount: BigDecimal,
         description: String?,
@@ -333,8 +332,8 @@ class ChargeAccount(
         transactionDescription: String,
         transactionTimestamp: Instant,
         accountBalanceAfterItem: BigDecimal?,
-    ): ExtendedTransactionItem<ChargeAccount> =
-        ExtendedTransactionItem(
+    ): TransactionDao.ExtendedTransactionItem<ChargeAccount> =
+        TransactionDao.ExtendedTransactionItem(
             item = itemBuilderFactory(
                 id = id,
                 amount = amount,
@@ -344,7 +343,7 @@ class ChargeAccount(
             transactionId = transactionId,
             transactionDescription = transactionDescription,
             transactionTimestamp = transactionTimestamp,
-            budgetDao = this,
+            transactionDao = this,
             budgetId = this@ChargeAccount.budgetId,
             accountBalanceAfterItem = accountBalanceAfterItem,
         )

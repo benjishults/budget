@@ -81,7 +81,7 @@ class JdbcDaoTest : FreeSpec() {
                     balance = 1000.toBigDecimal().setScale(2),
                     budgetId = budgetId,
                 )
-                val extendedTransactionItems = fetchTransactionItemsInvolvingAccount(account, 3)
+                val extendedTransactionItems = transactionDao.fetchTransactionItemsInvolvingAccount(account, 3)
                     .sorted()
                 withClue("extendedTransactionItems size") { extendedTransactionItems.size shouldBe 3 }
                 extendedTransactionItems[0].asClue {
@@ -107,8 +107,14 @@ class JdbcDaoTest : FreeSpec() {
                         true andThen
                         true andThen
                         false
-                shouldThrow<IllegalArgumentException> { fetchTransactionItemsInvolvingAccount(account, 3, 3) }
-                val secondPage = fetchTransactionItemsInvolvingAccount(
+                shouldThrow<IllegalArgumentException> {
+                    transactionDao.fetchTransactionItemsInvolvingAccount(
+                        account,
+                        3,
+                        3,
+                    )
+                }
+                val secondPage = transactionDao.fetchTransactionItemsInvolvingAccount(
                     account,
                     3,
                     3,

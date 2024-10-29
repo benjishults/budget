@@ -5,7 +5,7 @@ import bps.budget.model.Account
 import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftStatus
 import bps.budget.model.Transaction
-import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.jdbc.JdbcDao
 import bps.config.convertToPath
 import bps.jdbc.JdbcFixture
@@ -82,7 +82,7 @@ class DataMigrations {
                                         while (resultSet.next()) {
                                             val budgetId = resultSet.getUuid("budget_id")!!
                                             add(
-                                                BudgetDao.ExtendedTransactionItem(
+                                                TransactionDao.ExtendedTransactionItem(
                                                     item = Transaction.ItemBuilder(
                                                         UUID.randomUUID(),
                                                         amount = resultSet.getCurrencyAmount("amount"),
@@ -99,7 +99,7 @@ class DataMigrations {
                                                     transactionId = resultSet.getUuid("transaction_id")!!,
                                                     transactionDescription = "",
                                                     transactionTimestamp = now,
-                                                    budgetDao = jdbcDao,
+                                                    transactionDao = jdbcDao.transactionDao,
                                                     budgetId = budgetId,
                                                     accountBalanceAfterItem = BigDecimal.ZERO.setScale(2),
                                                 ),
@@ -108,7 +108,7 @@ class DataMigrations {
                                     }
                             }
                     }
-                        .forEach { transactionItem: BudgetDao.ExtendedTransactionItem<*> ->
+                        .forEach { transactionItem: TransactionDao.ExtendedTransactionItem<*> ->
                             prepareStatement(
                                 """
                                                 |update transaction_items

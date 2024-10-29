@@ -57,7 +57,13 @@ fun WithIo.customizeMenu(
                         "Enter a unique name for the new category: ",
                         inputReader,
                         outPrinter,
-                        validator = DistinctNameValidator(budgetData.categoryAccounts),
+                        validator = DistinctNameValidator(
+                            budgetData.categoryAccounts + budgetDao.accountDao.getDeactivatedAccounts(
+                                "category",
+                                budgetData.id,
+                                ::CategoryAccount,
+                            ),
+                        ),
                     )
                         .getResult()
                         ?.trim()
@@ -84,7 +90,7 @@ fun WithIo.customizeMenu(
                 Menu("What kind af account do you want to deactivate?") {
                     add(
                         pushMenu("Category Account") {
-                            deleteCategoryAccountMenu(
+                            deactivateCategoryAccountMenu(
                                 budgetData,
                                 budgetDao,
                                 userConfig.numberOfItemsInScrollingList,
@@ -94,7 +100,7 @@ fun WithIo.customizeMenu(
                     )
                     add(
                         pushMenu("Real Account") {
-                            deleteRealAccountMenu(
+                            deactivateRealAccountMenu(
                                 budgetData,
                                 budgetDao,
                                 userConfig.numberOfItemsInScrollingList,
@@ -104,7 +110,7 @@ fun WithIo.customizeMenu(
                     )
                     add(
                         pushMenu("Charge Account") {
-                            deleteChargeAccountMenu(
+                            deactivateChargeAccountMenu(
                                 budgetData,
                                 budgetDao,
                                 userConfig.numberOfItemsInScrollingList,
@@ -114,7 +120,7 @@ fun WithIo.customizeMenu(
                     )
                     add(
                         pushMenu("Draft Account") {
-                            deleteDraftAccountMenu(
+                            deactivateDraftAccountMenu(
                                 budgetData,
                                 budgetDao,
                                 userConfig.numberOfItemsInScrollingList,
@@ -134,7 +140,13 @@ fun WithIo.customizeMenu(
                         "Enter a unique name for the real account: ",
                         inputReader,
                         outPrinter,
-                        validator = DistinctNameValidator(budgetData.realAccounts),
+                        validator = DistinctNameValidator(
+                            budgetData.realAccounts + budgetDao.accountDao.getDeactivatedAccounts(
+                                "real",
+                                budgetData.id,
+                                ::RealAccount,
+                            ),
+                        ),
                     )
                         .getResult()
                         ?.trim()
@@ -209,7 +221,7 @@ fun WithIo.customizeMenu(
                         budgetDao.save(budgetData, user)
                         if (incomeTransaction != null) {
                             budgetData.commit(incomeTransaction)
-                            budgetDao.commit(incomeTransaction, budgetData.id)
+                            budgetDao.transactionDao.commit(incomeTransaction, budgetData.id)
                             outPrinter.important("Real account '${realAccount.name}' created with balance $$balance")
                         }
                     } catch (ex: Exception) {
@@ -226,7 +238,13 @@ fun WithIo.customizeMenu(
                         "Enter a unique name for the new credit card: ",
                         inputReader,
                         outPrinter,
-                        validator = DistinctNameValidator(budgetData.chargeAccounts),
+                        validator = DistinctNameValidator(
+                            budgetData.chargeAccounts + budgetDao.accountDao.getDeactivatedAccounts(
+                                "charge",
+                                budgetData.id,
+                                ::ChargeAccount,
+                            ),
+                        ),
                     )
                         .getResult()
                         ?.trim()
@@ -263,13 +281,13 @@ fun WithIo.customizeMenu(
         add(quitItem)
     }
 
-fun deleteCategoryAccountMenu(
+fun deactivateCategoryAccountMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     limit: Int,
     outPrinter: OutPrinter,
 ): Menu =
-    deleteAccountMenu(
+    deactivateAccountMenu(
         budgetData,
         budgetDao,
         limit,
@@ -281,13 +299,13 @@ fun deleteCategoryAccountMenu(
             }
     }
 
-fun deleteRealAccountMenu(
+fun deactivateRealAccountMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     limit: Int,
     outPrinter: OutPrinter,
 ): Menu =
-    deleteAccountMenu(
+    deactivateAccountMenu(
         budgetData,
         budgetDao,
         limit,
@@ -296,13 +314,13 @@ fun deleteRealAccountMenu(
         budgetData.realAccounts.filter { it.balance == BigDecimal.ZERO.setScale(2) }
     }
 
-fun deleteChargeAccountMenu(
+fun deactivateChargeAccountMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     limit: Int,
     outPrinter: OutPrinter,
 ): Menu =
-    deleteAccountMenu(
+    deactivateAccountMenu(
         budgetData,
         budgetDao,
         limit,
@@ -311,13 +329,13 @@ fun deleteChargeAccountMenu(
         budgetData.chargeAccounts.filter { it.balance == BigDecimal.ZERO.setScale(2) }
     }
 
-fun deleteDraftAccountMenu(
+fun deactivateDraftAccountMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     limit: Int,
     outPrinter: OutPrinter,
 ): Menu =
-    deleteAccountMenu(
+    deactivateAccountMenu(
         budgetData,
         budgetDao,
         limit,
@@ -326,7 +344,7 @@ fun deleteDraftAccountMenu(
         budgetData.draftAccounts.filter { it.balance == BigDecimal.ZERO.setScale(2) }
     }
 
-fun <T : Account> deleteAccountMenu(
+fun <T : Account> deactivateAccountMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     limit: Int,
@@ -346,6 +364,6 @@ fun <T : Account> deleteAccountMenu(
         labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
     ) { _: MenuSession, account: T ->
         budgetData.deleteAccount(account)
-        budgetDao.deactivateAccount(account)
+        budgetDao.accountDao.deactivateAccount(account)
         outPrinter.important("Deactivated account '${account.name}'")
     }

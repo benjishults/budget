@@ -24,17 +24,17 @@ interface BasicAccountsJdbcTestFixture : BaseJdbcTestFixture {
 //                e.printStackTrace()
 //            }
 //            try {
-            jdbcDao.deleteBudget(budgetId)
+            jdbcDao.userBudgetDao.deleteBudget(budgetId)
 //            } catch (e: Exception) {
 //                e.printStackTrace()
 //            }
 //            try {
-            jdbcDao.deleteUser(user.id)
+            jdbcDao.userBudgetDao.deleteUser(user.id)
 //            } catch (e: Exception) {
 //                e.printStackTrace()
 //            }
 //            try {
-            jdbcDao.deleteUserByLogin(user.login)
+            jdbcDao.userBudgetDao.deleteUserByLogin(user.login)
 //            } catch (e: Exception) {
 //                e.printStackTrace()
 //            }

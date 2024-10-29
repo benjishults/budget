@@ -10,15 +10,14 @@ import kotlinx.datetime.Instant
 import java.math.BigDecimal
 import java.util.UUID
 
-/**
- * @param C the [BudgetConfig] type determining how the data is found in the first place.
- */
+///**
+// * @param C the [BudgetConfig] type determining how the data is found in the first place.
+// */
 interface BudgetDao : AutoCloseable {
 
-    fun getUserByLogin(login: String): User? = null
-
-    fun createUser(login: String, password: String): UUID =
-        UUID.randomUUID()
+    val userBudgetDao: UserBudgetDao get() = TODO()
+    val transactionDao: TransactionDao get() = TODO()
+    val accountDao: AccountDao get() = TODO()
 
     fun prepForFirstLoad() {}
 
@@ -33,6 +32,20 @@ interface BudgetDao : AutoCloseable {
      * Save top-level account data.  Persist adding and deleting accounts
      */
     fun save(data: BudgetData, user: User) {}
+
+    override fun close() {}
+
+}
+
+interface UserBudgetDao {
+    fun getUserByLogin(login: String): User? = null
+    fun createUser(login: String, password: String): UUID = TODO()
+    fun deleteBudget(budgetId: UUID) {}
+    fun deleteUser(userId: UUID) {}
+    fun deleteUserByLogin(login: String) {}
+}
+
+interface TransactionDao {
 
     fun commit(
         transaction: Transaction,
@@ -61,10 +74,26 @@ interface BudgetDao : AutoCloseable {
     ) {
     }
 
-    fun deactivateAccount(account: Account) {}
-    fun deleteBudget(budgetId: UUID) {}
-    fun deleteUser(userId: UUID) {}
-    fun deleteUserByLogin(login: String) {}
+    /**
+     * @param balanceAtEndOfPage must be provided unless [offset] is `0`.
+     * If not provided, then the balance from the account will be used.
+     * Its value should be the balance of the account at the point when this page of results ended.
+     */
+    fun <A : Account> fetchTransactionItemsInvolvingAccount(
+        account: A,
+        limit: Int = 30,
+        offset: Int = 0,
+        balanceAtEndOfPage: BigDecimal? =
+            require(offset == 0) { "balanceAtEndOfPage must be provided unless offset is 0." }
+                .let { account.balance },
+    ): List<ExtendedTransactionItem<A>> =
+        emptyList()
+
+    fun getTransactionOrNull(
+        transactionId: UUID,
+        budgetId: UUID,
+        accountIdToAccountMap: Map<UUID, Account>,
+    ): Transaction?
 
     /**
      * See src/test/kotlin/bps/kotlin/GenericFunctionTest.kt for a discussion of how I want to improve this
@@ -75,7 +104,7 @@ interface BudgetDao : AutoCloseable {
         val transactionId: UUID,
         val transactionDescription: String,
         val transactionTimestamp: Instant,
-        val budgetDao: BudgetDao,
+        val transactionDao: TransactionDao,
         val budgetId: UUID,
     ) : Comparable<ExtendedTransactionItem<*>> {
 
@@ -89,7 +118,7 @@ interface BudgetDao : AutoCloseable {
         fun transaction(budgetId: UUID, accountIdToAccountMap: Map<UUID, Account>): Transaction =
             transaction
                 ?: run {
-                    budgetDao.getTransactionOrNull(transactionId, budgetId, accountIdToAccountMap)!!
+                    transactionDao.getTransactionOrNull(transactionId, budgetId, accountIdToAccountMap)!!
                         .also {
                             transaction = it
                         }
@@ -124,28 +153,24 @@ interface BudgetDao : AutoCloseable {
             return "ExtendedTransactionItem(transactionId=$transactionId, item=$item, accountBalanceAfterItem=$accountBalanceAfterItem)"
         }
     }
+}
 
-    /**
-     * @param balanceAtEndOfPage must be provided unless [offset] is `0`.
-     * If not provided, then the balance from the account will be used.
-     * Its value should be the balance of the account at the point when this page of results ended.
-     */
-    fun <A : Account> fetchTransactionItemsInvolvingAccount(
-        account: A,
-        limit: Int = 30,
-        offset: Int = 0,
-        balanceAtEndOfPage: BigDecimal? =
-            require(offset == 0) { "balanceAtEndOfPage must be provided unless offset is 0." }
-                .let { account.balance },
-    ): List<ExtendedTransactionItem<A>> =
-        emptyList()
+interface AccountDao {
 
-    override fun close() {}
-
-    fun getTransactionOrNull(
-        transactionId: UUID,
+    fun <T : Account> getDeactivatedAccounts(
+        type: String,
         budgetId: UUID,
-        accountIdToAccountMap: Map<UUID, Account>,
-    ): Transaction?
+        factory: (String, String, UUID, BigDecimal, UUID) -> T,
+    ): List<T> = TODO()
+
+    fun deactivateAccount(account: Account): Unit = TODO()
+
+    fun <T : Account> getActiveAccounts(
+        type: String,
+        budgetId: UUID,
+        factory: (String, String, UUID, BigDecimal, UUID) -> T,
+    ): List<T> = TODO()
+
+    fun updateBalances(transaction: Transaction, budgetId: UUID)
 
 }

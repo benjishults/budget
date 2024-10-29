@@ -54,7 +54,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
         }
         "with data from config" - {
             val budgetData = loadBudgetData(
-                user = jdbcDao.getUserByLogin(configurations.user.defaultLogin!!)!!,
+                user = jdbcDao.userBudgetDao.getUserByLogin(configurations.user.defaultLogin!!)!!,
                 budgetDao = jdbcDao,
                 budgetName = getBudgetNameFromPersistenceConfig(configurations.persistence)!!,
             )
@@ -81,7 +81,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                         }
                         .build()
                 budgetData.commit(income)
-                jdbcDao.commit(income, budgetData.id)
+                jdbcDao.transactionDao.commit(income, budgetData.id)
             }
             "allocate to food" {
                 val amount = BigDecimal("300.00")
@@ -105,7 +105,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                         }
                         .build()
                 budgetData.commit(allocate)
-                jdbcDao.commit(allocate, budgetData.id)
+                jdbcDao.transactionDao.commit(allocate, budgetData.id)
             }
             "write a check for food" {
                 val amount = BigDecimal("100.00")
@@ -131,7 +131,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                     }
                     .build()
                 budgetData.commit(writeCheck)
-                jdbcDao.commit(writeCheck, budgetData.id)
+                jdbcDao.transactionDao.commit(writeCheck, budgetData.id)
             }
             "check balances after writing check" {
                 budgetData.realAccounts.forEach { realAccount: RealAccount ->
@@ -195,7 +195,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                     }
                     .build()
                 budgetData.commit(writeCheck)
-                jdbcDao.commit(writeCheck, budgetData.id)
+                jdbcDao.transactionDao.commit(writeCheck, budgetData.id)
             }
             "check balances after check clears" {
                 checkBalancesAfterCheckClears(budgetData)

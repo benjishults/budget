@@ -4,6 +4,7 @@ import bps.budget.model.Account
 import bps.budget.model.CategoryAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.TransactionDao
 import bps.console.SimpleConsoleIoTestFixture
 import bps.console.app.MenuApplicationWithQuit
 import io.kotest.core.spec.style.FreeSpec
@@ -28,7 +29,8 @@ class ViewTransactionsMenuTest : FreeSpec(),
             override fun now(): Instant =
                 Instant.parse(String.format("2024-08-09T00:00:%02d.500Z", secondCount++))
         }
-        val fetchTransactionsCallsExpected = mutableMapOf<Pair<Int, Int>, List<BudgetDao.ExtendedTransactionItem<*>>>()
+        val fetchTransactionsCallsExpected =
+            mutableMapOf<Pair<Int, Int>, List<TransactionDao.ExtendedTransactionItem<*>>>()
         val fetchTransactionsCallsMade = mutableListOf<Pair<Int, Int>>()
 
         val budgetId = UUID.randomUUID()
@@ -41,26 +43,42 @@ class ViewTransactionsMenuTest : FreeSpec(),
         )
 
         val budgetDao = object : BudgetDao {
-            @Suppress("UNCHECKED_CAST")
-            override fun <A : Account> fetchTransactionItemsInvolvingAccount(
-                account: A,
-                limit: Int,
-                offset: Int,
-                balanceAtEndOfPage: BigDecimal?,
-            ): List<BudgetDao.ExtendedTransactionItem<A>> {
-                fetchTransactionsCallsMade.add(limit to offset)
-                return (fetchTransactionsCallsExpected[limit to offset]
-                    ?: emptyList()) as List<BudgetDao.ExtendedTransactionItem<A>>
+            override val transactionDao: TransactionDao = object : TransactionDao {
+                @Suppress("UNCHECKED_CAST")
+                override fun <A : Account> fetchTransactionItemsInvolvingAccount(
+                    account: A,
+                    limit: Int,
+                    offset: Int,
+                    balanceAtEndOfPage: BigDecimal?,
+                ): List<TransactionDao.ExtendedTransactionItem<A>> {
+                    fetchTransactionsCallsMade.add(limit to offset)
+                    return (fetchTransactionsCallsExpected[limit to offset]
+                        ?: emptyList()) as List<TransactionDao.ExtendedTransactionItem<A>>
+                }
+
+                override fun getTransactionOrNull(
+                    transactionId: UUID,
+                    budgetId: UUID,
+                    accountIdToAccountMap: Map<UUID, Account>,
+                ): Transaction? = null
+
             }
+
+//            override val accountDao: AccountDao
+//                get() = object : AccountDao {
+//                    override fun updateBalances(transaction: Transaction, budgetId: UUID) {
+//                    }
+//
+//                    override fun <T : Account> getActiveAccounts(
+//                        type: String,
+//                        budgetId: UUID,
+//                        factory: (String, String, UUID, BigDecimal, UUID) -> T
+//                    ): List<T> {
+//                    }
+//                }
 
             override fun close() {
             }
-
-            override fun getTransactionOrNull(
-                transactionId: UUID,
-                budgetId: UUID,
-                accountIdToAccountMap: Map<UUID, Account>,
-            ): Transaction? = null
 
         }
 //        val menuSession: MenuSession = MenuSession(
@@ -86,7 +104,7 @@ class ViewTransactionsMenuTest : FreeSpec(),
             )
             fetchTransactionsCallsExpected.clear()
             fetchTransactionsCallsExpected[3 to 0] = listOf(
-                BudgetDao.ExtendedTransactionItem(
+                TransactionDao.ExtendedTransactionItem(
                     item = Transaction.ItemBuilder(
                         id = UUID.randomUUID(),
                         amount = 5.toBigDecimal().setScale(2),
@@ -97,10 +115,10 @@ class ViewTransactionsMenuTest : FreeSpec(),
                     transactionId = UUID.randomUUID(),
                     transactionDescription = "first transaction",
                     transactionTimestamp = clock.now(),
-                    budgetDao = budgetDao,
+                    transactionDao = budgetDao.transactionDao,
                     budgetId = budgetId,
                 ),
-                BudgetDao.ExtendedTransactionItem(
+                TransactionDao.ExtendedTransactionItem(
                     item = Transaction.ItemBuilder(
                         id = UUID.randomUUID(),
                         amount = 6.toBigDecimal().setScale(2),
@@ -111,10 +129,10 @@ class ViewTransactionsMenuTest : FreeSpec(),
                     transactionId = UUID.randomUUID(),
                     transactionDescription = "first transaction",
                     transactionTimestamp = clock.now(),
-                    budgetDao = budgetDao,
+                    transactionDao = budgetDao.transactionDao,
                     budgetId = budgetId,
                 ),
-                BudgetDao.ExtendedTransactionItem(
+                TransactionDao.ExtendedTransactionItem(
                     item = Transaction.ItemBuilder(
                         id = UUID.randomUUID(),
                         amount = 7.toBigDecimal().setScale(2),
@@ -125,7 +143,7 @@ class ViewTransactionsMenuTest : FreeSpec(),
                     transactionId = UUID.randomUUID(),
                     transactionDescription = "first transaction",
                     transactionTimestamp = clock.now(),
-                    budgetDao = budgetDao,
+                    transactionDao = budgetDao.transactionDao,
                     budgetId = budgetId,
                 ),
             )

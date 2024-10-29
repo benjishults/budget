@@ -7,6 +7,7 @@ import bps.budget.model.DraftStatus
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.budget.transaction.ViewTransactionFixture
@@ -201,7 +202,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
     runningTotal: BigDecimal,
     billPayTransaction: Transaction,
     chargeAccount: ChargeAccount,
-    selectedItems: List<BudgetDao.ExtendedTransactionItem<ChargeAccount>>,
+    selectedItems: List<TransactionDao.ExtendedTransactionItem<ChargeAccount>>,
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
@@ -237,13 +238,14 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
         },
     ),
 ) { _, chargeTransactionItem ->
-    val allSelectedItems: List<BudgetDao.ExtendedTransactionItem<ChargeAccount>> = selectedItems + chargeTransactionItem
+    val allSelectedItems: List<TransactionDao.ExtendedTransactionItem<ChargeAccount>> =
+        selectedItems + chargeTransactionItem
     val remainingToBeCovered: BigDecimal = runningTotal + chargeTransactionItem.item.amount
     when {
         remainingToBeCovered == BigDecimal.ZERO.setScale(2) -> {
             menuSession.pop()
             budgetData.commit(billPayTransaction)
-            budgetDao.commitCreditCardPayment(
+            budgetDao.transactionDao.commitCreditCardPayment(
                 allSelectedItems,
                 billPayTransaction,
                 budgetData.id,

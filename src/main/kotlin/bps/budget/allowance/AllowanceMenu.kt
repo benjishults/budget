@@ -68,7 +68,7 @@ fun WithIo.makeAllowancesSelectionMenu(
             }
             .build()
         budgetData.commit(allocate)
-        budgetDao.commit(allocate, budgetData.id)
+        budgetDao.transactionDao.commit(allocate, budgetData.id)
         outPrinter.important("Allowance recorded")
     } else {
         outPrinter.important("Must allow a positive amount.")

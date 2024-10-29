@@ -3,6 +3,7 @@ package bps.budget.transaction
 import bps.budget.model.Account
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.TransactionDao
 import bps.budget.ui.format
 import bps.console.app.MenuSession
 import bps.console.io.DefaultOutPrinter
@@ -33,7 +34,7 @@ open class ViewTransactionsMenu<A : Account>(
     prompt: String = "Select transaction for details: ",
     val outPrinter: OutPrinter = DefaultOutPrinter,
     extraItems: List<MenuItem> = emptyList(),
-    actOnSelectedItem: (MenuSession, BudgetDao.ExtendedTransactionItem<A>) -> Unit = { _, extendedTransactionItem: BudgetDao.ExtendedTransactionItem<A> ->
+    actOnSelectedItem: (MenuSession, TransactionDao.ExtendedTransactionItem<A>) -> Unit = { _, extendedTransactionItem: TransactionDao.ExtendedTransactionItem<A> ->
         // NOTE this is needed so that when this menu is re-displayed, it will be where it started
         contextStack.removeLast()
         with(ViewTransactionFixture) {
@@ -43,7 +44,7 @@ open class ViewTransactionsMenu<A : Account>(
             )
         }
     },
-) : ScrollingSelectionWithContextMenu<BudgetDao.ExtendedTransactionItem<A>, BigDecimal>(
+) : ScrollingSelectionWithContextMenu<TransactionDao.ExtendedTransactionItem<A>, BigDecimal>(
     """
         |$header
         |$TRANSACTIONS_TABLE_HEADER
@@ -64,7 +65,7 @@ open class ViewTransactionsMenu<A : Account>(
         )
     },
     itemListGenerator = { selectedLimit: Int, selectedOffset: Int ->
-        with(budgetDao) {
+        with(budgetDao.transactionDao) {
             fetchTransactionItemsInvolvingAccount(
                 account = account,
                 limit = selectedLimit,
@@ -85,7 +86,7 @@ open class ViewTransactionsMenu<A : Account>(
     /**
      * Add the current context to the stack immediately when the list is generated.
      */
-    override fun List<BudgetDao.ExtendedTransactionItem<A>>.produceCurrentContext(): BigDecimal =
+    override fun List<TransactionDao.ExtendedTransactionItem<A>>.produceCurrentContext(): BigDecimal =
         lastOrNull()
             ?.run {
                 accountBalanceAfterItem!! - item.amount

@@ -224,7 +224,7 @@ fun WithIo.allocateSpendingItemMenu(
             } else {
                 val transaction = transactionBuilder.build()
                 budgetData.commit(transaction)
-                budgetDao.commit(transaction, budgetData.id)
+                budgetDao.transactionDao.commit(transaction, budgetData.id)
                 outPrinter.important("Spending recorded")
             }
         }
