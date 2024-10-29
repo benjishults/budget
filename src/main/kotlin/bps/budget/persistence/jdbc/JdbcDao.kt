@@ -265,8 +265,8 @@ create table if not exists transaction_items
                     )
                     createStatement.executeUpdate(
                         """
-create index if not exists lookup_transaction_items_by_transaction
-    on transaction_items (transaction_id, budget_id)
+create index if not exists lookup_transaction_items_by_account
+    on transaction_items (account_id, budget_id)
                     """.trimIndent(),
                     )
                 }
@@ -831,6 +831,10 @@ where acc.budget_id = ?
             }
 
     /**
+     * 1. Sets the [Transaction.Item.draftStatus] to [DraftStatus.cleared] for each [draftTransactionItems]
+     * 2. Sets the "cleared-by" relation in the DB.
+     * 3. Commits the new [clearingTransaction]
+     * 4. Updates account balances
      * @throws IllegalArgumentException if either the [draftTransactionItems] or the [clearingTransaction] is not what
      * we expect
      */
@@ -841,12 +845,14 @@ where acc.budget_id = ?
     ) =
         catchCommitErrorState {
             // require clearTransaction is a simple draft transaction(s) clearing transaction
+            // with a single real item
             require(clearingTransaction.draftItems.isNotEmpty())
             require(clearingTransaction.categoryItems.isEmpty())
             require(clearingTransaction.chargeItems.isEmpty())
             require(clearingTransaction.realItems.size == 1)
             val realTransactionItem: Transaction.Item<RealAccount> = clearingTransaction.realItems.first()
             val realAccount: RealAccount = realTransactionItem.account
+            // the clearing transaction's draft item is on the drafts account related to that real account
             require(
                 clearingTransaction
                     .draftItems
@@ -854,28 +860,30 @@ where acc.budget_id = ?
                     .account
                     .realCompanion == realAccount,
             )
-            // require draftTransactionItems to be what we expect
             require(draftTransactionItems.isNotEmpty())
+            // each transaction item is on the correct account
+            // and the transactions they are part of were check-writing transactions
             require(
-                draftTransactionItems.all {
-                    it.account
-                        .realCompanion == realAccount
-                            &&
-                            with(it.transaction) {
-                                realItems.isEmpty()
-                                        &&
-                                        chargeItems.isEmpty()
-                                        &&
-                                        draftItems.size == 1
-                            }
-                },
+                draftTransactionItems
+                    .all {
+                        it
+                            .account
+                            .realCompanion == realAccount &&
+                                with(it.transaction) {
+                                    realItems.isEmpty() &&
+                                            chargeItems.isEmpty() &&
+                                            draftItems.size == 1
+                                }
+                    },
             )
+            // each transaction item comes from a different transaction
             require(
                 draftTransactionItems
                     .mapTo(mutableSetOf()) { it.transaction }
                     .size ==
                         draftTransactionItems.size,
             )
+            // the draft transactions items' amount sum is the amount being taken out of the real account
             require(
                 draftTransactionItems
                     .fold(BigDecimal.ZERO.setScale(2)) { sum, transactionItem ->
@@ -891,15 +899,13 @@ where acc.budget_id = ?
                             |update transaction_items ti
                             |set draft_status = 'cleared'
                             |where ti.budget_id = ?
-                            |and ti.transaction_id = ?
-                            |and ti.account_id = ?
+                            |and ti.id = ?
                             |and ti.draft_status = 'outstanding'
                         """.trimMargin(),
                         )
                             .use { statement ->
                                 statement.setUuid(1, budgetId)
-                                statement.setUuid(2, draftTransactionItem.transaction.id)
-                                statement.setUuid(3, draftTransactionItem.account.id)
+                                statement.setUuid(2, draftTransactionItem.id)
                                 if (statement.executeUpdate() != 1)
                                     throw IllegalStateException("Check being cleared not found in DB")
                             }
@@ -931,6 +937,10 @@ where acc.budget_id = ?
         }
 
     /**
+     * 1. Sets the [Transaction.Item.draftStatus] to [DraftStatus.cleared] for each [clearedItems]
+     * 2. Sets the "cleared-by" relation in the DB.
+     * 3. Commits the new [billPayTransaction]
+     * 4. Updates account balances
      * @throws IllegalArgumentException if either the [clearedItems] or the [billPayTransaction] is not what
      * we expect
      */
@@ -941,7 +951,7 @@ where acc.budget_id = ?
         budgetId: UUID,
     ) =
         catchCommitErrorState {
-            // require billPayTransaction is a simple real transfer
+            // require billPayTransaction is a simple real transfer between a real and a charge account
             require(billPayTransaction.draftItems.isEmpty())
             require(billPayTransaction.categoryItems.isEmpty())
             require(billPayTransaction.chargeItems.size == 1)
@@ -952,11 +962,13 @@ where acc.budget_id = ?
                 billPayChargeTransactionItem.account
             // require clearedItems to be what we expect
             require(clearedItems.isNotEmpty())
+            // all cleared items must be on the same charge account that's getting the transfer
             require(
                 clearedItems.all {
                     it.item.account == chargeAccount
                 },
             )
+            // the amount of the clearedItems must be the same as the amount being transferred
             require(
                 clearedItems
                     .fold(BigDecimal.ZERO.setScale(2)) { sum, transactionItem: ExtendedTransactionItem<ChargeAccount> ->
@@ -972,15 +984,13 @@ where acc.budget_id = ?
                             |update transaction_items ti
                             |set draft_status = 'cleared'
                             |where ti.budget_id = ?
-                            |and ti.transaction_id = ?
-                            |and ti.account_id = ?
+                            |and ti.id = ?
                             |and ti.draft_status = 'outstanding'
                         """.trimMargin(),
                         )
                             .use { statement ->
                                 statement.setUuid(1, budgetId)
-                                statement.setUuid(2, chargeTransactionItem.transactionId)
-                                statement.setUuid(3, chargeTransactionItem.item.account.id)
+                                statement.setUuid(2, chargeTransactionItem.item.id)
                                 if (statement.executeUpdate() != 1)
                                     throw IllegalStateException("Charge being cleared not found in DB")
                             }
@@ -1009,8 +1019,25 @@ where acc.budget_id = ?
                     }
                 updateBalances(billPayTransaction, budgetId)
             }
-
         }
+
+    override fun deactivateAccount(account: Account) {
+        connection.transactOrThrow {
+            prepareStatement(
+                """
+update account_active_periods aap
+set end_date_utc = now()
+where aap.account_id = ?
+  and now() > aap.start_date_utc
+  and now() < aap.end_date_utc
+                """.trimIndent(),
+            )
+                .use { deactivateActivityPeriod: PreparedStatement ->
+                    deactivateActivityPeriod.setUuid(1, account.id)
+                    deactivateActivityPeriod.executeUpdate()
+                }
+        }
+    }
 
     /**
      * Inserts the transaction records and updates the account balances in the DB.
@@ -1129,6 +1156,7 @@ where acc.budget_id = ?
     /**
      * Saves only if we have not had an error trying to commit.
      */
+    // FIXME figure out what this should really be doing and what should be done elsewhere.
     override fun save(data: BudgetData, user: User) {
         require(data.validate())
         errorState
@@ -1177,8 +1205,6 @@ where acc.budget_id = ?
                 upsertAccountData(data.chargeAccounts, "charge", data.id)
                 createStagingAccountsTable()
                 upsertAccountData(data.draftAccounts, "draft", data.id)
-                // TODO mark deleted accounts as in-active
-                //      see account_active_periods which is currently unused
             }
     }
 
@@ -1253,30 +1279,14 @@ where acc.budget_id = ?
     /**
      * Must be called within a transaction with manual commits
      */
-    private fun Connection.upsertAccountData(accounts: List<Account>, accountType: String, budgetId: UUID) {
-        // if a DB-active account is not in the list, deactivate it in DB
-        val currentAccountIds: Set<UUID> =
-            accounts
-                .map { it.id }
-                .toSet()
-        val activityIdsToBeDeactivated: List<UUID> =
-            getFullListOfActiveAccountsWithActivityRecords(accountType, budgetId)
-                .filter { it.first !in currentAccountIds }
-                .map { it.second }
-        activityIdsToBeDeactivated.forEach { activityId: UUID ->
-            prepareStatement(
-                """
-update account_active_periods
-set end_date_utc = now()
-where id = ?
-                """.trimIndent(),
-            )
-                .use { deactivateActivityPeriod: PreparedStatement ->
-                    deactivateActivityPeriod.setUuid(1, activityId)
-                    deactivateActivityPeriod.executeUpdate()
-                }
-        }
+    // TODO we want to be in a state where we don't need to call this!
+    private fun Connection.upsertAccountData(
+        accounts: List<Account>,
+        accountType: String,
+        budgetId: UUID,
+    ) {
         accounts.forEach { account ->
+            // upsert account
             prepareStatement(
                 """
                 insert into staged_accounts (id, name, description, balance,${if (accountType == "draft") "companion_account_id, " else ""} budget_id)
@@ -1318,6 +1328,7 @@ where id = ?
                     createAccountStatement.setString(1, accountType)
                     createAccountStatement.executeUpdate()
                 }
+            // upsert account_active_periods entry
             prepareStatement(
                 """
                     insert into account_active_periods (id, account_id, budget_id)
@@ -1335,6 +1346,10 @@ where id = ?
         }
     }
 
+    /**
+     * @returns a list of <accountId, activityId> where the activityId is the id of the "current" account_active_periods.
+     * If there is no "current" account_active_periods record, the account is not included in the return value.
+     */
     private fun Connection.getFullListOfActiveAccountsWithActivityRecords(
         accountType: String,
         budgetId: UUID,

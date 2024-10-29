@@ -61,7 +61,7 @@ interface BudgetDao : AutoCloseable {
     ) {
     }
 
-    fun deleteAccount(account: Account) {}
+    fun deactivateAccount(account: Account) {}
     fun deleteBudget(budgetId: UUID) {}
     fun deleteUser(userId: UUID) {}
     fun deleteUserByLogin(login: String) {}

@@ -84,22 +84,22 @@ fun WithIo.customizeMenu(
                 Menu("What kind af account do you want to delete?") {
                     add(
                         pushMenu("Category Account") {
-                            budgetData.deleteCategoryAccountMenu(userConfig, outPrinter)
+                            budgetData.deleteCategoryAccountMenu(budgetDao, userConfig, outPrinter)
                         },
                     )
                     add(
                         pushMenu("Real Account") {
-                            budgetData.deleteRealAccountMenu(userConfig, outPrinter)
+                            budgetData.deleteRealAccountMenu(budgetDao, userConfig, outPrinter)
                         },
                     )
                     add(
                         pushMenu("Charge Account") {
-                            budgetData.deleteChargeAccountMenu(userConfig, outPrinter)
+                            budgetData.deleteChargeAccountMenu(budgetDao, userConfig, outPrinter)
                         },
                     )
                     add(
                         pushMenu("Draft Account") {
-                            budgetData.deleteDraftAccountMenu(userConfig, outPrinter)
+                            budgetData.deleteDraftAccountMenu(budgetDao, userConfig, outPrinter)
                         },
                     )
                     add(backItem)
@@ -243,40 +243,69 @@ fun WithIo.customizeMenu(
         add(quitItem)
     }
 
-fun BudgetData.deleteCategoryAccountMenu(userConfig: UserConfiguration, outPrinter: OutPrinter): Menu =
+fun BudgetData.deleteCategoryAccountMenu(
+    budgetDao: BudgetDao,
+    userConfig: UserConfiguration,
+    outPrinter: OutPrinter,
+): Menu =
     deleteAccountMenu(
         userConfig,
         outPrinter,
-        deleter = { deleteCategoryAccount(it) },
+        deleter = { account: CategoryAccount ->
+            this.deleteCategoryAccount(account)
+            budgetDao.deactivateAccount(account)
+        },
     ) {
-        (categoryAccounts - generalAccount).filter {
-            it.balance == BigDecimal.ZERO.setScale(2)
-        }
+        (categoryAccounts - generalAccount)
+            .filter {
+                it.balance == BigDecimal.ZERO.setScale(2)
+            }
     }
 
-fun BudgetData.deleteRealAccountMenu(userConfig: UserConfiguration, outPrinter: OutPrinter): Menu =
+fun BudgetData.deleteRealAccountMenu(
+    budgetDao: BudgetDao,
+    userConfig: UserConfiguration,
+    outPrinter: OutPrinter,
+): Menu =
     deleteAccountMenu(
         userConfig,
         outPrinter,
-        deleter = { deleteRealAccount(it) },
+        deleter = { account: RealAccount ->
+            this.deleteRealAccount(account)
+            budgetDao.deactivateAccount(account)
+        },
     ) {
         realAccounts.filter { it.balance == BigDecimal.ZERO.setScale(2) }
     }
 
-fun BudgetData.deleteChargeAccountMenu(userConfig: UserConfiguration, outPrinter: OutPrinter): Menu =
+fun BudgetData.deleteChargeAccountMenu(
+    budgetDao: BudgetDao,
+    userConfig: UserConfiguration,
+    outPrinter: OutPrinter,
+): Menu =
     deleteAccountMenu(
         userConfig,
         outPrinter,
-        deleter = { deleteChargeAccount(it) },
+        deleter = { account: ChargeAccount ->
+            deleteChargeAccount(account)
+            budgetDao.deactivateAccount(account)
+        },
     ) {
         chargeAccounts.filter { it.balance == BigDecimal.ZERO.setScale(2) }
     }
 
-fun BudgetData.deleteDraftAccountMenu(userConfig: UserConfiguration, outPrinter: OutPrinter): Menu =
+fun BudgetData.deleteDraftAccountMenu(
+    budgetDao: BudgetDao,
+    userConfig: UserConfiguration,
+    outPrinter: OutPrinter,
+): Menu =
     deleteAccountMenu(
         userConfig,
         outPrinter,
-        deleter = { deleteDraftAccount(it) },
+        deleter = { account: DraftAccount ->
+            deleteDraftAccount(account)
+            budgetDao.deactivateAccount(account)
+        },
     ) {
         draftAccounts.filter { it.balance == BigDecimal.ZERO.setScale(2) }
     }

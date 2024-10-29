@@ -215,9 +215,10 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
     timeZone = budgetData.timeZone,
     header = "Select all transactions from this '${chargeAccount.name}' bill.  Amount to be covered: $${
         amountOfBill +
-                selectedItems.fold(BigDecimal.ZERO) { sum, item ->
-                    sum + item.item.amount
-                }
+                selectedItems
+                    .fold(BigDecimal.ZERO) { sum, item ->
+                        sum + item.item.amount
+                    }
     }",
     prompt = "Select a transaction covered in this bill: ",
     limit = userConfig.numberOfItemsInScrollingList,
@@ -237,8 +238,6 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
     ),
 ) { _, chargeTransactionItem ->
     val allSelectedItems: List<BudgetDao.ExtendedTransactionItem<ChargeAccount>> = selectedItems + chargeTransactionItem
-    // FIXME if the selected amount is greater than allowed, then give a "denied" message
-    //       ... or don't show such items in the first place
     val remainingToBeCovered: BigDecimal = runningTotal + chargeTransactionItem.item.amount
     when {
         remainingToBeCovered == BigDecimal.ZERO.setScale(2) -> {
