@@ -29,6 +29,8 @@ jobs:
           POSTGRES_PASSWORD: admin
     #        volumes:
     #          - ./scripts:./.scripts
+    env:
+      PGPASSWORD: admin
 
     steps:
       - uses: actions/checkout@v4
