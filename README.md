@@ -1,27 +1,55 @@
 # BPS Budget
 
-## Build
+## One-Time Setup
+
+### Set up the env for DB
+
+Set the `BPS_BUDGET_POSTGRES_DATA_DIR` environment variable to something like `~/data/bps-budget/postgres`
+and make sure that folder exists.
+
+You'll need to have pulled the postgres image from some container registry:
+
+```shell
+podman pull docker.io/postgres:latest
+```
+
+### Start Postgres
+
+Run the script to run Postgres in an OSI container.  (I use podman with docker as an alias to podman but docker
+works fine, too, if you prefer.)
+
+```shell
+% ./scripts/startDb.sh
+```
+
+### Create DB and users
+
+```
+% psql -U admin -h localhost -f /home/benji/repos/benjishults/budget/scripts/setupDbAsAdmin.sql
+Password for user admin:
+CREATE DATABASE
+CREATE ROLE
+GRANT
+GRANT
+ALTER DATABASE
+CREATE ROLE
+% psql -U admin -h localhost -f /home/benji/repos/benjishults/budget/scripts/setupBudgetSchemasAsAdmin.sql
+Password for user admin:
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE SCHEMA
+```
+
+### Build the Application
 
 ```shell
 ./gradlew shadowJar
 ```
 
-## Set up to run
+### Prepare to run for the first time
 
-Needs work to productize but here's how it works as of now.
-
-Set the `BPS_BUDGET_POSTGRES_DATA_DIR` environment variable to something like `~/data/bps-budget/postgres`
-and make sure that folder exists.
-
-Then run with:
-
-```shell
-docker run -e POSTGRES_PASSWORD=admin -e POSTGRES_USER=admin -p 5432:5432 -v "$BPS_BUDGET_POSTGRES_DATA_DIR":
-/var/lib/postgresql/data --rm --name postgres -d postgres
-java -cp build/libs/budget-1.0-SNAPSHOT-all.jar bps.budget.Budget
-```
-
-To customize, create a file named `budget.yml` in your `~/.config/bps-budget` folder.
+Create a file named `budget.yml` in your `~/.config/bps-budget` folder.
 
 It should something like this:
 
@@ -40,17 +68,28 @@ persistence:
 budgetUser:
     defaultLogin: fake@fake.com # your email
     defaultTimeZone: America/New_York # your time zone
+```
 
+## Run the application
+
+Make sure the DB is running. If it isn't running then start it with:
+
+```shell
+% ./scripts/startDb.sh
+```
+
+Once the DB is running, start the budget application with:
+
+```shell
+% ./scripts/budget.sh
 ```
 
 ## Troubleshooting
 
-To connect to the PostgresQL DB running in the docker container, do
+To connect to the Postgres DB running in the docker container, do
 
 ```shell
 psql -U budget -h 127.0.0.1 -d budget
 ```
 
 Data migrations can be run using `bps.budget.persistence.migration.DataMigrations`.
-
-Run
