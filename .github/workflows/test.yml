@@ -27,6 +27,8 @@ jobs:
         env:
           POSTGRES_USER: admin
           POSTGRES_PASSWORD: admin
+    #        volumes:
+    #          - ./scripts:./.scripts
 
     steps:
       - uses: actions/checkout@v4
@@ -35,6 +37,9 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+      - name: Get Postgres Client
+        run: |
+          sudo apt-get -y install postgresql-client
       - run: |
           psql -U admin -h localhost -f ./scripts/setupDbAsAdmin.sql
           psql -U admin -d budget -h localhost -f ./scripts/setupBudgetSchemasAsAdmin.sql
