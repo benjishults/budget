@@ -24,6 +24,8 @@ works fine, too, if you prefer.)
 
 ### Create DB and users
 
+This will create databases, users, and schemas for both production and testing.
+
 ```
 % psql -U admin -h localhost -f ./scripts/setupDbAsAdmin.sql
 Password for user admin:
@@ -33,7 +35,7 @@ GRANT
 GRANT
 ALTER DATABASE
 CREATE ROLE
-% psql -U admin -h localhost -f ./scripts/setupBudgetSchemasAsAdmin.sql
+% psql -U admin -d budget -h localhost -f /home/benji/repos/benjishults/budget/scripts/setupBudgetSchemasAsAdmin.sql
 Password for user admin:
 CREATE SCHEMA
 CREATE SCHEMA
@@ -70,7 +72,12 @@ budgetUser:
     defaultTimeZone: America/New_York # your time zone
 ```
 
-## Run the application
+## Run the Application
+
+Currently, this isn't set up to be running in an open environment. The security on the DB is minimal to non-existent.
+
+If you're just running this on your personal machine, and you have some reasonable router connecting you to the
+internet (or no connection at all), you should be fine.
 
 Make sure the DB is running. If it isn't running then start it with:
 
@@ -93,3 +100,17 @@ psql -U budget -h 127.0.0.1 -d budget
 ```
 
 Data migrations can be run using `bps.budget.persistence.migration.DataMigrations`.
+
+## Run Tests
+
+Make sure the DB is running. If it isn't running then start it with:
+
+```shell
+% ./scripts/startDb.sh
+```
+
+Run tests with:
+
+```shell
+./gradlew test
+```
