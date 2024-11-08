@@ -25,7 +25,7 @@ works fine, too, if you prefer.)
 ### Create DB and users
 
 ```
-% psql -U admin -h localhost -f /home/benji/repos/benjishults/budget/scripts/setupDbAsAdmin.sql
+% psql -U admin -h localhost -f ./scripts/setupDbAsAdmin.sql
 Password for user admin:
 CREATE DATABASE
 CREATE ROLE
@@ -33,7 +33,7 @@ GRANT
 GRANT
 ALTER DATABASE
 CREATE ROLE
-% psql -U admin -h localhost -f /home/benji/repos/benjishults/budget/scripts/setupBudgetSchemasAsAdmin.sql
+% psql -U admin -h localhost -f ./scripts/setupBudgetSchemasAsAdmin.sql
 Password for user admin:
 CREATE SCHEMA
 CREATE SCHEMA
