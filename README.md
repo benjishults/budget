@@ -35,7 +35,7 @@ GRANT
 GRANT
 ALTER DATABASE
 CREATE ROLE
-% psql -U admin -d budget -h localhost -f /home/benji/repos/benjishults/budget/scripts/setupBudgetSchemasAsAdmin.sql
+% psql -U admin -d budget -h localhost -f ./scripts/setupBudgetSchemasAsAdmin.sql
 Password for user admin:
 CREATE SCHEMA
 CREATE SCHEMA
