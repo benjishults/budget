@@ -5,5 +5,5 @@ persistence:
     budgetName: Default Test File-Configured Budget
 budgetUser:
   defaultLogin: fake@fake.com
-  defaultTimeZone: America/New_York
+  defaultTimeZone: America/Chicago
 #  defaultBudgetName: My Budget

@@ -24,6 +24,7 @@ jobs:
     #          - ./scripts:./.scripts
     env:
       PGPASSWORD: admin
+      CI: true
 
     steps:
       - uses: actions/checkout@v4
