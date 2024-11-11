@@ -5,6 +5,7 @@ import bps.budget.auth.User
 import bps.budget.model.BudgetData
 import io.kotest.core.spec.Spec
 import io.kotest.mpp.atomics.AtomicReference
+import kotlinx.datetime.TimeZone
 import java.util.UUID
 
 interface BasicAccountsJdbcTestFixture : BaseJdbcTestFixture {
@@ -15,7 +16,12 @@ interface BasicAccountsJdbcTestFixture : BaseJdbcTestFixture {
      * Ensure that basic accounts are in place with zero balances in the DB before the test starts and deletes
      * transactions once the test is done.
      */
-    fun Spec.createBasicAccountsBeforeSpec(budgetId: UUID, budgetName: String, user: User) {
+    fun Spec.createBasicAccountsBeforeSpec(
+        budgetId: UUID,
+        budgetName: String,
+        user: User,
+        timeZone: TimeZone,
+    ) {
         beforeSpec {
             jdbcDao.prepForFirstLoad()
 //            try {
@@ -38,7 +44,7 @@ interface BasicAccountsJdbcTestFixture : BaseJdbcTestFixture {
 //            } catch (e: Exception) {
 //                e.printStackTrace()
 //            }
-            upsertBasicAccounts(budgetName, user = user, budgetId = budgetId)
+            upsertBasicAccounts(budgetName, user = user, timeZone = timeZone, budgetId = budgetId)
         }
     }
 
@@ -62,6 +68,7 @@ interface BasicAccountsJdbcTestFixture : BaseJdbcTestFixture {
         budgetName: String,
         generalAccountId: UUID = UUID.fromString("dfa8a21c-f0ad-434d-bcb5-9e37749fa81e"),
         user: User,
+        timeZone: TimeZone = TimeZone.UTC,
         budgetId: UUID,
     ) {
         jdbcDao.prepForFirstLoad()
@@ -69,6 +76,7 @@ interface BasicAccountsJdbcTestFixture : BaseJdbcTestFixture {
             BudgetData.withBasicAccounts(
                 budgetName = budgetName,
                 generalAccountId = generalAccountId,
+                timeZone = timeZone,
                 budgetId = budgetId,
             ),
             user,

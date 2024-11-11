@@ -17,6 +17,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
 import java.math.BigDecimal
 import java.util.UUID
 import kotlin.concurrent.thread
@@ -37,6 +38,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
             budgetId = budgetId,
             budgetName = getBudgetNameFromPersistenceConfig(configurations.persistence)!!,
             user = User(userId, configurations.user.defaultLogin!!),
+            timeZone = TimeZone.of(configurations.user.defaultTimeZone!!),
         )
         resetBalancesAndTransactionAfterSpec(budgetId)
         closeJdbcAfterSpec()

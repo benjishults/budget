@@ -30,6 +30,7 @@ import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
 import java.math.BigDecimal
 import java.util.UUID
 
@@ -44,6 +45,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
             budgetId,
             getBudgetNameFromPersistenceConfig(configurations.persistence)!!,
             User(userId, configurations.user.defaultLogin!!),
+            TimeZone.of(configurations.user.defaultTimeZone!!),
         )
         closeJdbcAfterSpec()
 
