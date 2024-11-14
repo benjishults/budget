@@ -10,19 +10,32 @@ open class SimplePromptWithDefault<T : Any>(
     val defaultValue: T,
     override val inputReader: InputReader = DefaultInputReader,
     override val outPrinter: OutPrinter = DefaultOutPrinter,
-    val additionalValidation: SimpleEntryValidator = AcceptAnythingSimpleEntryValidator,
     /**
-     * transforms entry after it has gone through [validator] and [additionalValidation]
+     * If [validator] fails on the user's input and that input was not blank, then this will be called prior to
+     * calling [transformer]
+     */
+    val additionalValidation: StringValidator = AcceptAnythingStringValidator,
+    /**
+     * Called on entry after it has gone through [validator] or [additionalValidation] if that fails.
+     *
+     * The default implementation simply casts to [T]
      */
     @Suppress("UNCHECKED_CAST")
-    override val transformer: (String) -> T =
-        {
-            it as T
-        },
+    override val transformer: (String) -> T = { it as T },
 ) : SimplePrompt<T> {
 
-    final override val validator: SimpleEntryValidator = NonBlankSimpleEntryValidator
+    /**
+     * Fails if the input is blank.
+     */
+    final override val validator: StringValidator = NonBlankStringValidator
 
+    /**
+     * This implementation:
+     * 1. returns [defaultValue] if the input was blank,
+     * 2. returns the result of [transformer] if [additionalValidation] passes,
+     * 3. otherwise, prints [additionalValidation]'s [StringValidator.errorMessage] as important and calls [SimplePrompt.actionOnInvalid]
+     *    which gives the user a chance to try again or returns `null`.
+     */
     override fun actionOnInvalid(input: String, message: String): T? =
         if (input.isBlank())
             defaultValue

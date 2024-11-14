@@ -15,7 +15,6 @@ import java.util.UUID
 @Instrumentable
 class JdbcAccountDao(
     val connection: Connection,
-    errorStateTracker: Any,
 ) : AccountDao, JdbcFixture {
 
     override fun <T : Account> getDeactivatedAccounts(
@@ -79,10 +78,14 @@ where acc.budget_id = ?
             }
 
 
+    /**
+     * Converts a [ResultSet] into list of [T]s
+     * @param T the [Account] type
+     */
     private fun <T : Account> ResultSet.extractAccounts(
         factory: (String, String, UUID, BigDecimal, UUID) -> T,
         budgetId: UUID,
-    ) =
+    ): List<T> =
         buildList {
             while (next()) {
                 add(
@@ -136,5 +139,25 @@ where aap.account_id = ?
                     }
             }
     }
+
+    override fun updateAccount(account: Account): Boolean =
+        connection.transactOrThrow {
+            prepareStatement(
+                """
+                update accounts acc
+                set acc.name = ?,
+                    acc.description = ?
+                where acc.id = ?
+                    and acc.budget_id = ?
+            """.trimIndent(),
+            )
+                .use { preparedStatement: PreparedStatement ->
+                    preparedStatement.setString(1, account.name)
+                    preparedStatement.setString(2, account.description)
+                    preparedStatement.setUuid(3, account.id)
+                    preparedStatement.setUuid(4, account.budgetId)
+                    preparedStatement.executeUpdate() == 1
+                }
+        }
 
 }

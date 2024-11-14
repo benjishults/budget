@@ -49,7 +49,7 @@ abstract class Account(
     // TODO why are these vars?
     override var name: String,
     override var description: String = "",
-    override var id: UUID = UUID.randomUUID(),
+    override val id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
     open val type: String,
     val budgetId: UUID,

@@ -17,21 +17,27 @@ interface SimplePrompt<T : Any> : Prompt<T> {
     /**
      * returns `true` if the input is acceptable
      */
-    val validator: SimpleEntryValidator
+    val validator: StringValidator
 
     /**
      * transforms valid input into an instance of [T].
      */
     val transformer: (String) -> T
 
+    /**
+     * The default implementation:
+     * 1. prints the [message] as important,
+     * 2. asks if the user wants to try again
+     * 3. returns `null` if they do not want to try again.
+     */
     fun actionOnInvalid(input: String, message: String): T? {
         outPrinter.important(message)
         return if (SimplePrompt(
                 basicPrompt = "Try again? [Y/n]: ",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
-                validator = AcceptAnythingSimpleEntryValidator,
-                transformer = { it != "n" },
+                validator = AcceptAnythingStringValidator,
+                transformer = { it !in listOf("n", "N") },
             )
                 .getResult()!!
         )
@@ -40,6 +46,10 @@ interface SimplePrompt<T : Any> : Prompt<T> {
             null
     }
 
+    /**
+     * @return the result of applying [transformer] to the user's input if the input passes [validator].  Otherwise,
+     * the result of calling [actionOnInvalid] passing the user's input and the [validator]'s [StringValidator.errorMessage].
+     */
     override fun getResult(): T? {
         outPrinter(basicPrompt)
         return inputReader()
@@ -58,7 +68,7 @@ interface SimplePrompt<T : Any> : Prompt<T> {
             basicPrompt: String,
             inputReader: InputReader = DefaultInputReader,
             outPrinter: OutPrinter = DefaultOutPrinter,
-            validator: SimpleEntryValidator = NonBlankSimpleEntryValidator,
+            validator: StringValidator = NonBlankStringValidator,
             transformer: (String) -> T = {
                 it as T
             },
@@ -68,16 +78,16 @@ interface SimplePrompt<T : Any> : Prompt<T> {
                 override val inputReader: InputReader = inputReader
                 override val outPrinter: OutPrinter = outPrinter
                 override val transformer: (String) -> T = transformer
-                override val validator: SimpleEntryValidator = validator
+                override val validator: StringValidator = validator
             }
     }
 }
 
-interface SimpleEntryValidator : (String) -> Boolean {
+interface StringValidator : (String) -> Boolean {
     val errorMessage: String
 }
 
-data object NonBlankSimpleEntryValidator : SimpleEntryValidator {
+data object NonBlankStringValidator : StringValidator {
     override fun invoke(entry: String): Boolean =
         entry.isNotBlank()
 
@@ -85,19 +95,19 @@ data object NonBlankSimpleEntryValidator : SimpleEntryValidator {
 
 }
 
-data object AcceptAnythingSimpleEntryValidator : SimpleEntryValidator {
+data object AcceptAnythingStringValidator : StringValidator {
     override fun invoke(entry: String): Boolean = true
 
     override val errorMessage: String = ""
 }
 
-data object EmailSimpleEntryValidator : SimpleEntryValidator {
+data object EmailStringValidator : StringValidator {
     override fun invoke(entry: String): Boolean = EmailValidator.getInstance().isValid(entry)
 
     override val errorMessage: String = "Must enter a valid email address."
 }
 
-data object PositiveSimpleEntryValidator : SimpleEntryValidator {
+data object PositiveStringValidator : StringValidator {
     override fun invoke(input: String): Boolean =
         input
             .toCurrencyAmountOrNull()
@@ -109,7 +119,7 @@ data object PositiveSimpleEntryValidator : SimpleEntryValidator {
     override val errorMessage: String = "Amount must be positive"
 }
 
-data object NonNegativeSimpleEntryValidator : SimpleEntryValidator {
+data object NonNegativeStringValidator : StringValidator {
     override fun invoke(input: String): Boolean =
         input
             .toCurrencyAmountOrNull()
@@ -121,10 +131,17 @@ data object NonNegativeSimpleEntryValidator : SimpleEntryValidator {
     override val errorMessage: String = "Amount must be non-negative"
 }
 
-data class InRangeInclusiveSimpleEntryValidator(
+data class NotInListStringValidator(val list: List<String>, val label: String) : StringValidator {
+    override fun invoke(input: String): Boolean =
+        input !in list
+
+    override val errorMessage: String = "Input must not be $label."
+}
+
+data class InRangeInclusiveStringValidator(
     val min: BigDecimal,
     val max: BigDecimal,
-) : SimpleEntryValidator {
+) : StringValidator {
     override fun invoke(input: String): Boolean =
         input
             .toCurrencyAmountOrNull()

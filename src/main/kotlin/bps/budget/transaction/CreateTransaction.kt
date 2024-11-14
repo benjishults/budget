@@ -11,7 +11,7 @@ import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.console.app.MenuSession
 import bps.console.app.TryAgainAtMostRecentMenuException
-import bps.console.inputs.InRangeInclusiveSimpleEntryValidator
+import bps.console.inputs.InRangeInclusiveStringValidator
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.menu.Menu
 import bps.console.menu.ScrollingSelectionMenu
@@ -69,7 +69,7 @@ fun WithIo.chooseRealAccountsThenCategories(
                 "Enter the amount spent from '${selectedRealAccount.name}' for '$description' [0.01, [$max]]: ",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
-                additionalValidation = InRangeInclusiveSimpleEntryValidator(BigDecimal("0.01").setScale(2), max),
+                additionalValidation = InRangeInclusiveStringValidator(BigDecimal("0.01").setScale(2), max),
                 defaultValue = max,
             ) {
                 it.toCurrencyAmountOrNull()!!
@@ -180,7 +180,7 @@ fun WithIo.allocateSpendingItemMenu(
                 "Enter the amount spent on '${selectedCategoryAccount.name}' for '$description' [0.01, [$max]]: ",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
-                additionalValidation = InRangeInclusiveSimpleEntryValidator(BigDecimal("0.01").setScale(2), max),
+                additionalValidation = InRangeInclusiveStringValidator(BigDecimal("0.01").setScale(2), max),
                 defaultValue = max,
             ) {
                 it.toCurrencyAmountOrNull()!!

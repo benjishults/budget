@@ -10,7 +10,7 @@ import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.console.app.MenuSession
 import bps.console.app.TryAgainAtMostRecentMenuException
-import bps.console.inputs.InRangeInclusiveSimpleEntryValidator
+import bps.console.inputs.InRangeInclusiveStringValidator
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
@@ -51,7 +51,7 @@ fun WithIo.transferMenu(
                     "Enter the amount to TRANSFER from '${transferFromAccount.name}' into '${transferToAccount.name}' [$min, $max]: ",
                     inputReader = inputReader,
                     outPrinter = outPrinter,
-                    validator = InRangeInclusiveSimpleEntryValidator(min, max),
+                    validator = InRangeInclusiveStringValidator(min, max),
                 ) {
                     it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
                 }

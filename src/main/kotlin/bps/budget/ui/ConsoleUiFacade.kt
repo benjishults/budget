@@ -9,9 +9,9 @@ import bps.budget.model.defaultGeneralAccountName
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
 import bps.console.app.QuitException
-import bps.console.inputs.EmailSimpleEntryValidator
+import bps.console.inputs.EmailStringValidator
 import bps.console.inputs.SelectionPrompt
-import bps.console.inputs.SimpleEntryValidator
+import bps.console.inputs.StringValidator
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.io.DefaultInputReader
@@ -138,7 +138,7 @@ class ConsoleUiFacade(
             TimeZone.currentSystemDefault(),
             inputReader,
             outPrinter,
-            additionalValidation = object : SimpleEntryValidator {
+            additionalValidation = object : StringValidator {
                 override val errorMessage: String = "Must enter a valid time-zone."
                 override fun invoke(entry: String): Boolean =
                     entry in TimeZone.availableZoneIds
@@ -158,7 +158,7 @@ class ConsoleUiFacade(
                     "username: ",
                     inputReader = inputReader,
                     outPrinter = outPrinter,
-                    validator = EmailSimpleEntryValidator,
+                    validator = EmailStringValidator,
                 )
                     .getResult()
                     ?: throw QuitException("No valid email entered.")

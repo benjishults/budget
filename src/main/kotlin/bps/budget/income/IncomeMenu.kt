@@ -9,7 +9,7 @@ import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.console.app.MenuSession
 import bps.console.app.TryAgainAtMostRecentMenuException
-import bps.console.inputs.PositiveSimpleEntryValidator
+import bps.console.inputs.PositiveStringValidator
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
@@ -36,7 +36,7 @@ fun WithIo.recordIncomeSelectionMenu(
             "Enter the amount of INCOME into '${realAccount.name}': ",
             inputReader = inputReader,
             outPrinter = outPrinter,
-            validator = PositiveSimpleEntryValidator,
+            validator = PositiveStringValidator,
         ) {
             it.toCurrencyAmountOrNull()!!
         }
