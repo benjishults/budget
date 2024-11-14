@@ -3,8 +3,10 @@ package bps.budget.persistence
 import bps.budget.auth.User
 import bps.budget.model.Account
 import bps.budget.model.BudgetData
+import bps.budget.model.CategoryAccount
 import bps.budget.model.ChargeAccount
 import bps.budget.model.DraftAccount
+import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
@@ -157,14 +159,46 @@ interface TransactionDao {
 
 interface AccountDao {
 
+    /**
+     * The default implementation throws [NotImplementedError]
+     */
     fun <T : Account> getDeactivatedAccounts(
         type: String,
         budgetId: UUID,
         factory: (String, String, UUID, BigDecimal, UUID) -> T,
     ): List<T> = TODO()
 
+    /**
+     * The default implementation calls [getActiveAccounts] and [getDeactivatedAccounts] and pulls the
+     * [Account.name]s out.  Implementors could improve on the efficiency if desired.
+     */
+    fun getAllAccountNamesForBudget(budgetId: UUID): List<String> =
+        buildList {
+            mapOf(
+                "category" to ::CategoryAccount,
+                "real" to ::RealAccount,
+                "charge" to ::ChargeAccount,
+            )
+                .forEach { (type, factory) ->
+                    addAll(
+                        getActiveAccounts(type, budgetId, factory)
+                            .map { it.name },
+                    )
+                    addAll(
+                        getDeactivatedAccounts(type, budgetId, factory)
+                            .map { it.name },
+                    )
+                }
+        }
+
+    /**
+     * The default implementation throws [NotImplementedError]
+     */
     fun deactivateAccount(account: Account): Unit = TODO()
 
+    /**
+     * The default implementation throws [NotImplementedError]
+     */
     fun <T : Account> getActiveAccounts(
         type: String,
         budgetId: UUID,
@@ -172,5 +206,6 @@ interface AccountDao {
     ): List<T> = TODO()
 
     fun updateBalances(transaction: Transaction, budgetId: UUID)
+    fun updateAccount(account: Account): Boolean
 
 }

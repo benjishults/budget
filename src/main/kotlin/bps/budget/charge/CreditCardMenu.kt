@@ -15,7 +15,7 @@ import bps.budget.transaction.ViewTransactionsWithoutBalancesMenu
 import bps.budget.transaction.allocateSpendingItemMenu
 import bps.console.app.MenuSession
 import bps.console.app.TryAgainAtMostRecentMenuException
-import bps.console.inputs.NonNegativeSimpleEntryValidator
+import bps.console.inputs.NonNegativeStringValidator
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
@@ -116,7 +116,7 @@ private fun WithIo.payCreditCardBill(
             basicPrompt = "Enter the total amount of the bill being paid on '${chargeAccount.name}': ",
             inputReader = inputReader,
             outPrinter = outPrinter,
-            validator = NonNegativeSimpleEntryValidator,
+            validator = NonNegativeStringValidator,
         ) { it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO }
             .getResult()
             ?: throw TryAgainAtMostRecentMenuException("No amount entered.")
@@ -291,7 +291,7 @@ private fun WithIo.spendOnACreditCard(
             "Enter the amount of the charge on '${chargeAccount.name}': ",
             inputReader = inputReader,
             outPrinter = outPrinter,
-            validator = NonNegativeSimpleEntryValidator,
+            validator = NonNegativeStringValidator,
         ) {
             it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
         }

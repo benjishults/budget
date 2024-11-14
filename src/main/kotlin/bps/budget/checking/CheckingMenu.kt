@@ -12,7 +12,7 @@ import bps.budget.toCurrencyAmountOrNull
 import bps.budget.transaction.ViewTransactionsWithoutBalancesMenu
 import bps.budget.transaction.allocateSpendingItemMenu
 import bps.console.app.TryAgainAtMostRecentMenuException
-import bps.console.inputs.InRangeInclusiveSimpleEntryValidator
+import bps.console.inputs.InRangeInclusiveStringValidator
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
@@ -52,7 +52,7 @@ fun WithIo.checksMenu(
                                 inputReader = inputReader,
                                 outPrinter = outPrinter,
                                 defaultValue = min,
-                                additionalValidation = InRangeInclusiveSimpleEntryValidator(min, max),
+                                additionalValidation = InRangeInclusiveStringValidator(min, max),
                             ) {
                                 it.toCurrencyAmountOrNull()!!
                             }

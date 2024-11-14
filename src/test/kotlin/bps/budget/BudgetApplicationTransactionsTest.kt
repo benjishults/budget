@@ -175,11 +175,12 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             |""".trimMargin(),
                         "Enter selection: ",
                         """ 1. Create a New Category
- 2. Deactivate an Account
- 3. Create a Real Fund
- 4. Add a Credit Card
- 5. Back (b)
- 6. Quit (q)
+ 2. Create a Real Fund
+ 3. Add a Credit Card
+ 4. Edit Account Details
+ 5. Deactivate an Account
+ 6. Back (b)
+ 7. Quit (q)
 """,
                         "Enter selection: ",
                         """What kind af account do you want to deactivate?
@@ -240,15 +241,16 @@ Deactivated account 'Cosmetics'
 """,
                         "Enter selection: ",
                         """ 1. Create a New Category
- 2. Deactivate an Account
- 3. Create a Real Fund
- 4. Add a Credit Card
- 5. Back (b)
- 6. Quit (q)
+ 2. Create a Real Fund
+ 3. Add a Credit Card
+ 4. Edit Account Details
+ 5. Deactivate an Account
+ 6. Back (b)
+ 7. Quit (q)
 """,
                         "Enter selection: ",
                     ),
-                    toInput = listOf("8", "2", "1", "1", "13", "5", "5"),
+                    toInput = listOf("8", "5", "1", "1", "13", "5", "b"),
                 )
             }
             "allocate to food and necessities" {
@@ -925,15 +927,16 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                          | 1. Create a New Category
-                         | 2. Deactivate an Account
-                         | 3. Create a Real Fund
-                         | 4. Add a Credit Card
-                         | 5. Back (b)
-                         | 6. Quit (q)
+                         | 2. Create a Real Fund
+                         | 3. Add a Credit Card
+                         | 4. Edit Account Details
+                         | 5. Deactivate an Account
+                         | 6. Back (b)
+                         | 7. Quit (q)
                          |""".trimMargin(),
                         "Enter selection: ",
                     ),
-                    toInput = listOf("4"),
+                    toInput = listOf("3"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -950,15 +953,16 @@ New credit card account 'Costco Visa' created
 """,
                         """
                          | 1. Create a New Category
-                         | 2. Deactivate an Account
-                         | 3. Create a Real Fund
-                         | 4. Add a Credit Card
-                         | 5. Back (b)
-                         | 6. Quit (q)
+                         | 2. Create a Real Fund
+                         | 3. Add a Credit Card
+                         | 4. Edit Account Details
+                         | 5. Deactivate an Account
+                         | 6. Back (b)
+                         | 7. Quit (q)
                          |""".trimMargin(),
                         "Enter selection: ",
                     ),
-                    toInput = listOf("5"),
+                    toInput = listOf("b"),
                 )
             }
             "spend using credit card" {
@@ -1651,15 +1655,16 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                          | 1. Create a New Category
-                         | 2. Deactivate an Account
-                         | 3. Create a Real Fund
-                         | 4. Add a Credit Card
-                         | 5. Back (b)
-                         | 6. Quit (q)
+                         | 2. Create a Real Fund
+                         | 3. Add a Credit Card
+                         | 4. Edit Account Details
+                         | 5. Deactivate an Account
+                         | 6. Back (b)
+                         | 7. Quit (q)
                          |""".trimMargin(),
                         "Enter selection: ",
                     ),
-                    toInput = listOf("3"),
+                    toInput = listOf("2"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -1688,15 +1693,16 @@ Real account 'Savings' created with balance ${'$'}1000.00
 """,
                         """
                          | 1. Create a New Category
-                         | 2. Deactivate an Account
-                         | 3. Create a Real Fund
-                         | 4. Add a Credit Card
-                         | 5. Back (b)
-                         | 6. Quit (q)
+                         | 2. Create a Real Fund
+                         | 3. Add a Credit Card
+                         | 4. Edit Account Details
+                         | 5. Deactivate an Account
+                         | 6. Back (b)
+                         | 7. Quit (q)
                          |""".trimMargin(),
                         "Enter selection: ",
                     ),
-                    toInput = listOf("5"),
+                    toInput = listOf("b"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(

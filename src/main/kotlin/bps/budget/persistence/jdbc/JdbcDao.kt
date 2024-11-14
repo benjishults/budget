@@ -64,10 +64,14 @@ class JdbcDao(
             }
     }
 
+    /**
+     * This will probably not be needed as we stop depending on the [save] method.  This is checked there so that, on
+     * close, we don't try to save bad data.
+     */
     private val errorStateTracker = ErrorStateTracker()
 
     override val userBudgetDao: UserBudgetDao = JdbcUserBudgetDao(connection, errorStateTracker)
-    override val accountDao: AccountDao = JdbcAccountDao(connection, errorStateTracker)
+    override val accountDao: AccountDao = JdbcAccountDao(connection)
     override val transactionDao: TransactionDao = JdbcTransactionDao(connection, errorStateTracker, accountDao)
 
     init {

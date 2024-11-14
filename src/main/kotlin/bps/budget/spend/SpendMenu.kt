@@ -8,8 +8,8 @@ import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.budget.transaction.chooseRealAccountsThenCategories
 import bps.console.app.TryAgainAtMostRecentMenuException
-import bps.console.inputs.NonBlankSimpleEntryValidator
-import bps.console.inputs.PositiveSimpleEntryValidator
+import bps.console.inputs.NonBlankStringValidator
+import bps.console.inputs.PositiveStringValidator
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.getTimestampFromUser
 import bps.console.menu.Menu
@@ -31,7 +31,7 @@ fun WithIo.recordSpendingMenu(
             "Enter the total amount spent: ",
             inputReader = inputReader,
             outPrinter = outPrinter,
-            validator = PositiveSimpleEntryValidator,
+            validator = PositiveStringValidator,
         ) {
             it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
         }
@@ -42,7 +42,7 @@ fun WithIo.recordSpendingMenu(
             "Enter description of transaction: ",
             inputReader = inputReader,
             outPrinter = outPrinter,
-            validator = NonBlankSimpleEntryValidator,
+            validator = NonBlankStringValidator,
         )
             .getResult()
             ?: throw TryAgainAtMostRecentMenuException("No description entered.")

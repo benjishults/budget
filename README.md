@@ -10,8 +10,13 @@ and make sure that folder exists.
 You'll need to have pulled the postgres image from some container registry:
 
 ```shell
-podman pull docker.io/postgres:latest
+docker pull docker.io/postgres:latest
 ```
+
+#### Quick aside on podman
+
+If you use `podman` instead of
+`docker`, [check this out](https://incredible-mountain-4be.notion.site/A-shell-hack-for-aliasing-docker-to-podman-13b777637b9d804d8fe0fe7d51b73926).
 
 ### Start Postgres
 
@@ -91,16 +96,6 @@ Once the DB is running, start the budget application with:
 % ./scripts/budget.sh
 ```
 
-## Troubleshooting
-
-To connect to the Postgres DB running in the docker container, do
-
-```shell
-psql -U budget -h 127.0.0.1 -d budget
-```
-
-Data migrations can be run using `bps.budget.persistence.migration.DataMigrations`.
-
 ## Run Tests
 
 Make sure the DB is running. If it isn't running then start it with:
@@ -114,3 +109,13 @@ Run tests with:
 ```shell
 ./gradlew test
 ```
+
+## Troubleshooting
+
+To connect to the Postgres DB running in the docker container, do
+
+```shell
+psql -U budget -h 127.0.0.1 -d budget
+```
+
+Data migrations can be run using `bps.budget.persistence.migration.DataMigrations`.
