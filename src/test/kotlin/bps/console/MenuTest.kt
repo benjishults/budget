@@ -20,7 +20,7 @@ class MenuTest : FreeSpec(),
         clearInputsAndOutputsBeforeEach()
         "basic" {
             val bottomMenu: Menu =
-                Menu("bottom") {
+                Menu({ "bottom" }) {
                     add(
                         takeAction("something else") {
                             outPrinter("doing the thing\n")
@@ -34,7 +34,7 @@ class MenuTest : FreeSpec(),
                     add(quitItem)
                 }
             val topMenu: Menu =
-                Menu("top") {
+                Menu({ "top" }) {
                     add(
                         takeActionAndPush(
                             label = "something",
@@ -81,7 +81,7 @@ Quitting
         }
         "shortcuts" {
             val bottomMenu =
-                Menu("bottom") {
+                Menu({ "bottom" }) {
                     add(
                         takeAction("something else") {
                             outPrinter("doing the thing\n")
@@ -95,7 +95,7 @@ Quitting
                     add(quitItem)
                 }
             val topMenu: Menu =
-                Menu("top") {
+                Menu({ "top" }) {
                     add(
                         takeActionAndPush(
                             label = "something",

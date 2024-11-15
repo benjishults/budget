@@ -100,7 +100,7 @@ fun WithIo.editAccountDetails(
     userConfiguration: UserConfiguration,
 ): Menu =
     ScrollingSelectionMenu(
-        header = "Select an account to edit",
+        header = { "Select an account to edit" },
         limit = userConfiguration.numberOfItemsInScrollingList,
         baseList = (budgetData.categoryAccounts - budgetData.generalAccount) + budgetData.realAccounts + budgetData.chargeAccounts + budgetData.generalAccount,
         labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
@@ -210,7 +210,7 @@ private fun WithIo.deactivateAccount(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
-) = Menu("What kind af account do you want to deactivate?") {
+) = Menu({ "What kind af account do you want to deactivate?" }) {
     add(
         pushMenu("Category Account") {
             deactivateCategoryAccountMenu(
@@ -460,7 +460,7 @@ fun <T : Account> deactivateAccountMenu(
     deleteFrom: () -> List<T>,
 ): Menu =
     ScrollingSelectionMenu(
-        header = "Select account to deactivate",
+        header = { "Select account to deactivate" },
         limit = limit,
         itemListGenerator = { lim, offset ->
             val baseList = deleteFrom()

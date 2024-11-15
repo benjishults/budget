@@ -18,7 +18,7 @@ class ScrollingSelectionMenuTest : FreeSpec(),
         System.setProperty("kotest.assertions.collection.enumerate.size", "1000")
         "test selection" {
             val subject: ScrollingSelectionMenu<String> = ScrollingSelectionMenu(
-                header = null,
+                header = { null },
                 limit = 3,
                 itemListGenerator = { limit, offset ->
                     buildList {
@@ -55,7 +55,7 @@ Quitting
         }
         "test with even division of items" {
             val subject: ScrollingSelectionMenu<String> = ScrollingSelectionMenu(
-                header = null,
+                header = { null },
                 limit = 3,
                 itemListGenerator = { limit, offset ->
                     buildList {
@@ -104,7 +104,7 @@ Quitting
         }
         "test with uneven division of items" {
             val subject: ScrollingSelectionMenu<String> = ScrollingSelectionMenu(
-                header = null,
+                header = { null },
                 limit = 3,
                 itemListGenerator = { limit, offset ->
                     buildList {

@@ -26,14 +26,14 @@ fun WithIo.transferMenu(
     userConfig: UserConfiguration,
     clock: Clock,
 ): Menu = ScrollingSelectionMenu(
-    header = "Select account to TRANSFER money FROM",
+    header = { "Select account to TRANSFER money FROM" },
     limit = userConfig.numberOfItemsInScrollingList,
     baseList = budgetData.realAccounts + (budgetData.categoryAccounts - budgetData.generalAccount),
     labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
 ) { menuSession: MenuSession, transferFromAccount: Account ->
     menuSession.push(
         ScrollingSelectionMenu(
-            header = "Select account to TRANSFER money TO (from '${transferFromAccount.name}')",
+            header = { "Select account to TRANSFER money TO (from '${transferFromAccount.name}')" },
             limit = userConfig.numberOfItemsInScrollingList,
             baseList = when (transferFromAccount) {
                 is CategoryAccount -> buildList {

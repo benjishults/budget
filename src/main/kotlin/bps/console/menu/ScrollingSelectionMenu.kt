@@ -8,8 +8,8 @@ import kotlin.math.min
  * @param T the type of the selected item
  */
 open class ScrollingSelectionMenu<T>(
-    override val header: String?,
-    override val prompt: String = "Enter selection: ",
+    override val header: () -> String?,
+    override val prompt: () -> String = { "Enter selection: " },
     val limit: Int = 30,
     val offset: Int = 0,
     protected val itemListGenerator: (Int, Int) -> List<T>,
@@ -21,8 +21,8 @@ open class ScrollingSelectionMenu<T>(
     override val shortcutMap: MutableMap<String, MenuItem> = mutableMapOf()
 
     constructor(
-        header: String?,
-        prompt: String = "Enter selection: ",
+        header: () -> String?,
+        prompt: () -> String = { "Enter selection: " },
         limit: Int = 30,
         offset: Int = 0,
         baseList: List<T>,

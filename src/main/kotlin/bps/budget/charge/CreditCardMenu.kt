@@ -36,7 +36,7 @@ fun WithIo.creditCardMenu(
     clock: Clock,
 ): Menu =
     ScrollingSelectionMenu(
-        header = "Select a credit card",
+        header = { "Select a credit card" },
         limit = userConfig.numberOfItemsInScrollingList,
         baseList = budgetData.chargeAccounts,
         // TODO do we want to incorporate credit limits to determine the balance and max
@@ -80,8 +80,8 @@ fun WithIo.creditCardMenu(
                             timeZone = budgetData.timeZone,
                             limit = userConfig.numberOfItemsInScrollingList,
                             filter = { it.item.draftStatus === DraftStatus.outstanding },
-                            header = "Unpaid transactions on '${chargeAccount.name}'",
-                            prompt = "Select transaction to view details: ",
+                            header = { "Unpaid transactions on '${chargeAccount.name}'" },
+                            prompt = { "Select transaction to view details: " },
                             outPrinter = outPrinter,
                             extraItems = listOf(), // TODO toggle cleared/outstanding
                         ) { _, extendedTransactionItem ->
@@ -123,7 +123,7 @@ private fun WithIo.payCreditCardBill(
     if (amountOfBill > BigDecimal.ZERO) {
         menuSession.push(
             ScrollingSelectionMenu(
-                header = "Select real account bill on '${chargeAccount.name}' was paid from",
+                header = { "Select real account bill on '${chargeAccount.name}' was paid from" },
                 limit = userConfig.numberOfItemsInScrollingList,
                 baseList = budgetData.realAccounts,
                 labelGenerator = { String.format("%,10.2f | %s", balance, name) },
@@ -214,14 +214,16 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
     budgetId = budgetData.id,
     accountIdToAccountMap = budgetData.accountIdToAccountMap,
     timeZone = budgetData.timeZone,
-    header = "Select all transactions from this '${chargeAccount.name}' bill.  Amount to be covered: $${
-        amountOfBill +
-                selectedItems
-                    .fold(BigDecimal.ZERO) { sum, item ->
-                        sum + item.item.amount
-                    }
-    }",
-    prompt = "Select a transaction covered in this bill: ",
+    header = {
+        "Select all transactions from this '${chargeAccount.name}' bill.  Amount to be covered: $${
+            amountOfBill +
+                    selectedItems
+                        .fold(BigDecimal.ZERO) { sum, item ->
+                            sum + item.item.amount
+                        }
+        }"
+    },
+    prompt = { "Select a transaction covered in this bill: " },
     limit = userConfig.numberOfItemsInScrollingList,
     filter = { it.item.draftStatus === DraftStatus.outstanding && it !in selectedItems },
     outPrinter = outPrinter,

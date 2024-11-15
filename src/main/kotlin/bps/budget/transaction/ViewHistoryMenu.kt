@@ -15,7 +15,7 @@ fun WithIo.viewHistoryMenu(
     userConfig: UserConfiguration,
 ): Menu =
     ScrollingSelectionMenu(
-        header = "Select account to view history",
+        header = { "Select account to view history" },
         limit = userConfig.numberOfItemsInScrollingList,
         baseList = buildList {
             add(budgetData.generalAccount)
