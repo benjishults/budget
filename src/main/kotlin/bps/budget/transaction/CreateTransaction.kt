@@ -27,10 +27,12 @@ fun WithIo.chooseRealAccountsThenCategories(
     userConfig: UserConfiguration,
 ): Menu =
     ScrollingSelectionMenu(
-        header = """
+        header = {
+            """
             Spending $$totalAmount for '$description'
             Select an account that some of that money was spent from.  Left to cover: $$runningTotal
-            """.trimIndent(),
+            """.trimIndent()
+        },
         limit = userConfig.numberOfItemsInScrollingList,
         baseList = budgetData.realAccounts,
         labelGenerator = {
@@ -136,14 +138,16 @@ fun WithIo.allocateSpendingItemMenu(
     userConfig: UserConfiguration,
 ): Menu =
     ScrollingSelectionMenu(
-        header = """
+        header = {
+            """
             Spending from '${
-            transactionBuilder.realItemBuilders.getOrNull(0)?.account?.name
-                ?: transactionBuilder.chargeItemBuilders.getOrNull(0)?.account?.name
-                ?: transactionBuilder.draftItemBuilders.getOrNull(0)?.account?.name
-        }': '$description'
+                transactionBuilder.realItemBuilders.getOrNull(0)?.account?.name
+                    ?: transactionBuilder.chargeItemBuilders.getOrNull(0)?.account?.name
+                    ?: transactionBuilder.draftItemBuilders.getOrNull(0)?.account?.name
+            }': '$description'
             Select a category that some of that money was spent on.  Left to cover: ${"$"}$runningTotal
-            """.trimIndent(),
+            """.trimIndent()
+        },
         limit = userConfig.numberOfItemsInScrollingList,
         baseList = budgetData.categoryAccounts - budgetData.generalAccount,
         labelGenerator = {

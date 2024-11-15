@@ -275,7 +275,7 @@ Deactivated account 'Cosmetics'
                 validateInteraction(
                     expectedOutputs = listOf(
                         "Every month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n",
-                        "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}'" + """
+                        "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$5,200.00]" + """
  1.       0.00 | Education       | Tuition, books, etc.
  2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
  3.       0.00 | Food            | Food other than what's covered in entertainment
@@ -309,7 +309,7 @@ Deactivated account 'Cosmetics'
 Allowance recorded
 
 """,
-                        "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}'" + """
+                        "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$4,900.00]" + """
  1.       0.00 | Education       | Tuition, books, etc.
  2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
  3.     300.00 | Food            | Food other than what's covered in entertainment
@@ -338,7 +338,7 @@ Allowance recorded
 Allowance recorded
 
 """,
-                        "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}'" + """
+                        "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$4,700.00]" + """
  1.       0.00 | Education       | Tuition, books, etc.
  2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
  3.     300.00 | Food            | Food other than what's covered in entertainment

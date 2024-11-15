@@ -111,7 +111,7 @@ fun WithIo.budgetMenu(
     user: User,
     clock: Clock,
 ): Menu =
-    Menu("Budget!") {
+    Menu({ "Budget!" }) {
         add(
             takeActionAndPush(
                 label = recordIncome,

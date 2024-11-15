@@ -7,8 +7,8 @@ import bps.console.app.MenuSession
  * @param C the type of the rollover context for tracking information from the previously-viewed page
  */
 abstract class ScrollingSelectionWithContextMenu<T, C>(
-    header: String?,
-    prompt: String = "Enter selection: ",
+    header: () -> String?,
+    prompt: () -> String = { "Enter selection: " },
     limit: Int = 30,
     offset: Int = 0,
     /**

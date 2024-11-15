@@ -6,8 +6,8 @@ import bps.console.io.OutPrinter
 
 interface Menu {
 
-    val header: String? get() = null
-    val prompt: String get() = "Enter selection: "
+    val header: () -> String? get() = { null }
+    val prompt: () -> String get() = { "Enter selection: " }
 
     /**
      * Returns the complete list of [MenuItem]s
@@ -21,7 +21,7 @@ interface Menu {
     fun List<MenuItem>.print(outPrinter: OutPrinter): List<MenuItem> =
         apply {
             foldIndexed(
-                header
+                header()
                     ?.let { header: String ->
                         StringBuilder("$header\n")
                     }
@@ -35,7 +35,7 @@ interface Menu {
                 .let { menuString: String ->
                     outPrinter(menuString)
                 }
-            outPrinter(prompt)
+            outPrinter(prompt())
         }
 
     class Builder {
@@ -51,15 +51,15 @@ interface Menu {
 
     companion object {
         operator fun invoke(
-            header: String? = null,
-            prompt: String = "Enter selection: ",
+            header: () -> String? = { null },
+            prompt: () -> String = { "Enter selection: " },
             items: Builder.() -> Unit,
         ): Menu {
             val builder = Builder()
                 .apply { items() }
             return object : Menu {
-                override val header: String? = header
-                override val prompt: String = prompt
+                override val header: () -> String? = header
+                override val prompt: () -> String = prompt
                 override val itemsGenerator: () -> List<MenuItem> = {
                     builder.itemList.toList()
                 }

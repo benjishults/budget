@@ -25,7 +25,13 @@ fun WithIo.makeAllowancesSelectionMenu(
     userConfig: UserConfiguration,
     clock: Clock,
 ): Menu = ScrollingSelectionMenu(
-    header = "Select account to ALLOCATE money into from '${budgetData.generalAccount.name}'",
+    header = {
+        String.format(
+            "Select account to ALLOCATE money into from '%s' [$%,.2f]",
+            budgetData.generalAccount.name,
+            budgetData.generalAccount.balance,
+        )
+    },
     limit = userConfig.numberOfItemsInScrollingList,
     baseList = budgetData.categoryAccounts - budgetData.generalAccount,
     labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },

@@ -30,8 +30,8 @@ open class ViewTransactionsMenu<A : Account>(
      * In the [produceCurrentContext] method, we add the balance prior to the page to [contextStack].
      */
     contextStack: MutableList<BigDecimal> = mutableListOf(),
-    header: String? = "'${account.name}' Account Transactions",
-    prompt: String = "Select transaction for details: ",
+    header: () -> String? = { "'${account.name}' Account Transactions" },
+    prompt: () -> String = { "Select transaction for details: " },
     val outPrinter: OutPrinter = DefaultOutPrinter,
     extraItems: List<MenuItem> = emptyList(),
     actOnSelectedItem: (MenuSession, TransactionDao.ExtendedTransactionItem<A>) -> Unit = { _, extendedTransactionItem: TransactionDao.ExtendedTransactionItem<A> ->
@@ -45,10 +45,12 @@ open class ViewTransactionsMenu<A : Account>(
         }
     },
 ) : ScrollingSelectionWithContextMenu<TransactionDao.ExtendedTransactionItem<A>, BigDecimal>(
-    """
-        |$header
+    {
+        """
+        |${header()}
         |$TRANSACTIONS_TABLE_HEADER
-    """.trimMargin(),
+    """.trimMargin()
+    },
     prompt,
     limit,
     offset,

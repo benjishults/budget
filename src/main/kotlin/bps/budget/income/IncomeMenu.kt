@@ -26,7 +26,7 @@ fun WithIo.recordIncomeSelectionMenu(
     clock: Clock,
     // TODO make this take the amount first and distribute among accounts?
 ): Menu = ScrollingSelectionMenu(
-    header = "Select account receiving the INCOME:",
+    header = { "Select account receiving the INCOME:" },
     limit = userConfig.numberOfItemsInScrollingList,
     baseList = budgetData.realAccounts + budgetData.chargeAccounts,
     labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },

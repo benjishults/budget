@@ -24,8 +24,8 @@ open class ViewTransactionsWithoutBalancesMenu<A : Account>(
     limit: Int = 30,
     offset: Int = 0,
     private val filter: (TransactionDao.ExtendedTransactionItem<A>) -> Boolean = { true },
-    header: String? = "'${account.name}' Account Transactions",
-    prompt: String,
+    header: () -> String? = { "'${account.name}' Account Transactions" },
+    prompt: () -> String,
     val outPrinter: OutPrinter,
     extraItems: List<MenuItem> = emptyList(),
     actOnSelectedItem: (MenuSession, TransactionDao.ExtendedTransactionItem<A>) -> Unit,
@@ -36,10 +36,12 @@ open class ViewTransactionsWithoutBalancesMenu<A : Account>(
         )
     }*/
 ) : ScrollingSelectionMenu<TransactionDao.ExtendedTransactionItem<A>>(
-    """
-        |$header
+    {
+        """
+        |${header()}
         |$TRANSACTIONS_WITHOUT_BALANCES_TABLE_HEADER
-    """.trimMargin(),
+    """.trimMargin()
+    },
     prompt,
     limit,
     offset,
