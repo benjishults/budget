@@ -74,7 +74,7 @@ fun WithIo.chooseRealAccountsThenCategories(
                 additionalValidation = InRangeInclusiveStringValidator(BigDecimal("0.01").setScale(2), max),
                 defaultValue = max,
             ) {
-                it.toCurrencyAmountOrNull()!!
+                it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
             }
                 .getResult()
                 ?: throw TryAgainAtMostRecentMenuException("No amount entered")
@@ -187,7 +187,7 @@ fun WithIo.allocateSpendingItemMenu(
                 additionalValidation = InRangeInclusiveStringValidator(BigDecimal("0.01").setScale(2), max),
                 defaultValue = max,
             ) {
-                it.toCurrencyAmountOrNull()!!
+                it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
             }
                 .getResult()
                 ?: throw TryAgainAtMostRecentMenuException("No amount entered")

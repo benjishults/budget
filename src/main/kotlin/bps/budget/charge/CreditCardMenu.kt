@@ -117,7 +117,7 @@ private fun WithIo.payCreditCardBill(
             inputReader = inputReader,
             outPrinter = outPrinter,
             validator = NonNegativeStringValidator,
-        ) { it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO }
+        ) { it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2) }
             .getResult()
             ?: throw TryAgainAtMostRecentMenuException("No amount entered.")
     if (amountOfBill > BigDecimal.ZERO) {
