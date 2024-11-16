@@ -54,7 +54,7 @@ fun WithIo.checksMenu(
                                 defaultValue = min,
                                 additionalValidation = InRangeInclusiveStringValidator(min, max),
                             ) {
-                                it.toCurrencyAmountOrNull()!!
+                                it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
                             }
                                 .getResult()
                                 ?: throw TryAgainAtMostRecentMenuException("No amount entered.")

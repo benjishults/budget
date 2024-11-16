@@ -335,7 +335,7 @@ private fun WithIo.createRealFund(
             inputReader = inputReader,
             outPrinter = outPrinter,
         ) {
-            it.toCurrencyAmountOrNull()!!
+            it.toCurrencyAmountOrNull() ?: throw TryAgainAtMostRecentMenuException("Invalid account balance")
         }
             .getResult()
             ?: throw TryAgainAtMostRecentMenuException("Invalid account balance")
