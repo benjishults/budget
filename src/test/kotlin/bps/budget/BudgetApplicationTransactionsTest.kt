@@ -1447,30 +1447,11 @@ Spending recorded
                         | 5. Quit (q)
                         |""".trimMargin(),
                         "Select a transaction covered in this bill: ",
-                    ),
-                    toInput = listOf("1"),
-                )
-                validateInteraction(
-                    expectedOutputs = listOf(
                         """
                             |
                             |Payment recorded!
                             |
                             |""".trimMargin(),
-                        """
-                        |Select real account bill on 'Costco Visa' was paid from
-                        | 1.   4,665.00 | Checking
-                        | 2.     198.50 | Wallet
-                        | 3. Back (b)
-                        | 4. Quit (q)
-                        |
-                    """.trimMargin(),
-                        "Enter selection: ",
-                    ),
-                    toInput = listOf("3"),
-                )
-                validateInteraction(
-                    expectedOutputs = listOf(
                         """
                         | 1. Record spending on 'Costco Visa'
                         | 2. Pay 'Costco Visa' bill
@@ -1481,7 +1462,7 @@ Spending recorded
                     """.trimMargin(),
                         "Enter selection: ",
                     ),
-                    toInput = listOf("4"),
+                    toInput = listOf("1", "b"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(

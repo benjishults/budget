@@ -190,7 +190,7 @@ fun WithIo.allocateSpendingItemMenu(
                 it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
             }
                 .getResult()
-                ?: throw TryAgainAtMostRecentMenuException("No amount entered")
+                ?: BigDecimal.ZERO.setScale(2)
         if (categoryAmount > BigDecimal.ZERO) {
             val categoryDescription: String =
                 SimplePromptWithDefault(

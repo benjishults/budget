@@ -239,7 +239,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
             )
         },
     ),
-) { _, chargeTransactionItem ->
+) { menuSession: MenuSession, chargeTransactionItem: TransactionDao.ExtendedTransactionItem<ChargeAccount> ->
     val allSelectedItems: List<TransactionDao.ExtendedTransactionItem<ChargeAccount>> =
         selectedItems + chargeTransactionItem
     val remainingToBeCovered: BigDecimal = runningTotal + chargeTransactionItem.item.amount
@@ -253,6 +253,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
                 budgetData.id,
             )
             outPrinter.important("Payment recorded!")
+            menuSession.pop()
         }
         remainingToBeCovered < BigDecimal.ZERO -> {
             outPrinter.important("ERROR: this bill payment amount is not large enough to cover that transaction")
