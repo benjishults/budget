@@ -28,7 +28,7 @@ fun WithIo.recordSpendingMenu(
     //     and an amount.
     val amount: BigDecimal =
         SimplePrompt<BigDecimal>(
-            "Enter the total amount spent: ",
+            "Enter the total AMOUNT spent: ",
             inputReader = inputReader,
             outPrinter = outPrinter,
             validator = PositiveStringValidator,
@@ -39,7 +39,7 @@ fun WithIo.recordSpendingMenu(
             ?: throw TryAgainAtMostRecentMenuException("No amount entered.")
     val description: String =
         SimplePrompt<String>(
-            "Enter description of transaction: ",
+            "Enter DESCRIPTION of transaction: ",
             inputReader = inputReader,
             outPrinter = outPrinter,
             validator = NonBlankStringValidator,

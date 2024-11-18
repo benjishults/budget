@@ -33,7 +33,7 @@ fun WithIo.recordIncomeSelectionMenu(
 ) { _: MenuSession, realAccount: RealAccount ->
     val amount: BigDecimal =
         SimplePrompt(
-            "Enter the amount of INCOME into '${realAccount.name}': ",
+            "Enter the AMOUNT of INCOME into '${realAccount.name}': ",
             inputReader = inputReader,
             outPrinter = outPrinter,
             validator = PositiveStringValidator,
@@ -47,7 +47,7 @@ fun WithIo.recordIncomeSelectionMenu(
     } else {
         val description: String =
             SimplePromptWithDefault(
-                "Enter description of income [income into '${realAccount.name}']: ",
+                "Enter DESCRIPTION of income [income into '${realAccount.name}']: ",
                 defaultValue = "income into '${realAccount.name}'",
                 inputReader = inputReader,
                 outPrinter = outPrinter,

@@ -48,7 +48,7 @@ fun WithIo.transferMenu(
             val min = BigDecimal("0.01").setScale(2)
             val amount: BigDecimal =
                 SimplePrompt<BigDecimal>(
-                    "Enter the amount to TRANSFER from '${transferFromAccount.name}' into '${transferToAccount.name}' [$min, $max]: ",
+                    "Enter the AMOUNT to TRANSFER from '${transferFromAccount.name}' into '${transferToAccount.name}' [$min, $max]: ",
                     inputReader = inputReader,
                     outPrinter = outPrinter,
                     validator = InRangeInclusiveStringValidator(min, max),
@@ -60,7 +60,7 @@ fun WithIo.transferMenu(
             if (amount > BigDecimal.ZERO) {
                 val description: String =
                     SimplePromptWithDefault(
-                        "Enter description of transaction [transfer from '${transferFromAccount.name}' into '${transferToAccount.name}']: ",
+                        "Enter DESCRIPTION of transaction [transfer from '${transferFromAccount.name}' into '${transferToAccount.name}']: ",
                         defaultValue = "transfer from '${transferFromAccount.name}' into '${transferToAccount.name}'",
                         inputReader = inputReader,
                         outPrinter = outPrinter,
