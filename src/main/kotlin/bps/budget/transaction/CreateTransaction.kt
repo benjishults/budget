@@ -126,6 +126,8 @@ fun WithIo.chooseRealAccountsThenCategories(
                     ),
                 )
             }
+        } else {
+            outPrinter.important("Amount must be positive.")
         }
     }
 
@@ -231,5 +233,7 @@ fun WithIo.allocateSpendingItemMenu(
                 budgetDao.transactionDao.commit(transaction, budgetData.id)
                 outPrinter.important("Spending recorded")
             }
+        } else {
+            outPrinter.important("Amount must be positive.")
         }
     }

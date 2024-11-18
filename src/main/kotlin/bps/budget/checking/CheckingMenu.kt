@@ -89,6 +89,8 @@ fun WithIo.checksMenu(
                                     userConfig,
                                 ),
                             )
+                        } else {
+                            outPrinter.important("Amount must be positive.")
                         }
                     },
                 )

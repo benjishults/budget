@@ -170,6 +170,8 @@ private fun WithIo.payCreditCardBill(
             },
         )
 
+    } else {
+        outPrinter.important("Amount must be positive.")
     }
 }
 
@@ -327,5 +329,7 @@ private fun WithIo.spendOnACreditCard(
                 userConfig,
             ),
         )
+    } else {
+        outPrinter.important("Amount must be positive.")
     }
 }
