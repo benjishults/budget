@@ -40,7 +40,7 @@ fun WithIo.makeAllowancesSelectionMenu(
     val min = BigDecimal("0.01").setScale(2)
     val amount: BigDecimal =
         SimplePrompt<BigDecimal>(
-            "Enter the amount to ALLOCATE into '${selectedCategoryAccount.name}' [$min, $max]: ",
+            "Enter the AMOUNT to ALLOCATE into '${selectedCategoryAccount.name}' [$min, $max]: ",
             inputReader = inputReader,
             outPrinter = outPrinter,
             validator = InRangeInclusiveStringValidator(min, max),
@@ -52,7 +52,7 @@ fun WithIo.makeAllowancesSelectionMenu(
     if (amount > BigDecimal.ZERO) {
         val description: String =
             SimplePromptWithDefault(
-                "Enter description of transaction [allowance into '${selectedCategoryAccount.name}']: ",
+                "Enter DESCRIPTION of transaction [allowance into '${selectedCategoryAccount.name}']: ",
                 defaultValue = "allowance into '${selectedCategoryAccount.name}'",
                 inputReader = inputReader,
                 outPrinter = outPrinter,

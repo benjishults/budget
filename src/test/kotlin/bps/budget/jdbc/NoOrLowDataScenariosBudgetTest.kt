@@ -49,7 +49,7 @@ class NoOrLowDataScenariosBudgetTest : FreeSpec(),
             outputs shouldContainExactly listOf(
                 """Looks like this is your first time running Budget.
 Enter the name for your "General" account [General] """,
-                "Enter the description for your \"General\" account [Income is automatically deposited here and allowances are made from here.] ",
+                "Enter the DESCRIPTION for your \"General\" account [Income is automatically deposited here and allowances are made from here.] ",
                 """
                             |Budget!
                             | 1. $recordIncome (i)

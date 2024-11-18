@@ -48,7 +48,7 @@ fun WithIo.checksMenu(
                         val min = BigDecimal("0.01").setScale(2)
                         val amount: BigDecimal =
                             SimplePromptWithDefault<BigDecimal>(
-                                "Enter the amount of check on '${draftAccount.name}' [$min, $max]: ",
+                                "Enter the AMOUNT of check on '${draftAccount.name}' [$min, $max]: ",
                                 inputReader = inputReader,
                                 outPrinter = outPrinter,
                                 defaultValue = min,
@@ -61,7 +61,7 @@ fun WithIo.checksMenu(
                         if (amount > BigDecimal.ZERO) {
                             val description: String =
                                 SimplePrompt<String>(
-                                    "Enter the recipient of the check on '${draftAccount.name}': ",
+                                    "Enter the RECIPIENT of the check on '${draftAccount.name}': ",
                                     inputReader = inputReader,
                                     outPrinter = outPrinter,
                                 )

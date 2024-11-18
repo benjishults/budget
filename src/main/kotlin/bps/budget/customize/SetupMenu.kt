@@ -146,14 +146,14 @@ fun WithIo.editAccountDetails(
                 .getResult()!!
         ) {
             val candidateDescription: String? = SimplePromptWithDefault(
-                basicPrompt = "Enter the new description for the account '${account.name}': ",
+                basicPrompt = "Enter the new DESCRIPTION for the account '${account.name}': ",
                 defaultValue = account.description,
                 inputReader = inputReader,
                 outPrinter = outPrinter,
             )
                 .getResult()
             if (candidateDescription !== null && SimplePromptWithDefault(
-                    basicPrompt = "Change description of '${account.name} from\n${account.description}\nto\n$candidateDescription\nAre you sure [y/N]? ",
+                    basicPrompt = "Change DESCRIPTION of '${account.name} from\n${account.description}\nto\n$candidateDescription\nAre you sure [y/N]? ",
                     defaultValue = false,
                     inputReader = inputReader,
                     outPrinter = outPrinter,
@@ -192,7 +192,7 @@ private fun WithIo.createCategory(
     if (name.isNotBlank()) {
         val description: String =
             SimplePromptWithDefault(
-                "Enter a description for the new category: ",
+                "Enter a DESCRIPTION for the new category: ",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
                 defaultValue = name,
@@ -276,7 +276,7 @@ private fun WithIo.createCreditAccount(
     if (name.isNotBlank()) {
         val description: String =
             SimplePromptWithDefault(
-                "Enter a description for the new credit card: ",
+                "Enter a DESCRIPTION for the new credit card: ",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
                 defaultValue = name,
@@ -312,7 +312,7 @@ private fun WithIo.createRealFund(
     if (name.isNotBlank()) {
         val accountDescription: String =
             SimplePromptWithDefault(
-                "Enter a description for the real account: ",
+                "Enter a DESCRIPTION for the real account: ",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
                 defaultValue = name,
@@ -355,7 +355,7 @@ private fun WithIo.createRealFund(
                 if (balance > BigDecimal.ZERO) {
                     val incomeDescription: String =
                         SimplePromptWithDefault(
-                            "Enter description of income [initial balance in '${realAccount.name}']: ",
+                            "Enter DESCRIPTION of income [initial balance in '${realAccount.name}']: ",
                             defaultValue = "initial balance in '${realAccount.name}'",
                             inputReader = inputReader,
                             outPrinter = outPrinter,

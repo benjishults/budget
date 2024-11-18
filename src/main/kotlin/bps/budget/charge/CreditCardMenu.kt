@@ -113,7 +113,7 @@ private fun WithIo.payCreditCardBill(
 ) {
     val amountOfBill: BigDecimal =
         SimplePrompt(
-            basicPrompt = "Enter the total amount of the bill being paid on '${chargeAccount.name}': ",
+            basicPrompt = "Enter the total AMOUNT of the bill being paid on '${chargeAccount.name}': ",
             inputReader = inputReader,
             outPrinter = outPrinter,
             validator = NonNegativeStringValidator,
@@ -291,7 +291,7 @@ private fun WithIo.spendOnACreditCard(
     // NOTE this is why we have separate draft accounts -- to easily know the real vs draft balance
     val amount: BigDecimal =
         SimplePrompt<BigDecimal>(
-            "Enter the amount of the charge on '${chargeAccount.name}': ",
+            "Enter the AMOUNT of the charge on '${chargeAccount.name}': ",
             inputReader = inputReader,
             outPrinter = outPrinter,
             validator = NonNegativeStringValidator,
@@ -303,7 +303,7 @@ private fun WithIo.spendOnACreditCard(
     if (amount > BigDecimal.ZERO) {
         val description: String =
             SimplePrompt<String>(
-                "Enter the recipient of the charge on '${chargeAccount.name}': ",
+                "Enter the RECIPIENT of the charge on '${chargeAccount.name}': ",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
             )

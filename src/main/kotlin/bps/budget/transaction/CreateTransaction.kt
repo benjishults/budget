@@ -68,7 +68,7 @@ fun WithIo.chooseRealAccountsThenCategories(
         )
         val currentAmount: BigDecimal =
             SimplePromptWithDefault(
-                "Enter the amount spent from '${selectedRealAccount.name}' for '$description' [0.01, [$max]]: ",
+                "Enter the AMOUNT spent from '${selectedRealAccount.name}' for '$description' [0.01, [$max]]: ",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
                 additionalValidation = InRangeInclusiveStringValidator(BigDecimal("0.01").setScale(2), max),
@@ -81,7 +81,7 @@ fun WithIo.chooseRealAccountsThenCategories(
         if (currentAmount > BigDecimal.ZERO) {
             val currentDescription: String =
                 SimplePromptWithDefault(
-                    "Enter description for '${selectedRealAccount.name}' spend [$description]: ",
+                    "Enter DESCRIPTION for '${selectedRealAccount.name}' spend [$description]: ",
                     defaultValue = description,
                     inputReader = inputReader,
                     outPrinter = outPrinter,
@@ -181,7 +181,7 @@ fun WithIo.allocateSpendingItemMenu(
         )
         val categoryAmount: BigDecimal =
             SimplePromptWithDefault(
-                "Enter the amount spent on '${selectedCategoryAccount.name}' for '$description' [0.01, [$max]]: ",
+                "Enter the AMOUNT spent on '${selectedCategoryAccount.name}' for '$description' [0.01, [$max]]: ",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
                 additionalValidation = InRangeInclusiveStringValidator(BigDecimal("0.01").setScale(2), max),
@@ -194,7 +194,7 @@ fun WithIo.allocateSpendingItemMenu(
         if (categoryAmount > BigDecimal.ZERO) {
             val categoryDescription: String =
                 SimplePromptWithDefault(
-                    "Enter description for '${selectedCategoryAccount.name}' spend [$description]: ",
+                    "Enter DESCRIPTION for '${selectedCategoryAccount.name}' spend [$description]: ",
                     defaultValue = description,
                     inputReader = inputReader,
                     outPrinter = outPrinter,

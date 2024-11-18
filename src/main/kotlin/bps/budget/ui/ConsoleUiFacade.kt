@@ -87,7 +87,7 @@ class ConsoleUiFacade(
         budgetDao.prepForFirstSave()
         val name: String =
             SimplePromptWithDefault(
-                "Enter the name for your \"General\" account [$defaultGeneralAccountName]: ",
+                "Enter the NAME for your \"General\" account [$defaultGeneralAccountName]: ",
                 defaultGeneralAccountName,
                 inputReader,
                 outPrinter,
@@ -96,7 +96,7 @@ class ConsoleUiFacade(
                 ?: throw QuitException()
         val description: String =
             SimplePromptWithDefault(
-                "Enter the description for your \"General\" account [$defaultGeneralAccountDescription]: ",
+                "Enter the DESCRIPTION for your \"General\" account [$defaultGeneralAccountDescription]: ",
                 defaultGeneralAccountDescription,
                 inputReader,
                 outPrinter,
