@@ -45,7 +45,9 @@ fun WithIo.makeAllowancesSelectionMenu(
             outPrinter = outPrinter,
             validator = InRangeInclusiveStringValidator(min, max),
         ) {
-            it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
+            // NOTE in SimplePrompt, this is only called if the validator passes and in this case, the validator
+            //    guarantees that this is not null
+            it.toCurrencyAmountOrNull()!!
         }
             .getResult()
             ?: throw TryAgainAtMostRecentMenuException("No amount entered.")

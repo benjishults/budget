@@ -49,13 +49,18 @@ interface SimplePrompt<T : Any> : Prompt<T> {
     /**
      * @return the result of applying [transformer] to the user's input if the input passes [validator].  Otherwise,
      * the result of calling [actionOnInvalid] passing the user's input and the [validator]'s [StringValidator.errorMessage].
+     * If [transformer] throws an exception, the [actionOnInvalid] is called with that exception's message.
      */
     override fun getResult(): T? {
         outPrinter(basicPrompt)
         return inputReader()
             .let { input: String ->
                 if (validator(input))
-                    transformer(input)
+                    try {
+                        transformer(input)
+                    } catch (e: Exception) {
+                        actionOnInvalid(input, e.message ?: "Error transforming input")
+                    }
                 else {
                     actionOnInvalid(input, validator.errorMessage)
                 }
