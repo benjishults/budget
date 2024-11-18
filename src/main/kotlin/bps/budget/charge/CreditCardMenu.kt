@@ -117,7 +117,11 @@ private fun WithIo.payCreditCardBill(
             inputReader = inputReader,
             outPrinter = outPrinter,
             validator = NonNegativeStringValidator,
-        ) { it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2) }
+        ) {
+            // NOTE in SimplePrompt, this is only called if the validator passes and in this case, the validator
+            //    guarantees that this is not null
+            it.toCurrencyAmountOrNull()!!
+        }
             .getResult()
             ?: throw TryAgainAtMostRecentMenuException("No amount entered.")
     if (amountOfBill > BigDecimal.ZERO) {
@@ -170,6 +174,8 @@ private fun WithIo.payCreditCardBill(
             },
         )
 
+    } else {
+        outPrinter.important("Amount must be positive.")
     }
 }
 
@@ -296,7 +302,9 @@ private fun WithIo.spendOnACreditCard(
             outPrinter = outPrinter,
             validator = NonNegativeStringValidator,
         ) {
-            it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
+            // NOTE in SimplePrompt, this is only called if the validator passes and in this case, the validator
+            //    guarantees that this is not null
+            it.toCurrencyAmountOrNull()!!
         }
             .getResult()
             ?: throw TryAgainAtMostRecentMenuException("No amount entered.")
@@ -327,5 +335,7 @@ private fun WithIo.spendOnACreditCard(
                 userConfig,
             ),
         )
+    } else {
+        outPrinter.important("Amount must be positive.")
     }
 }

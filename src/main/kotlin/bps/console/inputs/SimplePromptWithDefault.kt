@@ -5,6 +5,13 @@ import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
 
+/**
+ * @param additionalValidation if [validator] fails on the user's input and that input was not blank, then this will
+ * be called prior to calling [transformer].
+ * @param transformer Called on entry after it has gone through [validator] or [additionalValidation] if that fails.
+ * The default implementation simply casts to [T].
+ * @param T the type of the result.
+ */
 open class SimplePromptWithDefault<T : Any>(
     override val basicPrompt: String,
     val defaultValue: T,

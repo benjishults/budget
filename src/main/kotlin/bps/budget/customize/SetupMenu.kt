@@ -374,8 +374,10 @@ private fun WithIo.createRealFund(
                         budgetData,
                         realAccount,
                     )
-                } else
+                } else {
+                    outPrinter.important("Balance must be positive.")
                     null
+                }
             budgetDao.save(budgetData, user)
             if (incomeTransaction != null) {
                 budgetData.commit(incomeTransaction)

@@ -38,7 +38,8 @@ fun WithIo.recordIncomeSelectionMenu(
             outPrinter = outPrinter,
             validator = PositiveStringValidator,
         ) {
-            it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
+            // NOTE the validator ensures this is not null
+            it.toCurrencyAmountOrNull()!!
         }
             .getResult()
             ?: throw TryAgainAtMostRecentMenuException("No amount entered.")

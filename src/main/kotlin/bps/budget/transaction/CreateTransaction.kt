@@ -74,7 +74,9 @@ fun WithIo.chooseRealAccountsThenCategories(
                 additionalValidation = InRangeInclusiveStringValidator(BigDecimal("0.01").setScale(2), max),
                 defaultValue = max,
             ) {
-                it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
+                // NOTE for SimplePromptWithDefault, the first call to transform might fail.  If it
+                //    does, we want to apply the recovery action
+                it.toCurrencyAmountOrNull() ?: throw IllegalArgumentException("$it is not a valid amount")
             }
                 .getResult()
                 ?: throw TryAgainAtMostRecentMenuException("No amount entered")
@@ -126,6 +128,8 @@ fun WithIo.chooseRealAccountsThenCategories(
                     ),
                 )
             }
+        } else {
+            outPrinter.important("Amount must be positive.")
         }
     }
 
@@ -187,7 +191,9 @@ fun WithIo.allocateSpendingItemMenu(
                 additionalValidation = InRangeInclusiveStringValidator(BigDecimal("0.01").setScale(2), max),
                 defaultValue = max,
             ) {
-                it.toCurrencyAmountOrNull() ?: BigDecimal.ZERO.setScale(2)
+                // NOTE for SimplePromptWithDefault, the first call to transform might fail.  If it
+                //    does, we want to apply the recovery action
+                it.toCurrencyAmountOrNull() ?: throw IllegalArgumentException("$it is not a valid amount")
             }
                 .getResult()
                 ?: BigDecimal.ZERO.setScale(2)
@@ -231,5 +237,7 @@ fun WithIo.allocateSpendingItemMenu(
                 budgetDao.transactionDao.commit(transaction, budgetData.id)
                 outPrinter.important("Spending recorded")
             }
+        } else {
+            outPrinter.important("Amount must be positive.")
         }
     }
