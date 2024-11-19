@@ -1,17 +1,15 @@
 package bps.budget.customize
 
 import bps.budget.WithIo
-import bps.budget.auth.User
+import bps.budget.auth.AuthenticatedUser
 import bps.budget.income.createIncomeTransaction
 import bps.budget.model.Account
 import bps.budget.model.BudgetData
-import bps.budget.model.CategoryAccount
-import bps.budget.model.ChargeAccount
-import bps.budget.model.DraftAccount
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.AccountDao
 import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.console.app.MenuSession
@@ -33,8 +31,6 @@ import bps.console.menu.takeAction
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
 import kotlin.math.min
 
 data class DistinctNameValidator(val existingAccounts: List<Account>) : StringValidator {
@@ -49,24 +45,24 @@ data class DistinctNameValidator(val existingAccounts: List<Account>) : StringVa
 fun WithIo.customizeMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
-    user: User,
+    authenticatedUser: AuthenticatedUser,
     userConfig: UserConfiguration,
     clock: Clock,
 ) =
     Menu {
         add(
             takeAction("Create a New Category") {
-                createCategory(budgetData, budgetDao, user)
+                createCategory(budgetData, budgetDao)
             },
         )
         add(
             takeAction("Create a Real Fund") {
-                createRealFund(budgetData, budgetDao, clock, user)
+                createRealFund(budgetData, budgetDao.accountDao, budgetDao.transactionDao, clock)
             },
         )
         add(
             takeAction("Add a Credit Card") {
-                createCreditAccount(budgetData, budgetDao, user)
+                createCreditAccount(budgetData, budgetDao.accountDao)
             },
         )
         add(
@@ -174,7 +170,6 @@ fun WithIo.editAccountDetails(
 private fun WithIo.createCategory(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
-    user: User,
 ) {
     val name: String =
         SimplePrompt<String>(
@@ -200,9 +195,14 @@ private fun WithIo.createCategory(
                 .getResult()
                 ?.trim()
                 ?: throw TryAgainAtMostRecentMenuException("Description for the new category not entered.")
-        budgetData.addCategoryAccount(CategoryAccount(name, description, budgetId = budgetData.id))
-        budgetDao.save(budgetData, user)
-        outPrinter.important("Category '$name' created")
+        val categoryAccount =
+            budgetDao.accountDao.createCategoryAccountOrNull(name, description, budgetId = budgetData.id)
+        if (categoryAccount != null) {
+            budgetData.addCategoryAccount(categoryAccount)
+            outPrinter.important("Category '$name' created")
+        } else {
+            outPrinter.important("Unable to save category account..")
+        }
     }
 }
 
@@ -257,8 +257,7 @@ private fun WithIo.deactivateAccount(
 
 private fun WithIo.createCreditAccount(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
-    user: User,
+    accountDao: AccountDao,
 ) {
     val name: String =
         SimplePrompt<String>(
@@ -266,7 +265,7 @@ private fun WithIo.createCreditAccount(
             inputReader,
             outPrinter,
             validator = NotInListStringValidator(
-                budgetDao.accountDao.getAllAccountNamesForBudget(budgetData.id),
+                accountDao.getAllAccountNamesForBudget(budgetData.id),
                 "an existing account name",
             ),
         )
@@ -284,17 +283,22 @@ private fun WithIo.createCreditAccount(
                 .getResult()
                 ?.trim()
                 ?: throw TryAgainAtMostRecentMenuException("No description entered.")
-        budgetData.addChargeAccount(ChargeAccount(name, description, budgetId = budgetData.id))
-        budgetDao.save(budgetData, user)
-        outPrinter.important("New credit card account '$name' created")
+        val chargeAccount =
+            accountDao.createChargeAccountOrNull(name, description, budgetId = budgetData.id)
+        if (chargeAccount != null) {
+            budgetData.addChargeAccount(chargeAccount)
+            outPrinter.important("New credit card account '$name' created")
+        } else {
+            outPrinter.important("Unable to save category account..")
+        }
     }
 }
 
 private fun WithIo.createRealFund(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    accountDao: AccountDao,
+    transactionDao: TransactionDao,
     clock: Clock,
-    user: User,
 ) {
     val name: String =
         SimplePrompt<String>(
@@ -302,7 +306,7 @@ private fun WithIo.createRealFund(
             inputReader,
             outPrinter,
             validator = NotInListStringValidator(
-                budgetDao.accountDao.getAllAccountNamesForBudget(budgetData.id),
+                accountDao.getAllAccountNamesForBudget(budgetData.id),
                 "an existing account name",
             ),
         )
@@ -335,59 +339,75 @@ private fun WithIo.createRealFund(
             inputReader = inputReader,
             outPrinter = outPrinter,
         ) {
-            it.toCurrencyAmountOrNull() ?: throw TryAgainAtMostRecentMenuException("Invalid account balance")
+            it.toCurrencyAmountOrNull() ?: throw IllegalArgumentException("$it is an invalid account balance")
         }
             .getResult()
             ?: throw TryAgainAtMostRecentMenuException("Invalid account balance")
-        val realAccount = RealAccount(name, accountDescription, budgetId = budgetData.id)
-        budgetData.addRealAccount(realAccount)
-        if (isDraft)
-            budgetData.addDraftAccount(
-                DraftAccount(
+        val realAccount: RealAccount? =
+            if (isDraft) {
+                accountDao.createRealAndDraftAccountOrNull(
                     name,
                     accountDescription,
-                    realCompanion = realAccount,
                     budgetId = budgetData.id,
-                ),
+                )
+                    ?.let { (real, draft) ->
+                        budgetData.addRealAccount(real)
+                        budgetData.addDraftAccount(draft)
+                        real
+                    }
+            } else {
+                accountDao.createRealAccountOrNull(
+                    name,
+                    accountDescription,
+                    budgetId = budgetData.id,
+                )
+                    ?.also {
+                        budgetData.addRealAccount(it)
+                    }
+            }
+        if (realAccount != null) {
+            createAndSaveIncomeTransaction(balance, realAccount, budgetData, clock, transactionDao)
+        } else {
+            outPrinter.important("Unable to save real account.")
+        }
+    }
+}
+
+private fun WithIo.createAndSaveIncomeTransaction(
+    balance: BigDecimal,
+    realAccount: RealAccount,
+    budgetData: BudgetData,
+    clock: Clock,
+    transactionDao: TransactionDao,
+) {
+    if (balance > BigDecimal.ZERO) {
+        val incomeDescription: String =
+            SimplePromptWithDefault(
+                "Enter DESCRIPTION of income [initial balance in '${realAccount.name}']: ",
+                defaultValue = "initial balance in '${realAccount.name}'",
+                inputReader = inputReader,
+                outPrinter = outPrinter,
             )
-        try {
-            val incomeTransaction: Transaction? =
-                if (balance > BigDecimal.ZERO) {
-                    val incomeDescription: String =
-                        SimplePromptWithDefault(
-                            "Enter DESCRIPTION of income [initial balance in '${realAccount.name}']: ",
-                            defaultValue = "initial balance in '${realAccount.name}'",
-                            inputReader = inputReader,
-                            outPrinter = outPrinter,
-                        )
-                            .getResult()
-                            ?: throw TryAgainAtMostRecentMenuException("No description entered.")
-                    outPrinter("Enter timestamp for '$incomeDescription' transaction\n")
-                    val timestamp: Instant = getTimestampFromUser(
-                        timeZone = budgetData.timeZone,
-                        clock = clock,
-                    )
-                    createIncomeTransaction(
-                        incomeDescription,
-                        timestamp,
-                        balance,
-                        budgetData,
-                        realAccount,
-                    )
-                } else {
-                    outPrinter.important("Balance must be positive.")
-                    null
-                }
-            budgetDao.save(budgetData, user)
-            if (incomeTransaction != null) {
+                .getResult()
+            // NOTE I don't think this is possible when there's a default String value
+                ?: throw Error("No description entered.")
+        outPrinter("Enter timestamp for '$incomeDescription' transaction\n")
+        val timestamp: Instant = getTimestampFromUser(
+            timeZone = budgetData.timeZone,
+            clock = clock,
+        )
+        createIncomeTransaction(
+            incomeDescription,
+            timestamp,
+            balance,
+            budgetData,
+            realAccount,
+        )
+            .let { incomeTransaction: Transaction ->
                 budgetData.commit(incomeTransaction)
-                budgetDao.transactionDao.commit(incomeTransaction, budgetData.id)
+                transactionDao.commit(incomeTransaction, budgetData.id)
                 outPrinter.important("Real account '${realAccount.name}' created with balance $$balance")
             }
-        } catch (ex: Exception) {
-            budgetDao.save(budgetData, user)
-            outPrinter.important("Saved account '${realAccount.name}' with zero balance.")
-        }
     }
 }
 

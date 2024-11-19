@@ -39,8 +39,6 @@ const val defaultTravelAccountName = "Travel"
 const val defaultTravelAccountDescription = "Travel expenses for vacation"
 const val defaultWorkAccountName = "Work"
 const val defaultWorkAccountDescription = "Work-related expenses (possibly to be reimbursed)"
-const val defaultCheckingDraftsAccountName = "Checking Drafts"
-const val defaultCheckingDraftsAccountDescription = "Records checks being written or clearing"
 
 /**
  * See src/test/kotlin/bps/kotlin/GenericFunctionTest.kt for a discussion of how I want to improve this
@@ -109,6 +107,13 @@ abstract class Account(
 
 }
 
+enum class AccountType {
+    category,
+    real,
+    draft,
+    charge,
+}
+
 // TODO consider merging (most of) these into a single class.
 
 class CategoryAccount(
@@ -117,7 +122,7 @@ class CategoryAccount(
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
     budgetId: UUID,
-) : Account(name, description, id, balance, "category", budgetId) {
+) : Account(name, description, id, balance, AccountType.category.name, budgetId) {
 
     override fun Transaction.Builder.addItemBuilderTo(
         amount: BigDecimal,
@@ -175,7 +180,7 @@ open class RealAccount(
     id: UUID = UUID.randomUUID(),
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
     budgetId: UUID,
-) : Account(name, description, id, balance, "real", budgetId) {
+) : Account(name, description, id, balance, AccountType.real.name, budgetId) {
 
     override fun Transaction.Builder.addItemBuilderTo(
         amount: BigDecimal,
@@ -238,7 +243,7 @@ class DraftAccount(
     balance: BigDecimal = BigDecimal.ZERO.setScale(2),
     val realCompanion: RealAccount,
     budgetId: UUID,
-) : Account(name, description, id, balance, "draft", budgetId) {
+) : Account(name, description, id, balance, AccountType.draft.name, budgetId) {
 
     override fun Transaction.Builder.addItemBuilderTo(
         amount: BigDecimal,
@@ -298,7 +303,7 @@ class ChargeAccount(
     budgetId: UUID,
 ) : RealAccount(name, description, id, balance, budgetId) {
 
-    override val type: String = "charge"
+    override val type: String = AccountType.charge.name
 
     override fun Transaction.Builder.addItemBuilderTo(
         amount: BigDecimal,

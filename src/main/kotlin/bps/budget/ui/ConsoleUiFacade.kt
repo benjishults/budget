@@ -1,12 +1,14 @@
 package bps.budget.ui
 
 import bps.budget.auth.BudgetAccess
-import bps.budget.auth.User
+import bps.budget.auth.AuthenticatedUser
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.defaultGeneralAccountDescription
 import bps.budget.model.defaultGeneralAccountName
+import bps.budget.persistence.AccountDao
 import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.UserBudgetDao
 import bps.budget.persistence.UserConfiguration
 import bps.console.app.QuitException
 import bps.console.inputs.EmailStringValidator
@@ -30,19 +32,30 @@ class ConsoleUiFacade(
     override fun firstTimeSetup(
         budgetName: String,
         budgetDao: BudgetDao,
-        user: User,
+        authenticatedUser: AuthenticatedUser,
     ): BudgetData {
         announceFirstTime()
         val timeZone: TimeZone = getDesiredTimeZone()
+        val generalAccountId: UUID = UUID.randomUUID()
+        val budgetId: UUID = UUID.randomUUID()
+        budgetDao.userBudgetDao.createBudgetOrNull(generalAccountId, budgetId)!!
+        budgetDao.userBudgetDao.grantAccess(
+            budgetName = budgetName,
+            timeZoneId = timeZone.id,
+            userId = authenticatedUser.id,
+            budgetId = budgetId,
+        )
         return if (userWantsBasicAccounts()) {
             info(
                 """
                     |You'll be able to rename these accounts and create new accounts later,
                     |but please answer a couple of questions as we get started.""".trimMargin(),
             )
-            BudgetData.withBasicAccounts(
+            BudgetData.persistWithBasicAccounts(
                 budgetName = budgetName,
+                budgetId = budgetId,
                 timeZone = timeZone,
+                generalAccountId = generalAccountId,
                 checkingBalance = getInitialBalance(
                     "Checking",
                     "this is any account on which you are able to write checks",
@@ -51,10 +64,9 @@ class ConsoleUiFacade(
                     "Wallet",
                     "this is cash you might carry on your person",
                 ),
+                accountDao = budgetDao.accountDao,
             )
-                .also { budgetData: BudgetData ->
-                    info("saving that data...")
-                    budgetDao.save(budgetData, user)
+                .also {
                     info(
                         """
                                     |Saved
@@ -66,44 +78,17 @@ class ConsoleUiFacade(
                     )
                 }
         } else {
-            createGeneralAccount(budgetDao)
+            budgetDao.accountDao.createGeneralAccountWithIdOrNull(generalAccountId, budgetId = UUID.randomUUID())!!
                 .let { generalAccount: CategoryAccount ->
                     BudgetData(
-                        id = UUID.randomUUID(),
+                        id = budgetId,
                         name = budgetName,
                         timeZone = timeZone,
                         generalAccount = generalAccount,
                         categoryAccounts = listOf(generalAccount),
                     )
-                        .also { budgetData: BudgetData ->
-                            budgetDao.save(budgetData, user)
-                        }
                 }
         }
-    }
-
-
-    override fun createGeneralAccount(budgetDao: BudgetDao): CategoryAccount {
-        budgetDao.prepForFirstSave()
-        val name: String =
-            SimplePromptWithDefault(
-                "Enter the NAME for your \"General\" account [$defaultGeneralAccountName]: ",
-                defaultGeneralAccountName,
-                inputReader,
-                outPrinter,
-            )
-                .getResult()
-                ?: throw QuitException()
-        val description: String =
-            SimplePromptWithDefault(
-                "Enter the DESCRIPTION for your \"General\" account [$defaultGeneralAccountDescription]: ",
-                defaultGeneralAccountDescription,
-                inputReader,
-                outPrinter,
-            )
-                .getResult()
-                ?: throw QuitException()
-        return CategoryAccount(name, description, budgetId = UUID.randomUUID())
     }
 
     override fun userWantsBasicAccounts(): Boolean =
@@ -151,7 +136,7 @@ class ConsoleUiFacade(
         outPrinter("$infoMessage\n")
     }
 
-    override fun login(budgetDao: BudgetDao, userConfiguration: UserConfiguration): User {
+    override fun login(userBudgetDao: UserBudgetDao, userConfiguration: UserConfiguration): AuthenticatedUser {
         val login: String =
             if (userConfiguration.defaultLogin === null) {
                 SimplePrompt<String>(
@@ -174,14 +159,15 @@ class ConsoleUiFacade(
 //                )
 //                    .getResult()
             }
-        return budgetDao
-            .userBudgetDao
-            .getUserByLogin(login)
+        // TODO replace this with an upsert so we get a single transaction safe from race conditions
+        return userBudgetDao
+            // NOTE not doing authentication yet
+            .getUserByLoginOrNull(login) as AuthenticatedUser?
             ?: run {
                 outPrinter("Unknown user.  Creating new account.")
-                User(
+                AuthenticatedUser(
                     login = login,
-                    id = budgetDao.userBudgetDao.createUser(login, "a"),
+                    id = userBudgetDao.createUser(login, "a"),
                 )
             }
     }

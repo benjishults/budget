@@ -1,7 +1,14 @@
 package bps.budget.persistence.jdbc
 
 import bps.budget.model.Account
+import bps.budget.model.AccountType
+import bps.budget.model.CategoryAccount
+import bps.budget.model.ChargeAccount
+import bps.budget.model.DraftAccount
+import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
+import bps.budget.model.defaultGeneralAccountDescription
+import bps.budget.model.defaultGeneralAccountName
 import bps.budget.persistence.AccountDao
 import bps.jdbc.JdbcFixture
 import bps.jdbc.transactOrThrow
@@ -159,5 +166,211 @@ where aap.account_id = ?
                     preparedStatement.executeUpdate() == 1
                 }
         }
+
+    override fun createCategoryAccountOrNull(name: String, description: String, budgetId: UUID): CategoryAccount? =
+        connection.transactOrThrow {
+            prepareStatement(
+                """
+                insert into accounts (name, description, balance, type, budget_id, id)
+                values (?, ?, ?, ?, ?, ?)
+            """.trimIndent(),
+            )
+                .use { preparedStatement: PreparedStatement ->
+                    val id = preparedStatement.setAccountParametersAndReturnId(
+                        name,
+                        description,
+                        AccountType.category,
+                        budgetId,
+                    )
+                    if (preparedStatement.executeUpdate() == 1) {
+                        CategoryAccount(
+                            name = name,
+                            description = description,
+                            id = id,
+                            balance = BigDecimal.ZERO.setScale(2),
+                            budgetId = budgetId,
+                        )
+                    } else
+                        null
+                }
+                ?.also { insertAccountActivePeriod(it, budgetId) }
+        }
+
+    private fun Connection.insertAccountActivePeriod(account: Account, budgetId: UUID) =
+        prepareStatement(
+            """
+                            insert into account_active_periods (id, account_id, budget_id)
+                            values (?, ?, ?)
+                            on conflict do nothing
+                        """.trimIndent(),
+        )
+            .use { createActivePeriod: PreparedStatement ->
+                createActivePeriod.setUuid(1, UUID.randomUUID())
+                createActivePeriod.setUuid(2, account.id)
+                createActivePeriod.setUuid(3, budgetId)
+                // NOTE due to the uniqueness constraints on this table, this will be idempotent
+                createActivePeriod.executeUpdate()
+            }
+
+    override fun createGeneralAccountWithIdOrNull(id: UUID, balance: BigDecimal, budgetId: UUID): CategoryAccount? =
+        connection.transactOrThrow {
+            prepareStatement(
+                """
+                insert into accounts (name, description, balance, type, budget_id, id)
+                values (?, ?, ?, ?, ?, ?)
+            """.trimIndent(),
+            )
+                .use { preparedStatement: PreparedStatement ->
+                    preparedStatement.setString(1, defaultGeneralAccountName)
+                    preparedStatement.setString(2, defaultGeneralAccountDescription)
+                    preparedStatement.setBigDecimal(3, balance)
+                    preparedStatement.setString(4, AccountType.category.name)
+                    preparedStatement.setUuid(5, budgetId)
+                    preparedStatement.setUuid(6, id)
+                    if (preparedStatement.executeUpdate() == 1) {
+                        CategoryAccount(
+                            name = defaultGeneralAccountName,
+                            description = defaultGeneralAccountDescription,
+                            id = id,
+                            balance = balance,
+                            budgetId = budgetId,
+                        )
+                    } else
+                        null
+                }
+                ?.also { insertAccountActivePeriod(it, budgetId) }
+        }
+
+    override fun createRealAccountOrNull(
+        name: String,
+        description: String,
+        budgetId: UUID,
+        balance: BigDecimal,
+    ): RealAccount? =
+        connection.transactOrThrow {
+            createRealAccountInTransaction(name, description, budgetId, balance)
+        }
+
+    private fun Connection.createRealAccountInTransaction(
+        name: String,
+        description: String,
+        budgetId: UUID,
+        balance: BigDecimal,
+    ): RealAccount? =
+        prepareStatement(
+            """
+                    insert into accounts (name, description, balance, type, budget_id, id)
+                    values (?, ?, ?, ?, ?, ?)
+                """.trimIndent(),
+        )
+            .use { preparedStatement: PreparedStatement ->
+                val id = preparedStatement.setAccountParametersAndReturnId(
+                    name,
+                    description,
+                    AccountType.real,
+                    budgetId,
+                    balance,
+                )
+                if (preparedStatement.executeUpdate() == 1) {
+                    RealAccount(
+                        name = name,
+                        description = description,
+                        id = id,
+                        balance = balance,
+                        budgetId = budgetId,
+                    )
+                } else
+                    null
+            }
+            ?.also { insertAccountActivePeriod(it, budgetId) }
+
+    override fun createRealAndDraftAccountOrNull(
+        name: String,
+        description: String,
+        budgetId: UUID,
+        balance: BigDecimal,
+    ): Pair<RealAccount, DraftAccount>? =
+        connection.transactOrThrow {
+            createRealAccountInTransaction(name, description, budgetId, balance)
+                ?.let { realCompanion: RealAccount ->
+                    prepareStatement(
+                        """
+                            insert into accounts (name, description, balance, type, budget_id, id, companion_account_id)
+                            values (?, ?, ?, ?, ?, ?, ?)
+                        """.trimIndent(),
+                    )
+                        .use { createDraftAccountStatement: PreparedStatement ->
+                            val id = createDraftAccountStatement.setAccountParametersAndReturnId(
+                                name,
+                                description,
+                                AccountType.draft,
+                                budgetId,
+                            )
+                            createDraftAccountStatement.setUuid(7, realCompanion.id)
+                            if (createDraftAccountStatement.executeUpdate() == 1) {
+                                realCompanion to DraftAccount(
+                                    name = name,
+                                    description = description,
+                                    id = id,
+                                    balance = BigDecimal.ZERO.setScale(2),
+                                    budgetId = budgetId,
+                                    realCompanion = realCompanion,
+                                )
+                            } else
+                                null
+                        }
+                        ?.also { (_, draftAccount) -> insertAccountActivePeriod(draftAccount, budgetId) }
+                }
+        }
+
+    override fun createChargeAccountOrNull(
+        name: String,
+        description: String,
+        budgetId: UUID,
+    ): ChargeAccount? =
+        connection.transactOrThrow {
+            prepareStatement(
+                """
+                insert into accounts (name, description, balance, type, budget_id, id)
+                values (?, ?, ?, ?, ?, ?)
+            """.trimIndent(),
+            )
+                .use { preparedStatement: PreparedStatement ->
+                    val id = preparedStatement.setAccountParametersAndReturnId(
+                        name,
+                        description,
+                        AccountType.charge,
+                        budgetId,
+                    )
+                    if (preparedStatement.executeUpdate() == 1) {
+                        ChargeAccount(
+                            name = name,
+                            description = description,
+                            id = id,
+                            balance = BigDecimal.ZERO.setScale(2),
+                            budgetId = budgetId,
+                        )
+                    } else
+                        null
+                }
+                ?.also { insertAccountActivePeriod(it, budgetId) }
+        }
+
+    private fun PreparedStatement.setAccountParametersAndReturnId(
+        name: String,
+        description: String,
+        type: AccountType,
+        budgetId: UUID,
+        balance: BigDecimal = BigDecimal.ZERO.setScale(2),
+    ): UUID =
+        UUID.randomUUID()
+            .also {
+                setString(1, name)
+                setString(2, description)
+                setBigDecimal(3, balance)
+                setString(4, type.name)
+                setUuid(5, budgetId)
+                setUuid(6, it)
+            }
 
 }

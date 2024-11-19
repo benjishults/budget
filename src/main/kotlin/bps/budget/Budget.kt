@@ -3,7 +3,7 @@
 package bps.budget
 
 import bps.budget.allowance.makeAllowancesSelectionMenu
-import bps.budget.auth.User
+import bps.budget.auth.AuthenticatedUser
 import bps.budget.charge.creditCardMenu
 import bps.budget.checking.checksMenu
 import bps.budget.customize.customizeMenu
@@ -50,7 +50,7 @@ fun main() {
 
 class BudgetApplication private constructor(
     inputReader: InputReader,
-    outPrinter: OutPrinter,
+    val outPrinter: OutPrinter,
     uiFacade: UiFacade,
     val budgetDao: BudgetDao,
     clock: Clock,
@@ -76,9 +76,9 @@ class BudgetApplication private constructor(
         budgetDao.prepForFirstLoad()
     }
 
-    val user: User = uiFacade.login(budgetDao, configurations.user)
+    val authenticatedUser: AuthenticatedUser = uiFacade.login(budgetDao.userBudgetDao, configurations.user)
     val budgetData: BudgetData = loadOrBuildBudgetData(
-        user = user,
+        authenticatedUser = authenticatedUser,
         uiFacade = uiFacade,
         budgetDao = budgetDao,
         budgetName = getBudgetNameFromPersistenceConfig(configurations.persistence) ?: uiFacade.getBudgetName(),
@@ -87,7 +87,7 @@ class BudgetApplication private constructor(
     private val menuApplicationWithQuit =
         MenuApplicationWithQuit(
             WithIo(inputReader, outPrinter)
-                .budgetMenu(budgetData, budgetDao, configurations.user, user, clock),
+                .budgetMenu(budgetData, budgetDao, configurations.user, authenticatedUser, clock),
             inputReader,
             outPrinter,
         )
@@ -97,7 +97,8 @@ class BudgetApplication private constructor(
     }
 
     override fun close() {
-        budgetDao.save(budgetData, user)
+        if (!budgetData.validate())
+            outPrinter.important("Budget Data was invalid on exit!")
         budgetDao.close()
         menuApplicationWithQuit.close()
     }
@@ -108,7 +109,7 @@ fun WithIo.budgetMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
-    user: User,
+    authenticatedUser: AuthenticatedUser,
     clock: Clock,
 ): Menu =
     Menu({ "Budget!" }) {
@@ -164,7 +165,7 @@ fun WithIo.budgetMenu(
         )
         add(
             pushMenu(setup, "m") {
-                customizeMenu(budgetData, budgetDao, user, userConfig, clock)
+                customizeMenu(budgetData, budgetDao, authenticatedUser, userConfig, clock)
             },
         )
         add(quitItem)
