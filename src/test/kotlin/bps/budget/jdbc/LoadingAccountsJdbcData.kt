@@ -1,6 +1,6 @@
 package bps.budget.jdbc
 
-import bps.budget.auth.User
+import bps.budget.auth.AuthenticatedUser
 import bps.budget.persistence.getBudgetNameFromPersistenceConfig
 import bps.budget.persistence.jdbc.JdbcDao
 import io.kotest.core.spec.style.FreeSpec
@@ -19,7 +19,7 @@ class LoadingAccountsJdbcData : FreeSpec(), BasicAccountsJdbcTestFixture {
         createBasicAccountsBeforeSpec(
             budgetId,
             getBudgetNameFromPersistenceConfig(configurations.persistence)!!,
-            User(userId, configurations.user.defaultLogin!!),
+            AuthenticatedUser(userId, configurations.user.defaultLogin!!),
             TimeZone.of(configurations.user.defaultTimeZone!!),
         )
         closeJdbcAfterSpec()

@@ -1,6 +1,6 @@
 package bps.budget
 
-import bps.budget.auth.User
+import bps.budget.auth.AuthenticatedUser
 import bps.budget.jdbc.BasicAccountsJdbcTestFixture
 import bps.budget.model.BudgetData
 import bps.budget.model.defaultCheckingAccountName
@@ -37,7 +37,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
         createBasicAccountsBeforeSpec(
             budgetId = budgetId,
             budgetName = getBudgetNameFromPersistenceConfig(configurations.persistence)!!,
-            user = User(userId, configurations.user.defaultLogin!!),
+            authenticatedUser = AuthenticatedUser(userId, configurations.user.defaultLogin!!),
             timeZone = TimeZone.of(configurations.user.defaultTimeZone!!),
         )
         resetBalancesAndTransactionAfterSpec(budgetId)
@@ -593,7 +593,7 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                         |Select the checking account to work on
-                        | 1.   5,000.00 | Checking Drafts
+                        | 1.   5,000.00 | Checking
                         | 2. Back (b)
                         | 3. Quit (q)
                         |
@@ -605,8 +605,8 @@ Spending recorded
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                         | 1. Write a check on 'Checking Drafts'
-                         | 2. Record check cleared on 'Checking Drafts'
+                         | 1. Write a check on 'Checking'
+                         | 2. Record check cleared on 'Checking'
                          | 3. Back (b)
                          | 4. Quit (q)
                          |""".trimMargin(),
@@ -615,12 +615,12 @@ Spending recorded
                     toInput = listOf("1"),
                 )
                 validateInteraction(
-                    expectedOutputs = listOf("Enter the AMOUNT of check on 'Checking Drafts' [0.01, 5000.00]: "),
+                    expectedOutputs = listOf("Enter the AMOUNT of check on 'Checking' [0.01, 5000.00]: "),
                     toInput = listOf("300"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Enter the RECIPIENT of the check on 'Checking Drafts': ",
+                        "Enter the RECIPIENT of the check on 'Checking': ",
                         "Use current time [Y]? ",
                     ),
                     toInput = listOf("SuperMarket", ""),
@@ -628,7 +628,7 @@ Spending recorded
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Spending from 'Checking Drafts': 'SuperMarket'
+                        |Spending from 'Checking': 'SuperMarket'
                         |Select a category that some of that money was spent on.  Left to cover: $300.00
                         | 1.       0.00 | Education       | Tuition, books, etc.
                         | 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
@@ -663,7 +663,7 @@ Itemization prepared
 
 """,
                         """
-                        |Spending from 'Checking Drafts': 'SuperMarket'
+                        |Spending from 'Checking': 'SuperMarket'
                         |Select a category that some of that money was spent on.  Left to cover: $100.00
                         | 1.       0.00 | Education       | Tuition, books, etc.
                         | 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
@@ -698,8 +698,8 @@ Spending recorded
 
 """,
                         """
-                         | 1. Write a check on 'Checking Drafts'
-                         | 2. Record check cleared on 'Checking Drafts'
+                         | 1. Write a check on 'Checking'
+                         | 2. Record check cleared on 'Checking'
                          | 3. Back (b)
                          | 4. Quit (q)
                          |""".trimMargin(),
@@ -712,8 +712,8 @@ Spending recorded
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                         | 1. Write a check on 'Checking Drafts'
-                         | 2. Record check cleared on 'Checking Drafts'
+                         | 1. Write a check on 'Checking'
+                         | 2. Record check cleared on 'Checking'
                          | 3. Back (b)
                          | 4. Quit (q)
                          |""".trimMargin(),
@@ -724,7 +724,7 @@ Spending recorded
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Select the check that cleared on 'Checking Drafts'
+                        |Select the check that cleared on 'Checking'
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:05 |     300.00 | SuperMarket
                         | 2. Back (b)
@@ -738,7 +738,7 @@ Spending recorded
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Select the check that cleared on 'Checking Drafts'
+                        |Select the check that cleared on 'Checking'
                         |    Time Stamp          | Amount     | Description
                         | 1. Back (b)
                         | 2. Quit (q)
@@ -750,8 +750,8 @@ Spending recorded
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                         | 1. Write a check on 'Checking Drafts'
-                         | 2. Record check cleared on 'Checking Drafts'
+                         | 1. Write a check on 'Checking'
+                         | 2. Record check cleared on 'Checking'
                          | 3. Back (b)
                          | 4. Quit (q)
                          |
@@ -764,7 +764,7 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                         |Select the checking account to work on
-                        | 1.   4,700.00 | Checking Drafts
+                        | 1.   4,700.00 | Checking
                         | 2. Back (b)
                         | 3. Quit (q)
                         |
@@ -864,7 +864,7 @@ Spending recorded
                         |     Real Items: | Amount     | Description
                         |Checking         |    -300.00 | SuperMarket
                         |    Draft Items: | Amount     | Description
-                        |Checking Drafts  |    -300.00 | SuperMarket
+                        |Checking         |    -300.00 | SuperMarket
                         |""".trimMargin(),
                         """
                         |'Checking' Account Transactions
@@ -1571,7 +1571,7 @@ Spending recorded
                         |     Real Items: | Amount     | Description
                         |Checking         |    -300.00 | SuperMarket
                         |    Draft Items: | Amount     | Description
-                        |Checking Drafts  |    -300.00 | SuperMarket
+                        |Checking         |    -300.00 | SuperMarket
                         |""".trimMargin(),
                         """
                         |'Checking' Account Transactions

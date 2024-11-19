@@ -3,11 +3,16 @@ package bps.budget.auth
 import kotlinx.datetime.TimeZone
 import java.util.UUID
 
-data class User(
-    val id: UUID,
-    val login: String,
+interface User {
+    val id: UUID
+    val login: String
+}
+
+data class AuthenticatedUser(
+    override val id: UUID,
+    override val login: String,
     val access: List<BudgetAccess> = emptyList(),
-)
+) : User
 
 data class BudgetAccess(
     val budgetId: UUID,

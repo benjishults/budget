@@ -1,7 +1,8 @@
 package bps.budget.persistence.jdbc
 
-import bps.budget.auth.User
+import bps.budget.auth.AuthenticatedUser
 import bps.budget.model.Account
+import bps.budget.model.AccountType
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.ChargeAccount
@@ -249,7 +250,7 @@ create index if not exists lookup_transaction_items_by_account
         }
     }
 
-    data class BudgetDataInfo(
+    private data class BudgetDataInfo(
         val generalAccountId: UUID,
         val timeZone: TimeZone,
         val budgetName: String,
@@ -296,15 +297,15 @@ create index if not exists lookup_transaction_items_by_account
                         }
                 // TODO pull out duplicate code in these next three sections
                 val categoryAccounts: List<CategoryAccount> =
-                    accountDao.getActiveAccounts("category", budgetId, ::CategoryAccount)
+                    accountDao.getActiveAccounts(AccountType.category.name, budgetId, ::CategoryAccount)
                 val generalAccount: CategoryAccount =
                     categoryAccounts.find {
                         it.id == generalAccountId
                     }!!
                 val realAccounts: List<RealAccount> =
-                    accountDao.getActiveAccounts("real", budgetId, ::RealAccount)
+                    accountDao.getActiveAccounts(AccountType.real.name, budgetId, ::RealAccount)
                 val chargeAccounts: List<ChargeAccount> =
-                    accountDao.getActiveAccounts("charge", budgetId, ::ChargeAccount)
+                    accountDao.getActiveAccounts(AccountType.charge.name, budgetId, ::ChargeAccount)
                 val draftAccounts: List<DraftAccount> = // getAccounts("draft", budgetId, ::DraftAccount)
                     prepareStatement(
                         """
@@ -314,13 +315,14 @@ from accounts acc
               on acc.id = aap.account_id
                   and acc.budget_id = aap.budget_id
 where acc.budget_id = ?
-  and acc.type = 'draft'
+  and acc.type = ?
   and now() > aap.start_date_utc
   and now() < aap.end_date_utc
 """.trimIndent(),
                     )
                         .use { getDraftAccountsStatement ->
                             getDraftAccountsStatement.setUuid(1, budgetId)
+                            getDraftAccountsStatement.setString(2, AccountType.draft.name)
                             getDraftAccountsStatement.executeQuery()
                                 .use { result ->
                                     buildList {
@@ -359,60 +361,60 @@ where acc.budget_id = ?
                 throw DataConfigurationException(ex)
         }
 
-    /**
-     * Saves only if we have not had an error trying to commit.
-     */
-    // FIXME figure out what this should really be doing and what should be done elsewhere.
-    override fun save(data: BudgetData, user: User) {
-        require(data.validate())
-        errorStateTracker.errorState
-            ?: connection.transactOrThrow {
-                val generalAccountId: UUID = data.generalAccount.id
-                // create user and budget if it isn't there
-                prepareStatement(
-                    """
-                insert into users (id, login)
-                values (?, ?) on conflict do nothing""",
-                )
-                    .use { createBudgetStatement: PreparedStatement ->
-                        createBudgetStatement.setUuid(1, user.id)
-                        createBudgetStatement.setString(2, user.login)
-                        createBudgetStatement.executeUpdate()
-                    }
-                prepareStatement(
-                    """
-                insert into budgets (id, general_account_id)
-                values (?, ?) on conflict do nothing""",
-                )
-                    .use { createBudgetStatement: PreparedStatement ->
-                        createBudgetStatement.setUuid(1, data.id)
-                        createBudgetStatement.setUuid(2, generalAccountId)
-                        createBudgetStatement.executeUpdate()
-                    }
-                prepareStatement(
-                    """
-                insert into budget_access (id, budget_id, user_id, time_zone, budget_name)
-                values (?, ?, ?, ?, ?) on conflict do nothing""".trimIndent(),
-                )
-                    .use { createBudgetStatement: PreparedStatement ->
-                        createBudgetStatement.setUuid(1, UUID.randomUUID())
-                        createBudgetStatement.setUuid(2, data.id)
-                        createBudgetStatement.setUuid(3, user.id)
-                        createBudgetStatement.setString(4, data.timeZone.id)
-                        createBudgetStatement.setString(5, config.budgetName)
-                        createBudgetStatement.executeUpdate()
-                    }
-                // create accounts that aren't there and update those that are
-                createStagingAccountsTable()
-                upsertAccountData(data.categoryAccounts, "category", data.id)
-                createStagingAccountsTable()
-                upsertAccountData(data.realAccounts, "real", data.id)
-                createStagingAccountsTable()
-                upsertAccountData(data.chargeAccounts, "charge", data.id)
-                createStagingAccountsTable()
-                upsertAccountData(data.draftAccounts, "draft", data.id)
-            }
-    }
+//    /**
+//     * Saves only if we have not had an error trying to commit.
+//     */
+//    // FIXME figure out what this should really be doing and what should be done elsewhere.
+//    override fun save(budgetData: BudgetData, authenticatedUser: AuthenticatedUser) {
+//        require(budgetData.validate())
+//        errorStateTracker.errorState
+//            ?: connection.transactOrThrow {
+//                val generalAccountId: UUID = budgetData.generalAccount.id
+//                // create user and budget if it isn't there
+//                prepareStatement(
+//                    """
+//                insert into users (id, login)
+//                values (?, ?) on conflict do nothing""",
+//                )
+//                    .use { createBudgetStatement: PreparedStatement ->
+//                        createBudgetStatement.setUuid(1, authenticatedUser.id)
+//                        createBudgetStatement.setString(2, authenticatedUser.login)
+//                        createBudgetStatement.executeUpdate()
+//                    }
+//                prepareStatement(
+//                    """
+//                insert into budgets (id, general_account_id)
+//                values (?, ?) on conflict do nothing""",
+//                )
+//                    .use { createBudgetStatement: PreparedStatement ->
+//                        createBudgetStatement.setUuid(1, budgetData.id)
+//                        createBudgetStatement.setUuid(2, generalAccountId)
+//                        createBudgetStatement.executeUpdate()
+//                    }
+//                prepareStatement(
+//                    """
+//                        insert into budget_access (id, budget_id, user_id, time_zone, budget_name)
+//                        values (?, ?, ?, ?, ?) on conflict do nothing""".trimIndent(),
+//                )
+//                    .use { createBudgetStatement: PreparedStatement ->
+//                        createBudgetStatement.setUuid(1, UUID.randomUUID())
+//                        createBudgetStatement.setUuid(2, budgetData.id)
+//                        createBudgetStatement.setUuid(3, authenticatedUser.id)
+//                        createBudgetStatement.setString(4, budgetData.timeZone.id)
+//                        createBudgetStatement.setString(5, config.budgetName)
+//                        createBudgetStatement.executeUpdate()
+//                    }
+//                // create accounts that aren't there and update those that are
+//                createStagingAccountsTable()
+//                upsertAccountData(budgetData.categoryAccounts, AccountType.category.name, budgetData.id)
+//                createStagingAccountsTable()
+//                upsertAccountData(budgetData.realAccounts, AccountType.real.name, budgetData.id)
+//                createStagingAccountsTable()
+//                upsertAccountData(budgetData.chargeAccounts, AccountType.charge.name, budgetData.id)
+//                createStagingAccountsTable()
+//                upsertAccountData(budgetData.draftAccounts, AccountType.draft.name, budgetData.id)
+//            }
+//    }
 
     /**
      * Must be called within a transaction with manual commits

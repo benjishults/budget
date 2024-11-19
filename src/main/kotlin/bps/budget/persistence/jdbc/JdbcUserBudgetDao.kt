@@ -2,6 +2,7 @@ package bps.budget.persistence.jdbc
 
 import bps.budget.auth.BudgetAccess
 import bps.budget.auth.CoarseAccess
+import bps.budget.auth.AuthenticatedUser
 import bps.budget.auth.User
 import bps.budget.persistence.UserBudgetDao
 import bps.jdbc.JdbcFixture
@@ -19,7 +20,7 @@ class JdbcUserBudgetDao(
     val errorStateTracker: JdbcDao.ErrorStateTracker,
 ) : UserBudgetDao, JdbcFixture {
 
-    override fun getUserByLogin(login: String): User? =
+    override fun getUserByLoginOrNull(login: String): User? =
         connection.transactOrThrow {
             prepareStatement(
                 """
@@ -51,25 +52,61 @@ class JdbcUserBudgetDao(
                                             ),
                                         )
                                 } while (resultSet.next())
-                                User(id, login, budgets)
+                                // NOTE not doing authentication yet.
+                                AuthenticatedUser(id, login, budgets)
                             } else
                                 null
                         }
                 }
         }
 
-    override fun createUser(login: String, password: String): UUID =
-        errorStateTracker.catchCommitErrorState {
-            UUID.randomUUID()
-                .also { uuid: UUID ->
-                    connection.transactOrThrow {
-                        prepareStatement("insert into users (login, id) values(?, ?)")
-                            .use {
-                                it.setString(1, login)
-                                it.setUuid(2, uuid)
-                                it.executeUpdate()
-                            }
-                    }
+    override fun createUser(login: String, password: String, userId: UUID): UUID =
+        userId.also {
+            errorStateTracker.catchCommitErrorState {
+                connection.transactOrThrow {
+                    prepareStatement("insert into users (login, id) values (?, ?)")
+                        .use { statement ->
+                            statement.setString(1, login)
+                            statement.setUuid(2, userId)
+                            statement.executeUpdate()
+                        }
+                }
+            }
+        }
+
+    override fun grantAccess(budgetName: String, timeZoneId: String, userId: UUID, budgetId: UUID) {
+        connection.transactOrThrow {
+            prepareStatement(
+                """
+                    insert into budget_access (id, budget_id, user_id, time_zone, budget_name)
+                    values (?, ?, ?, ?, ?) on conflict do nothing
+                """.trimIndent(),
+            )
+                .use { createBudgetStatement: PreparedStatement ->
+                    createBudgetStatement.setUuid(1, UUID.randomUUID())
+                    createBudgetStatement.setUuid(2, budgetId)
+                    createBudgetStatement.setUuid(3, userId)
+                    createBudgetStatement.setString(4, timeZoneId)
+                    createBudgetStatement.setString(5, budgetName)
+                    createBudgetStatement.executeUpdate()
+                }
+        }
+    }
+
+    override fun createBudgetOrNull(generalAccountId: UUID, budgetId: UUID): UUID? =
+        connection.transactOrThrow {
+            prepareStatement(
+                """
+                insert into budgets (id, general_account_id)
+                values (?, ?) on conflict do nothing""",
+            )
+                .use { createBudgetStatement: PreparedStatement ->
+                    createBudgetStatement.setUuid(1, budgetId)
+                    createBudgetStatement.setUuid(2, generalAccountId)
+                    if (createBudgetStatement.executeUpdate() != 1)
+                        null
+                    else
+                        budgetId
                 }
         }
 

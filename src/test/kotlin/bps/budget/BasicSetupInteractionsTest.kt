@@ -42,7 +42,7 @@ class BasicSetupInteractionsTest : FreeSpec(),
                         budgetData.categoryAccounts shouldContain budgetData.generalAccount
                         budgetData.categoryAccounts.size shouldBe 14
                     }
-                    application.budgetDao.load(application.budgetData.id, application.user.id)
+                    application.budgetDao.load(application.budgetData.id, application.authenticatedUser.id)
                         .asClue { budgetData: BudgetData ->
                             budgetData.categoryAccounts shouldContain budgetData.generalAccount
                             budgetData.categoryAccounts.size shouldBe 14
@@ -60,7 +60,6 @@ class BasicSetupInteractionsTest : FreeSpec(),
                     |""".trimMargin(),
                 "How much do you currently have in account 'Checking' [0.00]? ",
                 "How much do you currently have in account 'Wallet' [0.00]? ",
-                "saving that data...\n",
                 """
                     |Saved
                     |Next, you'll probably want to

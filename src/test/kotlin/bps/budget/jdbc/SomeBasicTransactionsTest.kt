@@ -1,13 +1,12 @@
 package bps.budget.jdbc
 
-import bps.budget.auth.User
+import bps.budget.auth.AuthenticatedUser
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftAccount
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.model.defaultCheckingAccountName
-import bps.budget.model.defaultCheckingDraftsAccountName
 import bps.budget.model.defaultCosmeticsAccountName
 import bps.budget.model.defaultEducationAccountName
 import bps.budget.model.defaultEntertainmentAccountName
@@ -44,7 +43,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
         createBasicAccountsBeforeSpec(
             budgetId,
             getBudgetNameFromPersistenceConfig(configurations.persistence)!!,
-            User(userId, configurations.user.defaultLogin!!),
+            AuthenticatedUser(userId, configurations.user.defaultLogin!!),
             TimeZone.of(configurations.user.defaultTimeZone!!),
         )
         closeJdbcAfterSpec()
@@ -56,7 +55,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
         }
         "with data from config" - {
             val budgetData = loadBudgetData(
-                user = jdbcDao.userBudgetDao.getUserByLogin(configurations.user.defaultLogin!!)!!,
+                authenticatedUser = jdbcDao.userBudgetDao.getUserByLoginOrNull(configurations.user.defaultLogin!!) as AuthenticatedUser,
                 budgetDao = jdbcDao,
                 budgetName = getBudgetNameFromPersistenceConfig(configurations.persistence)!!,
             )
@@ -125,7 +124,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                         }
                         with(
                             budgetData.draftAccounts.find {
-                                it.name == defaultCheckingDraftsAccountName
+                                it.name == defaultCheckingAccountName
                             }!!,
                         ) {
                             addItemBuilderTo(amount)
@@ -168,7 +167,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                 }
                 budgetData.draftAccounts.forEach { it: DraftAccount ->
                     when (it.name) {
-                        defaultCheckingDraftsAccountName -> it.balance shouldBe BigDecimal("100.00")
+                        defaultCheckingAccountName -> it.balance shouldBe BigDecimal("100.00")
                         else -> fail("unexpected draft account: $it")
                     }
                 }
@@ -189,7 +188,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                         }
                         with(
                             budgetData.draftAccounts.find {
-                                it.name == defaultCheckingDraftsAccountName
+                                it.name == defaultCheckingAccountName
                             }!!,
                         ) {
                             addItemBuilderTo(-amount)
@@ -245,7 +244,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
         budgetData.draftAccounts.size shouldBe 1
         budgetData.draftAccounts.forEach { it: DraftAccount ->
             when (it.name) {
-                defaultCheckingDraftsAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
+                defaultCheckingAccountName -> it.balance shouldBe BigDecimal.ZERO.setScale(2)
                 else -> fail("unexpected draft account: $it")
             }
         }

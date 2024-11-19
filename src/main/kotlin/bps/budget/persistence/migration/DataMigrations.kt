@@ -2,6 +2,7 @@ package bps.budget.persistence.migration
 
 import bps.budget.BudgetConfigurations
 import bps.budget.model.Account
+import bps.budget.model.AccountType
 import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftStatus
 import bps.budget.model.Transaction
@@ -181,10 +182,10 @@ class DataMigrations {
                         .use { statement ->
                             statement.execute()
                         }
-                    migrateAccountsToSingleTable("category")
-                    migrateAccountsToSingleTable("real")
-                    migrateAccountsToSingleTable("charge")
-                    migrateAccountsToSingleTable("draft")
+                    migrateAccountsToSingleTable(AccountType.category.name)
+                    migrateAccountsToSingleTable(AccountType.real.name)
+                    migrateAccountsToSingleTable(AccountType.charge.name)
+                    migrateAccountsToSingleTable(AccountType.draft.name)
                     migrateActivePeriods()
                     migrateTransactions()
                 }
@@ -495,10 +496,10 @@ create index if not exists lookup_transaction_items_by_transaction
                                 statement.executeQuery().use { resultSet ->
                                     resultSet.next()
                                     val budgetId: UUID = resultSet.getUuid("budget_id")!!
-                                    migrateAccountsToActivityPeriodTable("category", budgetId)
-                                    migrateAccountsToActivityPeriodTable("real", budgetId)
-                                    migrateAccountsToActivityPeriodTable("charge", budgetId)
-                                    migrateAccountsToActivityPeriodTable("draft", budgetId)
+                                    migrateAccountsToActivityPeriodTable(AccountType.category.name, budgetId)
+                                    migrateAccountsToActivityPeriodTable(AccountType.real.name, budgetId)
+                                    migrateAccountsToActivityPeriodTable(AccountType.charge.name, budgetId)
+                                    migrateAccountsToActivityPeriodTable(AccountType.draft.name, budgetId)
                                 }
                             }
                     }

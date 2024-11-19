@@ -1,5 +1,7 @@
 package bps.budget.model
 
+import bps.budget.persistence.AccountDao
+import bps.budget.persistence.UserBudgetDao
 import kotlinx.datetime.TimeZone
 import java.math.BigDecimal
 import java.util.UUID
@@ -125,33 +127,32 @@ class BudgetData(
     companion object {
 
         @JvmStatic
-        fun withBasicAccounts(
+        fun persistWithBasicAccounts(
             budgetName: String,
             timeZone: TimeZone = TimeZone.currentSystemDefault(),
             checkingBalance: BigDecimal = BigDecimal.ZERO.setScale(2),
             walletBalance: BigDecimal = BigDecimal.ZERO.setScale(2),
-            generalAccountId: UUID? = null,
+            generalAccountId: UUID = UUID.randomUUID(),
             budgetId: UUID = UUID.randomUUID(),
+            accountDao: AccountDao,
         ): BudgetData {
-            val checkingAccount = RealAccount(
+            val (checkingAccount, draftAccount) = accountDao.createRealAndDraftAccountOrNull(
                 name = defaultCheckingAccountName,
                 description = defaultCheckingAccountDescription,
                 balance = checkingBalance,
                 budgetId = budgetId,
-            )
-            val generalAccount = CategoryAccount(
-                name = defaultGeneralAccountName,
-                description = defaultGeneralAccountDescription,
-                id = generalAccountId ?: UUID.randomUUID(),
+            )!!
+            val generalAccount = accountDao.createGeneralAccountWithIdOrNull(
+                id = generalAccountId,
                 balance = checkingBalance + walletBalance,
                 budgetId = budgetId,
-            )
-            val wallet = RealAccount(
+            )!!
+            val wallet = accountDao.createRealAccountOrNull(
                 name = defaultWalletAccountName,
                 description = defaultWalletAccountDescription,
                 balance = walletBalance,
                 budgetId = budgetId,
-            )
+            )!!
             return BudgetData(
                 id = budgetId,
                 name = budgetName,
@@ -159,84 +160,77 @@ class BudgetData(
                 generalAccount = generalAccount,
                 categoryAccounts = listOf(
                     generalAccount,
-                    CategoryAccount(
+                    accountDao.createCategoryAccountOrNull(
                         defaultCosmeticsAccountName,
                         defaultCosmeticsAccountDescription,
                         budgetId = budgetId,
-                    ),
-                    CategoryAccount(
+                    )!!,
+                    accountDao.createCategoryAccountOrNull(
                         defaultEducationAccountName,
                         defaultEducationAccountDescription,
                         budgetId = budgetId,
-                    ),
-                    CategoryAccount(
+                    )!!,
+                    accountDao.createCategoryAccountOrNull(
                         defaultEntertainmentAccountName,
                         defaultEntertainmentAccountDescription,
                         budgetId = budgetId,
-                    ),
-                    CategoryAccount(
+                    )!!,
+                    accountDao.createCategoryAccountOrNull(
                         defaultFoodAccountName,
                         defaultFoodAccountDescription,
                         budgetId = budgetId,
-                    ),
-                    CategoryAccount(
+                    )!!,
+                    accountDao.createCategoryAccountOrNull(
                         defaultHobbyAccountName,
                         defaultHobbyAccountDescription,
                         budgetId = budgetId,
-                    ),
-                    CategoryAccount(
+                    )!!,
+                    accountDao.createCategoryAccountOrNull(
                         defaultHomeAccountName,
                         defaultHomeAccountDescription,
                         budgetId = budgetId,
-                    ),
-                    CategoryAccount(
+                    )!!,
+                    accountDao.createCategoryAccountOrNull(
                         defaultHousingAccountName,
                         defaultHousingAccountDescription,
                         budgetId = budgetId,
-                    ),
-                    CategoryAccount(
+                    )!!,
+                    accountDao.createCategoryAccountOrNull(
                         defaultMedicalAccountName,
                         defaultMedicalAccountDescription,
                         budgetId = budgetId,
-                    ),
-                    CategoryAccount(
+                    )!!,
+                    accountDao.createCategoryAccountOrNull(
                         defaultNecessitiesAccountName,
                         defaultNecessitiesAccountDescription,
                         budgetId = budgetId,
-                    ),
-                    CategoryAccount(
+                    )!!,
+                    accountDao.createCategoryAccountOrNull(
                         defaultNetworkAccountName,
                         defaultNetworkAccountDescription,
                         budgetId = budgetId,
-                    ),
-                    CategoryAccount(
+                    )!!,
+                    accountDao.createCategoryAccountOrNull(
                         defaultTransportationAccountName,
                         defaultTransportationAccountDescription,
                         budgetId = budgetId,
-                    ),
-                    CategoryAccount(
+                    )!!,
+                    accountDao.createCategoryAccountOrNull(
                         defaultTravelAccountName,
                         defaultTravelAccountDescription,
                         budgetId = budgetId,
-                    ),
-                    CategoryAccount(
+                    )!!,
+                    accountDao.createCategoryAccountOrNull(
                         defaultWorkAccountName,
                         defaultWorkAccountDescription,
                         budgetId = budgetId,
-                    ),
+                    )!!,
                 ),
                 realAccounts = listOf(
                     wallet,
                     checkingAccount,
                 ),
-                draftAccounts = listOf(
-                    DraftAccount(
-                        name = defaultCheckingDraftsAccountName,
-                        description = defaultCheckingDraftsAccountDescription,
-                        realCompanion = checkingAccount,
-                        budgetId = budgetId,
-                    ),
-                ),
+                draftAccounts = listOf(draftAccount),
             )
         }
 

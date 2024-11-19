@@ -1,7 +1,7 @@
 package bps.budget.jdbc
 
 import bps.budget.BudgetConfigurations
-import bps.budget.auth.User
+import bps.budget.auth.AuthenticatedUser
 import bps.budget.model.BudgetData
 import io.kotest.core.spec.Spec
 import io.kotest.mpp.atomics.AtomicReference
@@ -19,7 +19,7 @@ interface BasicAccountsJdbcTestFixture : BaseJdbcTestFixture {
     fun Spec.createBasicAccountsBeforeSpec(
         budgetId: UUID,
         budgetName: String,
-        user: User,
+        authenticatedUser: AuthenticatedUser,
         timeZone: TimeZone,
     ) {
         beforeSpec {
@@ -35,16 +35,21 @@ interface BasicAccountsJdbcTestFixture : BaseJdbcTestFixture {
 //                e.printStackTrace()
 //            }
 //            try {
-            jdbcDao.userBudgetDao.deleteUser(user.id)
+            jdbcDao.userBudgetDao.deleteUser(authenticatedUser.id)
 //            } catch (e: Exception) {
 //                e.printStackTrace()
 //            }
 //            try {
-            jdbcDao.userBudgetDao.deleteUserByLogin(user.login)
+            jdbcDao.userBudgetDao.deleteUserByLogin(authenticatedUser.login)
 //            } catch (e: Exception) {
 //                e.printStackTrace()
 //            }
-            upsertBasicAccounts(budgetName, user = user, timeZone = timeZone, budgetId = budgetId)
+            upsertBasicAccounts(
+                budgetName,
+                timeZone = timeZone,
+                authenticatedUser = authenticatedUser,
+                budgetId = budgetId,
+            )
         }
     }
 
@@ -67,19 +72,25 @@ interface BasicAccountsJdbcTestFixture : BaseJdbcTestFixture {
     private fun upsertBasicAccounts(
         budgetName: String,
         generalAccountId: UUID = UUID.fromString("dfa8a21c-f0ad-434d-bcb5-9e37749fa81e"),
-        user: User,
         timeZone: TimeZone = TimeZone.UTC,
+        authenticatedUser: AuthenticatedUser,
         budgetId: UUID,
     ) {
         jdbcDao.prepForFirstLoad()
-        jdbcDao.save(
-            BudgetData.withBasicAccounts(
-                budgetName = budgetName,
-                generalAccountId = generalAccountId,
-                timeZone = timeZone,
-                budgetId = budgetId,
-            ),
-            user,
+        jdbcDao.userBudgetDao.createUser(authenticatedUser.login, "a", authenticatedUser.id)
+        jdbcDao.userBudgetDao.createBudgetOrNull(generalAccountId, budgetId)!!
+        jdbcDao.userBudgetDao.grantAccess(
+            budgetName = budgetName,
+            timeZoneId = timeZone.id,
+            userId = authenticatedUser.id,
+            budgetId = budgetId,
+        )
+        BudgetData.persistWithBasicAccounts(
+            budgetName = budgetName,
+            generalAccountId = generalAccountId,
+            timeZone = timeZone,
+            budgetId = budgetId,
+            accountDao = jdbcDao.accountDao,
         )
     }
 
