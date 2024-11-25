@@ -70,11 +70,11 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 1. $recordIncome (i)
                             | 2. $makeAllowances (a)
                             | 3. $recordSpending (s)
-                            | 4. View History (v)
+                            | 4. $manageTransactions (v)
                             | 5. $writeOrClearChecks (ch)
                             | 6. $useOrPayCreditCards (cr)
                             | 7. $transfer (x)
-                            | 8. $setup (m)
+                            | 8. $manageAccounts (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -166,11 +166,11 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 1. $recordIncome (i)
                             | 2. $makeAllowances (a)
                             | 3. $recordSpending (s)
-                            | 4. View History (v)
+                            | 4. $manageTransactions (v)
                             | 5. $writeOrClearChecks (ch)
                             | 6. $useOrPayCreditCards (cr)
                             | 7. $transfer (x)
-                            | 8. $setup (m)
+                            | 8. $manageAccounts (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -261,11 +261,11 @@ Deactivated account 'Cosmetics'
                             | 1. $recordIncome (i)
                             | 2. $makeAllowances (a)
                             | 3. $recordSpending (s)
-                            | 4. View History (v)
+                            | 4. $manageTransactions (v)
                             | 5. $writeOrClearChecks (ch)
                             | 6. $useOrPayCreditCards (cr)
                             | 7. $transfer (x)
-                            | 8. $setup (m)
+                            | 8. $manageAccounts (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -367,11 +367,11 @@ Allowance recorded
                             | 1. $recordIncome (i)
                             | 2. $makeAllowances (a)
                             | 3. $recordSpending (s)
-                            | 4. $viewHistory (v)
+                            | 4. $manageTransactions (v)
                             | 5. $writeOrClearChecks (ch)
                             | 6. $useOrPayCreditCards (cr)
                             | 7. $transfer (x)
-                            | 8. $setup (m)
+                            | 8. $manageAccounts (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -380,7 +380,7 @@ Allowance recorded
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        """Select account to view history
+                        """Select account to manage transactions
  1.   4,700.00 | General         | Income is automatically deposited here and allowances are made from here
  2.       0.00 | Education       | Tuition, books, etc.
  3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
@@ -444,7 +444,7 @@ Allowance recorded
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        """Select account to view history
+                        """Select account to manage transactions
  1.   4,700.00 | General         | Income is automatically deposited here and allowances are made from here
  2.       0.00 | Education       | Tuition, books, etc.
  3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
@@ -476,11 +476,11 @@ Allowance recorded
                             | 1. $recordIncome (i)
                             | 2. $makeAllowances (a)
                             | 3. $recordSpending (s)
-                            | 4. $viewHistory (v)
+                            | 4. $manageTransactions (v)
                             | 5. $writeOrClearChecks (ch)
                             | 6. $useOrPayCreditCards (cr)
                             | 7. $transfer (x)
-                            | 8. $setup (m)
+                            | 8. $manageAccounts (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -558,11 +558,11 @@ Spending recorded
                             | 1. $recordIncome (i)
                             | 2. $makeAllowances (a)
                             | 3. $recordSpending (s)
-                            | 4. $viewHistory (v)
+                            | 4. $manageTransactions (v)
                             | 5. $writeOrClearChecks (ch)
                             | 6. $useOrPayCreditCards (cr)
                             | 7. $transfer (x)
-                            | 8. $setup (m)
+                            | 8. $manageAccounts (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -578,11 +578,11 @@ Spending recorded
                             | 1. $recordIncome (i)
                             | 2. $makeAllowances (a)
                             | 3. $recordSpending (s)
-                            | 4. $viewHistory (v)
+                            | 4. $manageTransactions (v)
                             | 5. $writeOrClearChecks (ch)
                             | 6. $useOrPayCreditCards (cr)
                             | 7. $transfer (x)
-                            | 8. $setup (m)
+                            | 8. $manageAccounts (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -782,11 +782,11 @@ Spending recorded
                             | 1. $recordIncome (i)
                             | 2. $makeAllowances (a)
                             | 3. $recordSpending (s)
-                            | 4. $viewHistory (v)
+                            | 4. $manageTransactions (v)
                             | 5. $writeOrClearChecks (ch)
                             | 6. $useOrPayCreditCards (cr)
                             | 7. $transfer (x)
-                            | 8. $setup (m)
+                            | 8. $manageAccounts (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -795,7 +795,7 @@ Spending recorded
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        """Select account to view history
+                        """Select account to manage transactions
  1.   4,700.00 | General         | Income is automatically deposited here and allowances are made from here
  2.       0.00 | Education       | Tuition, books, etc.
  3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
@@ -880,7 +880,7 @@ Spending recorded
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        """Select account to view history
+                        """Select account to manage transactions
  1.   4,700.00 | General         | Income is automatically deposited here and allowances are made from here
  2.       0.00 | Education       | Tuition, books, etc.
  3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
@@ -912,11 +912,11 @@ Spending recorded
                             | 1. $recordIncome (i)
                             | 2. $makeAllowances (a)
                             | 3. $recordSpending (s)
-                            | 4. $viewHistory (v)
+                            | 4. $manageTransactions (v)
                             | 5. $writeOrClearChecks (ch)
                             | 6. $useOrPayCreditCards (cr)
                             | 7. $transfer (x)
-                            | 8. $setup (m)
+                            | 8. $manageAccounts (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -973,11 +973,11 @@ New credit card account 'Costco Visa' created
                             | 1. $recordIncome (i)
                             | 2. $makeAllowances (a)
                             | 3. $recordSpending (s)
-                            | 4. $viewHistory (v)
+                            | 4. $manageTransactions (v)
                             | 5. $writeOrClearChecks (ch)
                             | 6. $useOrPayCreditCards (cr)
                             | 7. $transfer (x)
-                            | 8. $setup (m)
+                            | 8. $manageAccounts (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -1176,11 +1176,11 @@ Spending recorded
                             | 1. $recordIncome (i)
                             | 2. $makeAllowances (a)
                             | 3. $recordSpending (s)
-                            | 4. $viewHistory (v)
+                            | 4. $manageTransactions (v)
                             | 5. $writeOrClearChecks (ch)
                             | 6. $useOrPayCreditCards (cr)
                             | 7. $transfer (x)
-                            | 8. $setup (m)
+                            | 8. $manageAccounts (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -1189,7 +1189,7 @@ Spending recorded
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        """Select account to view history
+                        """Select account to manage transactions
  1.   4,700.00 | General         | Income is automatically deposited here and allowances are made from here
  2.       0.00 | Education       | Tuition, books, etc.
  3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
@@ -1256,7 +1256,7 @@ Spending recorded
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        """Select account to view history
+                        """Select account to manage transactions
  1.   4,700.00 | General         | Income is automatically deposited here and allowances are made from here
  2.       0.00 | Education       | Tuition, books, etc.
  3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
@@ -1289,11 +1289,11 @@ Spending recorded
                             | 1. $recordIncome (i)
                             | 2. $makeAllowances (a)
                             | 3. $recordSpending (s)
-                            | 4. $viewHistory (v)
+                            | 4. $manageTransactions (v)
                             | 5. $writeOrClearChecks (ch)
                             | 6. $useOrPayCreditCards (cr)
                             | 7. $transfer (x)
-                            | 8. $setup (m)
+                            | 8. $manageAccounts (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -1486,11 +1486,11 @@ Spending recorded
                             | 1. $recordIncome (i)
                             | 2. $makeAllowances (a)
                             | 3. $recordSpending (s)
-                            | 4. $viewHistory (v)
+                            | 4. $manageTransactions (v)
                             | 5. $writeOrClearChecks (ch)
                             | 6. $useOrPayCreditCards (cr)
                             | 7. $transfer (x)
-                            | 8. $setup (m)
+                            | 8. $manageAccounts (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -1499,7 +1499,7 @@ Spending recorded
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        """Select account to view history
+                        """Select account to manage transactions
  1.   4,700.00 | General         | Income is automatically deposited here and allowances are made from here
  2.       0.00 | Education       | Tuition, books, etc.
  3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
@@ -1588,7 +1588,7 @@ Spending recorded
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        """Select account to view history
+                        """Select account to manage transactions
  1.   4,700.00 | General         | Income is automatically deposited here and allowances are made from here
  2.       0.00 | Education       | Tuition, books, etc.
  3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
@@ -1621,11 +1621,11 @@ Spending recorded
                             | 1. $recordIncome (i)
                             | 2. $makeAllowances (a)
                             | 3. $recordSpending (s)
-                            | 4. $viewHistory (v)
+                            | 4. $manageTransactions (v)
                             | 5. $writeOrClearChecks (ch)
                             | 6. $useOrPayCreditCards (cr)
                             | 7. $transfer (x)
-                            | 8. $setup (m)
+                            | 8. $manageAccounts (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -1692,11 +1692,11 @@ Real account 'Savings' created with balance ${'$'}1000.00
                             | 1. $recordIncome (i)
                             | 2. $makeAllowances (a)
                             | 3. $recordSpending (s)
-                            | 4. $viewHistory (v)
+                            | 4. $manageTransactions (v)
                             | 5. $writeOrClearChecks (ch)
                             | 6. $useOrPayCreditCards (cr)
                             | 7. $transfer (x)
-                            | 8. $setup (m)
+                            | 8. $manageAccounts (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -1705,7 +1705,7 @@ Real account 'Savings' created with balance ${'$'}1000.00
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        """Select account to view history
+                        """Select account to manage transactions
  1.   5,700.00 | General         | Income is automatically deposited here and allowances are made from here
  2.       0.00 | Education       | Tuition, books, etc.
  3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
@@ -1749,7 +1749,7 @@ Real account 'Savings' created with balance ${'$'}1000.00
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        """Select account to view history
+                        """Select account to manage transactions
  1.   5,700.00 | General         | Income is automatically deposited here and allowances are made from here
  2.       0.00 | Education       | Tuition, books, etc.
  3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
@@ -1783,11 +1783,11 @@ Real account 'Savings' created with balance ${'$'}1000.00
                             | 1. $recordIncome (i)
                             | 2. $makeAllowances (a)
                             | 3. $recordSpending (s)
-                            | 4. $viewHistory (v)
+                            | 4. $manageTransactions (v)
                             | 5. $writeOrClearChecks (ch)
                             | 6. $useOrPayCreditCards (cr)
                             | 7. $transfer (x)
-                            | 8. $setup (m)
+                            | 8. $manageAccounts (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",

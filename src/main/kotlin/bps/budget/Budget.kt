@@ -6,7 +6,7 @@ import bps.budget.allowance.makeAllowancesSelectionMenu
 import bps.budget.auth.AuthenticatedUser
 import bps.budget.charge.creditCardMenu
 import bps.budget.checking.checksMenu
-import bps.budget.customize.customizeMenu
+import bps.budget.customize.manageAccountsMenu
 import bps.budget.income.recordIncomeSelectionMenu
 import bps.budget.model.BudgetData
 import bps.budget.persistence.BudgetDao
@@ -15,7 +15,7 @@ import bps.budget.persistence.buildBudgetDao
 import bps.budget.persistence.getBudgetNameFromPersistenceConfig
 import bps.budget.persistence.loadOrBuildBudgetData
 import bps.budget.spend.recordSpendingMenu
-import bps.budget.transaction.viewHistoryMenu
+import bps.budget.transaction.manageTransactions
 import bps.budget.transfer.transferMenu
 import bps.budget.ui.ConsoleUiFacade
 import bps.budget.ui.UiFacade
@@ -144,8 +144,8 @@ fun WithIo.budgetMenu(
             },
         )
         add(
-            pushMenu(viewHistory, "v") {
-                viewHistoryMenu(budgetData, budgetDao, userConfig)
+            pushMenu(manageTransactions, "v") {
+                manageTransactions(budgetData, budgetDao, userConfig)
             },
         )
         add(
@@ -164,8 +164,8 @@ fun WithIo.budgetMenu(
             },
         )
         add(
-            pushMenu(setup, "m") {
-                customizeMenu(budgetData, budgetDao, authenticatedUser, userConfig, clock)
+            pushMenu(manageAccounts, "m") {
+                manageAccountsMenu(budgetData, budgetDao, authenticatedUser, userConfig, clock)
             },
         )
         add(quitItem)

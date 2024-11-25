@@ -73,11 +73,11 @@ class BasicSetupInteractionsTest : FreeSpec(),
                             | 1. $recordIncome (i)
                             | 2. $makeAllowances (a)
                             | 3. $recordSpending (s)
-                            | 4. View History (v)
+                            | 4. $manageTransactions (v)
                             | 5. $writeOrClearChecks (ch)
                             | 6. $useOrPayCreditCards (cr)
                             | 7. $transfer (x)
-                            | 8. $setup (m)
+                            | 8. $manageAccounts (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                 "Enter selection: ",

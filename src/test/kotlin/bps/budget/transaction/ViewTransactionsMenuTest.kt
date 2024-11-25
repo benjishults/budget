@@ -92,7 +92,7 @@ class ViewTransactionsMenuTest : FreeSpec(),
 //        )
         "!expect plenty of transactions" {
             val contextStack = mutableListOf<BigDecimal>()
-            val menu = ViewTransactionsMenu(
+            val menu = ManageTransactionsMenu(
                 account = selectedAccount,
                 budgetDao = budgetDao,
                 budgetId = budgetId,

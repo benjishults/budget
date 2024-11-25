@@ -10,11 +10,11 @@ const val makeAllowances = "Make Allowances"
 const val writeOrClearChecks = "Write or Clear Checks"
 const val useOrPayCreditCards = "Use or Pay Credit Cards"
 const val transfer = "Transfer Money"
-const val setup = "Manage Accounts"
+const val manageAccounts = "Manage Accounts"
 const val recordSpending = "Record Spending"
-const val viewHistory = "View History"
+const val manageTransactions = "Manage Transactions"
 
-class WithIo(
+data class WithIo(
     val inputReader: InputReader = DefaultInputReader,
     val outPrinter: OutPrinter = DefaultOutPrinter,
 )

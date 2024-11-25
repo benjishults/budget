@@ -3,7 +3,7 @@ package bps.budget.transaction
 import bps.budget.model.Account
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.TransactionDao
-import bps.budget.ui.format
+import bps.budget.ui.formatAsLocalDateTime
 import bps.console.app.MenuSession
 import bps.console.io.OutPrinter
 import bps.console.menu.MenuItem
@@ -50,7 +50,7 @@ open class ViewTransactionsWithoutBalancesMenu<A : Account>(
         String.format(
             "%s | %,10.2f | %s",
             transactionTimestamp
-                .format(timeZone),
+                .formatAsLocalDateTime(timeZone),
             item.amount,
             item.description ?: transactionDescription,
         )
