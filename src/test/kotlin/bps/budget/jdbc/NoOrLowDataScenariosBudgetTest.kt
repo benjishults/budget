@@ -6,7 +6,7 @@ import bps.budget.makeAllowances
 import bps.budget.persistence.jdbc.JdbcDao
 import bps.budget.recordIncome
 import bps.budget.recordSpending
-import bps.budget.setup
+import bps.budget.manageAccounts
 import bps.budget.transfer
 import bps.budget.ui.ConsoleUiFacade
 import bps.budget.useOrPayCreditCards
@@ -59,7 +59,7 @@ Enter the name for your "General" account [General] """,
                             | 5. $writeOrClearChecks (ch)
                             | 6. $useOrPayCreditCards (cr)
                             | 7. $transfer (x)
-                            | 8. $setup (m)
+                            | 8. $manageAccounts (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                 "Enter selection: ",

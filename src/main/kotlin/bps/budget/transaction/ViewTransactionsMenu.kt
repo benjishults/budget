@@ -4,12 +4,14 @@ import bps.budget.model.Account
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.TransactionDao
-import bps.budget.ui.format
+import bps.budget.ui.formatAsLocalDateTime
 import bps.console.app.MenuSession
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.OutPrinter
+import bps.console.menu.Menu
 import bps.console.menu.MenuItem
 import bps.console.menu.ScrollingSelectionWithContextMenu
+import bps.console.menu.item
 import kotlinx.datetime.TimeZone
 import java.math.BigDecimal
 import java.util.UUID
@@ -17,7 +19,7 @@ import kotlin.math.max
 
 private const val TRANSACTIONS_TABLE_HEADER = "    Time Stamp          | Amount     | Balance    | Description"
 
-open class ViewTransactionsMenu<A : Account>(
+open class ManageTransactionsMenu<A : Account>(
     private val account: A,
     private val budgetDao: BudgetDao,
     private val budgetId: UUID,
@@ -60,7 +62,7 @@ open class ViewTransactionsMenu<A : Account>(
         String.format(
             "%s | %,10.2f | %,10.2f | %s",
             transactionTimestamp
-                .format(timeZone),
+                .formatAsLocalDateTime(timeZone),
             item.amount,
             accountBalanceAfterItem,
             item.description ?: transactionDescription,
@@ -95,8 +97,8 @@ open class ViewTransactionsMenu<A : Account>(
             }
             ?: account.balance
 
-    override fun nextPageMenuProducer(): ViewTransactionsMenu<A> =
-        ViewTransactionsMenu(
+    override fun nextPageMenuProducer(): ManageTransactionsMenu<A> =
+        ManageTransactionsMenu(
             account = account,
             budgetDao = budgetDao,
             budgetId = budgetId,
@@ -112,8 +114,8 @@ open class ViewTransactionsMenu<A : Account>(
             actOnSelectedItem = actOnSelectedItem,
         )
 
-    override fun previousPageMenuProducer(): ViewTransactionsMenu<A> =
-        ViewTransactionsMenu(
+    override fun previousPageMenuProducer(): ManageTransactionsMenu<A> =
+        ManageTransactionsMenu(
             account = account,
             budgetDao = budgetDao,
             budgetId = budgetId,
@@ -140,7 +142,7 @@ object ViewTransactionFixture {
                 append(
                     transaction
                         .timestamp
-                        .format(timeZone),
+                        .formatAsLocalDateTime(timeZone),
                 )
                 append("\n")
                 append(transaction.description)

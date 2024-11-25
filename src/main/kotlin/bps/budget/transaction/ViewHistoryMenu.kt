@@ -9,13 +9,13 @@ import bps.console.app.MenuSession
 import bps.console.menu.Menu
 import bps.console.menu.ScrollingSelectionMenu
 
-fun WithIo.viewHistoryMenu(
+fun WithIo.manageTransactions(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
 ): Menu =
     ScrollingSelectionMenu(
-        header = { "Select account to view history" },
+        header = { "Select account to manage transactions" },
         limit = userConfig.numberOfItemsInScrollingList,
         baseList = buildList {
             add(budgetData.generalAccount)
@@ -30,7 +30,7 @@ fun WithIo.viewHistoryMenu(
         },
     ) { menuSession: MenuSession, selectedAccount: Account ->
         menuSession.push(
-            ViewTransactionsMenu(
+            ManageTransactionsMenu(
                 account = selectedAccount,
                 limit = userConfig.numberOfItemsInScrollingList,
                 budgetDao = budgetDao,

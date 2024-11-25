@@ -42,7 +42,7 @@ data class DistinctNameValidator(val existingAccounts: List<Account>) : StringVa
         }
 }
 
-fun WithIo.customizeMenu(
+fun WithIo.manageAccountsMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     authenticatedUser: AuthenticatedUser,
