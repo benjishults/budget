@@ -67,13 +67,16 @@ fun WithIo.manageTransactions(
                                             budgetData.timeZone,
                                         )
                                     }
-                                    if (userSaysYes("Are you sure you want to DELETE that transaction?"))
+                                    if (userSaysYes("Are you sure you want to DELETE that transaction?")) {
                                         budgetDao.transactionDao.deleteTransaction(
                                             transactionId = extendedTransactionItem.transactionId,
                                             budgetId = budgetData.id,
                                             accountIdToAccountMap = budgetData.accountIdToAccountMap,
                                         )
                                             .updateBalances(budgetId = budgetData.id)
+                                        budgetData.undoTransactionForItem(extendedTransactionItem)
+                                    }
+                                    outPrinter.important("Transaction deleted")
                                 }
                             },
                         )

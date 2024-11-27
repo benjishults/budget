@@ -1,6 +1,7 @@
 package bps.budget.model
 
 import bps.budget.persistence.AccountDao
+import bps.budget.persistence.TransactionDao
 import kotlinx.datetime.TimeZone
 import java.math.BigDecimal
 import java.util.UUID
@@ -138,6 +139,18 @@ class BudgetData(
             .forEach { negatedTransactionItem ->
                 negatedTransactionItem.account.commit(negatedTransactionItem)
             }
+    }
+
+    /**
+     * NOTE: this allows you to delete a transaction that has already been cleared.  Callers should avoid making this
+     *   mistake.
+     *
+     * This reverses the balance changes would have resulted from the application of the transaction associated
+     * to this [transactionItem].  In other
+     * words, this commits the [Transaction.Item.negate] of each of the [transactionItem]'s [Transaction.allItems].
+     */
+    fun undoTransactionForItem(transactionItem: TransactionDao.ExtendedTransactionItem<*>) {
+        undoTransaction(transactionItem.transaction(id, accountIdToAccountMap))
     }
 
     companion object {
