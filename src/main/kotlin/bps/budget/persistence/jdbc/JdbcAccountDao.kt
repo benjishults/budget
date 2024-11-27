@@ -125,27 +125,21 @@ where aap.account_id = ?
         }
     }
 
-    override fun updateBalances(transaction: Transaction, budgetId: UUID) {
-        buildList {
-            transaction.allItems().forEach { transactionItem: Transaction.Item<*> ->
-                add(transactionItem.account.id to transactionItem.amount)
-            }
-        }
-            .forEach { (accountId: UUID, amount: BigDecimal) ->
-                connection.prepareStatement(
-                    """
+    override fun List<AccountDao.BalanceToAdd>.updateBalances(budgetId: UUID) =
+        forEach { (accountId: UUID, amount: BigDecimal) ->
+            connection.prepareStatement(
+                """
                         update accounts
                         set balance = balance + ?
                         where id = ? and budget_id = ?""".trimIndent(),
-                )
-                    .use { preparedStatement: PreparedStatement ->
-                        preparedStatement.setBigDecimal(1, amount)
-                        preparedStatement.setUuid(2, accountId)
-                        preparedStatement.setUuid(3, budgetId)
-                        preparedStatement.executeUpdate()
-                    }
-            }
-    }
+            )
+                .use { preparedStatement: PreparedStatement ->
+                    preparedStatement.setBigDecimal(1, amount)
+                    preparedStatement.setUuid(2, accountId)
+                    preparedStatement.setUuid(3, budgetId)
+                    preparedStatement.executeUpdate()
+                }
+        }
 
     override fun updateAccount(account: Account): Boolean =
         connection.transactOrThrow {

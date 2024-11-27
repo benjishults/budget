@@ -1,6 +1,7 @@
 package bps.budget.transaction
 
 import bps.budget.model.Account
+import bps.budget.model.BudgetData
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.TransactionDao
@@ -19,7 +20,12 @@ import kotlin.math.max
 
 private const val TRANSACTIONS_TABLE_HEADER = "    Time Stamp          | Amount     | Balance    | Description"
 
+/**
+ * The default behavior after selecting an item is to show details.  Pass a value for [actOnSelectedItem] to override
+ * that behavior.
+ */
 open class ManageTransactionsMenu<A : Account>(
+    private val budgetData: BudgetData,
     private val account: A,
     private val budgetDao: BudgetDao,
     private val budgetId: UUID,
@@ -36,27 +42,28 @@ open class ManageTransactionsMenu<A : Account>(
     prompt: () -> String = { "Select transaction for details: " },
     val outPrinter: OutPrinter = DefaultOutPrinter,
     extraItems: List<MenuItem> = emptyList(),
-    actOnSelectedItem: (MenuSession, TransactionDao.ExtendedTransactionItem<A>) -> Unit = { _, extendedTransactionItem: TransactionDao.ExtendedTransactionItem<A> ->
-        // NOTE this is needed so that when this menu is re-displayed, it will be where it started
-        contextStack.removeLast()
-        with(ViewTransactionFixture) {
-            outPrinter.showTransactionDetailsAction(
-                extendedTransactionItem.transaction(budgetId, accountIdToAccountMap),
-                timeZone,
-            )
-        }
-    },
+    actOnSelectedItem: (MenuSession, TransactionDao.ExtendedTransactionItem<A>) -> Unit =
+        { _: MenuSession, extendedTransactionItem: TransactionDao.ExtendedTransactionItem<A> ->
+            // NOTE this is needed so that when this menu is re-displayed, it will be where it started
+            contextStack.removeLast()
+            with(ViewTransactionFixture) {
+                outPrinter.showTransactionDetailsAction(
+                    extendedTransactionItem.transaction(budgetId, accountIdToAccountMap),
+                    timeZone,
+                )
+            }
+        },
 ) : ScrollingSelectionWithContextMenu<TransactionDao.ExtendedTransactionItem<A>, BigDecimal>(
-    {
+    header = {
         """
-        |${header()}
-        |$TRANSACTIONS_TABLE_HEADER
-    """.trimMargin()
+            |${header()}
+            |$TRANSACTIONS_TABLE_HEADER
+        """.trimMargin()
     },
-    prompt,
-    limit,
-    offset,
-    contextStack,
+    prompt = prompt,
+    limit = limit,
+    offset = offset,
+    contextStack = contextStack,
     extraItems = extraItems,
     labelGenerator = {
         String.format(
@@ -112,6 +119,7 @@ open class ManageTransactionsMenu<A : Account>(
             extraItems = extraItems,
             outPrinter = outPrinter,
             actOnSelectedItem = actOnSelectedItem,
+            budgetData = budgetData,
         )
 
     override fun previousPageMenuProducer(): ManageTransactionsMenu<A> =
@@ -130,6 +138,7 @@ open class ManageTransactionsMenu<A : Account>(
             extraItems = extraItems,
             outPrinter = outPrinter,
             actOnSelectedItem = actOnSelectedItem,
+            budgetData = budgetData,
         )
 
 }

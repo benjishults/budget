@@ -123,11 +123,17 @@ class JdbcTransactionDao(
                     .use { insertTransaction: PreparedStatement ->
                         insertTransaction.executeUpdate()
                     }
-                insertTransactionItemsPreparedStatement(clearingTransaction, budgetId)
-                    .use { insertTransactionItem: PreparedStatement ->
-                        insertTransactionItem.executeUpdate()
-                    }
-                accountDao.updateBalances(clearingTransaction, budgetId)
+                with(accountDao) {
+                    val (statement, balancesToAdd) = insertTransactionItemsPreparedStatement(
+                        clearingTransaction,
+                        budgetId,
+                    )
+                    statement
+                        .use { insertTransactionItem: PreparedStatement ->
+                            insertTransactionItem.executeUpdate()
+                        }
+                    balancesToAdd.updateBalances(budgetId)
+                }
             }
         }
 
@@ -151,9 +157,10 @@ class JdbcTransactionDao(
     private fun Connection.insertTransactionItemsPreparedStatement(
         transaction: Transaction,
         budgetId: UUID,
-    ): PreparedStatement {
-        val transactionItemCounter =
-            transaction.categoryItems.size + transaction.realItems.size + transaction.draftItems.size + transaction.chargeItems.size
+    ): Pair<PreparedStatement, List<AccountDao.BalanceToAdd>> {
+        val items = transaction.allItems()
+        val transactionItemCounter = items.size
+        transaction.categoryItems.size + transaction.realItems.size + transaction.draftItems.size + transaction.chargeItems.size
         val insertSql = buildString {
             var counter = transactionItemCounter
             append("insert into transaction_items (id, transaction_id, description, amount, draft_status, budget_id, account_id) values ")
@@ -166,19 +173,22 @@ class JdbcTransactionDao(
         }
         var parameterIndex = 1
         val transactionItemInsert = prepareStatement(insertSql)
-        transaction
-            .allItems()
-            .forEach { transactionItem: Transaction.Item<*> ->
-                parameterIndex += setStandardProperties(
-                    transactionItemInsert,
-                    parameterIndex,
-                    transaction,
-                    transactionItem,
-                    budgetId,
-                )
-                transactionItemInsert.setUuid(parameterIndex++, transactionItem.account.id)
-            }
-        return transactionItemInsert
+        val balancesToAdd: List<AccountDao.BalanceToAdd> = buildList {
+            transaction
+                .allItems()
+                .forEach { transactionItem: Transaction.Item<*> ->
+                    parameterIndex += setStandardProperties(
+                        transactionItemInsert,
+                        parameterIndex,
+                        transaction,
+                        transactionItem,
+                        budgetId,
+                    )
+                    transactionItemInsert.setUuid(parameterIndex++, transactionItem.account.id)
+                    add(AccountDao.BalanceToAdd(transactionItem.account.id, transactionItem.amount))
+                }
+        }
+        return transactionItemInsert to balancesToAdd
     }
 
     /**
@@ -195,13 +205,81 @@ class JdbcTransactionDao(
                     .use { insertTransaction: PreparedStatement ->
                         insertTransaction.executeUpdate()
                     }
-                insertTransactionItemsPreparedStatement(transaction, budgetId)
-                    .use { insertTransactionItem: PreparedStatement ->
-                        insertTransactionItem.executeUpdate()
-                    }
-                if (saveBalances) accountDao.updateBalances(transaction, budgetId)
+                with(accountDao) {
+                    val (statement, balancesToAdd) = insertTransactionItemsPreparedStatement(
+                        transaction,
+                        budgetId,
+                    )
+                    statement
+                        .use { insertTransactionItem: PreparedStatement ->
+                            insertTransactionItem.executeUpdate()
+                        }
+                    if (saveBalances) balancesToAdd.updateBalances(budgetId)
+                }
             }
         }
+
+    /**
+     * Deletes the given transaction and all its items from the DB and updates account balances appropriately.
+     * @throws IllegalStateException if the given transaction has already been cleared.
+     * @throws IllegalArgumentException if the transaction doesn't exist.
+     * @return the list of [BalanceToAdd]s that should be applied to correct balances on accounts.
+     */
+    override fun deleteTransaction(
+        transactionId: UUID,
+        budgetId: UUID,
+        accountIdToAccountMap: Map<UUID, Account>,
+    ): List<AccountDao.BalanceToAdd> {
+        connection.transactOrThrow {
+            prepareStatement("""select * from transactions where id = ? and budget_id = ?""")
+                .use { statement ->
+                    statement.setUuid(1, transactionId)
+                    statement.setUuid(2, budgetId)
+                    statement.executeQuery()
+                        .use { resultSet ->
+                            if (resultSet.next()) {
+                                if (resultSet.getString("cleared_by_transaction_id") !== null) {
+                                    throw IllegalStateException("This transaction has already been cleared")
+                                }
+                            } else {
+                                throw IllegalArgumentException("No transaction found with id $transactionId")
+                            }
+                        }
+                }
+            return buildList {
+                prepareStatement(
+                    """
+                    |delete from transaction_items where transaction_id = ? and budget_id = ?
+                    |returning account_id, amount
+                """.trimMargin(),
+                )
+                    .use { statement ->
+                        statement.setUuid(1, transactionId)
+                        statement.setUuid(2, budgetId)
+                        statement.executeQuery()
+                            .use { resultSet ->
+                                while (resultSet.next()) {
+                                    add(
+                                        AccountDao.BalanceToAdd(
+                                            resultSet.getUuid("account_id")!!,
+                                            -resultSet.getCurrencyAmount("amount"),
+                                        ),
+                                    )
+                                }
+                            }
+                    }
+            }
+                .also {
+                    prepareStatement("""delete from transactions where id = ? and budget_id = ?""")
+                        .use { statement ->
+                            statement.setUuid(1, transactionId)
+                            statement.setUuid(2, budgetId)
+                            if (statement.executeUpdate() != 1)
+                                throw IllegalStateException("No transaction found with id $transactionId")
+                        }
+                }
+        }
+    }
 
     /**
      * 1. Sets the [Transaction.Item.draftStatus] to [DraftStatus.cleared] for each [clearedItems]
@@ -280,11 +358,17 @@ class JdbcTransactionDao(
                     .use { insertTransaction: PreparedStatement ->
                         insertTransaction.executeUpdate()
                     }
-                insertTransactionItemsPreparedStatement(billPayTransaction, budgetId)
-                    .use { insertTransactionItem: PreparedStatement ->
-                        insertTransactionItem.executeUpdate()
-                    }
-                accountDao.updateBalances(billPayTransaction, budgetId)
+                with(accountDao) {
+                    val (statement, balancesToAdd) = insertTransactionItemsPreparedStatement(
+                        billPayTransaction,
+                        budgetId,
+                    )
+                    statement
+                        .use { insertTransactionItem: PreparedStatement ->
+                            insertTransactionItem.executeUpdate()
+                        }
+                    balancesToAdd.updateBalances(budgetId)
+                }
             }
         }
 

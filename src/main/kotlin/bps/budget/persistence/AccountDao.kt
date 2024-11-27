@@ -7,12 +7,15 @@ import bps.budget.model.ChargeAccount
 import bps.budget.model.DraftAccount
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
-import bps.budget.model.defaultGeneralAccountDescription
-import bps.budget.model.defaultGeneralAccountName
 import java.math.BigDecimal
 import java.util.UUID
 
 interface AccountDao {
+
+    data class BalanceToAdd(
+        val accountId: UUID,
+        val amountToRevert: BigDecimal,
+    )
 
     /**
      * The default implementation throws [NotImplementedError]
@@ -60,7 +63,7 @@ interface AccountDao {
         factory: (String, String, UUID, BigDecimal, UUID) -> T,
     ): List<T> = TODO()
 
-    fun updateBalances(transaction: Transaction, budgetId: UUID)
+    fun List<BalanceToAdd>.updateBalances(budgetId: UUID)
     fun updateAccount(account: Account): Boolean
     fun createCategoryAccountOrNull(
         name: String,

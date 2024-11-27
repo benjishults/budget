@@ -14,7 +14,7 @@ const val manageAccounts = "Manage Accounts"
 const val recordSpending = "Record Spending"
 const val manageTransactions = "Manage Transactions"
 
-data class WithIo(
-    val inputReader: InputReader = DefaultInputReader,
-    val outPrinter: OutPrinter = DefaultOutPrinter,
-)
+interface WithIo {
+    val inputReader: InputReader get() = DefaultInputReader
+    val outPrinter: OutPrinter get() = DefaultOutPrinter
+}

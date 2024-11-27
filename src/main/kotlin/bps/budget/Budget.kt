@@ -49,13 +49,13 @@ fun main() {
 }
 
 class BudgetApplication private constructor(
-    inputReader: InputReader,
-    val outPrinter: OutPrinter,
+    override val inputReader: InputReader,
+    override val outPrinter: OutPrinter,
     uiFacade: UiFacade,
     val budgetDao: BudgetDao,
     clock: Clock,
     configurations: BudgetConfigurations,
-) : AutoCloseable {
+) : AutoCloseable, WithIo {
 
     constructor(
         uiFacade: UiFacade,
@@ -86,8 +86,7 @@ class BudgetApplication private constructor(
 
     private val menuApplicationWithQuit =
         MenuApplicationWithQuit(
-            WithIo(inputReader, outPrinter)
-                .budgetMenu(budgetData, budgetDao, configurations.user, authenticatedUser, clock),
+            budgetMenu(budgetData, budgetDao, configurations.user, authenticatedUser, clock),
             inputReader,
             outPrinter,
         )
