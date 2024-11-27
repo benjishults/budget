@@ -21,7 +21,7 @@ data class Transaction private constructor(
     lateinit var draftItems: List<Item<DraftAccount>>
         private set
 
-    fun allItems(): Sequence<Item<*>> = categoryItems.asSequence() + realItems + chargeItems + draftItems
+    fun allItems(): Collection<Item<*>> = categoryItems + realItems + chargeItems + draftItems
 
     private fun validate(): Boolean {
         val categoryAndDraftSum: BigDecimal =
@@ -89,6 +89,14 @@ data class Transaction private constructor(
         }
 
         override fun hashCode(): Int = id.hashCode()
+        fun negate(): Item<A> =
+            Item(
+                id = id,
+                amount = -amount,
+                description = "NEGATE! $description",
+                account = account,
+                draftStatus = draftStatus,
+            )
 
     }
 

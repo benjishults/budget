@@ -1,5 +1,6 @@
 package bps.console.inputs
 
+import bps.budget.WithIo
 import bps.budget.toCurrencyAmountOrNull
 import bps.console.io.DefaultInputReader
 import bps.console.io.DefaultOutPrinter
@@ -8,11 +9,11 @@ import bps.console.io.OutPrinter
 import org.apache.commons.validator.routines.EmailValidator
 import java.math.BigDecimal
 
-interface SimplePrompt<T : Any> : Prompt<T> {
+interface SimplePrompt<T : Any> : Prompt<T>, WithIo {
     // TODO specify that this shouldn't contain ending spaces or punctuation and make it so
     val basicPrompt: String
-    val inputReader: InputReader
-    val outPrinter: OutPrinter
+    override val inputReader: InputReader
+    override val outPrinter: OutPrinter
 
     /**
      * returns `true` if the input is acceptable
@@ -32,15 +33,7 @@ interface SimplePrompt<T : Any> : Prompt<T> {
      */
     fun actionOnInvalid(input: String, message: String): T? {
         outPrinter.important(message)
-        return if (SimplePrompt(
-                basicPrompt = "Try again? [Y/n]: ",
-                inputReader = inputReader,
-                outPrinter = outPrinter,
-                validator = AcceptAnythingStringValidator,
-                transformer = { it !in listOf("n", "N") },
-            )
-                .getResult()!!
-        )
+        return if (userDoesntSayNo("Try again?"))
             this.getResult()
         else
             null
@@ -87,6 +80,24 @@ interface SimplePrompt<T : Any> : Prompt<T> {
             }
     }
 }
+
+fun WithIo.userDoesntSayNo(promptInitial: String = "Try again?") = SimplePrompt<Boolean>(
+    basicPrompt = "$promptInitial [Y/n]: ",
+    inputReader = inputReader,
+    outPrinter = outPrinter,
+    validator = AcceptAnythingStringValidator,
+    transformer = { it !in listOf("n", "N") },
+)
+    .getResult()!!
+
+fun WithIo.userSaysYes(promptInitial: String = "Try again?") = SimplePrompt<Boolean>(
+    basicPrompt = "$promptInitial [y/N]: ",
+    inputReader = inputReader,
+    outPrinter = outPrinter,
+    validator = AcceptAnythingStringValidator,
+    transformer = { it in listOf("y", "Y") },
+)
+    .getResult()!!
 
 interface StringValidator : (String) -> Boolean {
     val errorMessage: String

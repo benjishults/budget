@@ -17,6 +17,16 @@ interface TransactionDao {
     ) {
     }
 
+    /**
+     * This implementation throws a [NotImplementedError].
+     * @return the list of [BalanceToAdd]s that should be applied to correct balances on accounts.
+     */
+    fun deleteTransaction(
+        transactionId: UUID,
+        budgetId: UUID,
+        accountIdToAccountMap: Map<UUID, Account>,
+    ): List<AccountDao.BalanceToAdd> = TODO()
+
     fun clearCheck(
         draftTransactionItems: List<Transaction.Item<DraftAccount>>,
         clearingTransaction: Transaction,
@@ -75,8 +85,6 @@ interface TransactionDao {
          * The first time this is referenced, a call will be made to the DB to fetch the entire transaction.
          * So, refer to this only if you need more than just the [transactionId], [transactionDescription], or
          * [transactionTimestamp].
-         *
-         * The value cannot actually be `null`.
          */
         fun transaction(budgetId: UUID, accountIdToAccountMap: Map<UUID, Account>): Transaction =
             transaction

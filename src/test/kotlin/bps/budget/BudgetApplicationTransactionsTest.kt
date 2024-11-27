@@ -412,8 +412,9 @@ Allowance recorded
                         | 2. 2024-08-08 19:00:02 |    -300.00 |   4,900.00 | allowance into 'Food'
                         | 3. 2024-08-08 19:00:01 |     200.00 |   5,200.00 | income into 'Wallet'
                         | 4. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
-                        | 5. Back (b)
-                        | 6. Quit (q)
+                        | 5. Delete a transaction (d)
+                        | 6. Back (b)
+                        | 7. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
@@ -435,12 +436,13 @@ Allowance recorded
                         | 2. 2024-08-08 19:00:02 |    -300.00 |   4,900.00 | allowance into 'Food'
                         | 3. 2024-08-08 19:00:01 |     200.00 |   5,200.00 | income into 'Wallet'
                         | 4. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
-                        | 5. Back (b)
-                        | 6. Quit (q)
+                        | 5. Delete a transaction (d)
+                        | 6. Back (b)
+                        | 7. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
-                    toInput = listOf("5"),
+                    toInput = listOf("b"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -825,8 +827,9 @@ Spending recorded
                         |    Time Stamp          | Amount     | Balance    | Description
                         | 1. 2024-08-08 19:00:06 |    -300.00 |   4,700.00 | SuperMarket
                         | 2. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
-                        | 3. Back (b)
-                        | 4. Quit (q)
+                        | 3. Delete a transaction (d)
+                        | 4. Back (b)
+                        | 5. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
@@ -871,12 +874,13 @@ Spending recorded
                         |    Time Stamp          | Amount     | Balance    | Description
                         | 1. 2024-08-08 19:00:06 |    -300.00 |   4,700.00 | SuperMarket
                         | 2. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
-                        | 3. Back (b)
-                        | 4. Quit (q)
+                        | 3. Delete a transaction (d)
+                        | 4. Back (b)
+                        | 5. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
-                    toInput = listOf("3"),
+                    toInput = listOf("b"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -1222,8 +1226,9 @@ Spending recorded
                         | 2. 2024-08-08 19:00:05 |    -200.00 |      98.50 | SuperMarket
                         | 3. 2024-08-08 19:00:04 |      -1.50 |     298.50 | Pepsi
                         | 4. 2024-08-08 19:00:02 |     300.00 |     300.00 | allowance into 'Food'
-                        | 5. Back (b)
-                        | 6. Quit (q)
+                        | 5. Delete a transaction (d)
+                        | 6. Back (b)
+                        | 7. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
@@ -1247,12 +1252,13 @@ Spending recorded
                         | 2. 2024-08-08 19:00:05 |    -200.00 |      98.50 | SuperMarket
                         | 3. 2024-08-08 19:00:04 |      -1.50 |     298.50 | Pepsi
                         | 4. 2024-08-08 19:00:02 |     300.00 |     300.00 | allowance into 'Food'
-                        | 5. Back (b)
-                        | 6. Quit (q)
+                        | 5. Delete a transaction (d)
+                        | 6. Back (b)
+                        | 7. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
-                    toInput = listOf("5"),
+                    toInput = listOf("b"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -1531,8 +1537,9 @@ Spending recorded
                         | 1. 2024-08-08 19:00:09 |     -35.00 |   4,665.00 | pay 'Costco Visa' bill
                         | 2. 2024-08-08 19:00:06 |    -300.00 |   4,700.00 | SuperMarket
                         | 3. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
-                        | 4. Back (b)
-                        | 5. Quit (q)
+                        | 4. Delete a transaction (d)
+                        | 5. Back (b)
+                        | 6. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
@@ -1579,12 +1586,13 @@ Spending recorded
                         | 1. 2024-08-08 19:00:09 |     -35.00 |   4,665.00 | pay 'Costco Visa' bill
                         | 2. 2024-08-08 19:00:06 |    -300.00 |   4,700.00 | SuperMarket
                         | 3. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
-                        | 4. Back (b)
-                        | 5. Quit (q)
+                        | 4. Delete a transaction (d)
+                        | 5. Back (b)
+                        | 6. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
-                    toInput = listOf("4"),
+                    toInput = listOf("b"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -1740,12 +1748,13 @@ Real account 'Savings' created with balance ${'$'}1000.00
                         | 3. 2024-08-08 19:00:02 |    -300.00 |   4,900.00 | allowance into 'Food'
                         | 4. 2024-08-08 19:00:01 |     200.00 |   5,200.00 | income into 'Wallet'
                         | 5. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
-                        | 6. Back (b)
-                        | 7. Quit (q)
+                        | 6. Delete a transaction (d)
+                        | 7. Back (b)
+                        | 8. Quit (q)
                         |""".trimMargin(),
                         "Select transaction for details: ",
                     ),
-                    toInput = listOf("6"),
+                    toInput = listOf("b"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
