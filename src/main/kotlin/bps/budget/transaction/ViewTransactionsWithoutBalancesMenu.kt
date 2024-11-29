@@ -51,8 +51,8 @@ open class ViewTransactionsWithoutBalancesMenu<A : Account>(
             "%s | %,10.2f | %s",
             transactionTimestamp
                 .formatAsLocalDateTime(timeZone),
-            item.amount,
-            item.description ?: transactionDescription,
+            amount,
+            description ?: transactionDescription,
         )
     },
     itemListGenerator = { selectedLimit: Int, selectedOffset: Int ->

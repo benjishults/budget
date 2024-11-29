@@ -225,7 +225,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
             amountOfBill +
                     selectedItems
                         .fold(BigDecimal.ZERO) { sum, item ->
-                            sum + item.item.amount
+                            sum + item.amount
                         }
         }"
     },
@@ -248,7 +248,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
 ) { menuSession: MenuSession, chargeTransactionItem: TransactionDao.ExtendedTransactionItem<ChargeAccount> ->
     val allSelectedItems: List<TransactionDao.ExtendedTransactionItem<ChargeAccount>> =
         selectedItems + chargeTransactionItem
-    val remainingToBeCovered: BigDecimal = runningTotal + chargeTransactionItem.item.amount
+    val remainingToBeCovered: BigDecimal = runningTotal + chargeTransactionItem.amount
     when {
         remainingToBeCovered == BigDecimal.ZERO.setScale(2) -> {
             menuSession.pop()

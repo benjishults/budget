@@ -33,7 +33,7 @@ fun WithIo.manageTransactions(
         },
     ) { menuSession: MenuSession, selectedAccount: Account ->
         menuSession.push(
-            ManageTransactionsMenu(
+            TransactionListMenu(
                 account = selectedAccount,
                 limit = userConfig.numberOfItemsInScrollingList,
                 budgetDao = budgetDao,
@@ -45,7 +45,7 @@ fun WithIo.manageTransactions(
                 extraItems = listOf(
                     item("Delete a transaction", "d") {
                         menuSession.push(
-                            ManageTransactionsMenu(
+                            TransactionListMenu(
                                 header = { "Choose a transaction to DELETE" },
                                 prompt = { "Select a transaction to DELETE: " },
                                 account = selectedAccount,

@@ -254,7 +254,7 @@ Deactivated account 'Cosmetics'
                     toInput = listOf("8", "5", "1", "1", "13", "5", "b"),
                 )
             }
-            "allocate to food and necessities" {
+            "allocate to food, necessities, and medical" {
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
@@ -373,7 +373,40 @@ Allowance recorded
 Allowance recorded
 
 """,
-                        "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$4,500.00]" + """
+                        """Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$4,500.00]
+ 1.       0.00 | Education       | Tuition, books, etc.
+ 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+ 3.     300.00 | Food            | Food other than what's covered in entertainment
+ 4.       0.00 | Hobby           | Expenses related to a hobby
+ 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+ 7.     200.00 | Medical         | Medicine, supplies, insurance, etc.
+ 8.     200.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+ 9.       0.00 | Network         | Mobile plan, routers, internet access
+10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+11.       0.00 | Travel          | Travel expenses for vacation
+12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+13. Back (b)
+14. Quit (q)
+""",
+                        "Enter selection: ",
+                        "Recent allowances:\n",
+                        "2024-08-08 19:00:02 |     300.00 | allowance into 'Food'\n",
+                        "Enter the AMOUNT to ALLOCATE into '$defaultFoodAccountName' [0.01, 4500.00]: ",
+                        """
+                            |
+                            |Amount must be between 0.01 and 4500.00
+                            |
+                            |
+                        """.trimMargin(),
+                        "Try again? [Y/n]: ",
+                        """
+                            |
+                            |No amount entered.
+                            |
+                            |
+                        """.trimMargin(),
+                        """Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$4,500.00]
  1.       0.00 | Education       | Tuition, books, etc.
  2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
  3.     300.00 | Food            | Food other than what's covered in entertainment
@@ -391,7 +424,7 @@ Allowance recorded
 """,
                         "Enter selection: ",
                     ),
-                    toInput = listOf("200", "", "", "13"),
+                    toInput = listOf("200", "", "", "3", "b", "n", "13"),
                 )
             }
             "view transactions and delete medical allowance" {
@@ -461,7 +494,7 @@ Allowance recorded
                         """
                         |2024-08-08 19:00:02
                         |allowance into 'Food'
-                        |Category Account | Amount     | Description
+                        |Category         | Amount     | Description
                         |Food             |     300.00 |
                         |General          |    -300.00 |
                         |""".trimMargin(),
@@ -497,7 +530,7 @@ Allowance recorded
                         "Select a transaction to DELETE: ",
                         """2024-08-08 19:00:04
 allowance into 'Medical'
-Category Account | Amount     | Description
+Category         | Amount     | Description
 General          |    -200.00 |
 Medical          |     200.00 |
 """,
@@ -961,9 +994,9 @@ Spending recorded
                         """
                         |2024-08-08 19:00:07
                         |SuperMarket
-                        |     Real Items: | Amount     | Description
+                        |Real             | Amount     | Description
                         |Checking         |    -300.00 | SuperMarket
-                        |    Draft Items: | Amount     | Description
+                        |Draft            | Amount     | Description
                         |Checking         |    -300.00 | SuperMarket
                         |""".trimMargin(),
                         """
@@ -1336,10 +1369,10 @@ Spending recorded
                         """
                         |2024-08-08 19:00:08
                         |Costco
-                        |Category Account | Amount     | Description
+                        |Category         | Amount     | Description
                         |Food             |     -20.00 |
                         |Necessities      |     -10.00 |
-                        |Credit Card Items: | Amount     | Description
+                        |Credit Card      | Amount     | Description
                         |Costco Visa      |     -30.00 | Costco
                         |""".trimMargin(),
                         """
@@ -1651,7 +1684,7 @@ Spending recorded
 //                        |Category Account | Amount     | Description
 //                        |Food             |    -200.00 |
 //                        |Necessities      |    -100.00 |
-//                        |     Real Items: | Amount     | Description
+//                        | Real            | Amount     | Description
 //                        |Checking         |    -300.00 | SuperMarket
 //                        |""".trimMargin(),
 //                        """
@@ -1672,9 +1705,9 @@ Spending recorded
                         """
                         |2024-08-08 19:00:07
                         |SuperMarket
-                        |     Real Items: | Amount     | Description
+                        |Real             | Amount     | Description
                         |Checking         |    -300.00 | SuperMarket
-                        |    Draft Items: | Amount     | Description
+                        |Draft            | Amount     | Description
                         |Checking         |    -300.00 | SuperMarket
                         |""".trimMargin(),
                         """

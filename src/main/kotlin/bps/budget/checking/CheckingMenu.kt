@@ -125,13 +125,13 @@ fun WithIo.checksMenu(
                                     .apply {
                                         with(draftAccount) {
                                             addItemBuilderTo(
-                                                -draftTransactionItem.item.amount,
+                                                -draftTransactionItem.amount,
                                                 this@apply.description,
                                                 DraftStatus.clearing,
                                             )
                                         }
-                                        with(draftTransactionItem.item.account.realCompanion) {
-                                            addItemBuilderTo(-draftTransactionItem.item.amount, this@apply.description)
+                                        with(draftTransactionItem.account.realCompanion) {
+                                            addItemBuilderTo(-draftTransactionItem.amount, this@apply.description)
                                         }
                                     }
                                     .build()

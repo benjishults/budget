@@ -4,6 +4,13 @@ import kotlinx.datetime.Instant
 import java.math.BigDecimal
 import java.util.UUID
 
+interface TransactionItem<out A : Account> /*: Comparable<TransactionItem<*>>*/ {
+    val amount: BigDecimal
+    val description: String?
+    val account: A
+    val timestamp: Instant
+}
+
 @Suppress("DataClassPrivateConstructor")
 data class Transaction private constructor(
     val id: UUID,
@@ -55,13 +62,15 @@ data class Transaction private constructor(
      */
     inner class Item<out A : Account>(
         val id: UUID,
-        val amount: BigDecimal,
-        val description: String? = null,
-        val account: A,
+        override val amount: BigDecimal,
+        override val description: String? = null,
+        override val account: A,
         val draftStatus: DraftStatus = DraftStatus.none,
-    ) : Comparable<Item<*>> {
+    ) : Comparable<Item<*>>, TransactionItem<A> {
 
         val transaction = this@Transaction
+
+        override val timestamp: Instant = transaction.timestamp
 
         override fun compareTo(other: Item<*>): Int =
             transaction.timestamp
