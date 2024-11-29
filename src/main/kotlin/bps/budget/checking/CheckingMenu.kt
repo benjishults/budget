@@ -148,6 +148,7 @@ fun WithIo.checksMenu(
                                 clearingTransaction,
                                 budgetData.id,
                             )
+                            outPrinter.important("Cleared check recorded")
                         }
                     },
                 )

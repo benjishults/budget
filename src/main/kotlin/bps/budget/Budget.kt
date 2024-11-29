@@ -114,7 +114,7 @@ fun WithIo.budgetMenu(
     Menu({ "Budget!" }) {
         add(
             takeActionAndPush(
-                label = recordIncome,
+                label = recordIncomeLabel,
                 shortcut = "i",
                 to = { recordIncomeSelectionMenu(budgetData, budgetDao, userConfig, clock) },
             ) {
@@ -128,7 +128,7 @@ fun WithIo.budgetMenu(
         )
         add(
             takeActionAndPush(
-                label = makeAllowances,
+                label = makeAllowancesLabel,
                 shortcut = "a",
                 to = { makeAllowancesSelectionMenu(budgetData, budgetDao, userConfig, clock) },
             ) {
@@ -138,32 +138,32 @@ fun WithIo.budgetMenu(
             },
         )
         add(
-            pushMenu(recordSpending, "s") {
+            pushMenu(recordSpendingLabel, "s") {
                 recordSpendingMenu(budgetData, budgetDao, userConfig, clock)
             },
         )
         add(
-            pushMenu(manageTransactions, "v") {
+            pushMenu(manageTransactionsLabel, "v") {
                 manageTransactions(budgetData, budgetDao, userConfig)
             },
         )
         add(
-            pushMenu(writeOrClearChecks, "ch") {
+            pushMenu(writeOrClearChecksLabel, "ch") {
                 checksMenu(budgetData, budgetDao, userConfig, clock)
             },
         )
         add(
-            pushMenu(useOrPayCreditCards, "cr") {
+            pushMenu(useOrPayCreditCardsLabel, "cr") {
                 creditCardMenu(budgetData, budgetDao, userConfig, clock)
             },
         )
         add(
-            pushMenu(transfer, "x") {
+            pushMenu(transferLabel, "x") {
                 transferMenu(budgetData, budgetDao, userConfig, clock)
             },
         )
         add(
-            pushMenu(manageAccounts, "m") {
+            pushMenu(manageAccountsLabel, "m") {
                 manageAccountsMenu(budgetData, budgetDao, authenticatedUser, userConfig, clock)
             },
         )
