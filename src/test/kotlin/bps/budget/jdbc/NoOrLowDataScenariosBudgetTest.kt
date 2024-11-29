@@ -2,15 +2,15 @@ package bps.budget.jdbc
 
 import bps.budget.BudgetApplication
 import bps.budget.BudgetConfigurations
-import bps.budget.makeAllowances
+import bps.budget.makeAllowancesLabel
 import bps.budget.persistence.jdbc.JdbcDao
-import bps.budget.recordIncome
-import bps.budget.recordSpending
-import bps.budget.manageAccounts
-import bps.budget.transfer
+import bps.budget.recordIncomeLabel
+import bps.budget.recordSpendingLabel
+import bps.budget.manageAccountsLabel
+import bps.budget.transferLabel
 import bps.budget.ui.ConsoleUiFacade
-import bps.budget.useOrPayCreditCards
-import bps.budget.writeOrClearChecks
+import bps.budget.useOrPayCreditCardsLabel
+import bps.budget.writeOrClearChecksLabel
 import bps.console.SimpleConsoleIoTestFixture
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContainExactly
@@ -52,14 +52,14 @@ Enter the name for your "General" account [General] """,
                 "Enter the DESCRIPTION for your \"General\" account [Income is automatically deposited here and allowances are made from here.] ",
                 """
                             |Budget!
-                            | 1. $recordIncome (i)
-                            | 2. $makeAllowances (a)
-                            | 3. $recordSpending (s)
+                            | 1. $recordIncomeLabel (i)
+                            | 2. $makeAllowancesLabel (a)
+                            | 3. $recordSpendingLabel (s)
                             | 4. View History (v)
-                            | 5. $writeOrClearChecks (ch)
-                            | 6. $useOrPayCreditCards (cr)
-                            | 7. $transfer (x)
-                            | 8. $manageAccounts (m)
+                            | 5. $writeOrClearChecksLabel (ch)
+                            | 6. $useOrPayCreditCardsLabel (cr)
+                            | 7. $transferLabel (x)
+                            | 8. $manageAccountsLabel (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                 "Enter selection: ",

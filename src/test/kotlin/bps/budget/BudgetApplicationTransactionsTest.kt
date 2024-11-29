@@ -68,14 +68,14 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome (i)
-                            | 2. $makeAllowances (a)
-                            | 3. $recordSpending (s)
-                            | 4. $manageTransactions (v)
-                            | 5. $writeOrClearChecks (ch)
-                            | 6. $useOrPayCreditCards (cr)
-                            | 7. $transfer (x)
-                            | 8. $manageAccounts (m)
+                            | 1. $recordIncomeLabel (i)
+                            | 2. $makeAllowancesLabel (a)
+                            | 3. $recordSpendingLabel (s)
+                            | 4. $manageTransactionsLabel (v)
+                            | 5. $writeOrClearChecksLabel (ch)
+                            | 6. $useOrPayCreditCardsLabel (cr)
+                            | 7. $transferLabel (x)
+                            | 8. $manageAccountsLabel (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -164,14 +164,14 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome (i)
-                            | 2. $makeAllowances (a)
-                            | 3. $recordSpending (s)
-                            | 4. $manageTransactions (v)
-                            | 5. $writeOrClearChecks (ch)
-                            | 6. $useOrPayCreditCards (cr)
-                            | 7. $transfer (x)
-                            | 8. $manageAccounts (m)
+                            | 1. $recordIncomeLabel (i)
+                            | 2. $makeAllowancesLabel (a)
+                            | 3. $recordSpendingLabel (s)
+                            | 4. $manageTransactionsLabel (v)
+                            | 5. $writeOrClearChecksLabel (ch)
+                            | 6. $useOrPayCreditCardsLabel (cr)
+                            | 7. $transferLabel (x)
+                            | 8. $manageAccountsLabel (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -259,14 +259,14 @@ Deactivated account 'Cosmetics'
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome (i)
-                            | 2. $makeAllowances (a)
-                            | 3. $recordSpending (s)
-                            | 4. $manageTransactions (v)
-                            | 5. $writeOrClearChecks (ch)
-                            | 6. $useOrPayCreditCards (cr)
-                            | 7. $transfer (x)
-                            | 8. $manageAccounts (m)
+                            | 1. $recordIncomeLabel (i)
+                            | 2. $makeAllowancesLabel (a)
+                            | 3. $recordSpendingLabel (s)
+                            | 4. $manageTransactionsLabel (v)
+                            | 5. $writeOrClearChecksLabel (ch)
+                            | 6. $useOrPayCreditCardsLabel (cr)
+                            | 7. $transferLabel (x)
+                            | 8. $manageAccountsLabel (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -399,14 +399,14 @@ Allowance recorded
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome (i)
-                            | 2. $makeAllowances (a)
-                            | 3. $recordSpending (s)
-                            | 4. $manageTransactions (v)
-                            | 5. $writeOrClearChecks (ch)
-                            | 6. $useOrPayCreditCards (cr)
-                            | 7. $transfer (x)
-                            | 8. $manageAccounts (m)
+                            | 1. $recordIncomeLabel (i)
+                            | 2. $makeAllowancesLabel (a)
+                            | 3. $recordSpendingLabel (s)
+                            | 4. $manageTransactionsLabel (v)
+                            | 5. $writeOrClearChecksLabel (ch)
+                            | 6. $useOrPayCreditCardsLabel (cr)
+                            | 7. $transferLabel (x)
+                            | 8. $manageAccountsLabel (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -566,14 +566,14 @@ Medical          |     200.00 |
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome (i)
-                            | 2. $makeAllowances (a)
-                            | 3. $recordSpending (s)
-                            | 4. $manageTransactions (v)
-                            | 5. $writeOrClearChecks (ch)
-                            | 6. $useOrPayCreditCards (cr)
-                            | 7. $transfer (x)
-                            | 8. $manageAccounts (m)
+                            | 1. $recordIncomeLabel (i)
+                            | 2. $makeAllowancesLabel (a)
+                            | 3. $recordSpendingLabel (s)
+                            | 4. $manageTransactionsLabel (v)
+                            | 5. $writeOrClearChecksLabel (ch)
+                            | 6. $useOrPayCreditCardsLabel (cr)
+                            | 7. $transferLabel (x)
+                            | 8. $manageAccountsLabel (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -648,14 +648,14 @@ Spending recorded
 """,
                         """
                             |Budget!
-                            | 1. $recordIncome (i)
-                            | 2. $makeAllowances (a)
-                            | 3. $recordSpending (s)
-                            | 4. $manageTransactions (v)
-                            | 5. $writeOrClearChecks (ch)
-                            | 6. $useOrPayCreditCards (cr)
-                            | 7. $transfer (x)
-                            | 8. $manageAccounts (m)
+                            | 1. $recordIncomeLabel (i)
+                            | 2. $makeAllowancesLabel (a)
+                            | 3. $recordSpendingLabel (s)
+                            | 4. $manageTransactionsLabel (v)
+                            | 5. $writeOrClearChecksLabel (ch)
+                            | 6. $useOrPayCreditCardsLabel (cr)
+                            | 7. $transferLabel (x)
+                            | 8. $manageAccountsLabel (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -668,14 +668,14 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome (i)
-                            | 2. $makeAllowances (a)
-                            | 3. $recordSpending (s)
-                            | 4. $manageTransactions (v)
-                            | 5. $writeOrClearChecks (ch)
-                            | 6. $useOrPayCreditCards (cr)
-                            | 7. $transfer (x)
-                            | 8. $manageAccounts (m)
+                            | 1. $recordIncomeLabel (i)
+                            | 2. $makeAllowancesLabel (a)
+                            | 3. $recordSpendingLabel (s)
+                            | 4. $manageTransactionsLabel (v)
+                            | 5. $writeOrClearChecksLabel (ch)
+                            | 6. $useOrPayCreditCardsLabel (cr)
+                            | 7. $transferLabel (x)
+                            | 8. $manageAccountsLabel (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -831,6 +831,12 @@ Spending recorded
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
+                            |
+                            |Cleared check recorded
+                            |
+                            |
+                        """.trimMargin(),
+                        """
                         |Select the check that cleared on 'Checking'
                         |    Time Stamp          | Amount     | Description
                         | 1. Back (b)
@@ -872,14 +878,14 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome (i)
-                            | 2. $makeAllowances (a)
-                            | 3. $recordSpending (s)
-                            | 4. $manageTransactions (v)
-                            | 5. $writeOrClearChecks (ch)
-                            | 6. $useOrPayCreditCards (cr)
-                            | 7. $transfer (x)
-                            | 8. $manageAccounts (m)
+                            | 1. $recordIncomeLabel (i)
+                            | 2. $makeAllowancesLabel (a)
+                            | 3. $recordSpendingLabel (s)
+                            | 4. $manageTransactionsLabel (v)
+                            | 5. $writeOrClearChecksLabel (ch)
+                            | 6. $useOrPayCreditCardsLabel (cr)
+                            | 7. $transferLabel (x)
+                            | 8. $manageAccountsLabel (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -1004,14 +1010,14 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome (i)
-                            | 2. $makeAllowances (a)
-                            | 3. $recordSpending (s)
-                            | 4. $manageTransactions (v)
-                            | 5. $writeOrClearChecks (ch)
-                            | 6. $useOrPayCreditCards (cr)
-                            | 7. $transfer (x)
-                            | 8. $manageAccounts (m)
+                            | 1. $recordIncomeLabel (i)
+                            | 2. $makeAllowancesLabel (a)
+                            | 3. $recordSpendingLabel (s)
+                            | 4. $manageTransactionsLabel (v)
+                            | 5. $writeOrClearChecksLabel (ch)
+                            | 6. $useOrPayCreditCardsLabel (cr)
+                            | 7. $transferLabel (x)
+                            | 8. $manageAccountsLabel (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -1065,14 +1071,14 @@ New credit card account 'Costco Visa' created
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome (i)
-                            | 2. $makeAllowances (a)
-                            | 3. $recordSpending (s)
-                            | 4. $manageTransactions (v)
-                            | 5. $writeOrClearChecks (ch)
-                            | 6. $useOrPayCreditCards (cr)
-                            | 7. $transfer (x)
-                            | 8. $manageAccounts (m)
+                            | 1. $recordIncomeLabel (i)
+                            | 2. $makeAllowancesLabel (a)
+                            | 3. $recordSpendingLabel (s)
+                            | 4. $manageTransactionsLabel (v)
+                            | 5. $writeOrClearChecksLabel (ch)
+                            | 6. $useOrPayCreditCardsLabel (cr)
+                            | 7. $transferLabel (x)
+                            | 8. $manageAccountsLabel (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -1268,14 +1274,14 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome (i)
-                            | 2. $makeAllowances (a)
-                            | 3. $recordSpending (s)
-                            | 4. $manageTransactions (v)
-                            | 5. $writeOrClearChecks (ch)
-                            | 6. $useOrPayCreditCards (cr)
-                            | 7. $transfer (x)
-                            | 8. $manageAccounts (m)
+                            | 1. $recordIncomeLabel (i)
+                            | 2. $makeAllowancesLabel (a)
+                            | 3. $recordSpendingLabel (s)
+                            | 4. $manageTransactionsLabel (v)
+                            | 5. $writeOrClearChecksLabel (ch)
+                            | 6. $useOrPayCreditCardsLabel (cr)
+                            | 7. $transferLabel (x)
+                            | 8. $manageAccountsLabel (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -1383,14 +1389,14 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome (i)
-                            | 2. $makeAllowances (a)
-                            | 3. $recordSpending (s)
-                            | 4. $manageTransactions (v)
-                            | 5. $writeOrClearChecks (ch)
-                            | 6. $useOrPayCreditCards (cr)
-                            | 7. $transfer (x)
-                            | 8. $manageAccounts (m)
+                            | 1. $recordIncomeLabel (i)
+                            | 2. $makeAllowancesLabel (a)
+                            | 3. $recordSpendingLabel (s)
+                            | 4. $manageTransactionsLabel (v)
+                            | 5. $writeOrClearChecksLabel (ch)
+                            | 6. $useOrPayCreditCardsLabel (cr)
+                            | 7. $transferLabel (x)
+                            | 8. $manageAccountsLabel (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -1580,14 +1586,14 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome (i)
-                            | 2. $makeAllowances (a)
-                            | 3. $recordSpending (s)
-                            | 4. $manageTransactions (v)
-                            | 5. $writeOrClearChecks (ch)
-                            | 6. $useOrPayCreditCards (cr)
-                            | 7. $transfer (x)
-                            | 8. $manageAccounts (m)
+                            | 1. $recordIncomeLabel (i)
+                            | 2. $makeAllowancesLabel (a)
+                            | 3. $recordSpendingLabel (s)
+                            | 4. $manageTransactionsLabel (v)
+                            | 5. $writeOrClearChecksLabel (ch)
+                            | 6. $useOrPayCreditCardsLabel (cr)
+                            | 7. $transferLabel (x)
+                            | 8. $manageAccountsLabel (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -1717,14 +1723,14 @@ Spending recorded
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome (i)
-                            | 2. $makeAllowances (a)
-                            | 3. $recordSpending (s)
-                            | 4. $manageTransactions (v)
-                            | 5. $writeOrClearChecks (ch)
-                            | 6. $useOrPayCreditCards (cr)
-                            | 7. $transfer (x)
-                            | 8. $manageAccounts (m)
+                            | 1. $recordIncomeLabel (i)
+                            | 2. $makeAllowancesLabel (a)
+                            | 3. $recordSpendingLabel (s)
+                            | 4. $manageTransactionsLabel (v)
+                            | 5. $writeOrClearChecksLabel (ch)
+                            | 6. $useOrPayCreditCardsLabel (cr)
+                            | 7. $transferLabel (x)
+                            | 8. $manageAccountsLabel (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -1788,14 +1794,14 @@ Real account 'Savings' created with balance ${'$'}1000.00
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome (i)
-                            | 2. $makeAllowances (a)
-                            | 3. $recordSpending (s)
-                            | 4. $manageTransactions (v)
-                            | 5. $writeOrClearChecks (ch)
-                            | 6. $useOrPayCreditCards (cr)
-                            | 7. $transfer (x)
-                            | 8. $manageAccounts (m)
+                            | 1. $recordIncomeLabel (i)
+                            | 2. $makeAllowancesLabel (a)
+                            | 3. $recordSpendingLabel (s)
+                            | 4. $manageTransactionsLabel (v)
+                            | 5. $writeOrClearChecksLabel (ch)
+                            | 6. $useOrPayCreditCardsLabel (cr)
+                            | 7. $transferLabel (x)
+                            | 8. $manageAccountsLabel (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
@@ -1880,14 +1886,14 @@ Real account 'Savings' created with balance ${'$'}1000.00
                     expectedOutputs = listOf(
                         """
                             |Budget!
-                            | 1. $recordIncome (i)
-                            | 2. $makeAllowances (a)
-                            | 3. $recordSpending (s)
-                            | 4. $manageTransactions (v)
-                            | 5. $writeOrClearChecks (ch)
-                            | 6. $useOrPayCreditCards (cr)
-                            | 7. $transfer (x)
-                            | 8. $manageAccounts (m)
+                            | 1. $recordIncomeLabel (i)
+                            | 2. $makeAllowancesLabel (a)
+                            | 3. $recordSpendingLabel (s)
+                            | 4. $manageTransactionsLabel (v)
+                            | 5. $writeOrClearChecksLabel (ch)
+                            | 6. $useOrPayCreditCardsLabel (cr)
+                            | 7. $transferLabel (x)
+                            | 8. $manageAccountsLabel (m)
                             | 9. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
