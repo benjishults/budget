@@ -27,7 +27,7 @@ fun WithIo.recordSpendingMenu(
     //     and the amount, I guess?  If so, I could add that to a new TransactionContext class with a Transaction.Builder
     //     and an amount.
     val amount: BigDecimal =
-        SimplePrompt<BigDecimal>(
+        SimplePrompt(
             "Enter the total AMOUNT spent: ",
             inputReader = inputReader,
             outPrinter = outPrinter,

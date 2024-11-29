@@ -13,6 +13,7 @@ import bps.budget.toCurrencyAmountOrNull
 import bps.budget.transaction.ViewTransactionFixture
 import bps.budget.transaction.ViewTransactionsWithoutBalancesMenu
 import bps.budget.transaction.allocateSpendingItemMenu
+import bps.budget.transaction.showRecentRelevantTransactions
 import bps.console.app.MenuSession
 import bps.console.app.TryAgainAtMostRecentMenuException
 import bps.console.inputs.NonNegativeStringValidator
@@ -293,6 +294,12 @@ private fun WithIo.spendOnACreditCard(
     menuSession: MenuSession,
     chargeAccount: ChargeAccount,
 ) {
+    showRecentRelevantTransactions(
+        transactionDao = budgetDao.transactionDao,
+        account = chargeAccount,
+        budgetData = budgetData,
+        label = "Recent expenditures:",
+    )
     // TODO enter check number if checking account
     // NOTE this is why we have separate draft accounts -- to easily know the real vs draft balance
     val amount: BigDecimal =

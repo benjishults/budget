@@ -4,12 +4,10 @@ import bps.budget.WithIo
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.Transaction
-import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
-import bps.budget.transaction.ViewTransactionFixture
-import bps.budget.ui.formatAsLocalDateTime
+import bps.budget.transaction.showRecentRelevantTransactions
 import bps.console.app.MenuSession
 import bps.console.app.TryAgainAtMostRecentMenuException
 import bps.console.inputs.InRangeInclusiveStringValidator
@@ -22,10 +20,9 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
 
-const val NUMBER_OF_TRANSACTION_ITEMS_TO_SHOW_BEFORE_PROMPT = 6
 fun WithIo.makeAllowancesSelectionMenu(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    transactionDao: TransactionDao,
     userConfig: UserConfiguration,
     clock: Clock,
 ): Menu {
@@ -42,34 +39,20 @@ fun WithIo.makeAllowancesSelectionMenu(
         labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
     ) { _: MenuSession, selectedCategoryAccount: CategoryAccount ->
 
-        budgetDao.transactionDao
-            .fetchTransactionItemsInvolvingAccount(selectedCategoryAccount, limit = 500)
-            .asSequence()
-            .filter { transactionItem ->
-                budgetData.generalAccount in
-                        transactionItem.transaction(
-                            budgetData.id,
-                            budgetData.accountIdToAccountMap,
-                        )
-                            .categoryItems
-                            .map { it.account }
-            }
-            .take(NUMBER_OF_TRANSACTION_ITEMS_TO_SHOW_BEFORE_PROMPT)
-            .sorted()
-            .toList()
-            .takeIf { it.isNotEmpty() }
-            ?.also { outPrinter("Recent allowances:\n") }
-            ?.forEach { item: TransactionDao.ExtendedTransactionItem<CategoryAccount> ->
-                outPrinter(
-                    String.format(
-                        "%s | %,10.2f | %s\n",
-                        item.transactionTimestamp
-                            .formatAsLocalDateTime(budgetData.timeZone),
-                        item.amount,
-                        item.description ?: item.transactionDescription,
-                    ),
-                )
-            }
+        showRecentRelevantTransactions(
+            transactionDao = transactionDao,
+            account = selectedCategoryAccount,
+            budgetData = budgetData,
+            label = "Recent allowances:",
+        ) { transactionItem ->
+            budgetData.generalAccount in
+                    transactionItem.transaction(
+                        budgetData.id,
+                        budgetData.accountIdToAccountMap,
+                    )
+                        .categoryItems
+                        .map { it.account }
+        }
 
         val max = budgetData.generalAccount.balance
         val min = BigDecimal("0.01").setScale(2)
@@ -111,7 +94,7 @@ fun WithIo.makeAllowancesSelectionMenu(
                 }
                 .build()
             budgetData.commit(allocate)
-            budgetDao.transactionDao.commit(allocate, budgetData.id)
+            transactionDao.commit(allocate, budgetData.id)
             outPrinter.important("Allowance recorded")
         } else {
             outPrinter.important("Must allow a positive amount.")

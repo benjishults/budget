@@ -11,6 +11,7 @@ import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.budget.transaction.ViewTransactionsWithoutBalancesMenu
 import bps.budget.transaction.allocateSpendingItemMenu
+import bps.budget.transaction.showRecentRelevantTransactions
 import bps.console.app.TryAgainAtMostRecentMenuException
 import bps.console.inputs.InRangeInclusiveStringValidator
 import bps.console.inputs.SimplePrompt
@@ -42,6 +43,13 @@ fun WithIo.checksMenu(
             Menu {
                 add(
                     takeAction("Write a check on '${draftAccount.name}'") {
+                        showRecentRelevantTransactions(
+                            transactionDao = budgetDao.transactionDao,
+                            account = draftAccount,
+                            budgetData = budgetData,
+                            label = "Recent checks:",
+                        )
+
                         // TODO enter check number if checking account
                         // NOTE this is why we have separate draft accounts -- to easily know the real vs draft balance
                         val max = draftAccount.realCompanion.balance - draftAccount.balance

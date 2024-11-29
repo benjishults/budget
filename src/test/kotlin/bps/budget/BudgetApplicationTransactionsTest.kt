@@ -1238,6 +1238,8 @@ Spending recorded
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
+                        "Recent expenditures:\n",
+                        "2024-08-08 19:00:08 |     -30.00 | Costco\n",
                         "Enter the AMOUNT of the charge on 'Costco Visa': ",
                         "Enter the RECIPIENT of the charge on 'Costco Visa': ",
                         "Use current time [Y]? ",
@@ -1265,6 +1267,8 @@ Spending recorded
                         |14. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
+                        "Recent expenditures:\n",
+                        "2024-08-08 19:00:08 |     -10.00 | Costco\n",
                         "Enter the AMOUNT spent on 'Necessities' for 'Target' [0.01, [20.00]]: ",
                         "Enter DESCRIPTION for 'Necessities' spend [Target]: ",
                     ),
@@ -1535,6 +1539,9 @@ Item prepared
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
+                        "Recent expenditures:\n",
+                        "2024-08-08 19:00:08 |     -30.00 | Costco\n",
+                        "2024-08-08 19:00:09 |     -20.00 | Target\n",
                         "Enter the AMOUNT of the charge on 'Costco Visa': ",
                         "Enter the RECIPIENT of the charge on 'Costco Visa': ",
                         "Use current time [Y]? ",
@@ -1562,6 +1569,9 @@ Item prepared
                         |14. Quit (q)
                         |""".trimMargin(),
                         "Enter selection: ",
+                        "Recent expenditures:\n",
+                        "2024-08-08 19:00:08 |     -10.00 | Costco\n",
+                        "2024-08-08 19:00:09 |     -20.00 | Target\n",
                         "Enter the AMOUNT spent on 'Necessities' for 'Brausen's' [0.01, [5.00]]: ",
                         "Enter DESCRIPTION for 'Necessities' spend [Brausen's]: ",
                     ),

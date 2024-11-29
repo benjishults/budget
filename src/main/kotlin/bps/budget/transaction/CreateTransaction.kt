@@ -53,6 +53,20 @@ fun WithIo.chooseRealAccountsThenCategories(
             )
         },
     ) { menuSession: MenuSession, selectedRealAccount: RealAccount ->
+        showRecentRelevantTransactions(
+            transactionDao = budgetDao.transactionDao,
+            account = selectedRealAccount,
+            budgetData = budgetData,
+            label = "Recent expenditures:",
+        ) { transactionItem ->
+            budgetData.generalAccount !in
+                    transactionItem.transaction(
+                        budgetData.id,
+                        budgetData.accountIdToAccountMap,
+                    )
+                        .categoryItems
+                        .map { it.account }
+        }
         val max = min(
             runningTotal,
             selectedRealAccount.balance +
@@ -171,6 +185,27 @@ fun WithIo.allocateSpendingItemMenu(
             )
         },
     ) { menuSession: MenuSession, selectedCategoryAccount: CategoryAccount ->
+        showRecentRelevantTransactions(
+            transactionDao = budgetDao.transactionDao,
+            account = selectedCategoryAccount,
+            budgetData = budgetData,
+            label = "Recent expenditures:",
+        ) { transactionItem ->
+            val transaction = transactionItem
+                .transaction(
+                    budgetId = budgetData.id,
+                    accountIdToAccountMap = budgetData.accountIdToAccountMap,
+                )
+            ((transactionBuilder.realItemBuilders +
+                    transactionBuilder.chargeItemBuilders)
+                .map { it.account }
+                .toSet() intersect
+                    (transaction.realItems + transaction.chargeItems)
+                        .map { it.account }
+                        .toSet())
+                .isNotEmpty()
+        }
+
         val max = min(
             runningTotal,
             selectedCategoryAccount.balance +

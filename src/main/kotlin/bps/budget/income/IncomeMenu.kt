@@ -7,6 +7,7 @@ import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
+import bps.budget.transaction.showRecentRelevantTransactions
 import bps.console.app.MenuSession
 import bps.console.app.TryAgainAtMostRecentMenuException
 import bps.console.inputs.PositiveStringValidator
@@ -31,6 +32,21 @@ fun WithIo.recordIncomeSelectionMenu(
     baseList = budgetData.realAccounts + budgetData.chargeAccounts,
     labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
 ) { _: MenuSession, realAccount: RealAccount ->
+
+    showRecentRelevantTransactions(
+        transactionDao = budgetDao.transactionDao,
+        account = realAccount,
+        budgetData = budgetData,
+        label = "Recent income:",
+    ) { transactionItem ->
+        budgetData.generalAccount in
+                transactionItem.transaction(
+                    budgetData.id,
+                    budgetData.accountIdToAccountMap,
+                )
+                    .categoryItems
+                    .map { it.account }
+    }
     val amount: BigDecimal =
         SimplePrompt(
             "Enter the AMOUNT of INCOME into '${realAccount.name}': ",
