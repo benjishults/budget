@@ -17,7 +17,7 @@ private const val TRANSACTIONS_WITHOUT_BALANCES_TABLE_HEADER =
 
 open class ViewTransactionsWithoutBalancesMenu<A : Account>(
     private val account: A,
-    private val budgetDao: BudgetDao,
+    private val transactionDao: TransactionDao,
     private val budgetId: UUID,
     private val accountIdToAccountMap: Map<UUID, Account>,
     private val timeZone: TimeZone,
@@ -56,7 +56,7 @@ open class ViewTransactionsWithoutBalancesMenu<A : Account>(
         )
     },
     itemListGenerator = { selectedLimit: Int, selectedOffset: Int ->
-        with(budgetDao.transactionDao) {
+        with(transactionDao) {
             fetchTransactionItemsInvolvingAccount(
                 account = account,
                 limit = selectedLimit,
@@ -78,7 +78,7 @@ open class ViewTransactionsWithoutBalancesMenu<A : Account>(
     override fun nextPageMenuProducer(): ViewTransactionsWithoutBalancesMenu<A> =
         ViewTransactionsWithoutBalancesMenu(
             account = account,
-            budgetDao = budgetDao,
+            transactionDao = transactionDao,
             budgetId = budgetId,
             accountIdToAccountMap = accountIdToAccountMap,
             timeZone = timeZone,
@@ -95,7 +95,7 @@ open class ViewTransactionsWithoutBalancesMenu<A : Account>(
     override fun previousPageMenuProducer(): ViewTransactionsWithoutBalancesMenu<A> =
         ViewTransactionsWithoutBalancesMenu(
             account = account,
-            budgetDao = budgetDao,
+            transactionDao = transactionDao,
             budgetId = budgetId,
             accountIdToAccountMap = accountIdToAccountMap,
             timeZone = timeZone,

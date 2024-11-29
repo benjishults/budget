@@ -29,7 +29,7 @@ import java.math.BigDecimal
 
 fun WithIo.checksMenu(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    transactionDao: TransactionDao,
     userConfig: UserConfiguration,
     clock: Clock,
 ): Menu =
@@ -44,7 +44,7 @@ fun WithIo.checksMenu(
                 add(
                     takeAction("Write a check on '${draftAccount.name}'") {
                         showRecentRelevantTransactions(
-                            transactionDao = budgetDao.transactionDao,
+                            transactionDao = transactionDao,
                             account = draftAccount,
                             budgetData = budgetData,
                             label = "Recent checks:",
@@ -96,7 +96,7 @@ fun WithIo.checksMenu(
                                     transactionBuilder,
                                     description,
                                     budgetData,
-                                    budgetDao,
+                                    transactionDao,
                                     userConfig,
                                 ),
                             )
@@ -112,7 +112,7 @@ fun WithIo.checksMenu(
                             header = { "Select the check that cleared on '${draftAccount.name}'" },
                             prompt = { "Select the check that cleared: " },
                             account = draftAccount,
-                            budgetDao = budgetDao,
+                            transactionDao = transactionDao,
                             budgetId = budgetData.id,
                             accountIdToAccountMap = budgetData.accountIdToAccountMap,
                             timeZone = budgetData.timeZone,
@@ -144,7 +144,7 @@ fun WithIo.checksMenu(
                                     }
                                     .build()
                             budgetData.commit(clearingTransaction)
-                            budgetDao.transactionDao.clearCheck(
+                            transactionDao.clearCheck(
                                 draftTransactionItem
                                     .item
                                     .build(

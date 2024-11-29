@@ -116,7 +116,7 @@ fun WithIo.budgetMenu(
             takeActionAndPush(
                 label = recordIncomeLabel,
                 shortcut = "i",
-                to = { recordIncomeSelectionMenu(budgetData, budgetDao, userConfig, clock) },
+                to = { recordIncomeSelectionMenu(budgetData, budgetDao.transactionDao, userConfig, clock) },
             ) {
                 outPrinter.important(
                     """
@@ -139,32 +139,32 @@ fun WithIo.budgetMenu(
         )
         add(
             pushMenu(recordSpendingLabel, "s") {
-                recordSpendingMenu(budgetData, budgetDao, userConfig, clock)
+                recordSpendingMenu(budgetData, budgetDao.transactionDao, userConfig, clock)
             },
         )
         add(
             pushMenu(manageTransactionsLabel, "v") {
-                manageTransactions(budgetData, budgetDao, userConfig)
+                manageTransactions(budgetData, budgetDao.transactionDao, budgetDao.accountDao, userConfig)
             },
         )
         add(
             pushMenu(writeOrClearChecksLabel, "ch") {
-                checksMenu(budgetData, budgetDao, userConfig, clock)
+                checksMenu(budgetData, budgetDao.transactionDao, userConfig, clock)
             },
         )
         add(
             pushMenu(useOrPayCreditCardsLabel, "cr") {
-                creditCardMenu(budgetData, budgetDao, userConfig, clock)
+                creditCardMenu(budgetData, budgetDao.transactionDao, userConfig, clock)
             },
         )
         add(
             pushMenu(transferLabel, "x") {
-                transferMenu(budgetData, budgetDao, userConfig, clock)
+                transferMenu(budgetData, budgetDao.transactionDao, userConfig, clock)
             },
         )
         add(
             pushMenu(manageAccountsLabel, "m") {
-                manageAccountsMenu(budgetData, budgetDao, authenticatedUser, userConfig, clock)
+                manageAccountsMenu(budgetData, budgetDao, userConfig, clock)
             },
         )
         add(quitItem)

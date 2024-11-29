@@ -4,6 +4,7 @@ import bps.budget.WithIo
 import bps.budget.model.BudgetData
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.budget.transaction.chooseRealAccountsThenCategories
@@ -19,7 +20,7 @@ import java.math.BigDecimal
 
 fun WithIo.recordSpendingMenu(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    transactionDao: TransactionDao,
     userConfig: UserConfiguration,
     clock: Clock,
 ): Menu {
@@ -54,7 +55,7 @@ fun WithIo.recordSpendingMenu(
         runningTotal = amount,
         description = description,
         budgetData = budgetData,
-        budgetDao = budgetDao,
+        transactionDao = transactionDao,
         userConfig = userConfig,
         transactionBuilder = Transaction.Builder(
             description,

@@ -26,7 +26,7 @@ private const val TRANSACTIONS_TABLE_HEADER = "    Time Stamp          | Amount 
 open class TransactionListMenu<A : Account>(
     private val budgetData: BudgetData,
     private val account: A,
-    private val budgetDao: BudgetDao,
+    private val transactionDao: TransactionDao,
     private val budgetId: UUID,
     private val accountIdToAccountMap: Map<UUID, Account>,
     private val timeZone: TimeZone,
@@ -75,7 +75,7 @@ open class TransactionListMenu<A : Account>(
         )
     },
     itemListGenerator = { selectedLimit: Int, selectedOffset: Int ->
-        with(budgetDao.transactionDao) {
+        with(transactionDao) {
             fetchTransactionItemsInvolvingAccount(
                 account = account,
                 limit = selectedLimit,
@@ -106,7 +106,7 @@ open class TransactionListMenu<A : Account>(
     override fun nextPageMenuProducer(): TransactionListMenu<A> =
         TransactionListMenu(
             account = account,
-            budgetDao = budgetDao,
+            transactionDao = transactionDao,
             budgetId = budgetId,
             accountIdToAccountMap = accountIdToAccountMap,
             timeZone = timeZone,
@@ -124,7 +124,7 @@ open class TransactionListMenu<A : Account>(
     override fun previousPageMenuProducer(): TransactionListMenu<A> =
         TransactionListMenu(
             account = account,
-            budgetDao = budgetDao,
+            transactionDao = transactionDao,
             budgetId = budgetId,
             accountIdToAccountMap = accountIdToAccountMap,
             timeZone = timeZone,

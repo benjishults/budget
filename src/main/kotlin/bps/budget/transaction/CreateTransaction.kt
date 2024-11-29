@@ -7,6 +7,7 @@ import bps.budget.model.CategoryAccount
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.console.app.MenuSession
@@ -23,7 +24,7 @@ fun WithIo.chooseRealAccountsThenCategories(
     transactionBuilder: Transaction.Builder,
     description: String,
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    transactionDao: TransactionDao,
     userConfig: UserConfiguration,
 ): Menu =
     ScrollingSelectionMenu(
@@ -54,7 +55,7 @@ fun WithIo.chooseRealAccountsThenCategories(
         },
     ) { menuSession: MenuSession, selectedRealAccount: RealAccount ->
         showRecentRelevantTransactions(
-            transactionDao = budgetDao.transactionDao,
+            transactionDao = transactionDao,
             account = selectedRealAccount,
             budgetData = budgetData,
             label = "Recent expenditures:",
@@ -125,7 +126,7 @@ fun WithIo.chooseRealAccountsThenCategories(
                         transactionBuilder,
                         description,
                         budgetData,
-                        budgetDao,
+                        transactionDao,
                         userConfig,
                     ),
                 )
@@ -137,7 +138,7 @@ fun WithIo.chooseRealAccountsThenCategories(
                         transactionBuilder,
                         description,
                         budgetData,
-                        budgetDao,
+                        transactionDao,
                         userConfig,
                     ),
                 )
@@ -152,7 +153,7 @@ fun WithIo.allocateSpendingItemMenu(
     transactionBuilder: Transaction.Builder,
     description: String,
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    transactionDao: TransactionDao,
     userConfig: UserConfiguration,
 ): Menu =
     ScrollingSelectionMenu(
@@ -186,7 +187,7 @@ fun WithIo.allocateSpendingItemMenu(
         },
     ) { menuSession: MenuSession, selectedCategoryAccount: CategoryAccount ->
         showRecentRelevantTransactions(
-            transactionDao = budgetDao.transactionDao,
+            transactionDao = transactionDao,
             account = selectedCategoryAccount,
             budgetData = budgetData,
             label = "Recent expenditures:",
@@ -262,14 +263,14 @@ fun WithIo.allocateSpendingItemMenu(
                         transactionBuilder,
                         description,
                         budgetData,
-                        budgetDao,
+                        transactionDao,
                         userConfig,
                     ),
                 )
             } else {
                 val transaction = transactionBuilder.build()
                 budgetData.commit(transaction)
-                budgetDao.transactionDao.commit(transaction, budgetData.id)
+                transactionDao.commit(transaction, budgetData.id)
                 outPrinter.important("Spending recorded")
             }
         } else {

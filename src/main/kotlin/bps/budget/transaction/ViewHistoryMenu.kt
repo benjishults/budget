@@ -3,7 +3,7 @@ package bps.budget.transaction
 import bps.budget.WithIo
 import bps.budget.model.Account
 import bps.budget.model.BudgetData
-import bps.budget.model.CategoryAccount
+import bps.budget.persistence.AccountDao
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
@@ -16,7 +16,8 @@ import bps.console.menu.item
 
 fun WithIo.manageTransactions(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    transactionDao: TransactionDao,
+    accountDao: AccountDao,
     userConfig: UserConfiguration,
 ): Menu =
     ScrollingSelectionMenu(
@@ -38,7 +39,7 @@ fun WithIo.manageTransactions(
             TransactionListMenu(
                 account = selectedAccount,
                 limit = userConfig.numberOfItemsInScrollingList,
-                budgetDao = budgetDao,
+                transactionDao = transactionDao,
                 budgetId = budgetData.id,
                 accountIdToAccountMap = budgetData.accountIdToAccountMap,
                 timeZone = budgetData.timeZone,
@@ -52,14 +53,14 @@ fun WithIo.manageTransactions(
                                 prompt = { "Select a transaction to DELETE: " },
                                 account = selectedAccount,
                                 limit = userConfig.numberOfItemsInScrollingList,
-                                budgetDao = budgetDao,
+                                transactionDao = transactionDao,
                                 budgetId = budgetData.id,
                                 accountIdToAccountMap = budgetData.accountIdToAccountMap,
                                 timeZone = budgetData.timeZone,
                                 outPrinter = outPrinter,
                                 budgetData = budgetData,
                             ) { _: MenuSession, extendedTransactionItem: TransactionDao.ExtendedTransactionItem<Account> ->
-                                with(budgetDao.accountDao) {
+                                with(accountDao) {
                                     with(ViewTransactionFixture) {
                                         outPrinter.showTransactionDetailsAction(
                                             extendedTransactionItem.transaction(
@@ -70,7 +71,7 @@ fun WithIo.manageTransactions(
                                         )
                                     }
                                     if (userSaysYes("Are you sure you want to DELETE that transaction?")) {
-                                        budgetDao.transactionDao.deleteTransaction(
+                                        transactionDao.deleteTransaction(
                                             transactionId = extendedTransactionItem.transactionId,
                                             budgetId = budgetData.id,
                                             accountIdToAccountMap = budgetData.accountIdToAccountMap,

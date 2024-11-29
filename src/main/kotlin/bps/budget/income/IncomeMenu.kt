@@ -4,7 +4,7 @@ import bps.budget.WithIo
 import bps.budget.model.BudgetData
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
-import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.budget.transaction.showRecentRelevantTransactions
@@ -22,7 +22,7 @@ import java.math.BigDecimal
 
 fun WithIo.recordIncomeSelectionMenu(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    transactionDao: TransactionDao,
     userConfig: UserConfiguration,
     clock: Clock,
     // TODO make this take the amount first and distribute among accounts?
@@ -34,7 +34,7 @@ fun WithIo.recordIncomeSelectionMenu(
 ) { _: MenuSession, realAccount: RealAccount ->
 
     showRecentRelevantTransactions(
-        transactionDao = budgetDao.transactionDao,
+        transactionDao = transactionDao,
         account = realAccount,
         budgetData = budgetData,
         label = "Recent income:",
@@ -75,7 +75,7 @@ fun WithIo.recordIncomeSelectionMenu(
         val incomeTransaction: Transaction =
             createIncomeTransaction(description, timestamp, amount, budgetData, realAccount)
         budgetData.commit(incomeTransaction)
-        budgetDao.transactionDao.commit(incomeTransaction, budgetData.id)
+        transactionDao.commit(incomeTransaction, budgetData.id)
         outPrinter.important("Income recorded")
     }
 }

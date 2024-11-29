@@ -6,6 +6,7 @@ import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.console.app.MenuSession
@@ -22,7 +23,7 @@ import java.math.BigDecimal
 
 fun WithIo.transferMenu(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    transactionDao: TransactionDao,
     userConfig: UserConfiguration,
     clock: Clock,
 ): Menu = ScrollingSelectionMenu(
@@ -84,7 +85,7 @@ fun WithIo.transferMenu(
                     }
                     .build()
                 budgetData.commit(transferTransaction)
-                budgetDao.transactionDao.commit(transferTransaction, budgetData.id)
+                transactionDao.commit(transferTransaction, budgetData.id)
                 outPrinter.important("Transfer recorded")
             } else {
                 outPrinter.important("Must transfer a positive amount.")
