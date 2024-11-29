@@ -119,17 +119,17 @@ class DataMigrations {
                                                 |  and amount = ?
                                                 |  and account_id = ?
                                                 |  and draft_status = ?
-                                                |  and ${if (transactionItem.item.description == null) "description is null" else "description = ?"}
+                                                |  and ${if (transactionItem.description == null) "description is null" else "description = ?"}
                                                 """.trimMargin(),
                             )
                                 .use { statement ->
                                     statement.setUuid(1, transactionItem.item.id)
                                     statement.setUuid(2, transactionItem.budgetId)
                                     statement.setUuid(3, transactionItem.transactionId)
-                                    statement.setBigDecimal(4, transactionItem.item.amount)
-                                    statement.setUuid(5, transactionItem.item.account.id)
+                                    statement.setBigDecimal(4, transactionItem.amount)
+                                    statement.setUuid(5, transactionItem.account.id)
                                     statement.setString(6, transactionItem.item.draftStatus.name)
-                                    transactionItem.item.description
+                                    transactionItem.description
                                         ?.let { description ->
                                             statement.setString(7, description)
                                         }

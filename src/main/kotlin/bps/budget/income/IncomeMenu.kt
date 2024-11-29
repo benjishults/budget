@@ -4,9 +4,10 @@ import bps.budget.WithIo
 import bps.budget.model.BudgetData
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
-import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
+import bps.budget.transaction.showRecentRelevantTransactions
 import bps.console.app.MenuSession
 import bps.console.app.TryAgainAtMostRecentMenuException
 import bps.console.inputs.PositiveStringValidator
@@ -21,7 +22,7 @@ import java.math.BigDecimal
 
 fun WithIo.recordIncomeSelectionMenu(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    transactionDao: TransactionDao,
     userConfig: UserConfiguration,
     clock: Clock,
     // TODO make this take the amount first and distribute among accounts?
@@ -31,6 +32,21 @@ fun WithIo.recordIncomeSelectionMenu(
     baseList = budgetData.realAccounts + budgetData.chargeAccounts,
     labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
 ) { _: MenuSession, realAccount: RealAccount ->
+
+    showRecentRelevantTransactions(
+        transactionDao = transactionDao,
+        account = realAccount,
+        budgetData = budgetData,
+        label = "Recent income:",
+    ) { transactionItem ->
+        budgetData.generalAccount in
+                transactionItem.transaction(
+                    budgetData.id,
+                    budgetData.accountIdToAccountMap,
+                )
+                    .categoryItems
+                    .map { it.account }
+    }
     val amount: BigDecimal =
         SimplePrompt(
             "Enter the AMOUNT of INCOME into '${realAccount.name}': ",
@@ -59,7 +75,7 @@ fun WithIo.recordIncomeSelectionMenu(
         val incomeTransaction: Transaction =
             createIncomeTransaction(description, timestamp, amount, budgetData, realAccount)
         budgetData.commit(incomeTransaction)
-        budgetDao.transactionDao.commit(incomeTransaction, budgetData.id)
+        transactionDao.commit(incomeTransaction, budgetData.id)
         outPrinter.important("Income recorded")
     }
 }

@@ -7,6 +7,7 @@ import bps.budget.model.CategoryAccount
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.BudgetDao
+import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.console.app.MenuSession
@@ -23,7 +24,7 @@ fun WithIo.chooseRealAccountsThenCategories(
     transactionBuilder: Transaction.Builder,
     description: String,
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    transactionDao: TransactionDao,
     userConfig: UserConfiguration,
 ): Menu =
     ScrollingSelectionMenu(
@@ -53,6 +54,20 @@ fun WithIo.chooseRealAccountsThenCategories(
             )
         },
     ) { menuSession: MenuSession, selectedRealAccount: RealAccount ->
+        showRecentRelevantTransactions(
+            transactionDao = transactionDao,
+            account = selectedRealAccount,
+            budgetData = budgetData,
+            label = "Recent expenditures:",
+        ) { transactionItem ->
+            budgetData.generalAccount !in
+                    transactionItem.transaction(
+                        budgetData.id,
+                        budgetData.accountIdToAccountMap,
+                    )
+                        .categoryItems
+                        .map { it.account }
+        }
         val max = min(
             runningTotal,
             selectedRealAccount.balance +
@@ -111,7 +126,7 @@ fun WithIo.chooseRealAccountsThenCategories(
                         transactionBuilder,
                         description,
                         budgetData,
-                        budgetDao,
+                        transactionDao,
                         userConfig,
                     ),
                 )
@@ -123,7 +138,7 @@ fun WithIo.chooseRealAccountsThenCategories(
                         transactionBuilder,
                         description,
                         budgetData,
-                        budgetDao,
+                        transactionDao,
                         userConfig,
                     ),
                 )
@@ -138,7 +153,7 @@ fun WithIo.allocateSpendingItemMenu(
     transactionBuilder: Transaction.Builder,
     description: String,
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    transactionDao: TransactionDao,
     userConfig: UserConfiguration,
 ): Menu =
     ScrollingSelectionMenu(
@@ -171,6 +186,27 @@ fun WithIo.allocateSpendingItemMenu(
             )
         },
     ) { menuSession: MenuSession, selectedCategoryAccount: CategoryAccount ->
+        showRecentRelevantTransactions(
+            transactionDao = transactionDao,
+            account = selectedCategoryAccount,
+            budgetData = budgetData,
+            label = "Recent expenditures:",
+        ) { transactionItem ->
+            val transaction = transactionItem
+                .transaction(
+                    budgetId = budgetData.id,
+                    accountIdToAccountMap = budgetData.accountIdToAccountMap,
+                )
+            ((transactionBuilder.realItemBuilders +
+                    transactionBuilder.chargeItemBuilders)
+                .map { it.account }
+                .toSet() intersect
+                    (transaction.realItems + transaction.chargeItems)
+                        .map { it.account }
+                        .toSet())
+                .isNotEmpty()
+        }
+
         val max = min(
             runningTotal,
             selectedCategoryAccount.balance +
@@ -227,14 +263,14 @@ fun WithIo.allocateSpendingItemMenu(
                         transactionBuilder,
                         description,
                         budgetData,
-                        budgetDao,
+                        transactionDao,
                         userConfig,
                     ),
                 )
             } else {
                 val transaction = transactionBuilder.build()
                 budgetData.commit(transaction)
-                budgetDao.transactionDao.commit(transaction, budgetData.id)
+                transactionDao.commit(transaction, budgetData.id)
                 outPrinter.important("Spending recorded")
             }
         } else {

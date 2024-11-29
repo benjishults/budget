@@ -310,14 +310,14 @@ class JdbcTransactionDao(
             // all cleared items must be on the same charge account that's getting the transfer
             require(
                 clearedItems.all {
-                    it.item.account == chargeAccount
+                    it.account == chargeAccount
                 },
             )
             // the amount of the clearedItems must be the same as the amount being transferred
             require(
                 clearedItems
                     .fold(BigDecimal.ZERO.setScale(2)) { sum, transactionItem: TransactionDao.ExtendedTransactionItem<ChargeAccount> ->
-                        sum + transactionItem.item.amount
+                        sum + transactionItem.amount
                     } ==
                         -billPayChargeTransactionItem.amount,
             )

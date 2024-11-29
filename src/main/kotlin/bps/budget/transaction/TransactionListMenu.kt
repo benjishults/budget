@@ -3,16 +3,15 @@ package bps.budget.transaction
 import bps.budget.model.Account
 import bps.budget.model.BudgetData
 import bps.budget.model.Transaction
+import bps.budget.model.TransactionItem
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.TransactionDao
 import bps.budget.ui.formatAsLocalDateTime
 import bps.console.app.MenuSession
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.OutPrinter
-import bps.console.menu.Menu
 import bps.console.menu.MenuItem
 import bps.console.menu.ScrollingSelectionWithContextMenu
-import bps.console.menu.item
 import kotlinx.datetime.TimeZone
 import java.math.BigDecimal
 import java.util.UUID
@@ -21,13 +20,13 @@ import kotlin.math.max
 private const val TRANSACTIONS_TABLE_HEADER = "    Time Stamp          | Amount     | Balance    | Description"
 
 /**
- * The default behavior after selecting an item is to show details.  Pass a value for [actOnSelectedItem] to override
- * that behavior.
+ * The default behavior after selecting an item is to show details.  Pass a value for [actOnSelectedItem]
+ * (and [prompt]) to override that behavior.
  */
-open class ManageTransactionsMenu<A : Account>(
+open class TransactionListMenu<A : Account>(
     private val budgetData: BudgetData,
     private val account: A,
-    private val budgetDao: BudgetDao,
+    private val transactionDao: TransactionDao,
     private val budgetId: UUID,
     private val accountIdToAccountMap: Map<UUID, Account>,
     private val timeZone: TimeZone,
@@ -70,13 +69,13 @@ open class ManageTransactionsMenu<A : Account>(
             "%s | %,10.2f | %,10.2f | %s",
             transactionTimestamp
                 .formatAsLocalDateTime(timeZone),
-            item.amount,
+            amount,
             accountBalanceAfterItem,
-            item.description ?: transactionDescription,
+            description ?: transactionDescription,
         )
     },
     itemListGenerator = { selectedLimit: Int, selectedOffset: Int ->
-        with(budgetDao.transactionDao) {
+        with(transactionDao) {
             fetchTransactionItemsInvolvingAccount(
                 account = account,
                 limit = selectedLimit,
@@ -100,14 +99,14 @@ open class ManageTransactionsMenu<A : Account>(
     override fun List<TransactionDao.ExtendedTransactionItem<A>>.produceCurrentContext(): BigDecimal =
         lastOrNull()
             ?.run {
-                accountBalanceAfterItem!! - item.amount
+                accountBalanceAfterItem!! - amount
             }
             ?: account.balance
 
-    override fun nextPageMenuProducer(): ManageTransactionsMenu<A> =
-        ManageTransactionsMenu(
+    override fun nextPageMenuProducer(): TransactionListMenu<A> =
+        TransactionListMenu(
             account = account,
-            budgetDao = budgetDao,
+            transactionDao = transactionDao,
             budgetId = budgetId,
             accountIdToAccountMap = accountIdToAccountMap,
             timeZone = timeZone,
@@ -122,10 +121,10 @@ open class ManageTransactionsMenu<A : Account>(
             budgetData = budgetData,
         )
 
-    override fun previousPageMenuProducer(): ManageTransactionsMenu<A> =
-        ManageTransactionsMenu(
+    override fun previousPageMenuProducer(): TransactionListMenu<A> =
+        TransactionListMenu(
             account = account,
-            budgetDao = budgetDao,
+            transactionDao = transactionDao,
             budgetId = budgetId,
             accountIdToAccountMap = accountIdToAccountMap,
             timeZone = timeZone,
@@ -156,23 +155,29 @@ object ViewTransactionFixture {
                 append("\n")
                 append(transaction.description)
                 append("\n")
-                appendItems("Category Account", transaction.categoryItems)
-                appendItems("Real Items:", transaction.realItems)
-                appendItems("Credit Card Items:", transaction.chargeItems)
-                appendItems("Draft Items:", transaction.draftItems)
+                appendItems("Category", transaction.categoryItems)
+                appendItems("Real", transaction.realItems)
+                appendItems("Credit Card", transaction.chargeItems)
+                appendItems("Draft", transaction.draftItems)
             },
         )
     }
 
     fun StringBuilder.appendItems(
         accountColumnLabel: String,
-        items: List<Transaction.Item<*>>,
+        items: List<TransactionItem<*>>,
     ) {
         if (items.isNotEmpty()) {
-            append(String.format("%16s | Amount     | Description\n", accountColumnLabel))
+            append(String.format("%-16s | Amount     | Description\n", accountColumnLabel))
             items
-                .sorted()
-                .forEach { transactionItem: Transaction.Item<*> ->
+                .sortedWith { item1, item2 ->
+                    when (item1) {
+                        is Transaction.Item<*> -> item1.compareTo(item2 as Transaction.Item<*>)
+                        is TransactionDao.ExtendedTransactionItem<*> -> item1.compareTo(item2 as TransactionDao.ExtendedTransactionItem<*>)
+                        else -> throw IllegalArgumentException()
+                    }
+                }
+                .forEach { transactionItem: TransactionItem<*> ->
                     append(
                         String.format(
                             "%-16s | %10.2f |%s",

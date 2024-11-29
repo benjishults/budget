@@ -4,6 +4,7 @@ import bps.budget.model.Account
 import bps.budget.model.ChargeAccount
 import bps.budget.model.DraftAccount
 import bps.budget.model.Transaction
+import bps.budget.model.TransactionItem
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
 import java.util.UUID
@@ -79,7 +80,8 @@ interface TransactionDao {
         val transactionTimestamp: Instant,
         val transactionDao: TransactionDao,
         val budgetId: UUID,
-    ) : Comparable<ExtendedTransactionItem<*>> {
+    ) : TransactionItem<A>,
+        Comparable<ExtendedTransactionItem<*>> {
 
         /**
          * The first time this is referenced, a call will be made to the DB to fetch the entire transaction.
@@ -106,6 +108,11 @@ interface TransactionDao {
                         else -> it
                     }
                 }
+
+        override val amount: BigDecimal = item.amount
+        override val description: String? = item.description
+        override val account: A = item.account
+        override val timestamp: Instant = transactionTimestamp
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true

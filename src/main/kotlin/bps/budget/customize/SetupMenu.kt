@@ -45,14 +45,13 @@ data class DistinctNameValidator(val existingAccounts: List<Account>) : StringVa
 fun WithIo.manageAccountsMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
-    authenticatedUser: AuthenticatedUser,
     userConfig: UserConfiguration,
     clock: Clock,
 ) =
     Menu {
         add(
             takeAction("Create a New Category") {
-                createCategory(budgetData, budgetDao)
+                createCategory(budgetData, budgetDao.accountDao)
             },
         )
         add(
@@ -72,7 +71,7 @@ fun WithIo.manageAccountsMenu(
         )
         add(
             pushMenu("Deactivate an Account") {
-                deactivateAccount(budgetData, budgetDao, userConfig)
+                deactivateAccount(budgetData, budgetDao.accountDao, userConfig)
             },
         )
         // TODO https://github.com/benjishults/budget/issues/6
@@ -169,7 +168,7 @@ fun WithIo.editAccountDetails(
 
 private fun WithIo.createCategory(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    accountDao: AccountDao,
 ) {
     val name: String =
         SimplePrompt<String>(
@@ -177,7 +176,7 @@ private fun WithIo.createCategory(
             inputReader,
             outPrinter,
             validator = NotInListStringValidator(
-                budgetDao.accountDao.getAllAccountNamesForBudget(budgetData.id),
+                accountDao.getAllAccountNamesForBudget(budgetData.id),
                 "an existing account name",
             ),
         )
@@ -196,7 +195,7 @@ private fun WithIo.createCategory(
                 ?.trim()
                 ?: throw TryAgainAtMostRecentMenuException("Description for the new category not entered.")
         val categoryAccount =
-            budgetDao.accountDao.createCategoryAccountOrNull(name, description, budgetId = budgetData.id)
+            accountDao.createCategoryAccountOrNull(name, description, budgetId = budgetData.id)
         if (categoryAccount != null) {
             budgetData.addCategoryAccount(categoryAccount)
             outPrinter.important("Category '$name' created")
@@ -208,14 +207,14 @@ private fun WithIo.createCategory(
 
 private fun WithIo.deactivateAccount(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    accountDao: AccountDao,
     userConfig: UserConfiguration,
 ) = Menu({ "What kind af account do you want to deactivate?" }) {
     add(
         pushMenu("Category Account") {
             deactivateCategoryAccountMenu(
                 budgetData,
-                budgetDao,
+                accountDao,
                 userConfig.numberOfItemsInScrollingList,
                 outPrinter,
             )
@@ -225,7 +224,7 @@ private fun WithIo.deactivateAccount(
         pushMenu("Real Account") {
             deactivateRealAccountMenu(
                 budgetData,
-                budgetDao,
+                accountDao,
                 userConfig.numberOfItemsInScrollingList,
                 outPrinter,
             )
@@ -235,7 +234,7 @@ private fun WithIo.deactivateAccount(
         pushMenu("Charge Account") {
             deactivateChargeAccountMenu(
                 budgetData,
-                budgetDao,
+                accountDao,
                 userConfig.numberOfItemsInScrollingList,
                 outPrinter,
             )
@@ -245,7 +244,7 @@ private fun WithIo.deactivateAccount(
         pushMenu("Draft Account") {
             deactivateDraftAccountMenu(
                 budgetData,
-                budgetDao,
+                accountDao,
                 userConfig.numberOfItemsInScrollingList,
                 outPrinter,
             )
@@ -413,13 +412,13 @@ private fun WithIo.createAndSaveIncomeTransaction(
 
 fun deactivateCategoryAccountMenu(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    accountDao: AccountDao,
     limit: Int,
     outPrinter: OutPrinter,
 ): Menu =
     deactivateAccountMenu(
         budgetData,
-        budgetDao,
+        accountDao,
         limit,
         outPrinter,
     ) {
@@ -431,13 +430,13 @@ fun deactivateCategoryAccountMenu(
 
 fun deactivateRealAccountMenu(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    accountDao: AccountDao,
     limit: Int,
     outPrinter: OutPrinter,
 ): Menu =
     deactivateAccountMenu(
         budgetData,
-        budgetDao,
+        accountDao,
         limit,
         outPrinter,
     ) {
@@ -446,13 +445,13 @@ fun deactivateRealAccountMenu(
 
 fun deactivateChargeAccountMenu(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    accountDao: AccountDao,
     limit: Int,
     outPrinter: OutPrinter,
 ): Menu =
     deactivateAccountMenu(
         budgetData,
-        budgetDao,
+        accountDao,
         limit,
         outPrinter,
     ) {
@@ -461,13 +460,13 @@ fun deactivateChargeAccountMenu(
 
 fun deactivateDraftAccountMenu(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    accountDao: AccountDao,
     limit: Int,
     outPrinter: OutPrinter,
 ): Menu =
     deactivateAccountMenu(
         budgetData,
-        budgetDao,
+        accountDao,
         limit,
         outPrinter,
     ) {
@@ -476,7 +475,7 @@ fun deactivateDraftAccountMenu(
 
 fun <T : Account> deactivateAccountMenu(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    accountDao: AccountDao,
     limit: Int,
     outPrinter: OutPrinter,
     deleteFrom: () -> List<T>,
@@ -494,6 +493,6 @@ fun <T : Account> deactivateAccountMenu(
         labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
     ) { _: MenuSession, account: T ->
         budgetData.deleteAccount(account)
-        budgetDao.accountDao.deactivateAccount(account)
+        accountDao.deactivateAccount(account)
         outPrinter.important("Deactivated account '${account.name}'")
     }

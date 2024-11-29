@@ -87,19 +87,19 @@ class JdbcDaoTest : FreeSpec() {
                 extendedTransactionItems[0].asClue {
                     it.accountBalanceAfterItem shouldBe
                             1000.toBigDecimal().setScale(2)
-                    it.item.amount shouldBe
+                    it.amount shouldBe
                             5.toBigDecimal().setScale(2)
                 }
                 extendedTransactionItems[1].asClue {
                     it.accountBalanceAfterItem shouldBe
                             995.toBigDecimal().setScale(2)
-                    it.item.amount shouldBe
+                    it.amount shouldBe
                             6.toBigDecimal().setScale(2)
                 }
                 extendedTransactionItems[2].asClue {
                     it.accountBalanceAfterItem shouldBe
                             (995 - 6).toBigDecimal().setScale(2)
-                    it.item.amount shouldBe
+                    it.amount shouldBe
                             7.toBigDecimal().setScale(2)
                 }
                 every { resultSet.next() } returns
@@ -125,19 +125,19 @@ class JdbcDaoTest : FreeSpec() {
                 secondPage[0].asClue {
                     it.accountBalanceAfterItem shouldBe
                             (995 - (6 + 7)).toBigDecimal().setScale(2)
-                    it.item.amount shouldBe
+                    it.amount shouldBe
                             8.toBigDecimal().setScale(2)
                 }
                 secondPage[1].asClue {
                     it.accountBalanceAfterItem shouldBe
                             (995 - (6 + 7 + 8)).toBigDecimal().setScale(2)
-                    it.item.amount shouldBe
+                    it.amount shouldBe
                             9.toBigDecimal().setScale(2)
                 }
                 secondPage[2].asClue {
                     it.accountBalanceAfterItem shouldBe
                             (995 - (6 + 7 + 8 + 9)).toBigDecimal().setScale(2)
-                    it.item.amount shouldBe
+                    it.amount shouldBe
                             10.toBigDecimal().setScale(2)
                 }
             }

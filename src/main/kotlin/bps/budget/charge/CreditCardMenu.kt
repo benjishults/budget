@@ -13,6 +13,7 @@ import bps.budget.toCurrencyAmountOrNull
 import bps.budget.transaction.ViewTransactionFixture
 import bps.budget.transaction.ViewTransactionsWithoutBalancesMenu
 import bps.budget.transaction.allocateSpendingItemMenu
+import bps.budget.transaction.showRecentRelevantTransactions
 import bps.console.app.MenuSession
 import bps.console.app.TryAgainAtMostRecentMenuException
 import bps.console.inputs.NonNegativeStringValidator
@@ -31,7 +32,7 @@ import java.math.BigDecimal
 
 fun WithIo.creditCardMenu(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    transactionDao: TransactionDao,
     userConfig: UserConfiguration,
     clock: Clock,
 ): Menu =
@@ -50,7 +51,7 @@ fun WithIo.creditCardMenu(
                         spendOnACreditCard(
                             budgetData,
                             clock,
-                            budgetDao,
+                            transactionDao,
                             userConfig,
                             menuSession,
                             chargeAccount,
@@ -66,7 +67,7 @@ fun WithIo.creditCardMenu(
                             budgetData,
                             clock,
                             chargeAccount,
-                            budgetDao,
+                            transactionDao,
                         )
                     },
                 )
@@ -74,7 +75,7 @@ fun WithIo.creditCardMenu(
                     pushMenu("View unpaid transactions on '${chargeAccount.name}'") {
                         ViewTransactionsWithoutBalancesMenu(
                             account = chargeAccount,
-                            budgetDao = budgetDao,
+                            transactionDao = transactionDao,
                             budgetId = budgetData.id,
                             accountIdToAccountMap = budgetData.accountIdToAccountMap,
                             timeZone = budgetData.timeZone,
@@ -109,7 +110,7 @@ private fun WithIo.payCreditCardBill(
     budgetData: BudgetData,
     clock: Clock,
     chargeAccount: ChargeAccount,
-    budgetDao: BudgetDao,
+    transactionDao: TransactionDao,
 ) {
     val amountOfBill: BigDecimal =
         SimplePrompt(
@@ -165,7 +166,7 @@ private fun WithIo.payCreditCardBill(
                         billPayTransaction = billPayTransaction,
                         chargeAccount = chargeAccount,
                         budgetData = budgetData,
-                        budgetDao = budgetDao,
+                        transactionDao = transactionDao,
                         userConfig = userConfig,
                         menuSession = menuSession,
                         clock = clock,
@@ -186,7 +187,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBill(
     billPayTransaction: Transaction,
     chargeAccount: ChargeAccount,
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    transactionDao: TransactionDao,
     userConfig: UserConfiguration,
     menuSession: MenuSession,
     clock: Clock,
@@ -197,7 +198,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBill(
     chargeAccount = chargeAccount,
     selectedItems = emptyList(),
     budgetData = budgetData,
-    budgetDao = budgetDao,
+    transactionDao = transactionDao,
     userConfig = userConfig,
     menuSession = menuSession,
     clock = clock,
@@ -210,13 +211,13 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
     chargeAccount: ChargeAccount,
     selectedItems: List<TransactionDao.ExtendedTransactionItem<ChargeAccount>>,
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    transactionDao: TransactionDao,
     userConfig: UserConfiguration,
     menuSession: MenuSession,
     clock: Clock,
 ): Menu = ViewTransactionsWithoutBalancesMenu(
     account = chargeAccount,
-    budgetDao = budgetDao,
+    transactionDao = transactionDao,
     budgetId = budgetData.id,
     accountIdToAccountMap = budgetData.accountIdToAccountMap,
     timeZone = budgetData.timeZone,
@@ -225,7 +226,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
             amountOfBill +
                     selectedItems
                         .fold(BigDecimal.ZERO) { sum, item ->
-                            sum + item.item.amount
+                            sum + item.amount
                         }
         }"
     },
@@ -238,22 +239,22 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
             spendOnACreditCard(
                 budgetData,
                 clock,
-                budgetDao,
+                transactionDao,
                 userConfig,
                 menuSession,
                 chargeAccount,
             )
         },
     ),
-) { menuSession: MenuSession, chargeTransactionItem: TransactionDao.ExtendedTransactionItem<ChargeAccount> ->
+) { _: MenuSession, chargeTransactionItem: TransactionDao.ExtendedTransactionItem<ChargeAccount> ->
     val allSelectedItems: List<TransactionDao.ExtendedTransactionItem<ChargeAccount>> =
         selectedItems + chargeTransactionItem
-    val remainingToBeCovered: BigDecimal = runningTotal + chargeTransactionItem.item.amount
+    val remainingToBeCovered: BigDecimal = runningTotal + chargeTransactionItem.amount
     when {
         remainingToBeCovered == BigDecimal.ZERO.setScale(2) -> {
             menuSession.pop()
             budgetData.commit(billPayTransaction)
-            budgetDao.transactionDao.commitCreditCardPayment(
+            transactionDao.commitCreditCardPayment(
                 allSelectedItems,
                 billPayTransaction,
                 budgetData.id,
@@ -275,7 +276,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
                     chargeAccount = chargeAccount,
                     selectedItems = allSelectedItems,
                     budgetData = budgetData,
-                    budgetDao = budgetDao,
+                    transactionDao = transactionDao,
                     userConfig = userConfig,
                     menuSession = menuSession,
                     clock = clock,
@@ -288,11 +289,17 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
 private fun WithIo.spendOnACreditCard(
     budgetData: BudgetData,
     clock: Clock,
-    budgetDao: BudgetDao,
+    transactionDao: TransactionDao,
     userConfig: UserConfiguration,
     menuSession: MenuSession,
     chargeAccount: ChargeAccount,
 ) {
+    showRecentRelevantTransactions(
+        transactionDao = transactionDao,
+        account = chargeAccount,
+        budgetData = budgetData,
+        label = "Recent expenditures:",
+    )
     // TODO enter check number if checking account
     // NOTE this is why we have separate draft accounts -- to easily know the real vs draft balance
     val amount: BigDecimal =
@@ -331,7 +338,7 @@ private fun WithIo.spendOnACreditCard(
                 transactionBuilder,
                 description,
                 budgetData,
-                budgetDao,
+                transactionDao,
                 userConfig,
             ),
         )

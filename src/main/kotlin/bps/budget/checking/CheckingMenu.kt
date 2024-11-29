@@ -11,6 +11,7 @@ import bps.budget.persistence.UserConfiguration
 import bps.budget.toCurrencyAmountOrNull
 import bps.budget.transaction.ViewTransactionsWithoutBalancesMenu
 import bps.budget.transaction.allocateSpendingItemMenu
+import bps.budget.transaction.showRecentRelevantTransactions
 import bps.console.app.TryAgainAtMostRecentMenuException
 import bps.console.inputs.InRangeInclusiveStringValidator
 import bps.console.inputs.SimplePrompt
@@ -28,7 +29,7 @@ import java.math.BigDecimal
 
 fun WithIo.checksMenu(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    transactionDao: TransactionDao,
     userConfig: UserConfiguration,
     clock: Clock,
 ): Menu =
@@ -42,6 +43,13 @@ fun WithIo.checksMenu(
             Menu {
                 add(
                     takeAction("Write a check on '${draftAccount.name}'") {
+                        showRecentRelevantTransactions(
+                            transactionDao = transactionDao,
+                            account = draftAccount,
+                            budgetData = budgetData,
+                            label = "Recent checks:",
+                        )
+
                         // TODO enter check number if checking account
                         // NOTE this is why we have separate draft accounts -- to easily know the real vs draft balance
                         val max = draftAccount.realCompanion.balance - draftAccount.balance
@@ -88,7 +96,7 @@ fun WithIo.checksMenu(
                                     transactionBuilder,
                                     description,
                                     budgetData,
-                                    budgetDao,
+                                    transactionDao,
                                     userConfig,
                                 ),
                             )
@@ -104,7 +112,7 @@ fun WithIo.checksMenu(
                             header = { "Select the check that cleared on '${draftAccount.name}'" },
                             prompt = { "Select the check that cleared: " },
                             account = draftAccount,
-                            budgetDao = budgetDao,
+                            transactionDao = transactionDao,
                             budgetId = budgetData.id,
                             accountIdToAccountMap = budgetData.accountIdToAccountMap,
                             timeZone = budgetData.timeZone,
@@ -125,18 +133,18 @@ fun WithIo.checksMenu(
                                     .apply {
                                         with(draftAccount) {
                                             addItemBuilderTo(
-                                                -draftTransactionItem.item.amount,
+                                                -draftTransactionItem.amount,
                                                 this@apply.description,
                                                 DraftStatus.clearing,
                                             )
                                         }
-                                        with(draftTransactionItem.item.account.realCompanion) {
-                                            addItemBuilderTo(-draftTransactionItem.item.amount, this@apply.description)
+                                        with(draftTransactionItem.account.realCompanion) {
+                                            addItemBuilderTo(-draftTransactionItem.amount, this@apply.description)
                                         }
                                     }
                                     .build()
                             budgetData.commit(clearingTransaction)
-                            budgetDao.transactionDao.clearCheck(
+                            transactionDao.clearCheck(
                                 draftTransactionItem
                                     .item
                                     .build(

@@ -3,9 +3,11 @@ package bps.budget.transaction
 import bps.budget.WithIo
 import bps.budget.model.Account
 import bps.budget.model.BudgetData
+import bps.budget.persistence.AccountDao
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
+import bps.budget.ui.formatAsLocalDateTime
 import bps.console.app.MenuSession
 import bps.console.inputs.userSaysYes
 import bps.console.menu.Menu
@@ -14,7 +16,8 @@ import bps.console.menu.item
 
 fun WithIo.manageTransactions(
     budgetData: BudgetData,
-    budgetDao: BudgetDao,
+    transactionDao: TransactionDao,
+    accountDao: AccountDao,
     userConfig: UserConfiguration,
 ): Menu =
     ScrollingSelectionMenu(
@@ -33,10 +36,10 @@ fun WithIo.manageTransactions(
         },
     ) { menuSession: MenuSession, selectedAccount: Account ->
         menuSession.push(
-            ManageTransactionsMenu(
+            TransactionListMenu(
                 account = selectedAccount,
                 limit = userConfig.numberOfItemsInScrollingList,
-                budgetDao = budgetDao,
+                transactionDao = transactionDao,
                 budgetId = budgetData.id,
                 accountIdToAccountMap = budgetData.accountIdToAccountMap,
                 timeZone = budgetData.timeZone,
@@ -45,19 +48,19 @@ fun WithIo.manageTransactions(
                 extraItems = listOf(
                     item("Delete a transaction", "d") {
                         menuSession.push(
-                            ManageTransactionsMenu(
+                            TransactionListMenu(
                                 header = { "Choose a transaction to DELETE" },
                                 prompt = { "Select a transaction to DELETE: " },
                                 account = selectedAccount,
                                 limit = userConfig.numberOfItemsInScrollingList,
-                                budgetDao = budgetDao,
+                                transactionDao = transactionDao,
                                 budgetId = budgetData.id,
                                 accountIdToAccountMap = budgetData.accountIdToAccountMap,
                                 timeZone = budgetData.timeZone,
                                 outPrinter = outPrinter,
                                 budgetData = budgetData,
                             ) { _: MenuSession, extendedTransactionItem: TransactionDao.ExtendedTransactionItem<Account> ->
-                                with(budgetDao.accountDao) {
+                                with(accountDao) {
                                     with(ViewTransactionFixture) {
                                         outPrinter.showTransactionDetailsAction(
                                             extendedTransactionItem.transaction(
@@ -68,7 +71,7 @@ fun WithIo.manageTransactions(
                                         )
                                     }
                                     if (userSaysYes("Are you sure you want to DELETE that transaction?")) {
-                                        budgetDao.transactionDao.deleteTransaction(
+                                        transactionDao.deleteTransaction(
                                             transactionId = extendedTransactionItem.transactionId,
                                             budgetId = budgetData.id,
                                             accountIdToAccountMap = budgetData.accountIdToAccountMap,
@@ -85,3 +88,32 @@ fun WithIo.manageTransactions(
             ),
         )
     }
+
+const val NUMBER_OF_TRANSACTION_ITEMS_TO_SHOW_BEFORE_PROMPT = 6
+
+fun WithIo.showRecentRelevantTransactions(
+    transactionDao: TransactionDao,
+    account: Account,
+    budgetData: BudgetData,
+    label: String = "Recent transactions",
+    filter: (TransactionDao.ExtendedTransactionItem<*>) -> Boolean = { true },
+) {
+    transactionDao
+        .fetchTransactionItemsInvolvingAccount(account, limit = 500)
+        .filter(filter)
+        .take(NUMBER_OF_TRANSACTION_ITEMS_TO_SHOW_BEFORE_PROMPT)
+        .sorted()
+        .takeIf { it.isNotEmpty() }
+        ?.also { outPrinter("$label\n") }
+        ?.forEach { item: TransactionDao.ExtendedTransactionItem<*> ->
+            outPrinter(
+                String.format(
+                    "%s | %,10.2f | %s\n",
+                    item.transactionTimestamp
+                        .formatAsLocalDateTime(budgetData.timeZone),
+                    item.amount,
+                    item.description ?: item.transactionDescription,
+                ),
+            )
+        }
+}
