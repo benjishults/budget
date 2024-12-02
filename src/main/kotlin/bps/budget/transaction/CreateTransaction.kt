@@ -1,6 +1,7 @@
 package bps.budget.transaction
 
 import bps.budget.WithIo
+import bps.budget.consistency.commitTransactionConsistently
 import bps.budget.model.min
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
@@ -268,8 +269,7 @@ fun WithIo.allocateSpendingItemMenu(
                 )
             } else {
                 val transaction = transactionBuilder.build()
-                budgetData.commit(transaction)
-                transactionDao.commit(transaction, budgetData.id)
+                commitTransactionConsistently(transaction, transactionDao, budgetData)
                 outPrinter.important("Spending recorded")
             }
         } else {

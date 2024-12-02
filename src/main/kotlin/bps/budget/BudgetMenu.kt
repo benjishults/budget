@@ -61,7 +61,7 @@ fun WithIo.budgetMenu(
         )
         add(
             pushMenu(writeOrClearChecksLabel, "ch") {
-                checksMenu(budgetData, budgetDao.transactionDao, userConfig, clock)
+                checksMenu(budgetData, budgetDao.transactionDao, budgetDao.accountDao, userConfig, clock)
             },
         )
         add(

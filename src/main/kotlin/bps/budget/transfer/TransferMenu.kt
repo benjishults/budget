@@ -1,6 +1,7 @@
 package bps.budget.transfer
 
 import bps.budget.WithIo
+import bps.budget.consistency.commitTransactionConsistently
 import bps.budget.model.Account
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
@@ -83,8 +84,7 @@ fun WithIo.transferMenu(
                         }
                     }
                     .build()
-                budgetData.commit(transferTransaction)
-                transactionDao.commit(transferTransaction, budgetData.id)
+                commitTransactionConsistently(transferTransaction, transactionDao, budgetData)
                 outPrinter.important("Transfer recorded")
             } else {
                 outPrinter.important("Must transfer a positive amount.")
