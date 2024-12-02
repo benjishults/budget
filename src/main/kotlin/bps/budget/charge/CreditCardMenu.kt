@@ -1,6 +1,7 @@
 package bps.budget.charge
 
 import bps.budget.WithIo
+import bps.budget.consistency.commitCreditCardPaymentConsistently
 import bps.budget.model.BudgetData
 import bps.budget.model.ChargeAccount
 import bps.budget.model.DraftStatus
@@ -252,12 +253,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
     when {
         remainingToBeCovered == BigDecimal.ZERO.setScale(2) -> {
             menuSession.pop()
-            budgetData.commit(billPayTransaction)
-            transactionDao.commitCreditCardPayment(
-                allSelectedItems,
-                billPayTransaction,
-                budgetData.id,
-            )
+            commitCreditCardPaymentConsistently(billPayTransaction, allSelectedItems, transactionDao, budgetData)
             outPrinter.important("Payment recorded!")
             menuSession.pop()
         }

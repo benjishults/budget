@@ -1,6 +1,7 @@
 package bps.budget.allowance
 
 import bps.budget.WithIo
+import bps.budget.consistency.commitTransactionConsistently
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.Transaction
@@ -93,8 +94,7 @@ fun WithIo.makeAllowancesSelectionMenu(
                     }
                 }
                 .build()
-            budgetData.commit(allocate)
-            transactionDao.commit(allocate, budgetData.id)
+            commitTransactionConsistently(allocate, transactionDao, budgetData)
             outPrinter.important("Allowance recorded")
         } else {
             outPrinter.important("Must allow a positive amount.")

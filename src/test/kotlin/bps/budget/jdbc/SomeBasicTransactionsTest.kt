@@ -1,6 +1,7 @@
 package bps.budget.jdbc
 
 import bps.budget.auth.AuthenticatedUser
+import bps.budget.consistency.commitTransactionConsistently
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftAccount
@@ -81,8 +82,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                             }
                         }
                         .build()
-                budgetData.commit(income)
-                jdbcDao.transactionDao.commit(income, budgetData.id)
+                commitTransactionConsistently(income, jdbcDao.transactionDao, budgetData)
             }
             "allocate to food" {
                 val amount = BigDecimal("300.00")
@@ -105,8 +105,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                             }
                         }
                         .build()
-                budgetData.commit(allocate)
-                jdbcDao.transactionDao.commit(allocate, budgetData.id)
+                commitTransactionConsistently(allocate, jdbcDao.transactionDao, budgetData)
             }
             "write a check for food" {
                 val amount = BigDecimal("100.00")
@@ -131,8 +130,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                         }
                     }
                     .build()
-                budgetData.commit(writeCheck)
-                jdbcDao.transactionDao.commit(writeCheck, budgetData.id)
+                commitTransactionConsistently(writeCheck, jdbcDao.transactionDao, budgetData)
             }
             "check balances after writing check" {
                 budgetData.realAccounts.forEach { realAccount: RealAccount ->
@@ -195,8 +193,7 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
                         }
                     }
                     .build()
-                budgetData.commit(writeCheck)
-                jdbcDao.transactionDao.commit(writeCheck, budgetData.id)
+                commitTransactionConsistently(writeCheck, jdbcDao.transactionDao, budgetData)
             }
             "check balances after check clears" {
                 checkBalancesAfterCheckClears(budgetData)

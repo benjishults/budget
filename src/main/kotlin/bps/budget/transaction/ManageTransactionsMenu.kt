@@ -1,6 +1,7 @@
 package bps.budget.transaction
 
 import bps.budget.WithIo
+import bps.budget.consistency.deleteTransactionConsistently
 import bps.budget.model.Account
 import bps.budget.model.BudgetData
 import bps.budget.persistence.AccountDao
@@ -8,7 +9,6 @@ import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.ui.formatAsLocalDateTime
 import bps.console.app.MenuSession
-import bps.console.inputs.userSaysYes
 import bps.console.menu.Menu
 import bps.console.menu.ScrollingSelectionMenu
 import bps.console.menu.item
@@ -59,27 +59,12 @@ fun WithIo.manageTransactions(
                                 outPrinter = outPrinter,
                                 budgetData = budgetData,
                             ) { _: MenuSession, extendedTransactionItem: TransactionDao.ExtendedTransactionItem<Account> ->
-                                with(accountDao) {
-                                    with(ViewTransactionFixture) {
-                                        outPrinter.showTransactionDetailsAction(
-                                            extendedTransactionItem.transaction(
-                                                budgetData.id,
-                                                budgetData.accountIdToAccountMap,
-                                            ),
-                                            budgetData.timeZone,
-                                        )
-                                    }
-                                    if (userSaysYes("Are you sure you want to DELETE that transaction?")) {
-                                        transactionDao.deleteTransaction(
-                                            transactionId = extendedTransactionItem.transactionId,
-                                            budgetId = budgetData.id,
-                                            accountIdToAccountMap = budgetData.accountIdToAccountMap,
-                                        )
-                                            .updateBalances(budgetId = budgetData.id)
-                                        budgetData.undoTransactionForItem(extendedTransactionItem)
-                                    }
-                                    outPrinter.important("Transaction deleted")
-                                }
+                                deleteTransactionConsistently(
+                                    extendedTransactionItem,
+                                    transactionDao,
+                                    accountDao,
+                                    budgetData,
+                                )
                             },
                         )
                     },

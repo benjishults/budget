@@ -1,6 +1,7 @@
 package bps.budget.income
 
 import bps.budget.WithIo
+import bps.budget.consistency.commitTransactionConsistently
 import bps.budget.model.BudgetData
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
@@ -72,10 +73,11 @@ fun WithIo.recordIncomeSelectionMenu(
                 .getResult()
                 ?: throw TryAgainAtMostRecentMenuException("No description entered.")
         val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
-        val incomeTransaction: Transaction =
-            createIncomeTransaction(description, timestamp, amount, budgetData, realAccount)
-        budgetData.commit(incomeTransaction)
-        transactionDao.commit(incomeTransaction, budgetData.id)
+        commitTransactionConsistently(
+            createIncomeTransaction(description, timestamp, amount, budgetData, realAccount),
+            transactionDao,
+            budgetData,
+        )
         outPrinter.important("Income recorded")
     }
 }

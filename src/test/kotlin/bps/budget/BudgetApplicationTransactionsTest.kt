@@ -733,8 +733,9 @@ Spending recorded
                         """
                          | 1. Write a check on 'Checking'
                          | 2. Record check cleared on 'Checking'
-                         | 3. Back (b)
-                         | 4. Quit (q)
+                         | 3. Delete a check written on 'Checking'
+                         | 4. Back (b)
+                         | 5. Quit (q)
                          |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -826,8 +827,9 @@ Spending recorded
                         """
                          | 1. Write a check on 'Checking'
                          | 2. Record check cleared on 'Checking'
-                         | 3. Back (b)
-                         | 4. Quit (q)
+                         | 3. Delete a check written on 'Checking'
+                         | 4. Back (b)
+                         | 5. Quit (q)
                          |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -840,8 +842,9 @@ Spending recorded
                         """
                          | 1. Write a check on 'Checking'
                          | 2. Record check cleared on 'Checking'
-                         | 3. Back (b)
-                         | 4. Quit (q)
+                         | 3. Delete a check written on 'Checking'
+                         | 4. Back (b)
+                         | 5. Quit (q)
                          |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -850,13 +853,13 @@ Spending recorded
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |Select the check that cleared on 'Checking'
+                        |Select the check that CLEARED on 'Checking'
                         |    Time Stamp          | Amount     | Description
                         | 1. 2024-08-08 19:00:06 |     300.00 | SuperMarket
                         | 2. Back (b)
                         | 3. Quit (q)
                         |""".trimMargin(),
-                        "Select the check that cleared: ",
+                        "Select the check that CLEARED: ",
                         "Did the check clear just now [Y]? ",
                     ),
                     toInput = listOf("1", ""),
@@ -870,12 +873,12 @@ Spending recorded
                             |
                         """.trimMargin(),
                         """
-                        |Select the check that cleared on 'Checking'
+                        |Select the check that CLEARED on 'Checking'
                         |    Time Stamp          | Amount     | Description
                         | 1. Back (b)
                         | 2. Quit (q)
                         |""".trimMargin(),
-                        "Select the check that cleared: ",
+                        "Select the check that CLEARED: ",
                     ),
                     toInput = listOf("b"),
                 )
@@ -884,8 +887,9 @@ Spending recorded
                         """
                          | 1. Write a check on 'Checking'
                          | 2. Record check cleared on 'Checking'
-                         | 3. Back (b)
-                         | 4. Quit (q)
+                         | 3. Delete a check written on 'Checking'
+                         | 4. Back (b)
+                         | 5. Quit (q)
                          |
                     """.trimMargin(),
                         "Enter selection: ",
