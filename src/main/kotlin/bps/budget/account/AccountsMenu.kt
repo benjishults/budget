@@ -1,4 +1,4 @@
-package bps.budget.customize
+package bps.budget.account
 
 import bps.budget.WithIo
 import bps.budget.income.createIncomeTransaction

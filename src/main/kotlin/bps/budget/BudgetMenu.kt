@@ -3,7 +3,7 @@ package bps.budget
 import bps.budget.allowance.makeAllowancesSelectionMenu
 import bps.budget.charge.creditCardMenu
 import bps.budget.checking.checksMenu
-import bps.budget.customize.manageAccountsMenu
+import bps.budget.account.manageAccountsMenu
 import bps.budget.income.recordIncomeSelectionMenu
 import bps.budget.model.BudgetData
 import bps.budget.persistence.BudgetDao
