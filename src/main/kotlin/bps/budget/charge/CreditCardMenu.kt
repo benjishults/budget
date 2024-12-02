@@ -6,10 +6,9 @@ import bps.budget.model.ChargeAccount
 import bps.budget.model.DraftStatus
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
-import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
-import bps.budget.toCurrencyAmountOrNull
+import bps.budget.model.toCurrencyAmountOrNull
 import bps.budget.transaction.ViewTransactionFixture
 import bps.budget.transaction.ViewTransactionsWithoutBalancesMenu
 import bps.budget.transaction.allocateSpendingItemMenu

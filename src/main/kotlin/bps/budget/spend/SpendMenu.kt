@@ -3,10 +3,9 @@ package bps.budget.spend
 import bps.budget.WithIo
 import bps.budget.model.BudgetData
 import bps.budget.model.Transaction
-import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
-import bps.budget.toCurrencyAmountOrNull
+import bps.budget.model.toCurrencyAmountOrNull
 import bps.budget.transaction.chooseRealAccountsThenCategories
 import bps.console.app.TryAgainAtMostRecentMenuException
 import bps.console.inputs.NonBlankStringValidator

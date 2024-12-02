@@ -73,7 +73,7 @@ class BasicSetupInteractionsTest : FreeSpec(),
                             | 1. $recordIncomeLabel (i)
                             | 2. $makeAllowancesLabel (a)
                             | 3. $recordSpendingLabel (s)
-                            | 4. $manageTransactionsLabel (v)
+                            | 4. $manageTransactionsLabel (t)
                             | 5. $writeOrClearChecksLabel (ch)
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)

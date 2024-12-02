@@ -6,7 +6,7 @@ import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
-import bps.budget.toCurrencyAmountOrNull
+import bps.budget.model.toCurrencyAmountOrNull
 import bps.budget.transaction.showRecentRelevantTransactions
 import bps.console.app.MenuSession
 import bps.console.app.TryAgainAtMostRecentMenuException

@@ -116,7 +116,7 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 //                            | 1. $recordIncome (i)
 //                            | 2. $makeAllowances (a)
 //                            | 3. $recordSpending (s)
-//                            | 4. View History (v)
+//                            | 4. View History (t)
 //                            | 5. $recordDrafts
 //                            | 6. $clearDrafts
 //                            | 7. $transfer (x)
@@ -188,7 +188,7 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 //                            | 1. $recordIncome (i)
 //                            | 2. $makeAllowances (a)
 //                            | 3. $recordSpending (s)
-//                            | 4. View History (v)
+//                            | 4. View History (t)
 //                            | 5. $recordDrafts
 //                            | 6. $clearDrafts
 //                            | 7. $transfer (x)
@@ -259,7 +259,7 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 //                            | 1. $recordIncome (i)
 //                            | 2. $makeAllowances (a)
 //                            | 3. $recordSpending (s)
-//                            | 4. $viewHistory (v)
+//                            | 4. $viewHistory (t)
 //                            | 5. $recordDrafts
 //                            | 6. $clearDrafts
 //                            | 7. $transfer (x)
@@ -328,7 +328,7 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 //                            | 1. $recordIncome (i)
 //                            | 2. $makeAllowances (a)
 //                            | 3. $recordSpending (s)
-//                            | 4. View History (v)
+//                            | 4. View History (t)
 //                            | 5. $recordDrafts
 //                            | 6. $clearDrafts
 //                            | 7. $transfer (x)
@@ -359,7 +359,7 @@ class BudgetMenuTransactionsTest : FreeSpec(),
 //                            | 1. $recordIncome (i)
 //                            | 2. $makeAllowances (a)
 //                            | 3. $recordSpending (s)
-//                            | 4. View History (v)
+//                            | 4. View History (t)
 //                            | 5. $recordDrafts
 //                            | 6. $clearDrafts
 //                            | 7. $transfer (x)

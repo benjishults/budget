@@ -1,7 +1,7 @@
 package bps.console.inputs
 
 import bps.budget.WithIo
-import bps.budget.toCurrencyAmountOrNull
+import bps.budget.model.toCurrencyAmountOrNull
 import bps.console.io.DefaultInputReader
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
