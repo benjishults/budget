@@ -7,12 +7,10 @@ import bps.budget.model.BudgetData
 import bps.budget.model.DraftAccount
 import bps.budget.model.DraftStatus
 import bps.budget.model.Transaction
-import bps.budget.persistence.TransactionDao
-import bps.budget.persistence.UserConfiguration
 import bps.budget.model.toCurrencyAmountOrNull
 import bps.budget.persistence.AccountDao
-import bps.budget.transaction.ViewTransactionFixture
-import bps.budget.transaction.ViewTransactionFixture.showTransactionDetailsAction
+import bps.budget.persistence.TransactionDao
+import bps.budget.persistence.UserConfiguration
 import bps.budget.transaction.ViewTransactionsWithoutBalancesMenu
 import bps.budget.transaction.allocateSpendingItemMenu
 import bps.budget.transaction.showRecentRelevantTransactions
@@ -22,7 +20,6 @@ import bps.console.inputs.InRangeInclusiveStringValidator
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
-import bps.console.inputs.userSaysYes
 import bps.console.menu.Menu
 import bps.console.menu.ScrollingSelectionMenu
 import bps.console.menu.backItem
@@ -59,7 +56,7 @@ fun WithIo.checksMenu(
                     },
                 )
                 add(
-                    takeAction("Delete a check written on '${draftAccount.name}'") {
+                    pushMenu("Delete a check written on '${draftAccount.name}'") {
                         deleteCheckOnAccount(
                             transactionDao = transactionDao,
                             userConfig = userConfig,
