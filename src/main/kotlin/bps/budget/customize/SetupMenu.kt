@@ -1,7 +1,6 @@
 package bps.budget.customize
 
 import bps.budget.WithIo
-import bps.budget.auth.AuthenticatedUser
 import bps.budget.income.createIncomeTransaction
 import bps.budget.model.Account
 import bps.budget.model.BudgetData
@@ -11,15 +10,15 @@ import bps.budget.persistence.AccountDao
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
-import bps.budget.toCurrencyAmountOrNull
+import bps.budget.model.toCurrencyAmountOrNull
 import bps.console.app.MenuSession
 import bps.console.app.TryAgainAtMostRecentMenuException
 import bps.console.inputs.AcceptAnythingStringValidator
 import bps.console.inputs.NonNegativeStringValidator
 import bps.console.inputs.NotInListStringValidator
-import bps.console.inputs.StringValidator
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
+import bps.console.inputs.StringValidator
 import bps.console.inputs.getTimestampFromUser
 import bps.console.io.OutPrinter
 import bps.console.menu.Menu

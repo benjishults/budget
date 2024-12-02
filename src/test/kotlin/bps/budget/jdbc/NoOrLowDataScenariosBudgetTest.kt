@@ -55,7 +55,7 @@ Enter the name for your "General" account [General] """,
                             | 1. $recordIncomeLabel (i)
                             | 2. $makeAllowancesLabel (a)
                             | 3. $recordSpendingLabel (s)
-                            | 4. View History (v)
+                            | 4. View History (t)
                             | 5. $writeOrClearChecksLabel (ch)
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
