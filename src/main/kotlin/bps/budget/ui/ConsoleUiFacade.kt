@@ -1,21 +1,18 @@
 package bps.budget.ui
 
-import bps.budget.auth.BudgetAccess
 import bps.budget.auth.AuthenticatedUser
+import bps.budget.auth.BudgetAccess
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
-import bps.budget.model.defaultGeneralAccountDescription
-import bps.budget.model.defaultGeneralAccountName
-import bps.budget.persistence.AccountDao
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserBudgetDao
 import bps.budget.persistence.UserConfiguration
 import bps.console.app.QuitException
 import bps.console.inputs.EmailStringValidator
 import bps.console.inputs.SelectionPrompt
-import bps.console.inputs.StringValidator
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
+import bps.console.inputs.StringValidator
 import bps.console.io.DefaultInputReader
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
