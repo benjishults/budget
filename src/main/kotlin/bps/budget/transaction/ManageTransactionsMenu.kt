@@ -86,7 +86,7 @@ fun WithIo.showRecentRelevantTransactions(
         .fetchTransactionItemsInvolvingAccount(account, limit = 500)
         .filter(filter)
         .take(NUMBER_OF_TRANSACTION_ITEMS_TO_SHOW_BEFORE_PROMPT)
-        .sorted()
+        .sortedDescending()
         .takeIf { it.isNotEmpty() }
         ?.also { outPrinter("$label\n") }
         ?.forEach { item: TransactionDao.ExtendedTransactionItem<*> ->
