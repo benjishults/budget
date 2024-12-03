@@ -1653,8 +1653,8 @@ Item prepared
                 validateInteraction(
                     expectedOutputs = listOf(
                         "Recent expenditures:\n",
-                        "2024-08-08 19:00:09 |     -30.00 | Costco\n",
                         "2024-08-08 19:00:10 |     -20.00 | Target\n",
+                        "2024-08-08 19:00:09 |     -30.00 | Costco\n",
                         "Enter the AMOUNT of the charge on 'Costco Visa': ",
                         "Enter the RECIPIENT of the charge on 'Costco Visa': ",
                         "Use current time [Y]? ",
@@ -1683,8 +1683,8 @@ Item prepared
                         |""".trimMargin(),
                         "Enter selection: ",
                         "Recent expenditures:\n",
-                        "2024-08-08 19:00:09 |     -10.00 | Costco\n",
                         "2024-08-08 19:00:10 |     -20.00 | Target\n",
+                        "2024-08-08 19:00:09 |     -10.00 | Costco\n",
                         "Enter the AMOUNT spent on 'Necessities' for 'Brausen's' [0.01, [5.00]]: ",
                         "Enter DESCRIPTION for 'Necessities' spend [Brausen's]: ",
                     ),
