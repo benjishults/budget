@@ -13,9 +13,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 
-/**
- * @throws IllegalStateException if the user opts out of entering a date
- */
 class TimestampPrompt(
     queryForNow: String,
     timeZone: TimeZone,
@@ -45,7 +42,7 @@ class TimestampPrompt(
                         ?: throw IllegalStateException("year")
                 val month: Int =
                     SimplePromptWithDefault(
-                        "   month (1-12) [${now.month.value}]: ",
+                        String.format("   month (1-12) [%2d]: ", now.month.value),
                         now.month.value,
                         inputReader,
                         outPrinter,
@@ -54,7 +51,7 @@ class TimestampPrompt(
                         ?: throw IllegalStateException("month")
                 val day: Int =
                     SimplePromptWithDefault(
-                        "   day of month [${now.dayOfMonth}]: ",
+                        String.format("   day of month [%2d]: ", now.dayOfMonth),
                         now.dayOfMonth,
                         inputReader,
                         outPrinter,
@@ -63,7 +60,7 @@ class TimestampPrompt(
                         ?: throw IllegalStateException("day of month")
                 val hour: Int =
                     SimplePromptWithDefault(
-                        "hour (24-clock) [${now.hour}]: ",
+                        String.format("hour (24-clock) [%2d]: ", now.hour),
                         now.hour,
                         inputReader,
                         outPrinter,
@@ -72,7 +69,7 @@ class TimestampPrompt(
                         ?: throw IllegalStateException("hour")
                 val minute: Int =
                     SimplePromptWithDefault(
-                        " minute of hour [${now.minute}]: ",
+                        String.format(" minute of hour [%2d]: ", now.minute),
                         now.minute,
                         inputReader,
                         outPrinter,
@@ -81,7 +78,7 @@ class TimestampPrompt(
                         ?: throw IllegalStateException("minute")
                 val second: Int =
                     SimplePromptWithDefault(
-                        "         second [${now.second}]: ",
+                        String.format("         second [%2d]: ", now.second),
                         now.second,
                         inputReader,
                         outPrinter,

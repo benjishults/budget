@@ -43,11 +43,11 @@ class TimestampPromptTest : FreeSpec(),
             outputs shouldContainExactly listOf(
                 "Use current time [Y]? ",
                 "         year [2024]: ",
-                "   month (1-12) [8]: ",
-                "   day of month [9]: ",
-                "hour (24-clock) [0]: ",
-                " minute of hour [0]: ",
-                "         second [0]: ",
+                "   month (1-12) [ 8]: ",
+                "   day of month [ 9]: ",
+                "hour (24-clock) [ 0]: ",
+                " minute of hour [ 0]: ",
+                "         second [ 0]: ",
             )
         }
         subject = TimestampPrompt(
@@ -69,11 +69,11 @@ class TimestampPromptTest : FreeSpec(),
             outputs shouldContainExactly listOf(
                 "Use current time [Y]? ",
                 "         year [2024]: ",
-                "   month (1-12) [8]: ",
-                "   day of month [9]: ",
-                "hour (24-clock) [0]: ",
-                " minute of hour [0]: ",
-                "         second [0]: ",
+                "   month (1-12) [ 8]: ",
+                "   day of month [ 9]: ",
+                "hour (24-clock) [ 0]: ",
+                " minute of hour [ 0]: ",
+                "         second [ 0]: ",
             )
         }
     }
