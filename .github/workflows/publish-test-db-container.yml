@@ -1,0 +1,21 @@
+name: publish-test-db-container.yml
+on:
+  - workflow_dispatch
+
+jobs:
+  publish-test-db-container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and Push Container
+        run: |
+          cd ci
+          docker build . --tag ghcr.io/benjishults/postgres-test:latest
+          #          docker run ghcr.io/benjishults/postgres-test:latest
+          docker push ghcr.io/benjishults/postgres-test:latest
