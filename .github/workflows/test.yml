@@ -13,14 +13,12 @@ jobs:
       contents: read
     services:
       postgres:
-        image: postgres:latest
+        image: ghcr.io/benjishults/postgres-test:latest
         ports:
           - 5432:5432
         env:
           POSTGRES_USER: admin
           POSTGRES_PASSWORD: admin
-    #        volumes:
-    #          - ./scripts:./.scripts
     env:
       PGPASSWORD: admin
       CI: true
@@ -32,13 +30,6 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-      - name: Get Postgres Client
-        run: |
-          sudo apt-get -y install postgresql-client
-      - name: Prepare DB for tests
-        run: |
-          psql -U admin -h localhost -f ./scripts/setupDbAsAdmin.sql
-          psql -U admin -d budget -h localhost -f ./scripts/setupBudgetSchemasAsAdmin.sql
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
 
