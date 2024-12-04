@@ -24,7 +24,7 @@ Run the script to run Postgres in an OSI container.  (I use podman with docker a
 works fine, too, if you prefer.)
 
 ```shell
-% ./scripts/startDb.sh
+./scripts/startDb.sh
 ```
 
 ### Create DB and users
@@ -87,13 +87,13 @@ internet (or no connection at all), you should be fine.
 Make sure the DB is running. If it isn't running then start it with:
 
 ```shell
-% ./scripts/startDb.sh
+./scripts/startDb.sh
 ```
 
 Once the DB is running, start the budget application with:
 
 ```shell
-% ./scripts/budget.sh
+./scripts/budget.sh
 ```
 
 ## Run Tests
@@ -101,7 +101,7 @@ Once the DB is running, start the budget application with:
 Make sure the DB is running. If it isn't running then start it with:
 
 ```shell
-% ./scripts/startDb.sh
+./scripts/startDb.sh
 ```
 
 Run tests with:
