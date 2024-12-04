@@ -119,3 +119,34 @@ psql -U budget -h 127.0.0.1 -d budget
 ```
 
 Data migrations can be run using `bps.budget.persistence.migration.DataMigrations`.
+
+## CI Docker Image Background
+
+See [Dockerfile](ci/Dockerfile).
+
+Everything you need to know should be in
+the [GitHub action that builds and publishes the image](.github/workflows/publish-test-db-container.yml) and
+the [GitHub action that runs tests](.github/workflows/test.yml).
+
+To test manually, create the image:
+
+```shell
+cd ci
+docker build -t pg-test .
+```
+
+Test run it with this
+
+```shell
+docker run -e POSTGRES_PASSWORD=test -e POSTGRES_USER=test -e POSTGRES_DB=budget --rm --name pg-test -p 5432:5432 -d pg-test:latest
+```
+
+and connect to it to ensure that the `test:test` user has access to two schemas: `test` and `clean_after_test`.
+
+You can look at logs with
+
+```shell
+docker logs pg-test
+```
+
+The image is published by the [publish-test-db-container.yml](.github/workflows/publish-test-db-container.yml) action.
