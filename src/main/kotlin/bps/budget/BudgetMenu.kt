@@ -11,6 +11,7 @@ import bps.budget.persistence.UserConfiguration
 import bps.budget.spend.recordSpendingMenu
 import bps.budget.transaction.manageTransactions
 import bps.budget.transfer.transferMenu
+import bps.console.io.WithIo
 import bps.console.menu.Menu
 import bps.console.menu.pushMenu
 import bps.console.menu.quitItem

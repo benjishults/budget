@@ -1,6 +1,6 @@
 package bps.budget.transfer
 
-import bps.budget.WithIo
+import bps.console.io.WithIo
 import bps.budget.consistency.commitTransactionConsistently
 import bps.budget.model.Account
 import bps.budget.model.BudgetData

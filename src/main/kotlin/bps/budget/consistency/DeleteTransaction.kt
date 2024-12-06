@@ -1,6 +1,6 @@
 package bps.budget.consistency
 
-import bps.budget.WithIo
+import bps.console.io.WithIo
 import bps.budget.model.BudgetData
 import bps.budget.persistence.AccountDao
 import bps.budget.persistence.TransactionDao

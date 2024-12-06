@@ -23,6 +23,14 @@ application {
 
 repositories {
     mavenCentral()
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/benjishults/console")
+        credentials {
+            username = System.getenv("GITHUB_ACTOR")
+            password = System.getenv("GITHUB_TOKEN")
+        }
+    }
 }
 
 //kotlin {
@@ -46,6 +54,7 @@ dependencies {
     //   https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#argon2id
 //    implementation("de.mkammerer:argon2-jvm:2.11")
     implementation("commons-validator:commons-validator:1.9.0")
+    implementation("io.github.benjishults:console:0.0.6")
     runtimeOnly("org.postgresql:postgresql:42.7.3")
     implementation("io.github.nhubbard:konf:$konfVersion")
 //    implementation("org.apache.commons:commons-csv:1.11.0")
