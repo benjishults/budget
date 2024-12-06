@@ -22,7 +22,8 @@ jobs:
           POSTGRES_PASSWORD: test
           POSTGRES_DB: budget
     env:
-      PGPASSWORD: admin
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_ACTOR: ${{ github.actor }}
       CI: true
 
     steps:
