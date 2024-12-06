@@ -2,6 +2,7 @@ val kotestVersion = "5.9.1"
 val jacksonVersion = "2.18.0"
 val konfVersion = "2.1.0"
 val mockkVersion = "1.13.12"
+val consoleVersion = "0.0.7"
 
 plugins {
     kotlin("jvm") version "2.0.21"
@@ -54,7 +55,7 @@ dependencies {
     //   https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#argon2id
 //    implementation("de.mkammerer:argon2-jvm:2.11")
     implementation("commons-validator:commons-validator:1.9.0")
-    implementation("io.github.benjishults:console:0.0.6")
+    implementation("io.github.benjishults:console:$consoleVersion")
     runtimeOnly("org.postgresql:postgresql:42.7.3")
     implementation("io.github.nhubbard:konf:$konfVersion")
 //    implementation("org.apache.commons:commons-csv:1.11.0")
@@ -68,6 +69,7 @@ dependencies {
     }
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
+    testImplementation("io.github.benjishults:console-test:$consoleVersion")
     testImplementation("io.mockk:mockk-jvm:$mockkVersion")
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
