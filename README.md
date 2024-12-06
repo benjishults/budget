@@ -50,6 +50,10 @@ CREATE SCHEMA
 
 ### Build the Application
 
+Building the application involves pulling dependencies from GitHub Packages. So, you'll need GitHub credentials.
+
+The variables `GITHUB_ACTOR` (username) and `GITHUB_TOKEN` (a token with `packages:read` permissions) need to be set.
+
 ```shell
 ./gradlew shadowJar
 ```
@@ -96,7 +100,9 @@ Once the DB is running, start the budget application with:
 ./scripts/budget.sh
 ```
 
-## Run Tests
+## Contributing
+
+### Running Tests
 
 Make sure the DB is running. If it isn't running then start it with:
 
@@ -118,15 +124,16 @@ To connect to the Postgres DB running in the docker container, do
 psql -U budget -h 127.0.0.1 -d budget
 ```
 
-Data migrations can be run using `bps.budget.persistence.migration.DataMigrations`.
+When I need to do a data migration, I whip that up here: `bps.budget.persistence.migration.DataMigrations`.
 
-## CI Docker Image Background
+## CI Docker Image
 
 See [Dockerfile](ci/Dockerfile).
 
 Everything you need to know should be in
-the [GitHub action that builds and publishes the image](.github/workflows/publish-test-db-container.yml) and
-the [GitHub action that runs tests](.github/workflows/test.yml).
+the [GitHub action that builds and publishes the image](.github/workflows/publish-test-db-container.yml) (builds and
+publishes the image) and
+the [GitHub action that runs tests](.github/workflows/test.yml) (runs the container).
 
 To test manually, create the image:
 
@@ -135,7 +142,7 @@ cd ci
 docker build -t pg-test .
 ```
 
-Test run it with this
+Test it with this
 
 ```shell
 docker run -e POSTGRES_PASSWORD=test -e POSTGRES_USER=test -e POSTGRES_DB=budget --rm --name pg-test -p 5432:5432 -d pg-test:latest
