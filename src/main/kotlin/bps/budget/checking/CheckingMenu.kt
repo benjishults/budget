@@ -1,6 +1,6 @@
 package bps.budget.checking
 
-import bps.budget.WithIo
+import bps.console.io.WithIo
 import bps.budget.consistency.clearCheckConsistently
 import bps.budget.consistency.deleteTransactionConsistently
 import bps.budget.model.BudgetData

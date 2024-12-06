@@ -1,6 +1,6 @@
 package bps.budget.transaction
 
-import bps.budget.WithIo
+import bps.console.io.WithIo
 import bps.budget.consistency.deleteTransactionConsistently
 import bps.budget.model.Account
 import bps.budget.model.BudgetData

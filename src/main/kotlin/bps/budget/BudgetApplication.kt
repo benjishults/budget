@@ -12,8 +12,8 @@ import bps.console.io.DefaultInputReader
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
+import bps.console.io.WithIo
 import kotlinx.datetime.Clock
-import java.math.BigDecimal
 
 const val recordIncomeLabel = "Record Income"
 const val makeAllowancesLabel = "Make Allowances"

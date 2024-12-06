@@ -1,6 +1,6 @@
 package bps.budget.allowance
 
-import bps.budget.WithIo
+import bps.console.io.WithIo
 import bps.budget.consistency.commitTransactionConsistently
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount

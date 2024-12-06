@@ -1,6 +1,6 @@
 package bps.budget.account
 
-import bps.budget.WithIo
+import bps.console.io.WithIo
 import bps.budget.consistency.createCategoryAccountConsistently
 import bps.budget.consistency.createChargeAccountConsistently
 import bps.budget.consistency.createRealAccountConsistentlyWithIo

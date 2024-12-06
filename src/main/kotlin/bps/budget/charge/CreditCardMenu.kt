@@ -1,6 +1,6 @@
 package bps.budget.charge
 
-import bps.budget.WithIo
+import bps.console.io.WithIo
 import bps.budget.consistency.commitCreditCardPaymentConsistently
 import bps.budget.model.BudgetData
 import bps.budget.model.ChargeAccount

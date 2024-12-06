@@ -11,7 +11,8 @@ interface TransactionItem<out A : Account> /*: Comparable<TransactionItem<*>>*/ 
     val timestamp: Instant
 }
 
-@Suppress("DataClassPrivateConstructor")
+//@Suppress("DataClassPrivateConstructor")
+@ConsistentCopyVisibility
 data class Transaction private constructor(
     val id: UUID,
     val description: String,
