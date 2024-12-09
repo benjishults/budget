@@ -81,6 +81,7 @@ fun WithIo.makeAllowancesSelectionMenu(
                     .getResult()
                     ?: throw TryAgainAtMostRecentMenuException("No description entered.")
             val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
+                ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
             val allocate = Transaction.Builder(
                 description,
                 timestamp,

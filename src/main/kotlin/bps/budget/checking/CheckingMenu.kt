@@ -124,6 +124,7 @@ fun WithIo.recordCheckClearedOnAccount(
             budgetData.timeZone,
             clock,
         )
+            ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
     clearCheckConsistently(draftTransactionItem, timestamp, draftAccount, transactionDao, budgetData)
     outPrinter.important("Cleared check recorded")
 }
@@ -148,15 +149,12 @@ fun WithIo.writeCheckOnAccount(
     val max = draftAccount.realCompanion.balance - draftAccount.balance
     val min = BigDecimal("0.01").setScale(2)
     val amount: BigDecimal =
-        SimplePromptWithDefault<BigDecimal>(
+        SimplePrompt<BigDecimal>(
             "Enter the AMOUNT of check on '${draftAccount.name}' [$min, $max]: ",
             inputReader = inputReader,
             outPrinter = outPrinter,
-            defaultValue = min,
-            additionalValidation = InRangeInclusiveStringValidator(min, max),
+            validator = InRangeInclusiveStringValidator(min, max),
         ) {
-            // NOTE for SimplePromptWithDefault, the first call to transform might fail.  If it
-            //    does, we want to apply the recovery action
             it.toCurrencyAmountOrNull()
                 ?: throw IllegalArgumentException("$it is not a valid amount")
         }
@@ -176,6 +174,7 @@ fun WithIo.writeCheckOnAccount(
                 timeZone = budgetData.timeZone,
                 clock = clock,
             )
+                ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
         val transactionBuilder: Transaction.Builder =
             Transaction.Builder(description, timestamp)
                 .apply {

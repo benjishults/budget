@@ -52,7 +52,8 @@ CREATE SCHEMA
 
 Building the application involves pulling dependencies from GitHub Packages. So, you'll need GitHub credentials.
 
-The variables `GITHUB_ACTOR` (username) and `GITHUB_TOKEN` (a token with `packages:read` permissions) need to be set.
+The environment variables `GITHUB_ACTOR` (username) and `GITHUB_TOKEN` (a token with `packages:read` permissions)
+need to be set.
 
 ```shell
 ./gradlew shadowJar
