@@ -9,6 +9,7 @@ import bps.budget.model.Transaction
 import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.model.toCurrencyAmountOrNull
+import bps.budget.transaction.showRecentRelevantTransactions
 import bps.console.app.MenuSession
 import bps.console.app.TryAgainAtMostRecentMenuException
 import bps.console.inputs.InRangeInclusiveStringValidator
@@ -32,6 +33,7 @@ fun WithIo.transferMenu(
     baseList = budgetData.realAccounts + (budgetData.categoryAccounts - budgetData.generalAccount),
     labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
 ) { menuSession: MenuSession, transferFromAccount: Account ->
+    showRecentRelevantTransactions(transactionDao, transferFromAccount, budgetData)
     menuSession.push(
         ScrollingSelectionMenu(
             header = { "Select account to TRANSFER money TO (from '${transferFromAccount.name}')" },
@@ -45,6 +47,7 @@ fun WithIo.transferMenu(
             },
             labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
         ) { _: MenuSession, transferToAccount: Account ->
+            showRecentRelevantTransactions(transactionDao, transferToAccount, budgetData)
             val max = transferFromAccount.balance
             val min = BigDecimal("0.01").setScale(2)
             val amount: BigDecimal =
