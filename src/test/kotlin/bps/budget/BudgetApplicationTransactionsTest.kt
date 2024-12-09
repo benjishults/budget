@@ -1874,7 +1874,7 @@ Spending recorded
                     toInput = listOf("b"),
                 )
             }
-            "add a real account with a balance" {
+            "add a real account with a balance and edit details" {
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
@@ -1944,7 +1944,85 @@ Real account 'Savings' created with balance ${'$'}1000.00
                          |""".trimMargin(),
                         "Enter selection: ",
                     ),
-                    toInput = listOf("b"),
+                    toInput = listOf("4"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                            |Select an account to edit
+                            | 1.       0.00 | Education       | Tuition, books, etc.
+                            | 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+                            | 3.      78.50 | Food            | Food other than what's covered in entertainment
+                            | 4.       0.00 | Hobby           | Expenses related to a hobby
+                            | 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+                            | 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+                            | 7.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+                            | 8.      65.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+                            | 9.       0.00 | Network         | Mobile plan, routers, internet access
+                            |10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+                            |11.       0.00 | Travel          | Travel expenses for vacation
+                            |12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+                            |13.   4,665.00 | Checking        | Account from which checks clear
+                            |14.   1,000.00 | Savings         | Savings account at My Bank
+                            |15.     198.50 | Wallet          | Cash on hand
+                            |16.     -20.00 | Costco Visa     | Costco Visa
+                            |17.   5,700.00 | General         | Income is automatically deposited here and allowances are made from here
+                            |18. Back (b)
+                            |19. Quit (q)
+                            |""".trimMargin(),
+                        "Enter selection: ",
+                        "Edit the name of account 'Necessities' [Y/n]? ",
+                        """Existing description: 'Energy, water, cleaning supplies, soap, tooth brushes, etc.'.
+Edit the description of account 'Necessities' [Y/n]? """,
+                        "Enter the new DESCRIPTION for the account 'Necessities': ",
+                        """Change DESCRIPTION of 'Necessities from
+Energy, water, cleaning supplies, soap, tooth brushes, etc.
+to
+Cleaning supplies, soap, tooth brushes, etc.
+Are you sure [y/N]? """,
+                    ),
+                    toInput = listOf("8", "n", "y", "Cleaning supplies, soap, tooth brushes, etc.", "y"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+Editing done
+
+""",
+                        """Select an account to edit
+ 1.       0.00 | Education       | Tuition, books, etc.
+ 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+ 3.      78.50 | Food            | Food other than what's covered in entertainment
+ 4.       0.00 | Hobby           | Expenses related to a hobby
+ 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+ 7.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+ 8.      65.00 | Necessities     | Cleaning supplies, soap, tooth brushes, etc.
+ 9.       0.00 | Network         | Mobile plan, routers, internet access
+10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+11.       0.00 | Travel          | Travel expenses for vacation
+12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+13.   4,665.00 | Checking        | Account from which checks clear
+14.   1,000.00 | Savings         | Savings account at My Bank
+15.     198.50 | Wallet          | Cash on hand
+16.     -20.00 | Costco Visa     | Costco Visa
+17.   5,700.00 | General         | Income is automatically deposited here and allowances are made from here
+18. Back (b)
+19. Quit (q)
+""",
+                        "Enter selection: ",
+                        """
+                         | 1. Create a New Category
+                         | 2. Create a Real Fund
+                         | 3. Add a Credit Card
+                         | 4. Edit Account Details
+                         | 5. Deactivate an Account
+                         | 6. Back (b)
+                         | 7. Quit (q)
+                         |""".trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("b", "b"),
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -1975,7 +2053,7 @@ Real account 'Savings' created with balance ${'$'}1000.00
  6.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
  7.       0.00 | Housing         | Rent, mortgage, property tax, insurance
  8.       0.00 | Medical         | Medicine, supplies, insurance, etc.
- 9.      65.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+ 9.      65.00 | Necessities     | Cleaning supplies, soap, tooth brushes, etc.
 10.       0.00 | Network         | Mobile plan, routers, internet access
 11.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
 12.       0.00 | Travel          | Travel expenses for vacation
@@ -2020,7 +2098,7 @@ Real account 'Savings' created with balance ${'$'}1000.00
  6.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
  7.       0.00 | Housing         | Rent, mortgage, property tax, insurance
  8.       0.00 | Medical         | Medicine, supplies, insurance, etc.
- 9.      65.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+ 9.      65.00 | Necessities     | Cleaning supplies, soap, tooth brushes, etc.
 10.       0.00 | Network         | Mobile plan, routers, internet access
 11.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
 12.       0.00 | Travel          | Travel expenses for vacation
@@ -2070,7 +2148,7 @@ Real account 'Savings' created with balance ${'$'}1000.00
                 | 8.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
                 | 9.       0.00 | Housing         | Rent, mortgage, property tax, insurance
                 |10.       0.00 | Medical         | Medicine, supplies, insurance, etc.
-                |11.      65.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+                |11.      65.00 | Necessities     | Cleaning supplies, soap, tooth brushes, etc.
                 |12.       0.00 | Network         | Mobile plan, routers, internet access
                 |13.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
                 |14.       0.00 | Travel          | Travel expenses for vacation
@@ -2132,7 +2210,7 @@ Transfer recorded
                 | 8.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
                 | 9.       0.00 | Housing         | Rent, mortgage, property tax, insurance
                 |10.       0.00 | Medical         | Medicine, supplies, insurance, etc.
-                |11.      65.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+                |11.      65.00 | Necessities     | Cleaning supplies, soap, tooth brushes, etc.
                 |12.       0.00 | Network         | Mobile plan, routers, internet access
                 |13.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
                 |14.       0.00 | Travel          | Travel expenses for vacation

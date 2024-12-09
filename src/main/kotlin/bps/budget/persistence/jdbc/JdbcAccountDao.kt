@@ -145,11 +145,11 @@ where aap.account_id = ?
         connection.transactOrThrow {
             prepareStatement(
                 """
-                update accounts acc
-                set acc.name = ?,
-                    acc.description = ?
-                where acc.id = ?
-                    and acc.budget_id = ?
+                update accounts
+                set name = ?,
+                    description = ?
+                where id = ?
+                    and budget_id = ?
             """.trimIndent(),
             )
                 .use { preparedStatement: PreparedStatement ->

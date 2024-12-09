@@ -108,7 +108,7 @@ fun WithIo.editAccountDetails(
             }
         }
         if (SimplePrompt(
-                basicPrompt = "Existing description: `${account.description}`.\nEdit the description of account '${account.name}' [Y/n]? ",
+                basicPrompt = "Existing description: '${account.description}'.\nEdit the description of account '${account.name}' [Y/n]? ",
                 inputReader = inputReader,
                 outPrinter = outPrinter,
                 validator = AcceptAnythingStringValidator,
