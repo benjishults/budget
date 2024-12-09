@@ -139,6 +139,7 @@ private fun WithIo.payCreditCardBill(
                         budgetData.timeZone,
                         clock,
                     )
+                        ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
                 val description: String =
                     SimplePromptWithDefault(
                         "Description of transaction [pay '${chargeAccount.name}' bill]: ",
@@ -320,6 +321,7 @@ private fun WithIo.spendOnACreditCard(
                 .getResult()
                 ?: throw TryAgainAtMostRecentMenuException("No description entered.")
         val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
+            ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
         val transactionBuilder: Transaction.Builder =
             Transaction.Builder(description, timestamp)
                 .apply {

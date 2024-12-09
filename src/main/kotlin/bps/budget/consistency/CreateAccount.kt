@@ -1,6 +1,7 @@
 package bps.budget.consistency
 
 import bps.console.io.WithIo
+import bps.console.app.TryAgainAtMostRecentMenuException
 import bps.budget.income.createIncomeTransaction
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
@@ -91,6 +92,7 @@ private fun WithIo.createAndSaveIncomeTransaction(
             timeZone = budgetData.timeZone,
             clock = clock,
         )
+            ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
         createIncomeTransaction(
             incomeDescription,
             timestamp,

@@ -49,6 +49,7 @@ fun WithIo.recordSpendingMenu(
             ?: throw TryAgainAtMostRecentMenuException("No description entered.")
     val timestamp: Instant =
         getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
+            ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
     return chooseRealAccountsThenCategories(
         totalAmount = amount,
         runningTotal = amount,

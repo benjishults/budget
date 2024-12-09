@@ -73,6 +73,7 @@ fun WithIo.recordIncomeSelectionMenu(
                 .getResult()
                 ?: throw TryAgainAtMostRecentMenuException("No description entered.")
         val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
+            ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
         commitTransactionConsistently(
             createIncomeTransaction(description, timestamp, amount, budgetData, realAccount),
             transactionDao,

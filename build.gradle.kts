@@ -2,7 +2,7 @@ val kotestVersion = "5.9.1"
 val jacksonVersion = "2.18.0"
 val konfVersion = "2.1.0"
 val mockkVersion = "1.13.12"
-val consoleVersion = "0.0.7"
+val consoleVersion = "1.0.0"
 
 plugins {
     kotlin("jvm") version "2.0.21"

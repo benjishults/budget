@@ -148,9 +148,9 @@ private fun WithIo.createCategory(
 ) {
     val name: String =
         SimplePrompt<String>(
-            "Enter a unique name for the new category: ",
-            inputReader,
-            outPrinter,
+            basicPrompt = "Enter a unique name for the new category: ",
+            inputReader = inputReader,
+            outPrinter = outPrinter,
             validator = NotInListStringValidator(
                 accountDao.getAllAccountNamesForBudget(budgetData.id),
                 "an existing account name",
@@ -234,8 +234,8 @@ private fun WithIo.createCreditAccount(
     val name: String =
         SimplePrompt<String>(
             "Enter a unique name for the new credit card: ",
-            inputReader,
-            outPrinter,
+            inputReader = inputReader,
+            outPrinter = outPrinter,
             validator = NotInListStringValidator(
                 accountDao.getAllAccountNamesForBudget(budgetData.id),
                 "an existing account name",
@@ -273,8 +273,8 @@ private fun WithIo.createRealFund(
     val name: String =
         SimplePrompt<String>(
             "Enter a unique name for the real account: ",
-            inputReader,
-            outPrinter,
+            inputReader = inputReader,
+            outPrinter = outPrinter,
             validator = NotInListStringValidator(
                 accountDao.getAllAccountNamesForBudget(budgetData.id),
                 "an existing account name",
