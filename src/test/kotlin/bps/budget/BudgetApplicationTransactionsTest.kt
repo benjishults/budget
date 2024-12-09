@@ -2163,6 +2163,8 @@ Editing done
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
+                        "Recent transactions\n",
+                        "2024-08-08 19:00:13 |   1,000.00 | initial balance in 'Savings'\n",
                         """
                 |Select account to TRANSFER money TO (from 'Savings')
                 | 1.   4,665.00 | Checking        | Account from which checks clear
@@ -2177,6 +2179,10 @@ Editing done
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
+                        "Recent transactions\n",
+                        "2024-08-08 19:00:11 |     -35.00 | pay 'Costco Visa' bill\n",
+                        "2024-08-08 19:00:08 |    -300.00 | SuperMarket\n",
+                        "2024-08-08 19:00:00 |   5,000.00 | income into 'Checking'\n",
                         "Enter the AMOUNT to TRANSFER from 'Savings' into 'Checking' [0.01, 1000.00]: ",
                         "Enter DESCRIPTION of transaction [transfer from 'Savings' into 'Checking']: ",
                         "Use current time [Y]? ",
