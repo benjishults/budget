@@ -52,8 +52,15 @@ CREATE SCHEMA
 
 Building the application involves pulling dependencies from GitHub Packages. So, you'll need GitHub credentials.
 
-The environment variables `GITHUB_ACTOR` (username) and `GITHUB_TOKEN` (a token with `packages:read` permissions)
-need to be set.
+The gradle properties `github.actor` (username) and `github.token` (a token with `packages:read` permissions)
+need to be set in a file named `gradle.properties` in your `GRADLE_USER_HOME` folder (defaults to `~/.gradle/`).
+
+```properties
+github.actor=<your github login>
+github.token=<token with packages:read>
+```
+
+Then build the application with
 
 ```shell
 ./gradlew shadowJar
@@ -115,6 +122,15 @@ Run tests with:
 
 ```shell
 ./gradlew test
+```
+
+Again, be sure you have the gradle properties `github.actor` (username) and `github.token` (a token with `packages:read`
+permissions) need to be set in a file named `gradle.properties` in your `GRADLE_USER_HOME` folder (defaults to
+`~/.gradle/`).
+
+```properties
+github.actor=<your github login>
+github.token=<token with packages:read>
 ```
 
 ## Troubleshooting
