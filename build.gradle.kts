@@ -6,11 +6,11 @@ val consoleVersion: String by project
 val gitHubActor: String =
     providers
         .gradleProperty("github.actor")
-        .get()
+        .getOrElse(System.getenv("GITHUB_ACTOR"))
 val gitHubToken: String =
     providers
         .gradleProperty("github.token")
-        .get()
+        .getOrElse(System.getenv("GITHUB_TOKEN"))
 
 plugins {
     kotlin("jvm") version "2.0.21"
@@ -38,8 +38,6 @@ repositories {
         credentials {
             username = gitHubActor
             password = gitHubToken
-//            username = System.getenv("GITHUB_ACTOR")
-//            password = System.getenv("GITHUB_TOKEN")
         }
     }
 }
