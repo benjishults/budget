@@ -169,15 +169,15 @@ class ConsoleUiFacade(
             }
     }
 
-    override fun selectBudget(access: List<BudgetAccess>): String =
-        SelectionPrompt(
-            header = null,
-            options = access.map { it.budgetName },
-            prompt = "Select budget: ",
-            inputReader = inputReader,
-            outPrinter = outPrinter,
-        )
-            .getResult()
+//    override fun selectBudget(access: List<BudgetAccess>): String =
+//        SelectionPrompt(
+//            header = null,
+//            options = access.map { it.budgetName },
+//            prompt = "Select budget: ",
+//            inputReader = inputReader,
+//            outPrinter = outPrinter,
+//        )
+//            .getResult()
 
     override fun getBudgetName(): String =
         SimplePromptWithDefault(

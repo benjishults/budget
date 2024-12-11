@@ -133,7 +133,10 @@ open class TransactionListMenu<A : Account>(
             limit = limit,
             offset = max(offset - limit, 0),
             contextStack = contextStack
-                .apply { removeLast() },
+                .apply {
+                    // NOTE this is why we need to override this method
+                    removeLast()
+                },
             extraItems = extraItems,
             outPrinter = outPrinter,
             actOnSelectedItem = actOnSelectedItem,
