@@ -69,7 +69,7 @@ class BudgetApplication private constructor(
         )
 
     fun run() {
-        menuApplicationWithQuit.run()
+        menuApplicationWithQuit.runApplication()
     }
 
     override fun close() {

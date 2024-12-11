@@ -3,14 +3,6 @@ val jacksonVersion: String by project
 val konfVersion: String by project
 val mockkVersion: String by project
 val consoleVersion: String by project
-val gitHubActor: String =
-    providers
-        .gradleProperty("github.actor")
-        .getOrElse(System.getenv("GITHUB_ACTOR"))
-val gitHubToken: String =
-    providers
-        .gradleProperty("github.token")
-        .getOrElse(System.getenv("GITHUB_TOKEN"))
 
 plugins {
     kotlin("jvm") version "2.0.21"
@@ -36,8 +28,12 @@ repositories {
         name = "GitHubPackages"
         url = uri("https://maven.pkg.github.com/benjishults/console")
         credentials {
-            username = gitHubActor
-            password = gitHubToken
+            username = providers
+                .gradleProperty("github.actor")
+                .getOrElse(System.getenv("GITHUB_ACTOR"))
+            password = providers
+                .gradleProperty("github.token")
+                .getOrElse(System.getenv("GITHUB_TOKEN"))
         }
     }
 }
