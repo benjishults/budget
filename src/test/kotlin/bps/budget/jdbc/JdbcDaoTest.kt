@@ -1,7 +1,7 @@
 package bps.budget.jdbc
 
 import bps.budget.model.CategoryAccount
-import bps.budget.persistence.JdbcConfig
+import bps.budget.persistence.jdbc.JdbcConfig
 import bps.budget.persistence.jdbc.JdbcDao
 import io.kotest.assertions.asClue
 import io.kotest.assertions.throwables.shouldThrow

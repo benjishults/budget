@@ -9,7 +9,7 @@ import io.kotest.matchers.equals.shouldBeEqual
 import kotlinx.datetime.TimeZone
 import java.util.UUID
 
-class LoadingAccountsJdbcData : FreeSpec(), BasicAccountsJdbcTestFixture {
+class LoadingAccountsJdbcDataTest : FreeSpec(), BasicAccountsJdbcTestFixture {
 
     override val jdbcDao = JdbcDao(configurations.persistence.jdbc!!)
 

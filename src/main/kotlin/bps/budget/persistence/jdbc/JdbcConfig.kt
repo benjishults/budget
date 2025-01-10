@@ -1,4 +1,6 @@
-package bps.budget.persistence
+package bps.budget.persistence.jdbc
+
+import bps.budget.persistence.BudgetConfig
 
 data class JdbcConfig(
     override val budgetName: String? = null,

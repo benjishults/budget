@@ -11,7 +11,6 @@ import bps.budget.model.RealAccount
 import bps.budget.persistence.AccountDao
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.DataConfigurationException
-import bps.budget.persistence.JdbcConfig
 import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserBudgetDao
 import bps.jdbc.JdbcFixture
