@@ -26,15 +26,17 @@ import bps.budget.model.defaultWorkAccountName
 import bps.budget.persistence.getBudgetNameFromPersistenceConfig
 import bps.budget.persistence.jdbc.JdbcDao
 import bps.budget.persistence.loadBudgetData
+import bps.kotlin.WithMockClock
 import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
-import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import java.math.BigDecimal
 import java.util.UUID
 
-class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
+class SomeBasicTransactionsTest : FreeSpec(),
+    WithMockClock,
+    BasicAccountsJdbcTestFixture {
 
     override val jdbcDao = JdbcDao(configurations.persistence.jdbc!!)
 
@@ -49,11 +51,8 @@ class SomeBasicTransactionsTest : FreeSpec(), BasicAccountsJdbcTestFixture {
         )
         closeJdbcAfterSpec()
 
-        val clock = object : Clock {
-            var secondCount = 0
-            override fun now(): kotlinx.datetime.Instant =
-                kotlinx.datetime.Instant.parse(String.format("2024-08-09T00:00:%02dZ", secondCount++))
-        }
+        val clock = produceSecondTickingClock()
+
         "with data from config" - {
             val budgetData = loadBudgetData(
                 authenticatedUser = jdbcDao.userBudgetDao.getUserByLoginOrNull(configurations.user.defaultLogin!!) as AuthenticatedUser,

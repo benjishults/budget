@@ -1,5 +1,6 @@
 package bps.budget.persistence
 
+import bps.budget.persistence.jdbc.JdbcConfig
 import bps.budget.persistence.jdbc.JdbcDao
 import org.apache.commons.validator.routines.EmailValidator
 
