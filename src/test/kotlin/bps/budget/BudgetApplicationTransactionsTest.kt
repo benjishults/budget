@@ -20,12 +20,11 @@ import io.kotest.matchers.shouldBe
 import kotlinx.datetime.TimeZone
 import java.math.BigDecimal
 import java.util.UUID
-import kotlin.concurrent.thread
 
 class BudgetApplicationTransactionsTest : FreeSpec(),
     BasicAccountsJdbcTestFixture,
     WithMockClock,
-    ComplexConsoleIoTestFixture by ComplexConsoleIoTestFixture(true) {
+    ComplexConsoleIoTestFixture by ComplexConsoleIoTestFixture(1500) {
 
     override val jdbcDao = JdbcDao(configurations.persistence.jdbc!!)
 
@@ -43,6 +42,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
         )
         resetBalancesAndTransactionAfterSpec(budgetId)
         closeJdbcAfterSpec()
+        stopApplicationAfterSpec()
 
         val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
 
@@ -56,9 +56,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                 outPrinter,
                 clock,
             )
-            thread(name = "Test Application Thread") {
-                application.run()
-            }
+            startApplicationForTesting(application.menuApplicationWithQuit)
             "record income" {
                 validateInteraction(
                     expectedOutputs = listOf(
@@ -273,18 +271,19 @@ Deactivated account 'Cosmetics'
                     expectedOutputs = listOf(
                         "Every month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n",
                         "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$5,200.00]" + """
- 1.       0.00 | Education       | Tuition, books, etc.
- 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
- 3.       0.00 | Food            | Food other than what's covered in entertainment
- 4.       0.00 | Hobby           | Expenses related to a hobby
- 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
- 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
- 7.       0.00 | Medical         | Medicine, supplies, insurance, etc.
- 8.       0.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
- 9.       0.00 | Network         | Mobile plan, routers, internet access
-10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
-11.       0.00 | Travel          | Travel expenses for vacation
-12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+    Account         |    Balance |    Average |        Max |        Min | Description
+ 1. Education       |       0.00 |        N/A |        N/A |        N/A | Tuition, books, etc.
+ 2. Entertainment   |       0.00 |        N/A |        N/A |        N/A | Games, books, subscriptions, going out for food or fun
+ 3. Food            |       0.00 |        N/A |        N/A |        N/A | Food other than what's covered in entertainment
+ 4. Hobby           |       0.00 |        N/A |        N/A |        N/A | Expenses related to a hobby
+ 5. Home Upkeep     |       0.00 |        N/A |        N/A |        N/A | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 6. Housing         |       0.00 |        N/A |        N/A |        N/A | Rent, mortgage, property tax, insurance
+ 7. Medical         |       0.00 |        N/A |        N/A |        N/A | Medicine, supplies, insurance, etc.
+ 8. Necessities     |       0.00 |        N/A |        N/A |        N/A | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+ 9. Network         |       0.00 |        N/A |        N/A |        N/A | Mobile plan, routers, internet access
+10. Transportation  |       0.00 |        N/A |        N/A |        N/A | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+11. Travel          |       0.00 |        N/A |        N/A |        N/A | Travel expenses for vacation
+12. Work            |       0.00 |        N/A |        N/A |        N/A | Work-related expenses (possibly to be reimbursed)
 13. Back (b)
 14. Quit (q)
 """,
@@ -307,18 +306,19 @@ Allowance recorded
 
 """,
                         "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$4,900.00]" + """
- 1.       0.00 | Education       | Tuition, books, etc.
- 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
- 3.     300.00 | Food            | Food other than what's covered in entertainment
- 4.       0.00 | Hobby           | Expenses related to a hobby
- 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
- 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
- 7.       0.00 | Medical         | Medicine, supplies, insurance, etc.
- 8.       0.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
- 9.       0.00 | Network         | Mobile plan, routers, internet access
-10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
-11.       0.00 | Travel          | Travel expenses for vacation
-12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+    Account         |    Balance |    Average |        Max |        Min | Description
+ 1. Education       |       0.00 |        N/A |        N/A |        N/A | Tuition, books, etc.
+ 2. Entertainment   |       0.00 |        N/A |        N/A |        N/A | Games, books, subscriptions, going out for food or fun
+ 3. Food            |     300.00 |        N/A |        N/A |        N/A | Food other than what's covered in entertainment
+ 4. Hobby           |       0.00 |        N/A |        N/A |        N/A | Expenses related to a hobby
+ 5. Home Upkeep     |       0.00 |        N/A |        N/A |        N/A | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 6. Housing         |       0.00 |        N/A |        N/A |        N/A | Rent, mortgage, property tax, insurance
+ 7. Medical         |       0.00 |        N/A |        N/A |        N/A | Medicine, supplies, insurance, etc.
+ 8. Necessities     |       0.00 |        N/A |        N/A |        N/A | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+ 9. Network         |       0.00 |        N/A |        N/A |        N/A | Mobile plan, routers, internet access
+10. Transportation  |       0.00 |        N/A |        N/A |        N/A | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+11. Travel          |       0.00 |        N/A |        N/A |        N/A | Travel expenses for vacation
+12. Work            |       0.00 |        N/A |        N/A |        N/A | Work-related expenses (possibly to be reimbursed)
 13. Back (b)
 14. Quit (q)
 """,
@@ -341,18 +341,19 @@ Allowance recorded
 
 """,
                         "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$4,700.00]" + """
- 1.       0.00 | Education       | Tuition, books, etc.
- 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
- 3.     300.00 | Food            | Food other than what's covered in entertainment
- 4.       0.00 | Hobby           | Expenses related to a hobby
- 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
- 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
- 7.       0.00 | Medical         | Medicine, supplies, insurance, etc.
- 8.     200.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
- 9.       0.00 | Network         | Mobile plan, routers, internet access
-10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
-11.       0.00 | Travel          | Travel expenses for vacation
-12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+    Account         |    Balance |    Average |        Max |        Min | Description
+ 1. Education       |       0.00 |        N/A |        N/A |        N/A | Tuition, books, etc.
+ 2. Entertainment   |       0.00 |        N/A |        N/A |        N/A | Games, books, subscriptions, going out for food or fun
+ 3. Food            |     300.00 |        N/A |        N/A |        N/A | Food other than what's covered in entertainment
+ 4. Hobby           |       0.00 |        N/A |        N/A |        N/A | Expenses related to a hobby
+ 5. Home Upkeep     |       0.00 |        N/A |        N/A |        N/A | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 6. Housing         |       0.00 |        N/A |        N/A |        N/A | Rent, mortgage, property tax, insurance
+ 7. Medical         |       0.00 |        N/A |        N/A |        N/A | Medicine, supplies, insurance, etc.
+ 8. Necessities     |     200.00 |        N/A |        N/A |        N/A | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+ 9. Network         |       0.00 |        N/A |        N/A |        N/A | Mobile plan, routers, internet access
+10. Transportation  |       0.00 |        N/A |        N/A |        N/A | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+11. Travel          |       0.00 |        N/A |        N/A |        N/A | Travel expenses for vacation
+12. Work            |       0.00 |        N/A |        N/A |        N/A | Work-related expenses (possibly to be reimbursed)
 13. Back (b)
 14. Quit (q)
 """,
@@ -370,18 +371,19 @@ Allowance recorded
 
 """,
                         """Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$4,500.00]
- 1.       0.00 | Education       | Tuition, books, etc.
- 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
- 3.     300.00 | Food            | Food other than what's covered in entertainment
- 4.       0.00 | Hobby           | Expenses related to a hobby
- 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
- 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
- 7.     200.00 | Medical         | Medicine, supplies, insurance, etc.
- 8.     200.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
- 9.       0.00 | Network         | Mobile plan, routers, internet access
-10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
-11.       0.00 | Travel          | Travel expenses for vacation
-12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+    Account         |    Balance |    Average |        Max |        Min | Description
+ 1. Education       |       0.00 |        N/A |        N/A |        N/A | Tuition, books, etc.
+ 2. Entertainment   |       0.00 |        N/A |        N/A |        N/A | Games, books, subscriptions, going out for food or fun
+ 3. Food            |     300.00 |        N/A |        N/A |        N/A | Food other than what's covered in entertainment
+ 4. Hobby           |       0.00 |        N/A |        N/A |        N/A | Expenses related to a hobby
+ 5. Home Upkeep     |       0.00 |        N/A |        N/A |        N/A | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 6. Housing         |       0.00 |        N/A |        N/A |        N/A | Rent, mortgage, property tax, insurance
+ 7. Medical         |     200.00 |        N/A |        N/A |        N/A | Medicine, supplies, insurance, etc.
+ 8. Necessities     |     200.00 |        N/A |        N/A |        N/A | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+ 9. Network         |       0.00 |        N/A |        N/A |        N/A | Mobile plan, routers, internet access
+10. Transportation  |       0.00 |        N/A |        N/A |        N/A | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+11. Travel          |       0.00 |        N/A |        N/A |        N/A | Travel expenses for vacation
+12. Work            |       0.00 |        N/A |        N/A |        N/A | Work-related expenses (possibly to be reimbursed)
 13. Back (b)
 14. Quit (q)
 """,
@@ -403,18 +405,19 @@ Allowance recorded
                             |
                         """.trimMargin(),
                         """Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$4,500.00]
- 1.       0.00 | Education       | Tuition, books, etc.
- 2.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
- 3.     300.00 | Food            | Food other than what's covered in entertainment
- 4.       0.00 | Hobby           | Expenses related to a hobby
- 5.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
- 6.       0.00 | Housing         | Rent, mortgage, property tax, insurance
- 7.     200.00 | Medical         | Medicine, supplies, insurance, etc.
- 8.     200.00 | Necessities     | Energy, water, cleaning supplies, soap, tooth brushes, etc.
- 9.       0.00 | Network         | Mobile plan, routers, internet access
-10.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
-11.       0.00 | Travel          | Travel expenses for vacation
-12.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+    Account         |    Balance |    Average |        Max |        Min | Description
+ 1. Education       |       0.00 |        N/A |        N/A |        N/A | Tuition, books, etc.
+ 2. Entertainment   |       0.00 |        N/A |        N/A |        N/A | Games, books, subscriptions, going out for food or fun
+ 3. Food            |     300.00 |        N/A |        N/A |        N/A | Food other than what's covered in entertainment
+ 4. Hobby           |       0.00 |        N/A |        N/A |        N/A | Expenses related to a hobby
+ 5. Home Upkeep     |       0.00 |        N/A |        N/A |        N/A | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 6. Housing         |       0.00 |        N/A |        N/A |        N/A | Rent, mortgage, property tax, insurance
+ 7. Medical         |     200.00 |        N/A |        N/A |        N/A | Medicine, supplies, insurance, etc.
+ 8. Necessities     |     200.00 |        N/A |        N/A |        N/A | Energy, water, cleaning supplies, soap, tooth brushes, etc.
+ 9. Network         |       0.00 |        N/A |        N/A |        N/A | Mobile plan, routers, internet access
+10. Transportation  |       0.00 |        N/A |        N/A |        N/A | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+11. Travel          |       0.00 |        N/A |        N/A |        N/A | Travel expenses for vacation
+12. Work            |       0.00 |        N/A |        N/A |        N/A | Work-related expenses (possibly to be reimbursed)
 13. Back (b)
 14. Quit (q)
 """,
@@ -2239,6 +2242,33 @@ Transfer recorded
             "!if I view a transaction on food that was the result of a charge (cleared or not) what's it look like?" {
             }
             "!if I view a transaction on food that was the result of a charge paid by check (cleared or not) what's it look like?" {
+            }
+            "test quitting" {
+                validateFinalOutput(
+                    expectedOutputs = listOf(
+                        """
+                            |Budget!
+                            | 1. Record Income (i)
+                            | 2. Make Allowances (a)
+                            | 3. Record Spending (s)
+                            | 4. Manage Transactions (t)
+                            | 5. Write or Clear Checks (ch)
+                            | 6. Use or Pay Credit Cards (cr)
+                            | 7. Transfer Money (x)
+                            | 8. Manage Accounts (m)
+                            | 9. Quit (q)
+                            |
+                        """.trimMargin(),
+                        "Enter selection: ",
+                        """
+                            |
+                            |Quitting
+                            |
+                            |
+                    """.trimMargin(),
+                    ),
+                    toInput = listOf("q"),
+                )
             }
         }
     }

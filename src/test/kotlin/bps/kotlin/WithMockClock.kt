@@ -6,6 +6,23 @@ import kotlin.time.Duration
 
 interface WithMockClock {
 
+    class TickingClock(
+        startTime: Instant = Instant.parse("2024-08-09T00:00:00.500Z"),
+        val duration: Duration = Duration.parse("PT1S"),
+    ) : Clock {
+
+        var currentInstant: Instant = startTime
+            private set
+
+        override fun now(): Instant {
+            return currentInstant
+                .also {
+                    currentInstant += duration
+                }
+        }
+    }
+
+
     /**
      * Limitations:
      * 1. The [Clock] produced is not thread safe.
@@ -15,11 +32,7 @@ interface WithMockClock {
      * @param startTime determines the first [Instant] to be returned by [Clock.now]
      */
     fun produceSecondTickingClock(startTime: Instant = Instant.parse("2024-08-09T00:00:00.500Z")) =
-        object : Clock {
-            var currentInstant: Instant = startTime
-            override fun now(): Instant =
-                currentInstant.also { currentInstant += Duration.parse("PT1S") }
-        }
+        TickingClock(Instant.parse("2024-08-09T00:00:00.500Z"))
 
     /**
      * Limitations:
@@ -30,10 +43,6 @@ interface WithMockClock {
      * @param startTime determines the first [Instant] to be returned by [Clock.now]
      */
     fun produceDayTickingClock(startTime: Instant = Instant.parse("2024-08-09T00:00:00.500Z")) =
-        object : Clock {
-            var currentInstant: Instant = startTime
-            override fun now(): Instant =
-                currentInstant.also { currentInstant += Duration.parse("P1D") }
-        }
+        TickingClock(startTime, Duration.parse("P1D"))
 
 }

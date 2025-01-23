@@ -8,6 +8,7 @@ import bps.budget.model.Transaction
 import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.model.toCurrencyAmountOrNull
+import bps.budget.persistence.AnalyticsDao
 import bps.budget.transaction.showRecentRelevantTransactions
 import bps.console.app.MenuSession
 import bps.console.app.TryAgainAtMostRecentMenuException
@@ -24,20 +25,52 @@ import java.math.BigDecimal
 fun WithIo.makeAllowancesSelectionMenu(
     budgetData: BudgetData,
     transactionDao: TransactionDao,
+    analyticsDao: AnalyticsDao,
     userConfig: UserConfiguration,
     clock: Clock,
 ): Menu {
     return ScrollingSelectionMenu(
         header = {
             String.format(
-                "Select account to ALLOCATE money into from '%s' [$%,.2f]",
+                """
+                    |Select account to ALLOCATE money into from '%s' [$%,.2f]
+                    |    Account         |    Balance |    Average |        Max |        Min | Description
+                """.trimMargin(),
                 budgetData.generalAccount.name,
                 budgetData.generalAccount.balance,
             )
         },
         limit = userConfig.numberOfItemsInScrollingList,
         baseList = budgetData.categoryAccounts - budgetData.generalAccount,
-        labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
+        labelGenerator = {
+            val ave = analyticsDao.averageExpenditure(this, budgetData.timeZone)
+            val max = analyticsDao.maxExpenditure()
+            val min = analyticsDao.minExpenditure()
+            String.format(
+                "%-15s | %,10.2f | ${
+                    if (ave === null)
+                        "       N/A"
+                    else
+                        "%,10.2f"
+                } | ${
+                    if (max === null)
+                        "       N/A"
+                    else
+                        "%4$,10.2f"
+                } | ${
+                    if (min === null)
+                        "       N/A"
+                    else
+                        "%5$,10.2f"
+                } | %6\$s",
+                name,
+                balance,
+                ave,
+                max,
+                min,
+                description,
+            )
+        },
     ) { _: MenuSession, selectedCategoryAccount: CategoryAccount ->
 
         showRecentRelevantTransactions(
