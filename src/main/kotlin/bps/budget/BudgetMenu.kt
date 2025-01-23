@@ -43,7 +43,15 @@ fun WithIo.budgetMenu(
             takeActionAndPush(
                 label = makeAllowancesLabel,
                 shortcut = "a",
-                to = { makeAllowancesSelectionMenu(budgetData, budgetDao.transactionDao, userConfig, clock) },
+                to = {
+                    makeAllowancesSelectionMenu(
+                        budgetData,
+                        budgetDao.transactionDao,
+                        budgetDao.analyticsDao,
+                        userConfig,
+                        clock,
+                    )
+                },
             ) {
                 outPrinter(
                     "Every month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n",

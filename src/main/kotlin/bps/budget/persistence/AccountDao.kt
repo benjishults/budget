@@ -6,7 +6,6 @@ import bps.budget.model.CategoryAccount
 import bps.budget.model.ChargeAccount
 import bps.budget.model.DraftAccount
 import bps.budget.model.RealAccount
-import bps.budget.model.Transaction
 import java.math.BigDecimal
 import java.util.UUID
 

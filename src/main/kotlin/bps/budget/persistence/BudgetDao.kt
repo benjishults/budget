@@ -8,6 +8,7 @@ interface BudgetDao : AutoCloseable {
     val userBudgetDao: UserBudgetDao get() = TODO()
     val transactionDao: TransactionDao get() = TODO()
     val accountDao: AccountDao get() = TODO()
+    val analyticsDao: AnalyticsDao get() = TODO()
 
     /**
      * Ensures the persistent store is ready.

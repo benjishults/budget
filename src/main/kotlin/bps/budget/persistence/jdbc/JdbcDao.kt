@@ -1,6 +1,5 @@
 package bps.budget.persistence.jdbc
 
-import bps.budget.auth.AuthenticatedUser
 import bps.budget.model.Account
 import bps.budget.model.AccountType
 import bps.budget.model.BudgetData
@@ -9,6 +8,7 @@ import bps.budget.model.ChargeAccount
 import bps.budget.model.DraftAccount
 import bps.budget.model.RealAccount
 import bps.budget.persistence.AccountDao
+import bps.budget.persistence.AnalyticsDao
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.DataConfigurationException
 import bps.budget.persistence.TransactionDao
@@ -73,6 +73,7 @@ class JdbcDao(
     override val userBudgetDao: UserBudgetDao = JdbcUserBudgetDao(connection, errorStateTracker)
     override val accountDao: AccountDao = JdbcAccountDao(connection)
     override val transactionDao: TransactionDao = JdbcTransactionDao(connection, errorStateTracker, accountDao)
+    override val analyticsDao: AnalyticsDao = JdbcAnalyticsDao(connection, accountDao)
 
     init {
         // NOTE keep the connection alive with an occasional call to `isValid`.

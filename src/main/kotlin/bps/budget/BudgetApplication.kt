@@ -61,7 +61,7 @@ class BudgetApplication private constructor(
         budgetName = getBudgetNameFromPersistenceConfig(configurations.persistence) ?: uiFacade.getBudgetName(),
     )
 
-    private val menuApplicationWithQuit =
+    val menuApplicationWithQuit =
         MenuApplicationWithQuit(
             budgetMenu(budgetData, budgetDao, configurations.user, clock),
             inputReader,
