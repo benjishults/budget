@@ -1,9 +1,0 @@
-persistence:
-  type: JDBC
-  file:
-    dataDirectory: src/test/resources/.data/bps-budget
-    budgetName: Default Test File-Configured Budget
-budgetUser:
-  defaultLogin: fake@fake.com
-  defaultTimeZone: America/Chicago
-#  defaultBudgetName: My Budget

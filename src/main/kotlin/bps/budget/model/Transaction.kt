@@ -11,14 +11,30 @@ interface TransactionItem<out A : Account> /*: Comparable<TransactionItem<*>>*/ 
     val timestamp: Instant
 }
 
-//@Suppress("DataClassPrivateConstructor")
 @ConsistentCopyVisibility
 data class Transaction private constructor(
     val id: UUID,
     val description: String,
     val timestamp: Instant,
+    val type: Type,
     val clears: Transaction? = null,
 ) {
+
+    enum class Type {
+        expense,
+        income,
+
+        /**
+         * transfer from General to a category
+         */
+        allowance,
+        transfer,
+
+        /**
+         * transfer from real to charge or draft
+         */
+        clearing,
+    }
 
     lateinit var categoryItems: List<Item<CategoryAccount>>
         private set
@@ -153,6 +169,7 @@ data class Transaction private constructor(
         var description: String? = null,
         var timestamp: Instant? = null,
         var id: UUID? = null,
+        var type: Type? = null,
         var clears: Transaction? = null,
     ) {
         val categoryItemBuilders: MutableList<ItemBuilder<CategoryAccount>> = mutableListOf()
@@ -164,6 +181,7 @@ data class Transaction private constructor(
             id = this@Builder.id ?: UUID.randomUUID(),
             description = this@Builder.description!!,
             timestamp = this@Builder.timestamp!!,
+            type = this@Builder.type!!,
             clears = this@Builder.clears,
         )
             .apply {
@@ -193,17 +211,18 @@ enum class DraftStatus {
     none,
 
     /**
-     * Means that the item is a cleared draft or charge.
+     * Means that the item is a cleared draft or charge expense on a category account from a draft or charge account
      */
     cleared,
 
     /**
-     * Means that it is part of a clearing transaction on a real account.
+     * Means that it is part of a clearing transaction transferring from a real account to a draft or charge account
      */
     clearing,
 
     /**
-     * Means that the item is waiting for a clearing event on a real account.
+     * Means that the item is a draft or charge expense on a category account from a draft or charge account
+     * waiting for a clearing event on a real account
      */
     outstanding
 }

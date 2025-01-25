@@ -48,61 +48,6 @@ create table if not exists budget_access
 create index if not exists lookup_budget_access_by_user
     on budget_access (user_id);
 
--- create table if not exists access_details
--- (
---     budget_access_id uuid    not null references budget_access (id),
---     fine_access      varchar not null
--- );
-
--- create index if not exists lookup_access_details_by_budget_access
---     on access_details (budget_access_id);
-
--- create table if not exists category_accounts
--- (
---     id          uuid           not null unique,
---     name        varchar(50)    not null,
---     description varchar(110)   not null default '',
---     balance     numeric(30, 2) not null default 0.0,
---     budget_id   uuid           not null references budgets (id),
---     primary key (id, budget_id),
---     unique (name, budget_id)
--- );
---
--- create table if not exists real_accounts
--- (
---     id          uuid           not null unique,
---     name        varchar(50)    not null,
---     description varchar(110)   not null default '',
---     balance     numeric(30, 2) not null default 0.0,
---     budget_id   uuid           not null references budgets (id),
---     primary key (id, budget_id),
---     unique (name, budget_id)
--- );
-
--- create table if not exists draft_accounts
--- (
---     id              uuid           not null unique,
---     name            varchar(50)    not null,
---     description     varchar(110)   not null default '',
---     balance         numeric(30, 2) not null default 0.0,
---     real_account_id uuid           not null references real_accounts (id),
---     budget_id       uuid           not null references budgets (id),
---     primary key (id, budget_id),
---     unique (name, budget_id),
---     unique (real_account_id, budget_id)
--- );
---
--- create table if not exists charge_accounts
--- (
---     id          uuid           not null unique,
---     name        varchar(50)    not null,
---     description varchar(110)   not null default '',
---     balance     numeric(30, 2) not null default 0.0,
---     budget_id   uuid           not null references budgets (id),
---     primary key (id, budget_id),
---     unique (name, budget_id)
--- );
-
 create table if not exists accounts
 (
     id                   uuid           not null unique,
@@ -138,6 +83,9 @@ create table if not exists transactions
     id                        uuid         not null unique,
     description               varchar(110) not null default '',
     timestamp_utc             timestamp    not null default now(),
+    -- 'expense', 'transfer', 'allowance', 'income', 'clearing'
+    -- 'clearing' transaction transfer from real to charge or draft accounts
+    type                      varchar(20)  not null,
     -- the transaction that clears this transaction
     cleared_by_transaction_id uuid         null,
     budget_id                 uuid         not null references budgets (id),
@@ -154,7 +102,10 @@ create table if not exists transaction_items
     description    varchar(110)   null,
     amount         numeric(30, 2) not null,
     account_id     uuid           not null references accounts (id),
-    draft_status   varchar        not null default 'none', -- 'none' 'outstanding' 'cleared'
+    -- 'none' 'outstanding' 'cleared' 'clearing'
+    -- 'outstanding' and 'cleared' are expenditures on category accounts
+    -- 'clearing' transfer from real to charge or draft accounts
+    draft_status   varchar        not null default 'none',
     budget_id      uuid           not null references budgets (id)
 );
 
@@ -228,7 +179,7 @@ where t.id in (select id
                from transactions
 --                where cleared_by_transaction_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47'
 --                  and budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47'
-               );
+);
 
 select *
 from accounts acc
@@ -477,10 +428,16 @@ where t.budget_id = 'ccac6f53-04f3-4da5-a2ea-de39c6843e47'
                limit ('30'::int4) offset ('0'::int4))
 ;
 
-select ti.id, ti.description, ti.amount, ti.draft_status, ca.name, t.description as transaction_descirption, t.timestamp_utc
+select ti.id,
+       ti.description,
+       ti.amount,
+       ti.draft_status,
+       ca.name,
+       t.description as transaction_descirption,
+       t.timestamp_utc
 from transaction_items ti
-join charge_accounts ca on ti.charge_account_id = ca.id and ti.budget_id = ca.budget_id
-join transactions t on t.id = ti.transaction_id and t.budget_id = ti.budget_id
+         join charge_accounts ca on ti.charge_account_id = ca.id and ti.budget_id = ca.budget_id
+         join transactions t on t.id = ti.transaction_id and t.budget_id = ti.budget_id
 where ti.budget_id = '91eca65d-7c6d-46dd-b3a2-1eb992b4bf83'
   and charge_account_id is not null;
 
