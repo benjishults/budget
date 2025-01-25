@@ -3,6 +3,7 @@ package bps.budget.consistency
 import bps.budget.model.BudgetData
 import bps.budget.model.ChargeAccount
 import bps.budget.model.DraftAccount
+import bps.budget.model.DraftStatus
 import bps.budget.model.Transaction
 import bps.budget.persistence.TransactionDao
 import kotlinx.datetime.Instant
@@ -40,13 +41,14 @@ fun clearCheckConsistently(
     Transaction.Builder(
         draftTransactionItem.transactionDescription,
         timestamp,
+        type = Transaction.Type.clearing,
     )
         .apply {
             with(draftAccount) {
                 addItemBuilderTo(
                     -draftTransactionItem.amount,
                     this@apply.description,
-                    bps.budget.model.DraftStatus.clearing,
+                    DraftStatus.clearing,
                 )
             }
             with(draftTransactionItem.account.realCompanion) {

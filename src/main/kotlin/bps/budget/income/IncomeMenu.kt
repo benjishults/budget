@@ -5,6 +5,7 @@ import bps.budget.consistency.commitTransactionConsistently
 import bps.budget.model.BudgetData
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
+import bps.budget.model.Transaction.Type
 import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
 import bps.budget.model.toCurrencyAmountOrNull
@@ -89,7 +90,11 @@ fun createIncomeTransaction(
     amount: BigDecimal,
     budgetData: BudgetData,
     realAccount: RealAccount,
-) = Transaction.Builder(description, timestamp)
+) = Transaction.Builder(
+    description = description,
+    timestamp = timestamp,
+    type = Type.income,
+)
     .apply {
         with(budgetData.generalAccount) {
             addItemBuilderTo(amount)

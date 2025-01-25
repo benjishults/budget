@@ -101,8 +101,7 @@ private fun WithIo.createAndSaveIncomeTransaction(
             realAccount,
         )
             .let { incomeTransaction: Transaction ->
-                budgetData.commit(incomeTransaction)
-                transactionDao.commit(incomeTransaction, budgetData.id)
+                commitTransactionConsistently(incomeTransaction, transactionDao, budgetData)
                 outPrinter.important("Real account '${realAccount.name}' created with balance $$balance")
             }
     }

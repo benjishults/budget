@@ -7,6 +7,7 @@ import bps.budget.model.CategoryAccount
 import bps.budget.model.DraftAccount
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
+import bps.budget.model.Transaction.Type
 import bps.budget.model.defaultCheckingAccountName
 import bps.budget.model.defaultCosmeticsAccountName
 import bps.budget.model.defaultEducationAccountName
@@ -66,6 +67,7 @@ class SomeBasicTransactionsTest : FreeSpec(),
                         .Builder(
                             description = "income into $defaultCheckingAccountName",
                             timestamp = clock.now(),
+                            type = Type.income,
                         )
                         .apply {
                             with(budgetData.generalAccount) {
@@ -90,6 +92,7 @@ class SomeBasicTransactionsTest : FreeSpec(),
                         .Builder(
                             description = "allocate into $defaultFoodAccountName",
                             timestamp = clock.now(),
+                            type = Type.allowance,
                         )
                         .apply {
                             with(budgetData.generalAccount) {
@@ -111,6 +114,7 @@ class SomeBasicTransactionsTest : FreeSpec(),
                 val writeCheck: Transaction = Transaction.Builder(
                     description = "groceries",
                     timestamp = clock.now(),
+                    type = Type.expense,
                 )
                     .apply {
                         with(
@@ -174,6 +178,7 @@ class SomeBasicTransactionsTest : FreeSpec(),
                 val writeCheck: Transaction = Transaction.Builder(
                     description = "groceries",
                     timestamp = clock.now(),
+                    type = Type.clearing,
                 )
                     .apply {
                         with(

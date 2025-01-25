@@ -76,8 +76,9 @@ fun WithIo.transferMenu(
                 val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
                     ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
                 val transferTransaction = Transaction.Builder(
-                    description,
-                    timestamp,
+                    description = description,
+                    timestamp = timestamp,
+                    type = Transaction.Type.transfer,
                 )
                     .apply {
                         with(transferFromAccount) {

@@ -1,5 +1,6 @@
 package bps.budget.model
 
+import bps.budget.model.Transaction.Type
 import bps.budget.persistence.TransactionDao
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
@@ -80,6 +81,7 @@ abstract class Account(
         transactionId: UUID,
         transactionDescription: String,
         transactionTimestamp: Instant,
+        transactionType: Type,
         accountBalanceAfterItem: BigDecimal?,
     ): TransactionDao.ExtendedTransactionItem<*> =
         TODO()
@@ -156,6 +158,7 @@ class CategoryAccount(
         transactionId: UUID,
         transactionDescription: String,
         transactionTimestamp: Instant,
+        transactionType: Type,
         accountBalanceAfterItem: BigDecimal?,
     ): TransactionDao.ExtendedTransactionItem<CategoryAccount> =
         TransactionDao.ExtendedTransactionItem(
@@ -168,6 +171,7 @@ class CategoryAccount(
             transactionId = transactionId,
             transactionDescription = transactionDescription,
             transactionTimestamp = transactionTimestamp,
+            transactionType = transactionType,
             transactionDao = this,
             budgetId = this@CategoryAccount.budgetId,
             accountBalanceAfterItem = accountBalanceAfterItem,
@@ -200,6 +204,7 @@ open class RealAccount(
         transactionId: UUID,
         transactionDescription: String,
         transactionTimestamp: Instant,
+        transactionType: Type,
         accountBalanceAfterItem: BigDecimal?,
     ): TransactionDao.ExtendedTransactionItem<RealAccount> =
         TransactionDao.ExtendedTransactionItem(
@@ -212,6 +217,7 @@ open class RealAccount(
             transactionId = transactionId,
             transactionDescription = transactionDescription,
             transactionTimestamp = transactionTimestamp,
+            transactionType = transactionType,
             transactionDao = this,
             budgetId = this@RealAccount.budgetId,
             accountBalanceAfterItem = accountBalanceAfterItem,
@@ -263,6 +269,7 @@ class DraftAccount(
         transactionId: UUID,
         transactionDescription: String,
         transactionTimestamp: Instant,
+        transactionType: Type,
         accountBalanceAfterItem: BigDecimal?,
     ): TransactionDao.ExtendedTransactionItem<DraftAccount> =
         TransactionDao.ExtendedTransactionItem(
@@ -275,6 +282,7 @@ class DraftAccount(
             transactionId = transactionId,
             transactionDescription = transactionDescription,
             transactionTimestamp = transactionTimestamp,
+            transactionType = transactionType,
             transactionDao = this,
             budgetId = this@DraftAccount.budgetId,
             accountBalanceAfterItem = accountBalanceAfterItem,
@@ -337,6 +345,7 @@ class ChargeAccount(
         transactionId: UUID,
         transactionDescription: String,
         transactionTimestamp: Instant,
+        transactionType: Type,
         accountBalanceAfterItem: BigDecimal?,
     ): TransactionDao.ExtendedTransactionItem<ChargeAccount> =
         TransactionDao.ExtendedTransactionItem(
@@ -349,6 +358,7 @@ class ChargeAccount(
             transactionId = transactionId,
             transactionDescription = transactionDescription,
             transactionTimestamp = transactionTimestamp,
+            transactionType = transactionType,
             transactionDao = this,
             budgetId = this@ChargeAccount.budgetId,
             accountBalanceAfterItem = accountBalanceAfterItem,

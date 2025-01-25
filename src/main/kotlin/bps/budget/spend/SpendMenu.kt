@@ -58,8 +58,9 @@ fun WithIo.recordSpendingMenu(
         transactionDao = transactionDao,
         userConfig = userConfig,
         transactionBuilder = Transaction.Builder(
-            description,
-            timestamp,
+            description = description,
+            timestamp = timestamp,
+            type = Transaction.Type.expense,
         ),
     )
 }

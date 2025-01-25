@@ -6,6 +6,7 @@ import bps.budget.model.DraftAccount
 import bps.budget.model.DraftStatus
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
+import bps.budget.model.Transaction.Type
 import bps.budget.persistence.AccountDao
 import bps.budget.persistence.TransactionDao
 import bps.jdbc.JdbcFixture
@@ -143,14 +144,15 @@ class JdbcTransactionDao(
     ): PreparedStatement {
         val insertTransaction: PreparedStatement = prepareStatement(
             """
-                insert into transactions (id, description, timestamp_utc, budget_id) VALUES
-                (?, ?, ?, ?)
+                insert into transactions (id, description, timestamp_utc, type, budget_id) VALUES
+                (?, ?, ?, ?, ?)
             """.trimIndent(),
         )
         insertTransaction.setUuid(1, transaction.id)
         insertTransaction.setString(2, transaction.description)
         insertTransaction.setTimestamp(3, transaction.timestamp)
-        insertTransaction.setUuid(4, budgetId)
+        insertTransaction.setString(4, transaction.type.name)
+        insertTransaction.setUuid(5, budgetId)
         return insertTransaction
     }
 
@@ -392,6 +394,7 @@ class JdbcTransactionDao(
                     |select t.id as transaction_id,
                     |       t.description as transaction_description,
                     |       t.timestamp_utc as transaction_timestamp,
+                    |       t.type,
                     |       i.id as item_id,
                     |       i.amount,
                     |       i.description,
@@ -440,6 +443,7 @@ class JdbcTransactionDao(
                                                     transactionId = transactionId,
                                                     transactionDescription = transactionDescription,
                                                     transactionTimestamp = transactionTimestamp,
+                                                    transactionType = Type.valueOf(getString("type")!!),
                                                     accountBalanceAfterItem = runningBalance,
                                                 )
                                             } as TransactionDao.ExtendedTransactionItem<A>,
@@ -504,6 +508,7 @@ class JdbcTransactionDao(
                     |select t.description as transaction_description,
                     |       t.timestamp_utc as transaction_timestamp,
                     |       t.cleared_by_transaction_id,
+                    |       t.type,
                     |       i.account_id,
                     |       i.id,
                     |       i.amount,
@@ -548,12 +553,13 @@ class JdbcTransactionDao(
         transactionId: UUID,
         accountIdToAccountMap: Map<UUID, Account>,
     ): Transaction.Builder =
-        Transaction
-            .Builder()
+        Transaction.Builder(
+            description = result.getString("transaction_description"),
+            timestamp = result.getInstant("transaction_timestamp"),
+            type = Type.valueOf(result.getString("type")),
+        )
             .apply {
                 id = transactionId
-                description = result.getString("transaction_description")
-                timestamp = result.getInstant("transaction_timestamp")
                 populateItem(result, accountIdToAccountMap)
             }
 

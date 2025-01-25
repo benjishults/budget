@@ -58,6 +58,8 @@ class JdbcDaoTest : FreeSpec() {
                         "description"
                 every { resultSet.getString("draft_status") } returns
                         "none"
+                every { resultSet.getString("type") } returns
+                        "expense"
                 every { resultSet.getUuid(any()) } answers
                         { UUID.randomUUID() }
                 every { resultSet.getUuid("budget_id") } returns

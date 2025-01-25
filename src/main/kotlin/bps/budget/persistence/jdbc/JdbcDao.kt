@@ -191,6 +191,7 @@ create table if not exists transactions
     id                        uuid         not null unique,
     description               varchar(110) not null default '',
     timestamp_utc             timestamp    not null default now(),
+    type                      varchar(20)  not null,
     -- the transaction that clears this transaction
     cleared_by_transaction_id uuid         null,
     budget_id                 uuid         not null references budgets (id),

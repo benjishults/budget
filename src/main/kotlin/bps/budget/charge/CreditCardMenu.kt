@@ -150,7 +150,11 @@ private fun WithIo.payCreditCardBill(
                         .getResult()
                         ?: throw TryAgainAtMostRecentMenuException("No description entered.")
                 val billPayTransaction: Transaction =
-                    Transaction.Builder(description, timestamp)
+                    Transaction.Builder(
+                        description = description,
+                        timestamp = timestamp,
+                        type = Transaction.Type.clearing,
+                    )
                         .apply {
                             with(selectedRealAccount) {
                                 addItemBuilderTo(-amountOfBill, description)
@@ -323,7 +327,11 @@ private fun WithIo.spendOnACreditCard(
         val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
             ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
         val transactionBuilder: Transaction.Builder =
-            Transaction.Builder(description, timestamp)
+            Transaction.Builder(
+                description = description,
+                timestamp = timestamp,
+                type = Transaction.Type.expense,
+            )
                 .apply {
                     with(chargeAccount) {
                         addItemBuilderTo(-amount, description, DraftStatus.outstanding)

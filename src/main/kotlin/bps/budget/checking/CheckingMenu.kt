@@ -176,7 +176,11 @@ fun WithIo.writeCheckOnAccount(
             )
                 ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
         val transactionBuilder: Transaction.Builder =
-            Transaction.Builder(description, timestamp)
+            Transaction.Builder(
+                description = description,
+                timestamp = timestamp,
+                type = Transaction.Type.expense,
+            )
                 .apply {
                     with(draftAccount) {
                         addItemBuilderTo(amount, description, DraftStatus.outstanding)
