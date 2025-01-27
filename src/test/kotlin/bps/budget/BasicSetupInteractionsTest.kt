@@ -28,7 +28,7 @@ class BasicSetupInteractionsTest : FreeSpec(),
         "setup basic data through console ui" {
             val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
             inputs.addAll(
-                listOf("test@test.com", "", "y", "2000", "100", "9"),
+                listOf("test@test.com", "", "y", "2000", "100", "10"),
             )
             BudgetApplication(
                 uiFunctions,
@@ -78,7 +78,8 @@ class BasicSetupInteractionsTest : FreeSpec(),
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. User Settings (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                 "Enter selection: ",
                 """

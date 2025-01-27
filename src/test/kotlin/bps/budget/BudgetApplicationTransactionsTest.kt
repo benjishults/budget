@@ -70,7 +70,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -166,7 +167,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                         """ 1. Create a New Category
@@ -261,7 +263,8 @@ Deactivated account 'Cosmetics'
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -439,7 +442,8 @@ Allowance recorded
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -606,7 +610,8 @@ Medical          |     200.00 |
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -688,7 +693,8 @@ Spending recorded
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -708,7 +714,8 @@ Spending recorded
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1031,7 +1038,8 @@ Check deleted
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1163,7 +1171,8 @@ Check deleted
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1224,7 +1233,8 @@ New credit card account 'Costco Visa' created
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1431,7 +1441,8 @@ Spending recorded
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1546,7 +1557,8 @@ Spending recorded
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1749,7 +1761,8 @@ Spending recorded
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1886,7 +1899,8 @@ Spending recorded
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -2035,7 +2049,8 @@ Editing done
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -2127,7 +2142,8 @@ Editing done
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -2256,7 +2272,8 @@ Transfer recorded
                             | 6. Use or Pay Credit Cards (cr)
                             | 7. Transfer Money (x)
                             | 8. Manage Accounts (m)
-                            | 9. Quit (q)
+                            | 9. User Settings (u)
+                            |10. Quit (q)
                             |
                         """.trimMargin(),
                         "Enter selection: ",

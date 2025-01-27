@@ -21,7 +21,7 @@ const val writeOrClearChecksLabel = "Write or Clear Checks"
 const val useOrPayCreditCardsLabel = "Use or Pay Credit Cards"
 const val transferLabel = "Transfer Money"
 const val manageAccountsLabel = "Manage Accounts"
-const val managePreferencesLabel = "Settings"
+const val userSettingsLabel = "User Settings"
 const val recordSpendingLabel = "Record Spending"
 const val manageTransactionsLabel = "Manage Transactions"
 
@@ -63,7 +63,7 @@ class BudgetApplication private constructor(
 
     val menuApplicationWithQuit =
         MenuApplicationWithQuit(
-            budgetMenu(budgetData, budgetDao, configurations.user, clock),
+            budgetMenu(budgetData, budgetDao, configurations.user, authenticatedUser.id, clock),
             inputReader,
             outPrinter,
         )

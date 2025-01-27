@@ -20,6 +20,7 @@ import bps.console.menu.Menu
 import bps.console.menu.ScrollingSelectionMenu
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.toInstant
 import java.math.BigDecimal
 
 fun WithIo.transferMenu(
@@ -73,8 +74,13 @@ fun WithIo.transferMenu(
                     )
                         .getResult()
                         ?: throw TryAgainAtMostRecentMenuException("No description entered.")
-                val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
-                    ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
+                val timestamp: Instant =
+                    getTimestampFromUser(
+                        timeZone = budgetData.timeZone,
+                        clock = clock,
+                    )
+                        ?.toInstant(budgetData.timeZone)
+                        ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
                 val transferTransaction = Transaction.Builder(
                     description = description,
                     timestamp = timestamp,

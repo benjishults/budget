@@ -1,5 +1,7 @@
 package bps.budget.allowance
 
+import bps.budget.analytics.AnalyticsOptions
+import bps.budget.analytics.AnalyticsOptions.Companion.invoke
 import bps.console.io.WithIo
 import bps.budget.consistency.commitTransactionConsistently
 import bps.budget.model.BudgetData
@@ -20,7 +22,11 @@ import bps.console.menu.Menu
 import bps.console.menu.ScrollingSelectionMenu
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import java.math.BigDecimal
+import kotlin.time.Duration
 
 fun WithIo.makeAllowancesSelectionMenu(
     budgetData: BudgetData,
@@ -43,7 +49,19 @@ fun WithIo.makeAllowancesSelectionMenu(
         limit = userConfig.numberOfItemsInScrollingList,
         baseList = budgetData.categoryAccounts - budgetData.generalAccount,
         labelGenerator = {
-            val ave = analyticsDao.averageExpenditure(this, budgetData.timeZone)
+            val ave = analyticsDao.averageExpenditure(
+                this, budgetData.timeZone,
+                AnalyticsOptions(
+//            excludeFirstActiveUnit = true,
+//            excludeMaxAndMin = false,
+//            minimumUnits = 3,
+//            timeUnit = DateTimeUnit.MONTH,
+                    excludeFutureUnits = true,
+                    excludeCurrentUnit = true,
+                    since = LocalDateTime.parse("2024-11-01T00:00:00")
+                        .toInstant(budgetData.timeZone),
+                ),
+            )
             val max = analyticsDao.maxExpenditure()
             val min = analyticsDao.minExpenditure()
             String.format(
@@ -114,6 +132,7 @@ fun WithIo.makeAllowancesSelectionMenu(
                     .getResult()
                     ?: throw TryAgainAtMostRecentMenuException("No description entered.")
             val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
+                ?.toInstant(budgetData.timeZone)
                 ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
             val allocate = Transaction.Builder(
                 description = description,

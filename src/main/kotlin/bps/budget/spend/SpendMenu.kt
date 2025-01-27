@@ -15,6 +15,7 @@ import bps.console.inputs.getTimestampFromUser
 import bps.console.menu.Menu
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.toInstant
 import java.math.BigDecimal
 
 fun WithIo.recordSpendingMenu(
@@ -49,6 +50,7 @@ fun WithIo.recordSpendingMenu(
             ?: throw TryAgainAtMostRecentMenuException("No description entered.")
     val timestamp: Instant =
         getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
+            ?.toInstant(budgetData.timeZone)
             ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
     return chooseRealAccountsThenCategories(
         totalAmount = amount,

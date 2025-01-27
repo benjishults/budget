@@ -8,6 +8,7 @@ import bps.budget.income.recordIncomeSelectionMenu
 import bps.budget.model.BudgetData
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
+import bps.budget.settings.userSettingsMenu
 import bps.budget.spend.recordSpendingMenu
 import bps.budget.transaction.manageTransactions
 import bps.budget.transfer.transferMenu
@@ -17,11 +18,13 @@ import bps.console.menu.pushMenu
 import bps.console.menu.quitItem
 import bps.console.menu.takeActionAndPush
 import kotlinx.datetime.Clock
+import java.util.UUID
 
 fun WithIo.budgetMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
+    userId: UUID,
     clock: Clock,
 ): Menu =
     Menu({ "Budget!" }) {
@@ -86,6 +89,11 @@ fun WithIo.budgetMenu(
         add(
             pushMenu(manageAccountsLabel, "m") {
                 manageAccountsMenu(budgetData, budgetDao, userConfig, clock)
+            },
+        )
+        add(
+            pushMenu(userSettingsLabel, "u") {
+                userSettingsMenu(budgetData, userId, budgetDao.userBudgetDao, clock)
             },
         )
 //        add(

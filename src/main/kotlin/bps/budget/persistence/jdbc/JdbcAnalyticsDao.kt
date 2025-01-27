@@ -1,5 +1,6 @@
 package bps.budget.persistence.jdbc
 
+import bps.budget.analytics.AnalyticsOptions
 import bps.budget.model.CategoryAccount
 import bps.budget.persistence.AccountDao
 import bps.budget.persistence.AnalyticsDao
@@ -10,10 +11,10 @@ import bps.time.NaturalLocalInterval
 import bps.time.NaturalMonthLocalInterval
 import bps.time.naturalMonthInterval
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
+import kotlin.time.Duration
 import kotlinx.datetime.toJavaInstant
 import kotlinx.datetime.toLocalDateTime
 import java.math.BigDecimal
@@ -238,41 +239,3 @@ class JdbcAnalyticsDao(
 
 }
 
-interface AnalyticsOptions {
-
-    //        val excludeFirstActiveUnit: Boolean
-    val excludeFutureUnits: Boolean
-    val excludeCurrentUnit: Boolean
-
-    //        val excludeMaxAndMinFromAverage: Boolean
-//        val minimumUnitsAfterExclusions: Int
-//        val timeUnit: DateTimeUnit
-    val since: Instant
-
-    companion object {
-        operator fun invoke(
-//                excludeFirstActiveUnit: Boolean,
-//                excludeMaxAndMinFromAverage: Boolean,
-//                minimumUnitsAfterExclusions: Int,
-//                timeUnit: DateTimeUnit,
-            excludeFutureUnits: Boolean,
-            excludeCurrentUnit: Boolean,
-            since: Instant,
-        ): AnalyticsOptions =
-            object : AnalyticsOptions {
-                //                    override val excludeFirstActiveUnit = excludeFirstActiveUnit
-//                    override val excludeMaxAndMinFromAverage = excludeMaxAndMinFromAverage
-//                    override val minimumUnitsAfterExclusions = minimumUnitsAfterExclusions
-//                    override val timeUnit = timeUnit
-                override val excludeFutureUnits: Boolean = excludeFutureUnits
-                override val excludeCurrentUnit: Boolean = excludeCurrentUnit
-                override val since: Instant = since
-
-                init {
-                    require(excludeFutureUnits || !excludeCurrentUnit)
-                }
-
-            }
-    }
-
-}

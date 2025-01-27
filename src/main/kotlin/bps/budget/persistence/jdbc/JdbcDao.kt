@@ -17,6 +17,7 @@ import bps.jdbc.JdbcFixture
 import bps.jdbc.transact
 import bps.jdbc.transactOrThrow
 import bps.kotlin.Instrumentable
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinInstant
@@ -131,16 +132,16 @@ create table if not exists budgets
                         """
 create table if not exists budget_access
 (
-    id            uuid         not null primary key,
-    user_id       uuid         not null references users (id),
-    budget_id     uuid         not null references budgets (id),
-    budget_name   varchar(110) not null,
-    time_zone     varchar(110) not null,
+    id              uuid         not null primary key,
+    user_id         uuid         not null references users (id),
+    budget_id       uuid         not null references budgets (id),
+    budget_name     varchar(110) not null,
+    time_zone       varchar(110) not null,
+    analytics_start timestamp    not null default now(),
     -- if null, check fine_access
-    coarse_access varchar,
+    coarse_access   varchar,
     unique (user_id, budget_id)
-)
-                    """.trimIndent(),
+)                    """.trimIndent(),
                     )
                     createStatement.executeUpdate(
                         """
@@ -202,7 +203,13 @@ create table if not exists transactions
                     createStatement.executeUpdate(
                         """
 create index if not exists lookup_transaction_by_date
-    on transactions (timestamp_utc desc, budget_id);
+    on transactions (timestamp_utc desc, budget_id)
+                    """.trimIndent(),
+                    )
+                    createStatement.executeUpdate(
+                        """
+create index if not exists lookup_transaction_by_type_and_date
+    on transactions (timestamp_utc desc, type, budget_id)
                     """.trimIndent(),
                     )
                     createStatement.executeUpdate(
@@ -254,6 +261,7 @@ create index if not exists lookup_transaction_items_by_account
     private data class BudgetDataInfo(
         val generalAccountId: UUID,
         val timeZone: TimeZone,
+        val analyticsStart: Instant,
         val budgetName: String,
     )
 
@@ -268,10 +276,10 @@ create index if not exists lookup_transaction_items_by_account
                     throw DataConfigurationException(ex.message, ex)
                 },
             ) {
-                val (generalAccountId: UUID, timeZone: TimeZone, budgetName: String) =
+                val (generalAccountId: UUID, timeZone: TimeZone, analyticsStart: Instant, budgetName: String) =
                     prepareStatement(
                         """
-                            select b.general_account_id, ba.time_zone, ba.budget_name
+                            select b.general_account_id, ba.time_zone, ba.budget_name, ba.analytics_start
                             from budgets b
                                 join budget_access ba on b.id = ba.budget_id
                                 join users u on u.id = ba.user_id
@@ -286,11 +294,12 @@ create index if not exists lookup_transaction_items_by_account
                                 .use { result: ResultSet ->
                                     if (result.next()) {
                                         BudgetDataInfo(
-                                            result.getObject("general_account_id", UUID::class.java),
-                                            result.getString("time_zone")
+                                            generalAccountId = result.getObject("general_account_id", UUID::class.java),
+                                            timeZone = result.getString("time_zone")
                                                 ?.let { timeZone -> TimeZone.of(timeZone) }
                                                 ?: TimeZone.currentSystemDefault(),
-                                            result.getString("budget_name"),
+                                            analyticsStart = result.getInstant("analytics_start"),
+                                            budgetName = result.getString("budget_name"),
                                         )
                                     } else
                                         throw DataConfigurationException("Budget data not found for name: ${config.budgetName}")
@@ -348,6 +357,7 @@ where acc.budget_id = ?
                     budgetId,
                     budgetName,
                     timeZone,
+                    analyticsStart,
                     generalAccount,
                     categoryAccounts,
                     realAccounts,

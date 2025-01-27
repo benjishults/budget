@@ -15,7 +15,7 @@ import java.util.UUID
 
 interface JdbcFixture {
 
-    fun PreparedStatement.setTimestamp(parameterIndex: Int, timestamp: Instant) {
+    fun PreparedStatement.setInstant(parameterIndex: Int, timestamp: Instant) {
         setTimestamp(parameterIndex, Timestamp(timestamp.toEpochMilliseconds()))
     }
 

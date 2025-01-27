@@ -1,5 +1,7 @@
 package bps.budget.jdbc
 
+import bps.budget.analytics.AnalyticsOptions
+import bps.budget.analytics.AnalyticsOptions.Companion.invoke
 import bps.budget.model.CategoryAccount
 import bps.budget.persistence.AccountDao
 import bps.budget.persistence.AnalyticsDao
@@ -16,6 +18,7 @@ import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Timestamp
+import kotlin.time.Duration
 
 class AnalyticsDaoTest : FreeSpec(),
     WithMockClock {
@@ -71,6 +74,15 @@ class AnalyticsDaoTest : FreeSpec(),
             dao.averageExpenditure(
                 foodAccount,
                 timeZone,
+                AnalyticsOptions(
+//            excludeFirstActiveUnit = true,
+//            excludeMaxAndMin = false,
+//            minimumUnits = 3,
+//            timeUnit = DateTimeUnit.MONTH,
+                    excludeFutureUnits = true,
+                    excludeCurrentUnit = true,
+                    since = clock.now() - Duration.parse("P395D"),
+                ),
             ) shouldBe (50 * 30).toBigDecimal()
         }
     }

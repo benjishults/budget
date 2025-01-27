@@ -20,6 +20,7 @@ import bps.console.menu.Menu
 import bps.console.menu.ScrollingSelectionMenu
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.toInstant
 import java.math.BigDecimal
 
 fun WithIo.recordIncomeSelectionMenu(
@@ -74,6 +75,7 @@ fun WithIo.recordIncomeSelectionMenu(
                 .getResult()
                 ?: throw TryAgainAtMostRecentMenuException("No description entered.")
         val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
+            ?.toInstant(budgetData.timeZone)
             ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
         commitTransactionConsistently(
             createIncomeTransaction(description, timestamp, amount, budgetData, realAccount),

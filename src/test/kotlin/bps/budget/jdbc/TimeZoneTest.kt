@@ -52,8 +52,8 @@ class TimeZoneTest : FreeSpec(), BaseJdbcTestFixture, JdbcFixture {
                         """.trimIndent(),
                     )
                         .use { statement ->
-                            statement.setTimestamp(1, now)
-                            statement.setTimestamp(2, now)
+                            statement.setInstant(1, now)
+                            statement.setInstant(2, now)
                             statement.setString(3, label2)
                             statement.executeUpdate()
                         }

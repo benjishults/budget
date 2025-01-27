@@ -5,6 +5,7 @@ import bps.budget.auth.AuthenticatedUser
 import bps.budget.model.BudgetData
 import io.kotest.core.spec.Spec
 import io.kotest.mpp.atomics.AtomicReference
+import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import java.util.UUID
 
@@ -82,6 +83,7 @@ interface BasicAccountsJdbcTestFixture : BaseJdbcTestFixture {
         jdbcDao.userBudgetDao.grantAccess(
             budgetName = budgetName,
             timeZoneId = timeZone.id,
+            analyticsStart = Clock.System.now(),
             userId = authenticatedUser.id,
             budgetId = budgetId,
         )

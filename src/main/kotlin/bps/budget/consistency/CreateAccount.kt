@@ -14,6 +14,7 @@ import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.toInstant
 import java.math.BigDecimal
 
 fun createCategoryAccountConsistently(
@@ -92,6 +93,7 @@ private fun WithIo.createAndSaveIncomeTransaction(
             timeZone = budgetData.timeZone,
             clock = clock,
         )
+            ?.toInstant(budgetData.timeZone)
             ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
         createIncomeTransaction(
             incomeDescription,
