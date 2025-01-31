@@ -4,7 +4,7 @@
 
 ### Set up the env for DB
 
-Set the `BPS_BUDGET_DATA_DIR` environment variable to something like `~/data/bps-budget/`
+Set the `BPS_BUDGET_DATA_DIR` environment variable to something like `~/data/bps-budget`
 and make sure that folder exists.
 
 You'll need to have pulled the postgres image from some container registry:

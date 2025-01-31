@@ -23,7 +23,7 @@ then
     printf "most recent backup\n%s\n" "$(tail --lines=1 "$sorted_filenames_file")"
     restore_file="${BPS_BUDGET_DATA_DIR}/backup/$(tail --lines=1 "$sorted_filenames_file")"
     echo "restoring from backup: $restore_file"
-#  pg_dump -U admin -h localhost budget < "$BPS_BUDGET_DATA_DIR"/backup/postgres-"$(date +"%011s")".sql
+#  pg_dump -U admin -h localhost budget < "$restore_file"
   fi
 else
   echo "filename given: $given_filename"
