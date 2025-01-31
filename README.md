@@ -4,7 +4,7 @@
 
 ### Set up the env for DB
 
-Set the `BPS_BUDGET_POSTGRES_DATA_DIR` environment variable to something like `~/data/bps-budget/postgres`
+Set the `BPS_BUDGET_DATA_DIR` environment variable to something like `~/data/bps-budget/`
 and make sure that folder exists.
 
 You'll need to have pulled the postgres image from some container registry:
@@ -60,7 +60,7 @@ github.actor=<your github login>
 github.token=<token with packages:read>
 ```
 
-Alternatively, you can set the environment variables `GITHUB_ACTOR` and `GITHUB_TOKEN`.  The latter is nice for the
+Alternatively, you can set the environment variables `GITHUB_ACTOR` and `GITHUB_TOKEN`. The latter is nice for the
 CI while the former is nice for your IDE.
 
 Then build the application with
