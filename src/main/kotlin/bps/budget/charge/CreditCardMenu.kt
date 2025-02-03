@@ -28,6 +28,7 @@ import bps.console.menu.quitItem
 import bps.console.menu.takeAction
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.toInstant
 import java.math.BigDecimal
 
 fun WithIo.creditCardMenu(
@@ -47,7 +48,7 @@ fun WithIo.creditCardMenu(
             Menu {
                 add(
                     // NOTE these might ought to be takeActionAndPush.  The intermediateAction could collect the initial data and pass it on.
-                    takeAction("Record spending on '${chargeAccount.name}'") {
+                    takeAction({ "Record spending on '${chargeAccount.name}'" }) {
                         spendOnACreditCard(
                             budgetData,
                             clock,
@@ -60,7 +61,7 @@ fun WithIo.creditCardMenu(
                 )
                 add(
                     // NOTE these might ought to be takeActionAndPush.  The intermediateAction could collect the initial data and pass it on.
-                    takeAction("Pay '${chargeAccount.name}' bill") {
+                    takeAction({ "Pay '${chargeAccount.name}' bill" }) {
                         payCreditCardBill(
                             menuSession,
                             userConfig,
@@ -72,7 +73,7 @@ fun WithIo.creditCardMenu(
                     },
                 )
                 add(
-                    pushMenu("View unpaid transactions on '${chargeAccount.name}'") {
+                    pushMenu({ "View unpaid transactions on '${chargeAccount.name}'" }) {
                         ViewTransactionsWithoutBalancesMenu(
                             account = chargeAccount,
                             transactionDao = transactionDao,
@@ -135,10 +136,11 @@ private fun WithIo.payCreditCardBill(
             ) { _: MenuSession, selectedRealAccount: RealAccount ->
                 val timestamp: Instant =
                     getTimestampFromUser(
-                        "Use current time for the bill-pay transaction [Y]? ",
-                        budgetData.timeZone,
-                        clock,
+                        queryForNow = "Use current time for the bill-pay transaction [Y]? ",
+                        timeZone = budgetData.timeZone,
+                        clock = clock,
                     )
+                        ?.toInstant(budgetData.timeZone)
                         ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
                 val description: String =
                     SimplePromptWithDefault(
@@ -240,7 +242,7 @@ private fun WithIo.selectOrCreateChargeTransactionsForBillHelper(
     filter = { it.item.draftStatus === DraftStatus.outstanding && it !in selectedItems },
     outPrinter = outPrinter,
     extraItems = listOf(
-        takeAction("Record a missing transaction from this '${chargeAccount.name}' bill") {
+        takeAction({ "Record a missing transaction from this '${chargeAccount.name}' bill" }) {
             spendOnACreditCard(
                 budgetData,
                 clock,
@@ -325,6 +327,7 @@ private fun WithIo.spendOnACreditCard(
                 .getResult()
                 ?: throw TryAgainAtMostRecentMenuException("No description entered.")
         val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
+            ?.toInstant(budgetData.timeZone)
             ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
         val transactionBuilder: Transaction.Builder =
             Transaction.Builder(

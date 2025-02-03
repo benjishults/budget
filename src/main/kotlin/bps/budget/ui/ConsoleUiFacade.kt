@@ -1,7 +1,6 @@
 package bps.budget.ui
 
 import bps.budget.auth.AuthenticatedUser
-import bps.budget.auth.BudgetAccess
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.persistence.BudgetDao
@@ -9,7 +8,6 @@ import bps.budget.persistence.UserBudgetDao
 import bps.budget.persistence.UserConfiguration
 import bps.console.app.QuitException
 import bps.console.inputs.EmailStringValidator
-import bps.console.inputs.SelectionPrompt
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.StringValidator
@@ -17,7 +15,13 @@ import bps.console.io.DefaultInputReader
 import bps.console.io.DefaultOutPrinter
 import bps.console.io.InputReader
 import bps.console.io.OutPrinter
+import bps.time.naturalMonthInterval
+import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import java.math.BigDecimal
 import java.util.UUID
 
@@ -30,6 +34,7 @@ class ConsoleUiFacade(
         budgetName: String,
         budgetDao: BudgetDao,
         authenticatedUser: AuthenticatedUser,
+        clock: Clock,
     ): BudgetData {
         announceFirstTime()
         val timeZone: TimeZone = getDesiredTimeZone()
@@ -39,6 +44,18 @@ class ConsoleUiFacade(
         budgetDao.userBudgetDao.grantAccess(
             budgetName = budgetName,
             timeZoneId = timeZone.id,
+            analyticsStart =
+                clock
+                    .now()
+                    .toLocalDateTime(timeZone)
+                    .let { now ->
+                        if (now.month == Month.DECEMBER) {
+                            LocalDateTime(now.year + 1, 1, 1, 0, 0, 0)
+                        } else {
+                            LocalDateTime(now.year, now.month + 1, 1, 0, 0, 0)
+                        }
+                    }
+                    .toInstant(timeZone),
             userId = authenticatedUser.id,
             budgetId = budgetId,
         )
@@ -81,6 +98,7 @@ class ConsoleUiFacade(
                         id = budgetId,
                         name = budgetName,
                         timeZone = timeZone,
+                        analyticsStart = Clock.System.now(),
                         generalAccount = generalAccount,
                         categoryAccounts = listOf(generalAccount),
                     )

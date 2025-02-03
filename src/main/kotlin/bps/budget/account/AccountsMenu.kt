@@ -37,27 +37,27 @@ fun WithIo.manageAccountsMenu(
 ) =
     Menu {
         add(
-            takeAction("Create a New Category") {
+            takeAction({ "Create a New Category" }) {
                 createCategory(budgetData, budgetDao.accountDao)
             },
         )
         add(
-            takeAction("Create a Real Fund") {
+            takeAction({ "Create a Real Fund" }) {
                 createRealFund(budgetData, budgetDao.accountDao, budgetDao.transactionDao, clock)
             },
         )
         add(
-            takeAction("Add a Credit Card") {
+            takeAction({ "Add a Credit Card" }) {
                 createCreditAccount(budgetData, budgetDao.accountDao)
             },
         )
         add(
-            pushMenu("Edit Account Details") {
+            pushMenu({ "Edit Account Details" }) {
                 editAccountDetails(budgetData, budgetDao.accountDao, userConfig)
             },
         )
         add(
-            pushMenu("Deactivate an Account") {
+            pushMenu({ "Deactivate an Account" }) {
                 deactivateAccount(budgetData, budgetDao.accountDao, userConfig)
             },
         )
@@ -184,7 +184,7 @@ private fun WithIo.deactivateAccount(
     userConfig: UserConfiguration,
 ) = Menu({ "What kind af account do you want to deactivate?" }) {
     add(
-        pushMenu("Category Account") {
+        pushMenu({ "Category Account" }) {
             deactivateCategoryAccountMenu(
                 budgetData,
                 accountDao,
@@ -194,7 +194,7 @@ private fun WithIo.deactivateAccount(
         },
     )
     add(
-        pushMenu("Real Account") {
+        pushMenu({ "Real Account" }) {
             deactivateRealAccountMenu(
                 budgetData,
                 accountDao,
@@ -204,7 +204,7 @@ private fun WithIo.deactivateAccount(
         },
     )
     add(
-        pushMenu("Charge Account") {
+        pushMenu({ "Charge Account" }) {
             deactivateChargeAccountMenu(
                 budgetData,
                 accountDao,
@@ -214,7 +214,7 @@ private fun WithIo.deactivateAccount(
         },
     )
     add(
-        pushMenu("Draft Account") {
+        pushMenu({ "Draft Account" }) {
             deactivateDraftAccountMenu(
                 budgetData,
                 accountDao,
@@ -302,6 +302,11 @@ private fun WithIo.createRealFund(
         ) { it.trim() in listOf("Y", "y", "true", "yes") }
             .getResult()
             ?: throw TryAgainAtMostRecentMenuException("No decision made on whether you are going to write checks on this account.")
+        outPrinter.important(
+            """
+            |If this account came into existence due to some recent income, then make the initial balance $0.00 and then record that income into the account.
+            |If this account has been there for some time and you are just now starting to track it in this program, then enter the initial balance below.""".trimMargin(),
+        )
         val balance: BigDecimal = SimplePromptWithDefault(
             basicPrompt = "Initial balance on account [0.00]:  (This amount will be added to your General account as well.) ",
             defaultValue = BigDecimal.ZERO.setScale(2),

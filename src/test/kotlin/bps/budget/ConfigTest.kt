@@ -30,8 +30,6 @@ persistence:
 
 user:
   defaultLogin: fake@fake.com
-  defaultTimeZone: America/New_York
-#  defaultBudgetName: My Budget
 """,
         )
     val persistence: PersistenceConfiguration =

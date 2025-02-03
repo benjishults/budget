@@ -89,7 +89,6 @@ persistence:
 
 budgetUser:
     defaultLogin: fake@fake.com # your email
-    defaultTimeZone: America/New_York # your time zone
 ```
 
 ## Run the Application

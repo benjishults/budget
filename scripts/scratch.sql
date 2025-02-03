@@ -35,14 +35,16 @@ create table if not exists budgets
 
 create table if not exists budget_access
 (
-    id            uuid         not null primary key,
-    user_id       uuid         not null references users (id),
-    budget_id     uuid         not null references budgets (id),
-    budget_name   varchar(110) not null,
-    time_zone     varchar(110) not null,
+    id              uuid         not null primary key,
+    user_id         uuid         not null references users (id),
+    budget_id       uuid         not null references budgets (id),
+    budget_name     varchar(110) not null,
+    time_zone       varchar(110) not null,
+    analytics_start timestamp    not null default now(),
     -- if null, check fine_access
-    coarse_access varchar,
-    unique (user_id, budget_id)
+    coarse_access   varchar,
+    unique (user_id, budget_id),
+    unique (user_id, budget_name)
 );
 
 create index if not exists lookup_budget_access_by_user
@@ -83,7 +85,7 @@ create table if not exists transactions
     id                        uuid         not null unique,
     description               varchar(110) not null default '',
     timestamp_utc             timestamp    not null default now(),
-    -- 'expense', 'transfer', 'allowance', 'income', 'clearing'
+    -- 'expense', 'transfer', 'allowance', 'income', 'clearing', 'initial'
     -- 'clearing' transaction transfer from real to charge or draft accounts
     type                      varchar(20)  not null,
     -- the transaction that clears this transaction
@@ -94,6 +96,9 @@ create table if not exists transactions
 
 create index if not exists lookup_transaction_by_date
     on transactions (timestamp_utc desc, budget_id);
+
+create index if not exists lookup_transaction_by_type_and_date
+    on transactions (timestamp_utc desc, type, budget_id);
 
 create table if not exists transaction_items
 (

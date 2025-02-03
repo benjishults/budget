@@ -28,6 +28,7 @@ import bps.console.menu.quitItem
 import bps.console.menu.takeAction
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.toInstant
 import java.math.BigDecimal
 
 fun WithIo.checksMenu(
@@ -46,17 +47,17 @@ fun WithIo.checksMenu(
         menuSession.push(
             Menu {
                 add(
-                    takeAction("Write a check on '${draftAccount.name}'") {
+                    takeAction({ "Write a check on '${draftAccount.name}'" }) {
                         writeCheckOnAccount(transactionDao, draftAccount, budgetData, clock, menuSession, userConfig)
                     },
                 )
                 add(
-                    pushMenu("Record check cleared on '${draftAccount.name}'") {
+                    pushMenu({ "Record check cleared on '${draftAccount.name}'" }) {
                         recordCheckClearedOnAccount(draftAccount, transactionDao, budgetData, userConfig, clock)
                     },
                 )
                 add(
-                    pushMenu("Delete a check written on '${draftAccount.name}'") {
+                    pushMenu({ "Delete a check written on '${draftAccount.name}'" }) {
                         deleteCheckOnAccount(
                             transactionDao = transactionDao,
                             userConfig = userConfig,
@@ -120,10 +121,11 @@ fun WithIo.recordCheckClearedOnAccount(
 ) { _, draftTransactionItem: TransactionDao.ExtendedTransactionItem<DraftAccount> ->
     val timestamp: Instant =
         getTimestampFromUser(
-            "Did the check clear just now [Y]? ",
-            budgetData.timeZone,
-            clock,
+            queryForNow = "Did the check clear just now [Y]? ",
+            timeZone = budgetData.timeZone,
+            clock = clock,
         )
+            ?.toInstant(budgetData.timeZone)
             ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
     clearCheckConsistently(draftTransactionItem, timestamp, draftAccount, transactionDao, budgetData)
     outPrinter.important("Cleared check recorded")
@@ -174,6 +176,7 @@ fun WithIo.writeCheckOnAccount(
                 timeZone = budgetData.timeZone,
                 clock = clock,
             )
+                ?.toInstant(budgetData.timeZone)
                 ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
         val transactionBuilder: Transaction.Builder =
             Transaction.Builder(

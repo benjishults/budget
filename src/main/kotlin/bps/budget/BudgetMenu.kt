@@ -1,13 +1,14 @@
 package bps.budget
 
+import bps.budget.account.manageAccountsMenu
 import bps.budget.allowance.makeAllowancesSelectionMenu
 import bps.budget.charge.creditCardMenu
 import bps.budget.checking.checksMenu
-import bps.budget.account.manageAccountsMenu
 import bps.budget.income.recordIncomeSelectionMenu
 import bps.budget.model.BudgetData
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserConfiguration
+import bps.budget.settings.userSettingsMenu
 import bps.budget.spend.recordSpendingMenu
 import bps.budget.transaction.manageTransactions
 import bps.budget.transfer.transferMenu
@@ -17,17 +18,19 @@ import bps.console.menu.pushMenu
 import bps.console.menu.quitItem
 import bps.console.menu.takeActionAndPush
 import kotlinx.datetime.Clock
+import java.util.UUID
 
 fun WithIo.budgetMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
     userConfig: UserConfiguration,
+    userId: UUID,
     clock: Clock,
 ): Menu =
     Menu({ "Budget!" }) {
         add(
             takeActionAndPush(
-                label = recordIncomeLabel,
+                label = { recordIncomeLabel },
                 shortcut = "i",
                 to = { recordIncomeSelectionMenu(budgetData, budgetDao.transactionDao, userConfig, clock) },
             ) {
@@ -41,7 +44,7 @@ fun WithIo.budgetMenu(
         )
         add(
             takeActionAndPush(
-                label = makeAllowancesLabel,
+                label = { makeAllowancesLabel },
                 shortcut = "a",
                 to = {
                     makeAllowancesSelectionMenu(
@@ -59,33 +62,42 @@ fun WithIo.budgetMenu(
             },
         )
         add(
-            pushMenu(recordSpendingLabel, "s") {
+            pushMenu({ recordSpendingLabel }, "s") {
                 recordSpendingMenu(budgetData, budgetDao.transactionDao, userConfig, clock)
             },
         )
         add(
-            pushMenu(manageTransactionsLabel, "t") {
+            pushMenu({ manageTransactionsLabel }, "t") {
                 manageTransactions(budgetData, budgetDao.transactionDao, budgetDao.accountDao, userConfig)
             },
         )
         add(
-            pushMenu(writeOrClearChecksLabel, "ch") {
+            pushMenu({ writeOrClearChecksLabel }, "ch") {
                 checksMenu(budgetData, budgetDao.transactionDao, budgetDao.accountDao, userConfig, clock)
             },
         )
         add(
-            pushMenu(useOrPayCreditCardsLabel, "cr") {
+            pushMenu({ useOrPayCreditCardsLabel }, "cr") {
                 creditCardMenu(budgetData, budgetDao.transactionDao, userConfig, clock)
             },
         )
         add(
-            pushMenu(transferLabel, "x") {
+            pushMenu({ transferLabel }, "x") {
                 transferMenu(budgetData, budgetDao.transactionDao, userConfig, clock)
             },
         )
         add(
-            pushMenu(manageAccountsLabel, "m") {
+            pushMenu({ manageAccountsLabel }, "m") {
                 manageAccountsMenu(budgetData, budgetDao, userConfig, clock)
+            },
+        )
+        add(
+            pushMenu({ userSettingsLabel }, "u") {
+                userSettingsMenu(
+                    budgetData = budgetData,
+                    userId = userId,
+                    userBudgetDao = budgetDao.userBudgetDao,
+                )
             },
         )
 //        add(

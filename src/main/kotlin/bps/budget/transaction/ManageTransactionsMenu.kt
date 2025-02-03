@@ -45,7 +45,7 @@ fun WithIo.manageTransactions(
                 outPrinter = outPrinter,
                 budgetData = budgetData,
                 extraItems = listOf(
-                    item("Delete a transaction", "d") {
+                    item({ "Delete a transaction" }, "d") {
                         menuSession.push(
                             TransactionListMenu(
                                 header = { "Choose a transaction to DELETE" },

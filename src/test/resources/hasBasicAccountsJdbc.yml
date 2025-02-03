@@ -9,5 +9,4 @@ persistence:
     host: localhost
 budgetUser:
   defaultLogin: test@test.com
-  defaultTimeZone: America/Chicago
 #  defaultBudgetName: Basic Accounts Test

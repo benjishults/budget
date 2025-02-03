@@ -22,12 +22,26 @@ then
     sort "$filenames_file" > "$sorted_filenames_file"
     printf "most recent backup\n%s\n" "$(tail --lines=1 "$sorted_filenames_file")"
     restore_file="${BPS_BUDGET_DATA_DIR}/backup/$(tail --lines=1 "$sorted_filenames_file")"
-    echo "restoring from backup: $restore_file"
-#  pg_dump -U admin -h localhost budget < "$restore_file"
+    echo -n "Are you sure you want to restore $restore_file? [y/N] "
+    read -r response
+    if [ "$response" = 'y' ]
+    then
+      pg_dump -U admin -h localhost budget < "$restore_file"
+      echo "restored"
+    else
+      echo "not restoring"
+    fi
   fi
 else
-  echo "filename given: $given_filename"
-#  pg_dump -U admin -h localhost budget < "$given_filename"
+  echo -n "Are you sure you want to restore $given_filename? [y/N] "
+  read -r response
+  if [ "$response" = 'y' ]
+  then
+    pg_dump -U admin -h localhost budget < "$given_filename"
+    echo "restored"
+  else
+    echo "not restoring"
+  fi
 fi
 
 

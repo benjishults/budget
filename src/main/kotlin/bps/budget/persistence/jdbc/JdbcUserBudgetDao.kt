@@ -1,6 +1,6 @@
 package bps.budget.persistence.jdbc
 
-import bps.budget.auth.BudgetAccess
+import bps.budget.auth.UserBudgetAccess
 import bps.budget.auth.CoarseAccess
 import bps.budget.auth.AuthenticatedUser
 import bps.budget.auth.User
@@ -8,6 +8,7 @@ import bps.budget.persistence.UserBudgetDao
 import bps.jdbc.JdbcFixture
 import bps.jdbc.transactOrThrow
 import bps.kotlin.Instrumentable
+import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -26,7 +27,7 @@ class JdbcUserBudgetDao(
                 """
                 |select *
                 |from users u
-                |         left join budget_access ba on u.id = ba.user_id
+                |  left join budget_access ba on u.id = ba.user_id
                 |where u.login = ?
                 """.trimMargin(),
             )
@@ -35,18 +36,19 @@ class JdbcUserBudgetDao(
                     preparedStatement.executeQuery()
                         .use { resultSet: ResultSet ->
                             if (resultSet.next()) {
-                                val budgets = mutableListOf<BudgetAccess>()
+                                val budgets = mutableListOf<UserBudgetAccess>()
                                 val id = resultSet.getObject("id", UUID::class.java)
                                 do {
                                     val budgetName: String? = resultSet.getString("budget_name")
                                     if (budgetName !== null)
                                         budgets.add(
-                                            BudgetAccess(
+                                            UserBudgetAccess(
                                                 budgetId = resultSet.getObject("budget_id", UUID::class.java),
                                                 budgetName = budgetName,
                                                 timeZone = resultSet.getString("time_zone")
                                                     ?.let { timeZone -> TimeZone.of(timeZone) }
                                                     ?: TimeZone.currentSystemDefault(),
+                                                analyticsStart = resultSet.getInstant("analytics_start"),
                                                 coarseAccess = resultSet.getString("coarse_access")
                                                     ?.let(CoarseAccess::valueOf),
                                             ),
@@ -74,12 +76,18 @@ class JdbcUserBudgetDao(
             }
         }
 
-    override fun grantAccess(budgetName: String, timeZoneId: String, userId: UUID, budgetId: UUID) {
+    override fun grantAccess(
+        budgetName: String,
+        timeZoneId: String,
+        analyticsStart: Instant,
+        userId: UUID,
+        budgetId: UUID,
+    ) {
         connection.transactOrThrow {
             prepareStatement(
                 """
-                    insert into budget_access (id, budget_id, user_id, time_zone, budget_name)
-                    values (?, ?, ?, ?, ?) on conflict do nothing
+                    insert into budget_access (id, budget_id, user_id, time_zone, analytics_start, budget_name)
+                    values (?, ?, ?, ?, ?, ?) on conflict do nothing
                 """.trimIndent(),
             )
                 .use { createBudgetStatement: PreparedStatement ->
@@ -87,11 +95,48 @@ class JdbcUserBudgetDao(
                     createBudgetStatement.setUuid(2, budgetId)
                     createBudgetStatement.setUuid(3, userId)
                     createBudgetStatement.setString(4, timeZoneId)
-                    createBudgetStatement.setString(5, budgetName)
+                    createBudgetStatement.setInstant(5, analyticsStart)
+                    createBudgetStatement.setString(6, budgetName)
                     createBudgetStatement.executeUpdate()
                 }
         }
     }
+
+    override fun updateTimeZone(timeZoneId: String, userId: UUID, budgetId: UUID): Int =
+        connection.transactOrThrow {
+            prepareStatement(
+                """
+                    update budget_access
+                    set time_zone = ?
+                    where user_id = ?
+                      and budget_id = ?
+                """.trimIndent(),
+            )
+                .use { updateTimeZoneStatement: PreparedStatement ->
+                    updateTimeZoneStatement.setString(1, timeZoneId)
+                    updateTimeZoneStatement.setUuid(2, userId)
+                    updateTimeZoneStatement.setUuid(3, budgetId)
+                    updateTimeZoneStatement.executeUpdate()
+                }
+        }
+
+    override fun updateAnalyticsStart(analyticsStart: Instant, userId: UUID, budgetId: UUID): Int =
+        connection.transactOrThrow {
+            prepareStatement(
+                """
+                    update budget_access
+                    set analytics_start = ?
+                    where user_id = ?
+                      and budget_id = ?
+                """.trimIndent(),
+            )
+                .use { updateTimeZoneStatement: PreparedStatement ->
+                    updateTimeZoneStatement.setInstant(1, analyticsStart)
+                    updateTimeZoneStatement.setUuid(2, userId)
+                    updateTimeZoneStatement.setUuid(3, budgetId)
+                    updateTimeZoneStatement.executeUpdate()
+                }
+        }
 
     override fun createBudgetOrNull(generalAccountId: UUID, budgetId: UUID): UUID? =
         connection.transactOrThrow {

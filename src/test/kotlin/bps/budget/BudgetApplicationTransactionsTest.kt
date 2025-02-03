@@ -17,6 +17,7 @@ import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
+import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import java.math.BigDecimal
 import java.util.UUID
@@ -31,22 +32,25 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
     init {
         System.setProperty("kotest.assertions.collection.print.size", "1000")
         System.setProperty("kotest.assertions.collection.enumerate.size", "1000")
+
+        val clock = produceSecondTickingClock(Instant.parse("2024-08-08T23:59:59.500Z"))
+
         val budgetId: UUID = UUID.fromString("89bc165a-ee70-43a4-b637-2774bcfc3ea4")
-        clearInputsAndOutputsBeforeEach()
         val userId = UUID.fromString("f0f209c8-1b1e-43b3-8799-2dba58524d02")
+
+        clearInputsAndOutputsBeforeEach()
         createBasicAccountsBeforeSpec(
             budgetId = budgetId,
             budgetName = getBudgetNameFromPersistenceConfig(configurations.persistence)!!,
             authenticatedUser = AuthenticatedUser(userId, configurations.user.defaultLogin!!),
-            timeZone = TimeZone.of(configurations.user.defaultTimeZone!!),
+            timeZone = TimeZone.of("America/Chicago"),
+            clock = clock,
         )
         resetBalancesAndTransactionAfterSpec(budgetId)
         closeJdbcAfterSpec()
         stopApplicationAfterSpec()
 
         val uiFunctions = ConsoleUiFacade(inputReader, outPrinter)
-
-        val clock = produceSecondTickingClock()
 
         "run application with data from DB" - {
             val application = BudgetApplication(
@@ -70,7 +74,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -166,7 +171,8 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                         """ 1. Create a New Category
@@ -261,7 +267,8 @@ Deactivated account 'Cosmetics'
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -439,7 +446,8 @@ Allowance recorded
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -606,7 +614,8 @@ Medical          |     200.00 |
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -688,7 +697,8 @@ Spending recorded
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -708,7 +718,8 @@ Spending recorded
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1031,7 +1042,8 @@ Check deleted
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1163,7 +1175,8 @@ Check deleted
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1224,7 +1237,8 @@ New credit card account 'Costco Visa' created
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1431,7 +1445,8 @@ Spending recorded
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1546,7 +1561,8 @@ Spending recorded
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1749,7 +1765,8 @@ Spending recorded
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1886,7 +1903,8 @@ Spending recorded
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -1912,6 +1930,14 @@ Spending recorded
                         "Enter a unique name for the real account: ",
                         "Enter a DESCRIPTION for the real account: ",
                         "Will you write checks on this account [y/N]? ",
+
+                        """
+            |
+            |If this account came into existence due to some recent income, then make the initial balance $0.00 and then record that income into the account.
+            |If this account has been there for some time and you are just now starting to track it in this program, then enter the initial balance below.
+            |
+            |""".trimMargin(),
+
                         "Initial balance on account [0.00]:  (This amount will be added to your General account as well.) ",
                         "Enter DESCRIPTION of income [initial balance in 'Savings']: ",
                         "Enter timestamp for 'initial balance in 'Savings'' transaction\n",
@@ -2035,7 +2061,8 @@ Editing done
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -2127,7 +2154,8 @@ Editing done
                             | 6. $useOrPayCreditCardsLabel (cr)
                             | 7. $transferLabel (x)
                             | 8. $manageAccountsLabel (m)
-                            | 9. Quit (q)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
                             |""".trimMargin(),
                         "Enter selection: ",
                     ),
@@ -2229,6 +2257,146 @@ Transfer recorded
                     toInput = listOf("b", "b"),
                 )
             }
+            "change time-zone and observe timestamps presented an hour off" {
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                            |Budget!
+                            | 1. Record Income (i)
+                            | 2. Make Allowances (a)
+                            | 3. Record Spending (s)
+                            | 4. Manage Transactions (t)
+                            | 5. Write or Clear Checks (ch)
+                            | 6. Use or Pay Credit Cards (cr)
+                            | 7. Transfer Money (x)
+                            | 8. Manage Accounts (m)
+                            | 9. User Settings (u)
+                            |10. Quit (q)
+                            |
+                        """.trimMargin(),
+                        "Enter selection: ",
+                        """
+                       | 1. Change Time-Zone From America/Chicago
+                       | 2. Change Analytics Start Date From 2024-09-01
+                       | 3. Back (b)
+                       | 4. Quit (q)
+                       |
+                    """.trimMargin(),
+                        "Enter selection: ",
+                        """
+                |
+                |The Time-Zone is the time-zone in which dates will be presented.
+                |When entering a time-zone, it's best to use a format like "Europe/Paris" or "America/New_York" though some other
+                |formats are accepted.
+                |
+                |
+                        """.trimMargin(),
+                        "Enter new desired time-zone for dates to be presented in [America/Chicago]: ",
+                        """
+                            |
+                            |Time-Zone set to America/New_York
+                            |
+                            |
+                        """.trimMargin(),
+                        """
+                       | 1. Change Time-Zone From America/New_York
+                       | 2. Change Analytics Start Date From 2024-09-01
+                       | 3. Back (b)
+                       | 4. Quit (q)
+                       |
+                    """.trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("u", "1", "America/New_York", "b"),
+                )
+                // TODO look at transactions and see that the dates are displayed differently
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                            |Budget!
+                            | 1. $recordIncomeLabel (i)
+                            | 2. $makeAllowancesLabel (a)
+                            | 3. $recordSpendingLabel (s)
+                            | 4. $manageTransactionsLabel (t)
+                            | 5. $writeOrClearChecksLabel (ch)
+                            | 6. $useOrPayCreditCardsLabel (cr)
+                            | 7. $transferLabel (x)
+                            | 8. $manageAccountsLabel (m)
+                            | 9. $userSettingsLabel (u)
+                            |10. Quit (q)
+                            |""".trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("4"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """Select account to manage transactions
+ 1.   5,700.00 | General         | Income is automatically deposited here and allowances are made from here
+ 2.       0.00 | Education       | Tuition, books, etc.
+ 3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+ 4.      78.50 | Food            | Food other than what's covered in entertainment
+ 5.       0.00 | Hobby           | Expenses related to a hobby
+ 6.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+ 7.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+ 8.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+ 9.      65.00 | Necessities     | Cleaning supplies, soap, tooth brushes, etc.
+10.       0.00 | Network         | Mobile plan, routers, internet access
+11.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+12.       0.00 | Travel          | Travel expenses for vacation
+13.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+14.   5,165.00 | Checking        | Account from which checks clear
+15.     500.00 | Savings         | Savings account at My Bank
+16.     198.50 | Wallet          | Cash on hand
+17.     -20.00 | Costco Visa     | Costco Visa
+18. Back (b)
+19. Quit (q)
+""",
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("1"),
+                )
+                validateInteraction(
+                    expectedOutputs = listOf(
+                        """
+                        |'General' Account Transactions
+                        |    Time Stamp          | Amount     | Balance    | Description
+                        | 1. 2024-08-08 20:00:13 |   1,000.00 |   5,700.00 | initial balance in 'Savings'
+                        | 2. 2024-08-08 20:00:03 |    -200.00 |   4,700.00 | allowance into 'Necessities'
+                        | 3. 2024-08-08 20:00:02 |    -300.00 |   4,900.00 | allowance into 'Food'
+                        | 4. 2024-08-08 20:00:01 |     200.00 |   5,200.00 | income into 'Wallet'
+                        | 5. 2024-08-08 20:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
+                        | 6. Delete a transaction (d)
+                        | 7. Back (b)
+                        | 8. Quit (q)
+                        |""".trimMargin(),
+                        "Select transaction for details: ",
+                        """|Select account to manage transactions
+| 1.   5,700.00 | General         | Income is automatically deposited here and allowances are made from here
+| 2.       0.00 | Education       | Tuition, books, etc.
+| 3.       0.00 | Entertainment   | Games, books, subscriptions, going out for food or fun
+| 4.      78.50 | Food            | Food other than what's covered in entertainment
+| 5.       0.00 | Hobby           | Expenses related to a hobby
+| 6.       0.00 | Home Upkeep     | Upkeep: association fees, furnace filters, appliances, repairs, lawn care
+| 7.       0.00 | Housing         | Rent, mortgage, property tax, insurance
+| 8.       0.00 | Medical         | Medicine, supplies, insurance, etc.
+| 9.      65.00 | Necessities     | Cleaning supplies, soap, tooth brushes, etc.
+|10.       0.00 | Network         | Mobile plan, routers, internet access
+|11.       0.00 | Transportation  | Fares, vehicle payments, insurance, fuel, up-keep, etc.
+|12.       0.00 | Travel          | Travel expenses for vacation
+|13.       0.00 | Work            | Work-related expenses (possibly to be reimbursed)
+|14.   5,165.00 | Checking        | Account from which checks clear
+|15.     500.00 | Savings         | Savings account at My Bank
+|16.     198.50 | Wallet          | Cash on hand
+|17.     -20.00 | Costco Visa     | Costco Visa
+|18. Back (b)
+|19. Quit (q)
+|""".trimMargin(),
+                        "Enter selection: ",
+                    ),
+                    toInput = listOf("b", "b"),
+                )
+            }
             "!ensure user can back out of a transaction without saving" - {
                 "should be asked to confirm if transaction is in progress" {}
                 "should NOT be asked to confirm if transaction is in progress" {}
@@ -2256,7 +2424,8 @@ Transfer recorded
                             | 6. Use or Pay Credit Cards (cr)
                             | 7. Transfer Money (x)
                             | 8. Manage Accounts (m)
-                            | 9. Quit (q)
+                            | 9. User Settings (u)
+                            |10. Quit (q)
                             |
                         """.trimMargin(),
                         "Enter selection: ",

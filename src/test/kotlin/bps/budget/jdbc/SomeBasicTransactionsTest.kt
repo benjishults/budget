@@ -42,17 +42,17 @@ class SomeBasicTransactionsTest : FreeSpec(),
     override val jdbcDao = JdbcDao(configurations.persistence.jdbc!!)
 
     init {
+        val clock = produceSecondTickingClock()
         val budgetId: UUID = UUID.fromString("89bc165a-ee70-43a4-b637-2774bcfc3ea4")
         val userId: UUID = UUID.fromString("f0f209c8-1b1e-43b3-8799-2dba58524d02")
         createBasicAccountsBeforeSpec(
             budgetId,
             getBudgetNameFromPersistenceConfig(configurations.persistence)!!,
             AuthenticatedUser(userId, configurations.user.defaultLogin!!),
-            TimeZone.of(configurations.user.defaultTimeZone!!),
+            TimeZone.of("America/Chicago"),
+            clock,
         )
         closeJdbcAfterSpec()
-
-        val clock = produceSecondTickingClock()
 
         "with data from config" - {
             val budgetData = loadBudgetData(

@@ -17,9 +17,16 @@ then
   done
   sort "$filenames_file" > "$sorted_filenames_file"
   printf "oldest backups\n%s\n" "$(head --lines=-10 "$sorted_filenames_file")"
-  head --lines=-10 "$sorted_filenames_file" | while read -r filename
-  do
-    echo "deleting old backup: ${BPS_BUDGET_DATA_DIR}/backup/$filename"
-    rm "${BPS_BUDGET_DATA_DIR}/backup/$filename"
-  done
+  echo -n "Do you want to delete old backups? [y/N] "
+  read -r response
+  if [ "$response" = 'y' ]
+  then
+    head --lines=-10 "$sorted_filenames_file" | while read -r filename
+    do
+      echo "deleting old backup: ${BPS_BUDGET_DATA_DIR}/backup/$filename"
+      rm "${BPS_BUDGET_DATA_DIR}/backup/$filename"
+    done
+  else
+    echo "leaving old backups"
+  fi
 fi
