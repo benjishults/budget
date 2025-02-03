@@ -43,7 +43,7 @@ class BudgetApplicationTransactionsTest : FreeSpec(),
             budgetId = budgetId,
             budgetName = getBudgetNameFromPersistenceConfig(configurations.persistence)!!,
             authenticatedUser = AuthenticatedUser(userId, configurations.user.defaultLogin!!),
-            timeZone = TimeZone.of(configurations.user.defaultTimeZone!!),
+            timeZone = TimeZone.of("America/Chicago"),
             clock = clock,
         )
         resetBalancesAndTransactionAfterSpec(budgetId)

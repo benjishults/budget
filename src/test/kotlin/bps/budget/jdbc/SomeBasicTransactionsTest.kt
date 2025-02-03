@@ -49,7 +49,7 @@ class SomeBasicTransactionsTest : FreeSpec(),
             budgetId,
             getBudgetNameFromPersistenceConfig(configurations.persistence)!!,
             AuthenticatedUser(userId, configurations.user.defaultLogin!!),
-            TimeZone.of(configurations.user.defaultTimeZone!!),
+            TimeZone.of("America/Chicago"),
             clock,
         )
         closeJdbcAfterSpec()

@@ -21,7 +21,7 @@ class LoadingAccountsJdbcDataTest : FreeSpec(), BasicAccountsJdbcTestFixture {
             budgetId,
             getBudgetNameFromPersistenceConfig(configurations.persistence)!!,
             AuthenticatedUser(userId, configurations.user.defaultLogin!!),
-            TimeZone.of(configurations.user.defaultTimeZone!!),
+            TimeZone.of("America/Chicago"),
             Clock.System,
         )
         closeJdbcAfterSpec()

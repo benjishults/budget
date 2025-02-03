@@ -16,5 +16,4 @@ persistence:
 
 budgetUser:
   defaultLogin: fake@fake.com
-  defaultTimeZone: America/New_York
 #  defaultBudgetName: My Budget
