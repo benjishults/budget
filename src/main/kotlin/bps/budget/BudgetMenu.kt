@@ -27,7 +27,7 @@ fun WithIo.budgetMenu(
     Menu({ "Budget!" }) {
         add(
             takeActionAndPush(
-                label = recordIncomeLabel,
+                label = { recordIncomeLabel },
                 shortcut = "i",
                 to = { recordIncomeSelectionMenu(budgetData, budgetDao.transactionDao, userConfig, clock) },
             ) {
@@ -41,7 +41,7 @@ fun WithIo.budgetMenu(
         )
         add(
             takeActionAndPush(
-                label = makeAllowancesLabel,
+                label = { makeAllowancesLabel },
                 shortcut = "a",
                 to = {
                     makeAllowancesSelectionMenu(
@@ -59,32 +59,32 @@ fun WithIo.budgetMenu(
             },
         )
         add(
-            pushMenu(recordSpendingLabel, "s") {
+            pushMenu({ recordSpendingLabel }, "s") {
                 recordSpendingMenu(budgetData, budgetDao.transactionDao, userConfig, clock)
             },
         )
         add(
-            pushMenu(manageTransactionsLabel, "t") {
+            pushMenu({ manageTransactionsLabel }, "t") {
                 manageTransactions(budgetData, budgetDao.transactionDao, budgetDao.accountDao, userConfig)
             },
         )
         add(
-            pushMenu(writeOrClearChecksLabel, "ch") {
+            pushMenu({ writeOrClearChecksLabel }, "ch") {
                 checksMenu(budgetData, budgetDao.transactionDao, budgetDao.accountDao, userConfig, clock)
             },
         )
         add(
-            pushMenu(useOrPayCreditCardsLabel, "cr") {
+            pushMenu({ useOrPayCreditCardsLabel }, "cr") {
                 creditCardMenu(budgetData, budgetDao.transactionDao, userConfig, clock)
             },
         )
         add(
-            pushMenu(transferLabel, "x") {
+            pushMenu({ transferLabel }, "x") {
                 transferMenu(budgetData, budgetDao.transactionDao, userConfig, clock)
             },
         )
         add(
-            pushMenu(manageAccountsLabel, "m") {
+            pushMenu({ manageAccountsLabel }, "m") {
                 manageAccountsMenu(budgetData, budgetDao, userConfig, clock)
             },
         )

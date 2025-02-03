@@ -167,12 +167,6 @@ class JdbcAnalyticsDao(
     ): BigDecimal? =
         connection.transactOrThrow {
             val expenditures = MonthlyExpenditureSeries()
-            // TODO
-            //    1. find active units
-            //    2. determine whether to include first
-            //    3. find totals in each unit
-            //    4. make exclusions as required by options
-            //    5. calculate average expenditure per unit
             prepareStatement(
                 """
                 |select t.timestamp_utc, ti.amount from transaction_items ti

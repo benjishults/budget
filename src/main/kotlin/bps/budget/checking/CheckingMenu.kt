@@ -46,17 +46,17 @@ fun WithIo.checksMenu(
         menuSession.push(
             Menu {
                 add(
-                    takeAction("Write a check on '${draftAccount.name}'") {
+                    takeAction({ "Write a check on '${draftAccount.name}'" }) {
                         writeCheckOnAccount(transactionDao, draftAccount, budgetData, clock, menuSession, userConfig)
                     },
                 )
                 add(
-                    pushMenu("Record check cleared on '${draftAccount.name}'") {
+                    pushMenu({ "Record check cleared on '${draftAccount.name}'" }) {
                         recordCheckClearedOnAccount(draftAccount, transactionDao, budgetData, userConfig, clock)
                     },
                 )
                 add(
-                    pushMenu("Delete a check written on '${draftAccount.name}'") {
+                    pushMenu({ "Delete a check written on '${draftAccount.name}'" }) {
                         deleteCheckOnAccount(
                             transactionDao = transactionDao,
                             userConfig = userConfig,
