@@ -2,7 +2,6 @@ package bps.budget.jdbc
 
 import bps.budget.BudgetConfigurations
 import bps.budget.persistence.jdbc.JdbcDao
-import bps.budget.persistence.jdbc.toLocalDateTime
 import bps.jdbc.JdbcFixture
 import bps.jdbc.transactOrThrow
 import io.kotest.core.spec.style.FreeSpec
@@ -52,8 +51,8 @@ class TimeZoneTest : FreeSpec(), BaseJdbcTestFixture, JdbcFixture {
                         """.trimIndent(),
                     )
                         .use { statement ->
-                            statement.setTimestamp(1, now)
-                            statement.setTimestamp(2, now)
+                            statement.setInstant(1, now)
+                            statement.setInstant(2, now)
                             statement.setString(3, label2)
                             statement.executeUpdate()
                         }

@@ -1,14 +1,14 @@
 package bps.budget.allowance
 
-import bps.console.io.WithIo
+import bps.budget.analytics.AnalyticsOptions
 import bps.budget.consistency.commitTransactionConsistently
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.Transaction
-import bps.budget.persistence.TransactionDao
-import bps.budget.persistence.UserConfiguration
 import bps.budget.model.toCurrencyAmountOrNull
 import bps.budget.persistence.AnalyticsDao
+import bps.budget.persistence.TransactionDao
+import bps.budget.persistence.UserConfiguration
 import bps.budget.transaction.showRecentRelevantTransactions
 import bps.console.app.MenuSession
 import bps.console.app.TryAgainAtMostRecentMenuException
@@ -16,10 +16,12 @@ import bps.console.inputs.InRangeInclusiveStringValidator
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
+import bps.console.io.WithIo
 import bps.console.menu.Menu
 import bps.console.menu.ScrollingSelectionMenu
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.toInstant
 import java.math.BigDecimal
 
 fun WithIo.makeAllowancesSelectionMenu(
@@ -43,7 +45,18 @@ fun WithIo.makeAllowancesSelectionMenu(
         limit = userConfig.numberOfItemsInScrollingList,
         baseList = budgetData.categoryAccounts - budgetData.generalAccount,
         labelGenerator = {
-            val ave = analyticsDao.averageExpenditure(this, budgetData.timeZone)
+            val ave = analyticsDao.averageExpenditure(
+                this, budgetData.timeZone,
+                AnalyticsOptions(
+//            excludeFirstActiveUnit = true,
+//            excludeMaxAndMin = false,
+//            minimumUnits = 3,
+//            timeUnit = DateTimeUnit.MONTH,
+                    excludeFutureUnits = true,
+                    excludeCurrentUnit = true,
+                    since = budgetData.analyticsStart,
+                ),
+            )
             val max = analyticsDao.maxExpenditure()
             val min = analyticsDao.minExpenditure()
             String.format(
@@ -114,6 +127,7 @@ fun WithIo.makeAllowancesSelectionMenu(
                     .getResult()
                     ?: throw TryAgainAtMostRecentMenuException("No description entered.")
             val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
+                ?.toInstant(budgetData.timeZone)
                 ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
             val allocate = Transaction.Builder(
                 description = description,

@@ -6,6 +6,7 @@ import bps.budget.persistence.jdbc.JdbcDao
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.equals.shouldBeEqual
+import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import java.util.UUID
 
@@ -21,6 +22,7 @@ class LoadingAccountsJdbcDataTest : FreeSpec(), BasicAccountsJdbcTestFixture {
             getBudgetNameFromPersistenceConfig(configurations.persistence)!!,
             AuthenticatedUser(userId, configurations.user.defaultLogin!!),
             TimeZone.of(configurations.user.defaultTimeZone!!),
+            Clock.System,
         )
         closeJdbcAfterSpec()
 

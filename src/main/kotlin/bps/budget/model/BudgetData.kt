@@ -2,7 +2,9 @@ package bps.budget.model
 
 import bps.budget.persistence.AccountDao
 import bps.budget.persistence.TransactionDao
+import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.Clock
 import java.math.BigDecimal
 import java.util.UUID
 
@@ -12,7 +14,8 @@ import java.util.UUID
 class BudgetData(
     val id: UUID,
     val name: String,
-    val timeZone: TimeZone,
+    var timeZone: TimeZone,
+    var analyticsStart: Instant,
     val generalAccount: CategoryAccount,
     categoryAccounts: List<CategoryAccount>,
     realAccounts: List<RealAccount> = emptyList(),
@@ -159,6 +162,7 @@ class BudgetData(
         fun persistWithBasicAccounts(
             budgetName: String,
             timeZone: TimeZone = TimeZone.currentSystemDefault(),
+
             checkingBalance: BigDecimal = BigDecimal.ZERO.setScale(2),
             walletBalance: BigDecimal = BigDecimal.ZERO.setScale(2),
             generalAccountId: UUID = UUID.randomUUID(),
@@ -186,6 +190,7 @@ class BudgetData(
                 id = budgetId,
                 name = budgetName,
                 timeZone = timeZone,
+                analyticsStart = Clock.System.now(),
                 generalAccount = generalAccount,
                 categoryAccounts = listOf(
                     generalAccount,

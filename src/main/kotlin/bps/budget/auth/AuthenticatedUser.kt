@@ -1,5 +1,6 @@
 package bps.budget.auth
 
+import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import java.util.UUID
 
@@ -11,13 +12,14 @@ interface User {
 data class AuthenticatedUser(
     override val id: UUID,
     override val login: String,
-    val access: List<BudgetAccess> = emptyList(),
+    val access: List<UserBudgetAccess> = emptyList(),
 ) : User
 
-data class BudgetAccess(
+data class UserBudgetAccess(
     val budgetId: UUID,
     val budgetName: String,
     val timeZone: TimeZone,
+    val analyticsStart: Instant,
     val coarseAccess: CoarseAccess? = null,
     // NOTE currently unused
     val fineAccess: List<FineAccess> = emptyList(),

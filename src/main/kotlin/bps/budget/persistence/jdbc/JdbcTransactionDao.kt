@@ -150,7 +150,7 @@ class JdbcTransactionDao(
         )
         insertTransaction.setUuid(1, transaction.id)
         insertTransaction.setString(2, transaction.description)
-        insertTransaction.setTimestamp(3, transaction.timestamp)
+        insertTransaction.setInstant(3, transaction.timestamp)
         insertTransaction.setString(4, transaction.type.name)
         insertTransaction.setUuid(5, budgetId)
         return insertTransaction

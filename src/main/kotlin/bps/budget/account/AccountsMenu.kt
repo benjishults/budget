@@ -302,6 +302,11 @@ private fun WithIo.createRealFund(
         ) { it.trim() in listOf("Y", "y", "true", "yes") }
             .getResult()
             ?: throw TryAgainAtMostRecentMenuException("No decision made on whether you are going to write checks on this account.")
+        outPrinter.important(
+            """
+            |If this account came into existence due to some recent income, then make the initial balance $0.00 and then record that income into the account.
+            |If this account has been there for some time and you are just now starting to track it in this program, then enter the initial balance below.""".trimMargin(),
+        )
         val balance: BigDecimal = SimplePromptWithDefault(
             basicPrompt = "Initial balance on account [0.00]:  (This amount will be added to your General account as well.) ",
             defaultValue = BigDecimal.ZERO.setScale(2),

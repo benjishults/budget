@@ -25,6 +25,11 @@ data class Transaction private constructor(
         income,
 
         /**
+         * Starting to track an existing real account for the first time.
+         */
+        initial,
+
+        /**
          * transfer from General to a category
          */
         allowance,

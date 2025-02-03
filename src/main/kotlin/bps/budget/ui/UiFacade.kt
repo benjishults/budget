@@ -1,11 +1,11 @@
 package bps.budget.ui
 
-import bps.budget.auth.BudgetAccess
 import bps.budget.auth.AuthenticatedUser
 import bps.budget.model.BudgetData
 import bps.budget.persistence.BudgetDao
 import bps.budget.persistence.UserBudgetDao
 import bps.budget.persistence.UserConfiguration
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -30,7 +30,12 @@ interface UiFacade {
 
     //    fun selectBudget(access: List<BudgetAccess>): String
     fun getBudgetName(): String
-    fun firstTimeSetup(budgetName: String, budgetDao: BudgetDao, authenticatedUser: AuthenticatedUser): BudgetData
+    fun firstTimeSetup(
+        budgetName: String,
+        budgetDao: BudgetDao,
+        authenticatedUser: AuthenticatedUser,
+        clock: Clock,
+    ): BudgetData
 }
 
 fun Instant.formatAsLocalDateTime(timeZone: TimeZone): String =

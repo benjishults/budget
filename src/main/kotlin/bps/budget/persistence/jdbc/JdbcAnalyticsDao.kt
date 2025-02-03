@@ -1,13 +1,16 @@
 package bps.budget.persistence.jdbc
 
+import bps.budget.analytics.AnalyticsOptions
 import bps.budget.model.CategoryAccount
 import bps.budget.persistence.AccountDao
 import bps.budget.persistence.AnalyticsDao
 import bps.budget.persistence.migration.DataMigrations.Companion.getLocalDateTimeForTimeZone
 import bps.budget.persistence.migration.DataMigrations.Companion.setUuid
+import bps.jdbc.JdbcFixture
 import bps.jdbc.transactOrThrow
 import bps.time.NaturalLocalInterval
 import bps.time.NaturalMonthLocalInterval
+import bps.time.atStartOfMonth
 import bps.time.naturalMonthInterval
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -28,7 +31,7 @@ class JdbcAnalyticsDao(
     val connection: Connection,
     val accountDao: AccountDao,
     override val clock: Clock = Clock.System,
-) : AnalyticsDao {
+) : AnalyticsDao, JdbcFixture {
 
     data class Expenditure(
         val amount: BigDecimal,
@@ -107,7 +110,7 @@ class JdbcAnalyticsDao(
 //        }
 
         fun add(expenditure: Expenditure) {
-            expenditures.compute(expenditure.timestamp.naturalMonthInterval().start) { key: LocalDateTime, foundValue: ExpendituresInInterval? ->
+            expenditures.compute(expenditure.timestamp.atStartOfMonth()) { key: LocalDateTime, foundValue: ExpendituresInInterval? ->
                 (foundValue ?: ExpendituresInInterval(key.naturalMonthInterval()))
                     .also {
                         it.add(expenditure)
@@ -180,40 +183,38 @@ class JdbcAnalyticsDao(
                 |and ti.budget_id = ?
                 |order by t.timestamp_utc asc
             """.trimMargin(),
+                // TODO page this if we run into DB latency
 //                |offset ?
 //                |limit 100
             )
                 .use { statement: PreparedStatement ->
                     statement.setUuid(1, categoryAccount.id)
-                    val timestampAtStartOfSinceMonth: Timestamp =
-                        Timestamp.from(
-                            options.since
-                                .toLocalDateTime(timeZone)
-                                .naturalMonthInterval()
-                                .start
-                                .toInstant(timeZone)
-                                .toJavaInstant(),
-                        )
-                    statement.setTimestamp(2, timestampAtStartOfSinceMonth)
+                    val sinceTimestamp: Timestamp = Timestamp.from(options.since.toJavaInstant())
+                    statement.setTimestamp(2, sinceTimestamp)
                     statement.setUuid(3, categoryAccount.budgetId)
                     statement.executeQuery()
                         .use { resultSet: ResultSet ->
-                            val filter: (LocalDateTime) -> Boolean =
+                            val isNotTooLate: (Instant) -> Boolean =
                                 if (options.excludeCurrentUnit) {
-                                    val thisMonth: NaturalMonthLocalInterval =
-                                        clock.now().toLocalDateTime(timeZone).naturalMonthInterval()
+                                    val firstOfThisMonth: Instant =
+                                        clock
+                                            .now()
+                                            .atStartOfMonth(timeZone)
+                                            // NOTE safe because it is midnight and offsets generally occur at or after
+                                            //      1 a.m. local time
+                                            .toInstant(timeZone)
 
-                                    fun(t: LocalDateTime) = t < thisMonth.start
+                                    fun(t: Instant) = t < firstOfThisMonth
                                 } else {
                                     { true }
                                 }
                             while (resultSet.next()) {
-                                val timestamp = resultSet.getLocalDateTimeForTimeZone(timeZone)
-                                if (filter(timestamp))
+                                val timestamp: Instant = resultSet.getInstantOrNull()!!
+                                if (isNotTooLate(timestamp))
                                     expenditures.add(
                                         Expenditure(
                                             -resultSet.getBigDecimal("amount"),
-                                            timestamp,
+                                            timestamp.toLocalDateTime(timeZone),
                                         ),
                                     )
                             }
@@ -232,41 +233,3 @@ class JdbcAnalyticsDao(
 
 }
 
-interface AnalyticsOptions {
-
-    //        val excludeFirstActiveUnit: Boolean
-    val excludeFutureUnits: Boolean
-    val excludeCurrentUnit: Boolean
-
-    //        val excludeMaxAndMinFromAverage: Boolean
-//        val minimumUnitsAfterExclusions: Int
-//        val timeUnit: DateTimeUnit
-    val since: Instant
-
-    companion object {
-        operator fun invoke(
-//                excludeFirstActiveUnit: Boolean,
-//                excludeMaxAndMinFromAverage: Boolean,
-//                minimumUnitsAfterExclusions: Int,
-//                timeUnit: DateTimeUnit,
-            excludeFutureUnits: Boolean,
-            excludeCurrentUnit: Boolean,
-            since: Instant,
-        ): AnalyticsOptions =
-            object : AnalyticsOptions {
-                //                    override val excludeFirstActiveUnit = excludeFirstActiveUnit
-//                    override val excludeMaxAndMinFromAverage = excludeMaxAndMinFromAverage
-//                    override val minimumUnitsAfterExclusions = minimumUnitsAfterExclusions
-//                    override val timeUnit = timeUnit
-                override val excludeFutureUnits: Boolean = excludeFutureUnits
-                override val excludeCurrentUnit: Boolean = excludeCurrentUnit
-                override val since: Instant = since
-
-                init {
-                    require(excludeFutureUnits || !excludeCurrentUnit)
-                }
-
-            }
-    }
-
-}

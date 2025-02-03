@@ -28,6 +28,7 @@ import bps.console.menu.quitItem
 import bps.console.menu.takeAction
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.toInstant
 import java.math.BigDecimal
 
 fun WithIo.creditCardMenu(
@@ -135,10 +136,11 @@ private fun WithIo.payCreditCardBill(
             ) { _: MenuSession, selectedRealAccount: RealAccount ->
                 val timestamp: Instant =
                     getTimestampFromUser(
-                        "Use current time for the bill-pay transaction [Y]? ",
-                        budgetData.timeZone,
-                        clock,
+                        queryForNow = "Use current time for the bill-pay transaction [Y]? ",
+                        timeZone = budgetData.timeZone,
+                        clock = clock,
                     )
+                        ?.toInstant(budgetData.timeZone)
                         ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
                 val description: String =
                     SimplePromptWithDefault(
@@ -325,6 +327,7 @@ private fun WithIo.spendOnACreditCard(
                 .getResult()
                 ?: throw TryAgainAtMostRecentMenuException("No description entered.")
         val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
+            ?.toInstant(budgetData.timeZone)
             ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
         val transactionBuilder: Transaction.Builder =
             Transaction.Builder(

@@ -1,10 +1,10 @@
 package bps.jdbc
 
-import bps.budget.persistence.jdbc.toLocalDateTime
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinInstant
+import kotlinx.datetime.toLocalDateTime
 import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -15,9 +15,18 @@ import java.util.UUID
 
 interface JdbcFixture {
 
-    fun PreparedStatement.setTimestamp(parameterIndex: Int, timestamp: Instant) {
+    fun PreparedStatement.setInstant(parameterIndex: Int, timestamp: Instant) {
         setTimestamp(parameterIndex, Timestamp(timestamp.toEpochMilliseconds()))
     }
+
+    /**
+     * This assumes that the DB [Timestamp] is stored in UTC.
+     */
+    fun Timestamp.toLocalDateTime(timeZone: TimeZone): LocalDateTime =
+        this
+            .toInstant()
+            .toKotlinInstant()
+            .toLocalDateTime(timeZone)
 
     fun ResultSet.getLocalDateTimeForTimeZone(
         timeZone: TimeZone,

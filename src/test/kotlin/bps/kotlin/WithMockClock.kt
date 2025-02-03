@@ -32,7 +32,7 @@ interface WithMockClock {
      * @param startTime determines the first [Instant] to be returned by [Clock.now]
      */
     fun produceSecondTickingClock(startTime: Instant = Instant.parse("2024-08-09T00:00:00.500Z")) =
-        TickingClock(Instant.parse("2024-08-09T00:00:00.500Z"))
+        TickingClock(startTime)
 
     /**
      * Limitations:

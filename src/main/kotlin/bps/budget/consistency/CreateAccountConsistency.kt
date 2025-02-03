@@ -1,8 +1,6 @@
 package bps.budget.consistency
 
-import bps.console.io.WithIo
-import bps.console.app.TryAgainAtMostRecentMenuException
-import bps.budget.income.createIncomeTransaction
+import bps.budget.income.createInitialBalanceTransaction
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.ChargeAccount
@@ -10,10 +8,13 @@ import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.persistence.AccountDao
 import bps.budget.persistence.TransactionDao
+import bps.console.app.TryAgainAtMostRecentMenuException
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
+import bps.console.io.WithIo
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.toInstant
 import java.math.BigDecimal
 
 fun createCategoryAccountConsistently(
@@ -92,8 +93,9 @@ private fun WithIo.createAndSaveIncomeTransaction(
             timeZone = budgetData.timeZone,
             clock = clock,
         )
+            ?.toInstant(budgetData.timeZone)
             ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
-        createIncomeTransaction(
+        createInitialBalanceTransaction(
             incomeDescription,
             timestamp,
             balance,

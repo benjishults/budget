@@ -20,6 +20,7 @@ import bps.console.menu.Menu
 import bps.console.menu.ScrollingSelectionMenu
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.toInstant
 import java.math.BigDecimal
 
 fun WithIo.recordIncomeSelectionMenu(
@@ -74,6 +75,7 @@ fun WithIo.recordIncomeSelectionMenu(
                 .getResult()
                 ?: throw TryAgainAtMostRecentMenuException("No description entered.")
         val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
+            ?.toInstant(budgetData.timeZone)
             ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
         commitTransactionConsistently(
             createIncomeTransaction(description, timestamp, amount, budgetData, realAccount),
@@ -90,10 +92,41 @@ fun createIncomeTransaction(
     amount: BigDecimal,
     budgetData: BudgetData,
     realAccount: RealAccount,
-) = Transaction.Builder(
+): Transaction = createTransactionAddingToRealAccountAndGeneral(
     description = description,
     timestamp = timestamp,
     type = Type.income,
+    amount = amount,
+    budgetData = budgetData,
+    realAccount = realAccount,
+)
+
+fun createInitialBalanceTransaction(
+    description: String,
+    timestamp: Instant,
+    amount: BigDecimal,
+    budgetData: BudgetData,
+    realAccount: RealAccount,
+): Transaction = createTransactionAddingToRealAccountAndGeneral(
+    description = description,
+    timestamp = timestamp,
+    type = Type.initial,
+    amount = amount,
+    budgetData = budgetData,
+    realAccount = realAccount,
+)
+
+fun createTransactionAddingToRealAccountAndGeneral(
+    description: String,
+    timestamp: Instant,
+    amount: BigDecimal,
+    budgetData: BudgetData,
+    realAccount: RealAccount,
+    type: Type,
+) = Transaction.Builder(
+    description = description,
+    timestamp = timestamp,
+    type = type,
 )
     .apply {
         with(budgetData.generalAccount) {
