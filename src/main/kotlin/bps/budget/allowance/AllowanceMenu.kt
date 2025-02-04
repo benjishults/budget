@@ -22,6 +22,7 @@ import bps.console.menu.ScrollingSelectionMenu
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import java.math.BigDecimal
 
 fun WithIo.makeAllowancesSelectionMenu(
@@ -31,6 +32,7 @@ fun WithIo.makeAllowancesSelectionMenu(
     userConfig: UserConfiguration,
     clock: Clock,
 ): Menu {
+    val now = clock.now()
     return ScrollingSelectionMenu(
         header = {
             String.format(
@@ -54,6 +56,12 @@ fun WithIo.makeAllowancesSelectionMenu(
 //            timeUnit = DateTimeUnit.MONTH,
                     excludeFutureUnits = true,
                     excludeCurrentUnit = true,
+                    // NOTE after the 20th, we count the previous month in analytics
+                    // TODO make this configurable
+                    excludePreviousUnit =
+                        now
+                            .toLocalDateTime(budgetData.timeZone)
+                            .dayOfMonth < 20,
                     since = budgetData.analyticsStart,
                 ),
             )

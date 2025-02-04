@@ -1,5 +1,6 @@
 package bps.budget.checking
 
+import bps.budget.budgetQuitItem
 import bps.console.io.WithIo
 import bps.budget.consistency.clearCheckConsistently
 import bps.budget.consistency.deleteTransactionConsistently
@@ -68,7 +69,7 @@ fun WithIo.checksMenu(
                     },
                 )
                 add(backItem)
-                add(quitItem)
+                add(budgetQuitItem)
             },
         )
     }

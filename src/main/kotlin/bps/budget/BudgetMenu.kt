@@ -20,6 +20,14 @@ import bps.console.menu.takeActionAndPush
 import kotlinx.datetime.Clock
 import java.util.UUID
 
+val budgetQuitItem = quitItem(
+    """
+                                |Quitting
+                                |
+                                |Consider running the backup if you are storing the data locally.
+                        """.trimMargin(),
+)
+
 fun WithIo.budgetMenu(
     budgetData: BudgetData,
     budgetDao: BudgetDao,
@@ -106,13 +114,6 @@ fun WithIo.budgetMenu(
 //            },
 //        )
         add(
-            quitItem(
-                """
-                                |Quitting
-                                |
-                                |Consider running the backup if you are storing the data locally.
-                        """.trimMargin(),
-            ),
+            budgetQuitItem,
         )
     }
-

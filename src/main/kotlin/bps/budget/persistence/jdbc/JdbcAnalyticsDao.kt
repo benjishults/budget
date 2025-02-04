@@ -10,10 +10,11 @@ import bps.time.NaturalLocalInterval
 import bps.time.atStartOfMonth
 import bps.time.naturalMonthInterval
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
-import kotlinx.datetime.toJavaInstant
 import kotlinx.datetime.toLocalDateTime
 import java.math.BigDecimal
 import java.sql.Connection
@@ -22,6 +23,7 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import java.util.SortedMap
 import java.util.TreeMap
+import java.util.UUID
 
 class JdbcAnalyticsDao(
     val connection: Connection,
@@ -29,7 +31,7 @@ class JdbcAnalyticsDao(
     override val clock: Clock = Clock.System,
 ) : AnalyticsDao, JdbcFixture {
 
-    data class Expenditure(
+    data class Item(
         val amount: BigDecimal,
         val timestamp: LocalDateTime,
     ) {
@@ -38,24 +40,24 @@ class JdbcAnalyticsDao(
         }
     }
 
-    class ExpendituresInInterval(
+    class ItemsInInterval(
         val interval: NaturalLocalInterval,
-    ) : Comparable<ExpendituresInInterval> {
+    ) : Comparable<ItemsInInterval> {
 
-        private val _expenditures = mutableListOf<Expenditure>()
-        val expenditures: List<Expenditure>
-            get() = _expenditures.toList()
+        private val _items = mutableListOf<Item>()
+        val items: List<Item>
+            get() = _items.toList()
 
-        fun add(expenditure: Expenditure) {
-            _expenditures.add(expenditure)
+        fun add(item: Item) {
+            _items.add(item)
         }
 
-        override fun compareTo(other: ExpendituresInInterval): Int =
+        override fun compareTo(other: ItemsInInterval): Int =
             interval.start.compareTo(other.interval.start)
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
-            if (other !is ExpendituresInInterval) return false
+            if (other !is ItemsInInterval) return false
 
             if (interval != other.interval) return false
 
@@ -68,8 +70,8 @@ class JdbcAnalyticsDao(
 
     }
 
-    open class ExpenditureSeries<K : Comparable<K>>(
-        open val expenditures: SortedMap<K, ExpendituresInInterval>,
+    open class ItemSeries<K : Comparable<K>>(
+        open val items: SortedMap<K, ItemsInInterval>,
     ) {
 //        init {
 //            require(
@@ -85,9 +87,9 @@ class JdbcAnalyticsDao(
 //        }
     }
 
-    class MonthlyExpenditureSeries(
-        expenditures: SortedMap<LocalDateTime, ExpendituresInInterval> = TreeMap(),
-    ) : ExpenditureSeries<LocalDateTime>(expenditures) {
+    class MonthlyItemSeries(
+        items: SortedMap<LocalDateTime, ItemsInInterval> = TreeMap(),
+    ) : ItemSeries<LocalDateTime>(items) {
 //        init {
 //            var previous: NaturalMonthLocalInterval = expenditures.keys.first()
 //            require(
@@ -105,11 +107,13 @@ class JdbcAnalyticsDao(
 //            )
 //        }
 
-        fun add(expenditure: Expenditure) {
-            expenditures.compute(expenditure.timestamp.atStartOfMonth()) { key: LocalDateTime, foundValue: ExpendituresInInterval? ->
-                (foundValue ?: ExpendituresInInterval(key.naturalMonthInterval()))
+        // TODO this would be less error-prone if we used Instants instead of LocalDateTimes because the start of the month
+        //      is usually not an ambiguous LocalDateTime and it would be the only one we would need to do translation on.
+        fun add(item: Item) {
+            this@MonthlyItemSeries.items.compute(item.timestamp.atStartOfMonth()) { key: LocalDateTime, foundValue: ItemsInInterval? ->
+                (foundValue ?: ItemsInInterval(key.naturalMonthInterval()))
                     .also {
-                        it.add(expenditure)
+                        it.add(item)
                     }
             }
         }
@@ -150,14 +154,62 @@ class JdbcAnalyticsDao(
         // TODO worry about options
         // TODO worry about exceptions
         private fun computeMonthlyTotals(options: AnalyticsOptions): List<BigDecimal> =
-            expenditures
-                .map { (_: LocalDateTime, v: ExpendituresInInterval) ->
-                    v.expenditures
+            this@MonthlyItemSeries.items
+                .map { (_: LocalDateTime, v: ItemsInInterval) ->
+                    v.items
                         .map { it.amount }
                         .reduce(BigDecimal::plus)
                 }
 
     }
+
+    override fun averageIncome(
+        timeZone: TimeZone,
+        options: AnalyticsOptions,
+        budgetId: UUID,
+    ): BigDecimal? =
+        connection.transactOrThrow {
+            val incomes = MonthlyItemSeries()
+            prepareStatement(
+                """
+                |select t.timestamp_utc, ti.amount from transaction_items ti
+                |join transactions t
+                |  on ti.transaction_id = t.id
+                |    and ti.budget_id = t.budget_id
+                |where t.type = 'income'
+                |  and ti.amount > 0
+                |  and t.timestamp_utc >= ?
+                |  ${if (options.excludeCurrentUnit || options.excludeFutureTransactions || options.excludePreviousUnit) "and t.timestamp_utc < ?" else ""}
+                |  and ti.budget_id = ?
+                |order by t.timestamp_utc asc
+            """.trimMargin(),
+                // TODO page this if we run into DB latency
+//                |offset ?
+//                |limit 100
+            )
+                .use { statement: PreparedStatement ->
+                    statement.setInstant(1, options.since)
+                    statement.setUuid(
+                        setEndTimeStampMaybe(options, statement, 2, this@JdbcAnalyticsDao.clock.now(), timeZone),
+                        budgetId
+                    )
+                    statement.executeQuery()
+                        .use { resultSet: ResultSet ->
+                            while (resultSet.next()) {
+                                incomes.add(
+                                    Item(
+                                        resultSet.getBigDecimal("amount"),
+                                        resultSet.getInstantOrNull()!!
+                                            // FIXME do these really need to be LocalDateTimes?
+                                            //       if not, we may avoid some problems my leaving them as Instants
+                                            .toLocalDateTime(timeZone),
+                                    ),
+                                )
+                            }
+                        }
+                }
+            incomes.average(options)
+        }
 
     // TODO make a single function that returns various analytics to avoid multiple trips to the DB.
     //      I imagine each of these analytics functions will be pulling the same data.
@@ -167,7 +219,7 @@ class JdbcAnalyticsDao(
         options: AnalyticsOptions,
     ): BigDecimal? =
         connection.transactOrThrow {
-            val expenditures = MonthlyExpenditureSeries()
+            val expenditures = MonthlyItemSeries()
             prepareStatement(
                 """
                 |select t.timestamp_utc, ti.amount from transaction_items ti
@@ -178,7 +230,7 @@ class JdbcAnalyticsDao(
                 |  and t.type = 'expense'
                 |  and ti.amount < 0
                 |  and t.timestamp_utc >= ?
-                |  ${if (options.excludeCurrentUnit || options.excludeFutureUnits) "and t.timestamp_utc < ?" else ""}
+                |  ${if (options.excludeCurrentUnit || options.excludeFutureTransactions) "and t.timestamp_utc < ?" else ""}
                 |  and ti.budget_id = ?
                 |order by t.timestamp_utc asc
             """.trimMargin(),
@@ -188,30 +240,17 @@ class JdbcAnalyticsDao(
             )
                 .use { statement: PreparedStatement ->
                     statement.setUuid(1, categoryAccount.id)
-                    val sinceTimestamp: Timestamp = Timestamp.from(options.since.toJavaInstant())
-                    statement.setTimestamp(2, sinceTimestamp)
-                    if (options.excludeCurrentUnit) {
-                        statement.setInstant(
-                            3,
-                            clock
-                                .now()
-                                .atStartOfMonth(timeZone)
-                                // NOTE safe because it is midnight and offsets generally occur at or after
-                                //      1 a.m. local time
-                                .toInstant(timeZone),
-                        )
-                        statement.setUuid(4, categoryAccount.budgetId)
-                    } else if (options.excludeFutureUnits) {
-                        statement.setInstant(3, clock.now())
-                        statement.setUuid(4, categoryAccount.budgetId)
-                    } else {
-                        statement.setUuid(3, categoryAccount.budgetId)
-                    }
+                    statement.setInstant(2, options.since)
+                    statement.setUuid(
+                        setEndTimeStampMaybe(options, statement, 3, this@JdbcAnalyticsDao.clock.now(), timeZone),
+                        categoryAccount.budgetId
+                    )
+
                     statement.executeQuery()
                         .use { resultSet: ResultSet ->
                             while (resultSet.next()) {
                                 expenditures.add(
-                                    Expenditure(
+                                    Item(
                                         -resultSet.getBigDecimal("amount"),
                                         resultSet.getInstantOrNull()!!
                                             // FIXME do these really need to be LocalDateTimes?
@@ -232,6 +271,50 @@ class JdbcAnalyticsDao(
     // FIXME
     override fun minExpenditure(): BigDecimal? =
         null
+
+    /**
+     * Fills in the appropriate [Timestamp] at [statement]'s placeholder [atIndex].  If it filled anything in there,
+     * it will return [atIndex]` + 1`.  Otherwise, it returns [atIndex].
+     */
+    private fun setEndTimeStampMaybe(
+        options: AnalyticsOptions,
+        statement: PreparedStatement,
+        atIndex: Int,
+        now: Instant,
+        timeZone: TimeZone,
+    ): Int =
+        if (options.excludePreviousUnit) {
+            statement.setInstant(
+                atIndex,
+                now
+                    .atStartOfMonth(timeZone)
+                    .let {
+                        if (it.month === Month.JANUARY)
+                            LocalDateTime(it.year - 1, 12, 1, 0, 0)
+                        else
+                            LocalDateTime(it.year, it.monthNumber - 1, 1, 0, 0)
+                    }
+                    // NOTE safe because it is midnight and offsets generally occur at or after
+                    //      1 a.m. local time
+                    .toInstant(timeZone),
+            )
+            atIndex + 1
+        } else if (options.excludeCurrentUnit) {
+            statement.setInstant(
+                atIndex,
+                now
+                    .atStartOfMonth(timeZone)
+                    // NOTE safe because it is midnight and offsets generally occur at or after
+                    //      1 a.m. local time
+                    .toInstant(timeZone),
+            )
+            atIndex + 1
+        } else if (options.excludeFutureTransactions) {
+            statement.setInstant(2, now)
+            atIndex + 1
+        } else {
+            atIndex
+        }
 
 }
 

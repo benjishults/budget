@@ -76,6 +76,7 @@ class AnalyticsDaoTest : FreeSpec(),
                 AnalyticsOptions(
                     excludeFutureUnits = true,
                     excludeCurrentUnit = true,
+                    excludePreviousUnit = true,
                     // NOTE this is midnight in New York (though it's ignored due to mocking the connection)
                     since = Instant.parse("2023-08-01T04:00:00Z"),
                 ),

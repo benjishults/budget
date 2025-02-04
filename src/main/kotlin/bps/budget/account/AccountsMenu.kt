@@ -1,5 +1,6 @@
 package bps.budget.account
 
+import bps.budget.budgetQuitItem
 import bps.console.io.WithIo
 import bps.budget.consistency.createCategoryAccountConsistently
 import bps.budget.consistency.createChargeAccountConsistently
@@ -62,7 +63,7 @@ fun WithIo.manageAccountsMenu(
             },
         )
         add(backItem)
-        add(quitItem)
+        add(budgetQuitItem)
     }
 
 fun WithIo.editAccountDetails(
@@ -224,7 +225,7 @@ private fun WithIo.deactivateAccount(
         },
     )
     add(backItem)
-    add(quitItem)
+    add(budgetQuitItem)
 }
 
 private fun WithIo.createCreditAccount(
