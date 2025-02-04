@@ -85,6 +85,8 @@ class BasicSetupInteractionsTest : FreeSpec(),
                 """
 Quitting
 
+Consider running the backup if you are storing the data locally.
+
 """,
             )
             inputs shouldHaveSize 0

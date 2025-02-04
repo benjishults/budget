@@ -105,6 +105,14 @@ fun WithIo.budgetMenu(
 //                manageSettingsMenu(budgetData, budgetDao, userConfig, clock)
 //            },
 //        )
-        add(quitItem)
+        add(
+            quitItem(
+                """
+                                |Quitting
+                                |
+                                |Consider running the backup if you are storing the data locally.
+                        """.trimMargin(),
+            ),
+        )
     }
 

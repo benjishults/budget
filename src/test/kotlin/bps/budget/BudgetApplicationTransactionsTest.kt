@@ -2433,6 +2433,8 @@ Transfer recorded
                             |
                             |Quitting
                             |
+                            |Consider running the backup if you are storing the data locally.
+                            |
                             |
                     """.trimMargin(),
                     ),
