@@ -5,10 +5,18 @@ import bps.budget.model.CategoryAccount
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import java.math.BigDecimal
+import java.util.UUID
 
 interface AnalyticsDao {
 
     val clock: Clock
+
+    fun averageIncome(
+        timeZone: TimeZone,
+        options: AnalyticsOptions,
+        budgetId: UUID,
+    ): BigDecimal? =
+        TODO()
 
     fun averageExpenditure(
         categoryAccount: CategoryAccount,

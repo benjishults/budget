@@ -1,5 +1,6 @@
 package bps.budget.settings
 
+import bps.budget.budgetQuitItem
 import bps.budget.consistency.updateAnalyticsStartConsistently
 import bps.budget.consistency.updateTimeZoneConsistently
 import bps.budget.model.BudgetData
@@ -43,7 +44,13 @@ fun WithIo.userSettingsMenu(
         )
         val analyticsStartLocalDateTime: LocalDateTime = budgetData.analyticsStart.toLocalDateTime(budgetData.timeZone)
         add(
-            takeAction({ "Change Analytics Start Date From ${analyticsStartLocalDateTime.toString().substring(0, 10)}" }) {
+            takeAction(
+                {
+                    "Change Analytics Start Date From ${
+                        analyticsStartLocalDateTime.toString().substring(0, 10)
+                    }"
+                },
+            ) {
                 outPrinter.important(
                     """
         |The Analytics Start Date is the earliest date that analytics will be applied to.
@@ -61,7 +68,7 @@ fun WithIo.userSettingsMenu(
             },
         )
         add(backItem)
-        add(quitItem)
+        add(budgetQuitItem)
     }
 
 fun WithIo.changeTimeZone(

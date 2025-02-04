@@ -1,13 +1,13 @@
 package bps.budget.analytics
 
 import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalDateTime
 
 interface AnalyticsOptions {
 
     //        val excludeFirstActiveUnit: Boolean
-    val excludeFutureUnits: Boolean
+    val excludeFutureTransactions: Boolean
     val excludeCurrentUnit: Boolean
+    val excludePreviousUnit: Boolean
 
     //        val excludeMaxAndMinFromAverage: Boolean
 //        val minimumUnitsAfterExclusions: Int
@@ -23,6 +23,7 @@ interface AnalyticsOptions {
 //                timeUnit: DateTimeUnit,
             excludeFutureUnits: Boolean,
             excludeCurrentUnit: Boolean,
+            excludePreviousUnit: Boolean,
             since: Instant,
 //            hardBeginning: LocalDateTime,
         ): AnalyticsOptions =
@@ -31,8 +32,9 @@ interface AnalyticsOptions {
 //                    override val excludeMaxAndMinFromAverage = excludeMaxAndMinFromAverage
 //                    override val minimumUnitsAfterExclusions = minimumUnitsAfterExclusions
 //                    override val timeUnit = timeUnit
-                override val excludeFutureUnits: Boolean = excludeFutureUnits
+                override val excludeFutureTransactions: Boolean = excludeFutureUnits
                 override val excludeCurrentUnit: Boolean = excludeCurrentUnit
+                override val excludePreviousUnit: Boolean = excludeCurrentUnit
                 override val since: Instant = since
 //                override val hardBeginning = hardBeginning
 

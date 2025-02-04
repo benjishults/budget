@@ -1,5 +1,6 @@
 package bps.budget.charge
 
+import bps.budget.budgetQuitItem
 import bps.console.io.WithIo
 import bps.budget.consistency.commitCreditCardPaymentConsistently
 import bps.budget.model.BudgetData
@@ -101,7 +102,7 @@ fun WithIo.creditCardMenu(
                     },
                 )
                 add(backItem)
-                add(quitItem)
+                add(budgetQuitItem)
             },
         )
     }
