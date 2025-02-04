@@ -23,8 +23,10 @@ class AnalyticsDaoTest : FreeSpec(),
 
     init {
         val timeZone: TimeZone = TimeZone.of("America/New_York")
+        // NOTE midnight in NY
         val now = Instant.parse("2024-08-01T04:00:00Z")
         val clock = produceSecondTickingClock(now)
+        // NOTE midnight in NY
         val pastClock = produceDayTickingClock(Instant.parse("2023-08-01T04:00:00.500Z"))
 
         val connection: Connection = mockk(relaxed = true)
@@ -74,7 +76,7 @@ class AnalyticsDaoTest : FreeSpec(),
                 AnalyticsOptions(
                     excludeFutureUnits = true,
                     excludeCurrentUnit = true,
-                    // NOTE this is midnight in New York
+                    // NOTE this is midnight in New York (though it's ignored due to mocking the connection)
                     since = Instant.parse("2023-08-01T04:00:00Z"),
                 ),
             ) shouldBe (366 * 50 / 12).toBigDecimal()
