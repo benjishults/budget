@@ -1,7 +1,6 @@
 package bps.budget.jdbc
 
 import bps.budget.analytics.AnalyticsOptions
-import bps.budget.analytics.AnalyticsOptions.Companion.invoke
 import bps.budget.model.CategoryAccount
 import bps.budget.persistence.AccountDao
 import bps.budget.persistence.AnalyticsDao
@@ -18,22 +17,22 @@ import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Timestamp
-import kotlin.time.Duration
 
 class AnalyticsDaoTest : FreeSpec(),
     WithMockClock {
 
     init {
         val timeZone: TimeZone = TimeZone.of("America/New_York")
-        val now = Instant.parse("2024-08-09T00:00:00.500Z")
+        val now = Instant.parse("2024-08-01T04:00:00Z")
         val clock = produceSecondTickingClock(now)
-        val pastClock = produceDayTickingClock(Instant.parse("2023-07-09T00:00:00.500Z"))
+        val pastClock = produceDayTickingClock(Instant.parse("2023-08-01T04:00:00.500Z"))
 
         val connection: Connection = mockk(relaxed = true)
         val accountDao: AccountDao = mockk(relaxed = true)
         val dao: AnalyticsDao = JdbcAnalyticsDao(
             connection = connection,
             accountDao = accountDao,
+            // NOTE what gets passed in here doesn't matter since we are mocking the results on the connection
             clock = clock,
         )
         val preparedStatement: PreparedStatement = mockk(relaxed = true)
@@ -46,13 +45,11 @@ class AnalyticsDaoTest : FreeSpec(),
             resultSet
         }
         // NOTE needs to be big enough to cover one expenditure per day for the 13 months between the pastClock and clock
-        val numberOfExpenditures = 400
+        val numberOfExpenditures = 366
         val timestampList = buildList {
             var timestamp = Timestamp.from(pastClock.now().toJavaInstant())
-            val timestampOfNow = Timestamp.from(now.toJavaInstant())
             repeat(numberOfExpenditures) {
-                if (timestamp.before(timestampOfNow))
-                    add(timestamp)
+                add(timestamp)
                 timestamp = Timestamp.from(pastClock.now().toJavaInstant())
             }
         }
@@ -61,6 +58,7 @@ class AnalyticsDaoTest : FreeSpec(),
                 false
         every { resultSet.getTimestamp(any<String>()) } returnsMany
                 timestampList
+        // NOTE spending $50 every day
         every { resultSet.getBigDecimal("amount") } returnsMany
                 buildList {
                     repeat(timestampList.size) {
@@ -69,21 +67,17 @@ class AnalyticsDaoTest : FreeSpec(),
                 }
         "test averages" {
             val foodAccount: CategoryAccount = mockk(relaxed = true)
-            // NOTE this happens by a bizarre coincidence.  While you would expect the answer to be quite close to
-            //    this value, it's just lucky that it is exact.
             dao.averageExpenditure(
                 foodAccount,
                 timeZone,
+                // NOTE this doesn't really matter since we're mocking the results
                 AnalyticsOptions(
-//            excludeFirstActiveUnit = true,
-//            excludeMaxAndMin = false,
-//            minimumUnits = 3,
-//            timeUnit = DateTimeUnit.MONTH,
                     excludeFutureUnits = true,
                     excludeCurrentUnit = true,
-                    since = clock.now() - Duration.parse("P395D"),
+                    // NOTE this is midnight in New York
+                    since = Instant.parse("2023-08-01T04:00:00Z"),
                 ),
-            ) shouldBe (50 * 30).toBigDecimal()
+            ) shouldBe (366 * 50 / 12).toBigDecimal()
         }
     }
 
