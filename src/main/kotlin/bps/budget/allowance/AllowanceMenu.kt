@@ -91,14 +91,12 @@ fun WithIo.makeAllowancesSelectionMenu(
             account = selectedCategoryAccount,
             budgetData = budgetData,
             label = "Recent allowances:",
-        ) { transactionItem ->
-            budgetData.generalAccount in
-                    transactionItem.transaction(
-                        budgetData.id,
-                        budgetData.accountIdToAccountMap,
-                    )
-                        .categoryItems
-                        .map { it.account }
+        ) { transactionItem: TransactionDao.ExtendedTransactionItem<*> ->
+            transactionItem.transactionType in listOf(
+                Transaction.Type.allowance,
+                Transaction.Type.expense,
+                Transaction.Type.transfer,
+            )
         }
 
         val max = budgetData.generalAccount.balance
