@@ -88,6 +88,7 @@ fun WithIo.creditCardMenu(
                             extraItems = listOf(), // TODO toggle cleared/outstanding
                         ) { _, extendedTransactionItem ->
                             with(ViewTransactionFixture) {
+                                outPrinter.verticalSpace()
                                 outPrinter.showTransactionDetailsAction(
                                     extendedTransactionItem.transaction(
                                         budgetData.id,
@@ -113,6 +114,7 @@ private fun WithIo.payCreditCardBill(
     chargeAccount: ChargeAccount,
     transactionDao: TransactionDao,
 ) {
+    outPrinter.verticalSpace()
     val amountOfBill: BigDecimal =
         SimplePrompt(
             basicPrompt = "Enter the total AMOUNT of the bill being paid on '${chargeAccount.name}': ",
@@ -134,6 +136,7 @@ private fun WithIo.payCreditCardBill(
                 baseList = budgetData.realAccounts,
                 labelGenerator = { String.format("%,10.2f | %s", balance, name) },
             ) { _: MenuSession, selectedRealAccount: RealAccount ->
+                outPrinter.verticalSpace()
                 val timestamp: Instant =
                     getTimestampFromUser(
                         queryForNow = "Use current time for the bill-pay transaction [Y]? ",
@@ -142,6 +145,7 @@ private fun WithIo.payCreditCardBill(
                     )
                         ?.toInstant(budgetData.timeZone)
                         ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")
+                outPrinter.verticalSpace()
                 val description: String =
                     SimplePromptWithDefault(
                         "Description of transaction [pay '${chargeAccount.name}' bill]: ",
@@ -296,6 +300,7 @@ private fun WithIo.spendOnACreditCard(
     menuSession: MenuSession,
     chargeAccount: ChargeAccount,
 ) {
+    outPrinter.verticalSpace()
     showRecentRelevantTransactions(
         transactionDao = transactionDao,
         account = chargeAccount,
@@ -304,6 +309,7 @@ private fun WithIo.spendOnACreditCard(
     )
     // TODO enter check number if checking account
     // NOTE this is why we have separate draft accounts -- to easily know the real vs draft balance
+    outPrinter.verticalSpace()
     val amount: BigDecimal =
         SimplePrompt<BigDecimal>(
             "Enter the AMOUNT of the charge on '${chargeAccount.name}': ",
@@ -318,6 +324,7 @@ private fun WithIo.spendOnACreditCard(
             .getResult()
             ?: throw TryAgainAtMostRecentMenuException("No amount entered.")
     if (amount > BigDecimal.ZERO) {
+        outPrinter.verticalSpace()
         val description: String =
             SimplePrompt<String>(
                 "Enter the RECIPIENT of the charge on '${chargeAccount.name}': ",
@@ -326,6 +333,7 @@ private fun WithIo.spendOnACreditCard(
             )
                 .getResult()
                 ?: throw TryAgainAtMostRecentMenuException("No description entered.")
+        outPrinter.verticalSpace()
         val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
             ?.toInstant(budgetData.timeZone)
             ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")

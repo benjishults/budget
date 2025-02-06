@@ -71,6 +71,7 @@ fun WithIo.changeTimeZone(
 ) {
     val previousTimeZone: TimeZone = budgetData.timeZone
     val budgetId: UUID = budgetData.id
+    outPrinter.verticalSpace()
     SimplePromptWithDefault(
         basicPrompt = "Enter new desired time-zone for dates to be presented in [${previousTimeZone.id}]: ",
         defaultValue = previousTimeZone,
@@ -118,6 +119,7 @@ private fun WithIo.changeAnalyticsStartDate(
     userBudgetDao: UserBudgetDao,
     budgetData: BudgetData,
 ) {
+    outPrinter.verticalSpace()
     getTimestampFromUser(
         queryAcceptDefault = "Accept the current analytics start date of ${currentAnalyticsStart} [Y]? ",
         default = currentAnalyticsStart,

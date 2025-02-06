@@ -1,14 +1,13 @@
 package bps.budget.income
 
-import bps.console.io.WithIo
 import bps.budget.consistency.commitTransactionConsistently
 import bps.budget.model.BudgetData
 import bps.budget.model.RealAccount
 import bps.budget.model.Transaction
 import bps.budget.model.Transaction.Type
+import bps.budget.model.toCurrencyAmountOrNull
 import bps.budget.persistence.TransactionDao
 import bps.budget.persistence.UserConfiguration
-import bps.budget.model.toCurrencyAmountOrNull
 import bps.budget.transaction.showRecentRelevantTransactions
 import bps.console.app.MenuSession
 import bps.console.app.TryAgainAtMostRecentMenuException
@@ -16,6 +15,7 @@ import bps.console.inputs.PositiveStringValidator
 import bps.console.inputs.SimplePrompt
 import bps.console.inputs.SimplePromptWithDefault
 import bps.console.inputs.getTimestampFromUser
+import bps.console.io.WithIo
 import bps.console.menu.Menu
 import bps.console.menu.ScrollingSelectionMenu
 import kotlinx.datetime.Clock
@@ -35,7 +35,7 @@ fun WithIo.recordIncomeSelectionMenu(
     baseList = budgetData.realAccounts + budgetData.chargeAccounts,
     labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
 ) { _: MenuSession, realAccount: RealAccount ->
-
+    outPrinter.verticalSpace()
     showRecentRelevantTransactions(
         transactionDao = transactionDao,
         account = realAccount,
@@ -50,6 +50,7 @@ fun WithIo.recordIncomeSelectionMenu(
                     .categoryItems
                     .map { it.account }
     }
+    outPrinter.verticalSpace()
     val amount: BigDecimal =
         SimplePrompt(
             "Enter the AMOUNT of INCOME into '${realAccount.name}': ",
@@ -62,9 +63,11 @@ fun WithIo.recordIncomeSelectionMenu(
         }
             .getResult()
             ?: throw TryAgainAtMostRecentMenuException("No amount entered.")
+    outPrinter.verticalSpace()
     if (amount <= BigDecimal.ZERO.setScale(2)) {
         outPrinter.important("Not recording non-positive income.")
     } else {
+        outPrinter.verticalSpace()
         val description: String =
             SimplePromptWithDefault(
                 "Enter DESCRIPTION of income [income into '${realAccount.name}']: ",
@@ -74,6 +77,7 @@ fun WithIo.recordIncomeSelectionMenu(
             )
                 .getResult()
                 ?: throw TryAgainAtMostRecentMenuException("No description entered.")
+        outPrinter.verticalSpace()
         val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
             ?.toInstant(budgetData.timeZone)
             ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")

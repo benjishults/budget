@@ -91,6 +91,7 @@ fun WithIo.deleteCheckOnAccount(
     limit = userConfig.numberOfItemsInScrollingList,
     outPrinter = outPrinter,
 ) { _, draftTransactionItem: TransactionDao.ExtendedTransactionItem<DraftAccount> ->
+    outPrinter.verticalSpace()
     deleteTransactionConsistently(
         transactionItem = draftTransactionItem,
         transactionDao = transactionDao,
@@ -119,6 +120,7 @@ fun WithIo.recordCheckClearedOnAccount(
     limit = userConfig.numberOfItemsInScrollingList,
     outPrinter = outPrinter,
 ) { _, draftTransactionItem: TransactionDao.ExtendedTransactionItem<DraftAccount> ->
+    outPrinter.verticalSpace()
     val timestamp: Instant =
         getTimestampFromUser(
             queryForNow = "Did the check clear just now [Y]? ",
@@ -139,6 +141,7 @@ fun WithIo.writeCheckOnAccount(
     menuSession: MenuSession,
     userConfig: UserConfiguration,
 ) {
+    outPrinter.verticalSpace()
     showRecentRelevantTransactions(
         transactionDao = transactionDao,
         account = draftAccount,
@@ -150,6 +153,7 @@ fun WithIo.writeCheckOnAccount(
     // NOTE this is why we have separate draft accounts -- to easily know the real vs draft balance
     val max = draftAccount.realCompanion.balance - draftAccount.balance
     val min = BigDecimal("0.01").setScale(2)
+    outPrinter.verticalSpace()
     val amount: BigDecimal =
         SimplePrompt<BigDecimal>(
             "Enter the AMOUNT of check on '${draftAccount.name}' [$min, $max]: ",
@@ -163,6 +167,7 @@ fun WithIo.writeCheckOnAccount(
             .getResult()
             ?: throw TryAgainAtMostRecentMenuException("No amount entered.")
     if (amount > BigDecimal.ZERO) {
+        outPrinter.verticalSpace()
         val description: String =
             SimplePrompt<String>(
                 "Enter the RECIPIENT of the check on '${draftAccount.name}': ",
@@ -171,6 +176,7 @@ fun WithIo.writeCheckOnAccount(
             )
                 .getResult()
                 ?: throw TryAgainAtMostRecentMenuException("No description entered.")
+        outPrinter.verticalSpace()
         val timestamp: Instant =
             getTimestampFromUser(
                 timeZone = budgetData.timeZone,

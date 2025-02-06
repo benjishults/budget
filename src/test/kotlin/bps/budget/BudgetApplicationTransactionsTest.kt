@@ -25,7 +25,9 @@ import java.util.UUID
 class BudgetApplicationTransactionsTest : FreeSpec(),
     BasicAccountsJdbcTestFixture,
     WithMockClock,
-    ComplexConsoleIoTestFixture by ComplexConsoleIoTestFixture(1500) {
+    // NOTE for debugging
+//    ComplexConsoleIoTestFixture by ComplexConsoleIoTestFixture(90_000, true) {
+    ComplexConsoleIoTestFixture by ComplexConsoleIoTestFixture(1500, true) {
 
     override val jdbcDao = JdbcDao(configurations.persistence.jdbc!!)
 
@@ -276,7 +278,7 @@ Deactivated account 'Cosmetics'
                 )
                 validateInteraction(
                     expectedOutputs = listOf(
-                        "Every month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n",
+                        "\nEvery month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n\n\n",
                         "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$5,200.00]" + """
     Account         |    Balance |    Average |        Max |        Min | Description
  1. Education       |       0.00 |        N/A |        N/A |        N/A | Tuition, books, etc.
@@ -2000,11 +2002,13 @@ Real account 'Savings' created with balance ${'$'}1000.00
                         """Existing description: 'Energy, water, cleaning supplies, soap, tooth brushes, etc.'.
 Edit the description of account 'Necessities' [Y/n]? """,
                         "Enter the new DESCRIPTION for the account 'Necessities': ",
-                        """Change DESCRIPTION of 'Necessities from
-Energy, water, cleaning supplies, soap, tooth brushes, etc.
-to
-Cleaning supplies, soap, tooth brushes, etc.
-Are you sure [y/N]? """,
+                        """
+                            |
+                            |Change DESCRIPTION of 'Necessities from
+                            |Energy, water, cleaning supplies, soap, tooth brushes, etc.
+                            |to
+                            |Cleaning supplies, soap, tooth brushes, etc.
+                            |Are you sure [y/N]? """.trimMargin(),
                     ),
                     toInput = listOf("8", "n", "y", "Cleaning supplies, soap, tooth brushes, etc.", "y"),
                 )
