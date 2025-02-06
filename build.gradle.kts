@@ -1,14 +1,17 @@
-val kotestVersion: String by project
+val commonsValidatorVersion: String by project
+val consoleVersion: String by project
 val jacksonVersion: String by project
 val konfVersion: String by project
+val kotestVersion: String by project
+val kotlinXDateTimeVersion: String by project
 val mockkVersion: String by project
-val consoleVersion: String by project
+val postgresqlVersion: String by project
 
 plugins {
-    kotlin("jvm") version "2.0.21"
-    kotlin("plugin.allopen") version "2.0.21"
+    kotlin("jvm") version "2.1.10"
+    kotlin("plugin.allopen") version "2.1.10"
     application
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradleup.shadow") version "8.3.6"
 }
 
 group = "bps"
@@ -59,12 +62,12 @@ dependencies {
     // password hashing https://javadoc.io/doc/de.mkammerer/argon2-jvm/2.6/de/mkammerer/argon2/Argon2.html
     //   https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#argon2id
 //    implementation("de.mkammerer:argon2-jvm:2.11")
-    implementation("commons-validator:commons-validator:1.9.0")
+    implementation("commons-validator:commons-validator:$commonsValidatorVersion")
     implementation("io.github.benjishults:console:$consoleVersion")
-    runtimeOnly("org.postgresql:postgresql:42.7.3")
+    runtimeOnly("org.postgresql:postgresql:$postgresqlVersion")
     implementation("io.github.nhubbard:konf:$konfVersion")
 //    implementation("org.apache.commons:commons-csv:1.11.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinXDateTimeVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")

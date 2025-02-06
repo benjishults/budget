@@ -25,7 +25,9 @@ import java.util.UUID
 class BudgetApplicationTransactionsTest : FreeSpec(),
     BasicAccountsJdbcTestFixture,
     WithMockClock,
-    ComplexConsoleIoTestFixture by ComplexConsoleIoTestFixture(1500) {
+    // NOTE for debugging
+//    ComplexConsoleIoTestFixture by ComplexConsoleIoTestFixture(90_000, true) {
+    ComplexConsoleIoTestFixture by ComplexConsoleIoTestFixture(1500, true) {
 
     override val jdbcDao = JdbcDao(configurations.persistence.jdbc!!)
 
