@@ -54,6 +54,7 @@ fun WithIo.chooseRealAccountsThenCategories(
             )
         },
     ) { menuSession: MenuSession, selectedRealAccount: RealAccount ->
+        outPrinter.verticalSpace()
         showRecentRelevantTransactions(
             transactionDao = transactionDao,
             account = selectedRealAccount,
@@ -81,6 +82,7 @@ fun WithIo.chooseRealAccountsThenCategories(
                                 runningValue
                         },
         )
+        outPrinter.verticalSpace()
         val currentAmount: BigDecimal =
             SimplePromptWithDefault(
                 "Enter the AMOUNT spent from '${selectedRealAccount.name}' for '$description' [0.01, [$max]]: ",
@@ -96,6 +98,7 @@ fun WithIo.chooseRealAccountsThenCategories(
                 .getResult()
                 ?: throw TryAgainAtMostRecentMenuException("No amount entered")
         if (currentAmount > BigDecimal.ZERO) {
+            outPrinter.verticalSpace()
             val currentDescription: String =
                 SimplePromptWithDefault(
                     "Enter DESCRIPTION for '${selectedRealAccount.name}' spend [$description]: ",
@@ -186,6 +189,7 @@ fun WithIo.allocateSpendingItemMenu(
             )
         },
     ) { menuSession: MenuSession, selectedCategoryAccount: CategoryAccount ->
+        outPrinter.verticalSpace()
         showRecentRelevantTransactions(
             transactionDao = transactionDao,
             account = selectedCategoryAccount,
@@ -219,6 +223,7 @@ fun WithIo.allocateSpendingItemMenu(
                                 runningValue
                         },
         )
+        outPrinter.verticalSpace()
         val categoryAmount: BigDecimal =
             SimplePromptWithDefault(
                 "Enter the AMOUNT spent on '${selectedCategoryAccount.name}' for '$description' [0.01, [$max]]: ",
@@ -234,6 +239,7 @@ fun WithIo.allocateSpendingItemMenu(
                 .getResult()
                 ?: BigDecimal.ZERO.setScale(2)
         if (categoryAmount > BigDecimal.ZERO) {
+            outPrinter.verticalSpace()
             val categoryDescription: String =
                 SimplePromptWithDefault(
                     "Enter DESCRIPTION for '${selectedCategoryAccount.name}' spend [$description]: ",

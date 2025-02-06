@@ -76,6 +76,7 @@ fun WithIo.editAccountDetails(
         baseList = (budgetData.categoryAccounts - budgetData.generalAccount) + budgetData.realAccounts + budgetData.chargeAccounts + budgetData.generalAccount,
         labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
     ) { _: MenuSession, account: Account ->
+        outPrinter.verticalSpace()
         if (SimplePrompt(
                 basicPrompt = "Edit the name of account '${account.name}' [Y/n]? ",
                 inputReader = inputReader,
@@ -85,6 +86,7 @@ fun WithIo.editAccountDetails(
             )
                 .getResult()!!
         ) {
+            outPrinter.verticalSpace()
             val candidateName: String? = SimplePrompt<String>(
                 basicPrompt = "Enter the new name for the account '${account.name}': ",
                 inputReader = inputReader,
@@ -96,7 +98,7 @@ fun WithIo.editAccountDetails(
             )
                 .getResult()
             if (candidateName !== null && SimplePromptWithDefault(
-                    basicPrompt = "Rename '${account.name} to '$candidateName'.  Are you sure [y/N]? ",
+                    basicPrompt = "\nRename '${account.name} to '$candidateName'.  Are you sure [y/N]? ",
                     defaultValue = false,
                     inputReader = inputReader,
                     outPrinter = outPrinter,
@@ -107,6 +109,7 @@ fun WithIo.editAccountDetails(
                 account.name = candidateName
             }
         }
+        outPrinter.verticalSpace()
         if (SimplePrompt(
                 basicPrompt = "Existing description: '${account.description}'.\nEdit the description of account '${account.name}' [Y/n]? ",
                 inputReader = inputReader,
@@ -116,6 +119,7 @@ fun WithIo.editAccountDetails(
             )
                 .getResult()!!
         ) {
+            outPrinter.verticalSpace()
             val candidateDescription: String? = SimplePromptWithDefault(
                 basicPrompt = "Enter the new DESCRIPTION for the account '${account.name}': ",
                 defaultValue = account.description,
@@ -124,7 +128,7 @@ fun WithIo.editAccountDetails(
             )
                 .getResult()
             if (candidateDescription !== null && SimplePromptWithDefault(
-                    basicPrompt = "Change DESCRIPTION of '${account.name} from\n${account.description}\nto\n$candidateDescription\nAre you sure [y/N]? ",
+                    basicPrompt = "\nChange DESCRIPTION of '${account.name} from\n${account.description}\nto\n$candidateDescription\nAre you sure [y/N]? ",
                     defaultValue = false,
                     inputReader = inputReader,
                     outPrinter = outPrinter,
@@ -146,6 +150,7 @@ private fun WithIo.createCategory(
     budgetData: BudgetData,
     accountDao: AccountDao,
 ) {
+    outPrinter.verticalSpace()
     val name: String =
         SimplePrompt<String>(
             basicPrompt = "Enter a unique name for the new category: ",
@@ -160,6 +165,7 @@ private fun WithIo.createCategory(
             ?.trim()
             ?: throw TryAgainAtMostRecentMenuException("Unique name for account not entered.")
     if (name.isNotBlank()) {
+        outPrinter.verticalSpace()
         val description: String =
             SimplePromptWithDefault(
                 "Enter a DESCRIPTION for the new category: ",
@@ -231,6 +237,7 @@ private fun WithIo.createCreditAccount(
     budgetData: BudgetData,
     accountDao: AccountDao,
 ) {
+    outPrinter.verticalSpace()
     val name: String =
         SimplePrompt<String>(
             "Enter a unique name for the new credit card: ",
@@ -245,6 +252,7 @@ private fun WithIo.createCreditAccount(
             ?.trim()
             ?: throw TryAgainAtMostRecentMenuException("No name entered.")
     if (name.isNotBlank()) {
+        outPrinter.verticalSpace()
         val description: String =
             SimplePromptWithDefault(
                 "Enter a DESCRIPTION for the new credit card: ",
@@ -270,6 +278,7 @@ private fun WithIo.createRealFund(
     transactionDao: TransactionDao,
     clock: Clock,
 ) {
+    outPrinter.verticalSpace()
     val name: String =
         SimplePrompt<String>(
             "Enter a unique name for the real account: ",
@@ -284,6 +293,7 @@ private fun WithIo.createRealFund(
             ?.trim()
             ?: throw TryAgainAtMostRecentMenuException("Description for the new account not entered.")
     if (name.isNotBlank()) {
+        outPrinter.verticalSpace()
         val accountDescription: String =
             SimplePromptWithDefault(
                 "Enter a DESCRIPTION for the real account: ",
@@ -294,6 +304,7 @@ private fun WithIo.createRealFund(
                 .getResult()
                 ?.trim()
                 ?: throw TryAgainAtMostRecentMenuException("Description for the new account not entered.")
+        outPrinter.verticalSpace()
         val isDraft: Boolean = SimplePromptWithDefault(
             "Will you write checks on this account [y/N]? ",
             inputReader = inputReader,

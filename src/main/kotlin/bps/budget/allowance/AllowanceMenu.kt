@@ -85,7 +85,7 @@ fun WithIo.makeAllowancesSelectionMenu(
             )
         },
     ) { _: MenuSession, selectedCategoryAccount: CategoryAccount ->
-
+        outPrinter.verticalSpace()
         showRecentRelevantTransactions(
             transactionDao = transactionDao,
             account = selectedCategoryAccount,
@@ -101,6 +101,7 @@ fun WithIo.makeAllowancesSelectionMenu(
 
         val max = budgetData.generalAccount.balance
         val min = BigDecimal("0.01").setScale(2)
+        outPrinter.verticalSpace()
         val amount: BigDecimal =
             SimplePrompt<BigDecimal>(
                 "Enter the AMOUNT to ALLOCATE into '${selectedCategoryAccount.name}' [$min, $max]: ",
@@ -115,6 +116,7 @@ fun WithIo.makeAllowancesSelectionMenu(
                 .getResult()
                 ?: throw TryAgainAtMostRecentMenuException("No amount entered.")
         if (amount > BigDecimal.ZERO) {
+            outPrinter.verticalSpace()
             val description: String =
                 SimplePromptWithDefault(
                     "Enter DESCRIPTION of transaction [allowance into '${selectedCategoryAccount.name}']: ",
@@ -124,6 +126,7 @@ fun WithIo.makeAllowancesSelectionMenu(
                 )
                     .getResult()
                     ?: throw TryAgainAtMostRecentMenuException("No description entered.")
+            outPrinter.verticalSpace()
             val timestamp: Instant = getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
                 ?.toInstant(budgetData.timeZone)
                 ?: throw TryAgainAtMostRecentMenuException("No timestamp entered.")

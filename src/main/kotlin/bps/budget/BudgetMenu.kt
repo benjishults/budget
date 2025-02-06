@@ -56,7 +56,7 @@ fun WithIo.budgetMenu(
                     )
                 },
             ) {
-                outPrinter(
+                outPrinter.important(
                     "Every month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n",
                 )
             },

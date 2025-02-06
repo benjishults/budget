@@ -34,6 +34,7 @@ fun WithIo.transferMenu(
     baseList = budgetData.realAccounts + (budgetData.categoryAccounts - budgetData.generalAccount),
     labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
 ) { menuSession: MenuSession, transferFromAccount: Account ->
+    outPrinter.verticalSpace()
     showRecentRelevantTransactions(transactionDao, transferFromAccount, budgetData)
     menuSession.push(
         ScrollingSelectionMenu(
@@ -48,9 +49,11 @@ fun WithIo.transferMenu(
             },
             labelGenerator = { String.format("%,10.2f | %-15s | %s", balance, name, description) },
         ) { _: MenuSession, transferToAccount: Account ->
+            outPrinter.verticalSpace()
             showRecentRelevantTransactions(transactionDao, transferToAccount, budgetData)
             val max = transferFromAccount.balance
             val min = BigDecimal("0.01").setScale(2)
+            outPrinter.verticalSpace()
             val amount: BigDecimal =
                 SimplePrompt<BigDecimal>(
                     "Enter the AMOUNT to TRANSFER from '${transferFromAccount.name}' into '${transferToAccount.name}' [$min, $max]: ",
@@ -65,6 +68,7 @@ fun WithIo.transferMenu(
                     .getResult()
                     ?: throw TryAgainAtMostRecentMenuException("No amount entered.")
             if (amount > BigDecimal.ZERO) {
+                outPrinter.verticalSpace()
                 val description: String =
                     SimplePromptWithDefault(
                         "Enter DESCRIPTION of transaction [transfer from '${transferFromAccount.name}' into '${transferToAccount.name}']: ",
@@ -74,6 +78,7 @@ fun WithIo.transferMenu(
                     )
                         .getResult()
                         ?: throw TryAgainAtMostRecentMenuException("No description entered.")
+                outPrinter.verticalSpace()
                 val timestamp: Instant =
                     getTimestampFromUser(
                         timeZone = budgetData.timeZone,

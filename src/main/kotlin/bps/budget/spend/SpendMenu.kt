@@ -27,6 +27,7 @@ fun WithIo.recordSpendingMenu(
     // TODO move this up to the takeActionAndPush?  The intermediateAction would need to return the Transaction.Builder
     //     and the amount, I guess?  If so, I could add that to a new TransactionContext class with a Transaction.Builder
     //     and an amount.
+    outPrinter.verticalSpace()
     val amount: BigDecimal =
         SimplePrompt(
             "Enter the total AMOUNT spent: ",
@@ -39,6 +40,7 @@ fun WithIo.recordSpendingMenu(
         }
             .getResult()
             ?: throw TryAgainAtMostRecentMenuException("No amount entered.")
+    outPrinter.verticalSpace()
     val description: String =
         SimplePrompt<String>(
             "Enter DESCRIPTION of transaction: ",
@@ -48,6 +50,7 @@ fun WithIo.recordSpendingMenu(
         )
             .getResult()
             ?: throw TryAgainAtMostRecentMenuException("No description entered.")
+    outPrinter.verticalSpace()
     val timestamp: Instant =
         getTimestampFromUser(timeZone = budgetData.timeZone, clock = clock)
             ?.toInstant(budgetData.timeZone)
