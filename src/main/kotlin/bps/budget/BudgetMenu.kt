@@ -40,7 +40,15 @@ fun WithIo.budgetMenu(
             takeActionAndPush(
                 label = { recordIncomeLabel },
                 shortcut = "i",
-                to = { recordIncomeSelectionMenu(budgetData, budgetDao.transactionDao, userConfig, clock) },
+                to = {
+                    recordIncomeSelectionMenu(
+                        budgetData,
+                        budgetDao.transactionDao,
+                        budgetDao.analyticsDao,
+                        userConfig,
+                        clock,
+                    )
+                },
             ) {
                 outPrinter.important(
                     """

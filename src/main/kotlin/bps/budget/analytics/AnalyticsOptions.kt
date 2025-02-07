@@ -9,6 +9,8 @@ interface AnalyticsOptions {
     val excludeCurrentUnit: Boolean
     val excludePreviousUnit: Boolean
 
+    val endDateLimited: Boolean get() = excludeCurrentUnit || excludeCurrentUnit || excludeFutureTransactions
+
     //        val excludeMaxAndMinFromAverage: Boolean
 //        val minimumUnitsAfterExclusions: Int
 //        val timeUnit: DateTimeUnit
