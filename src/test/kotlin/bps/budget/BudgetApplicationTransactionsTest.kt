@@ -281,6 +281,7 @@ Deactivated account 'Cosmetics'
                         "\nEvery month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n\n\n",
                         "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$5,200.00]" + """
     Account         |    Balance |    Average |        Max |        Min | Description
+    Total           |        N/A |        N/A |        N/A |        N/A | Total Monthly Expenditures
  1. Education       |       0.00 |        N/A |        N/A |        N/A | Tuition, books, etc.
  2. Entertainment   |       0.00 |        N/A |        N/A |        N/A | Games, books, subscriptions, going out for food or fun
  3. Food            |       0.00 |        N/A |        N/A |        N/A | Food other than what's covered in entertainment
@@ -316,6 +317,7 @@ Allowance recorded
 """,
                         "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$4,900.00]" + """
     Account         |    Balance |    Average |        Max |        Min | Description
+    Total           |        N/A |        N/A |        N/A |        N/A | Total Monthly Expenditures
  1. Education       |       0.00 |        N/A |        N/A |        N/A | Tuition, books, etc.
  2. Entertainment   |       0.00 |        N/A |        N/A |        N/A | Games, books, subscriptions, going out for food or fun
  3. Food            |     300.00 |        N/A |        N/A |        N/A | Food other than what's covered in entertainment
@@ -351,6 +353,7 @@ Allowance recorded
 """,
                         "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$4,700.00]" + """
     Account         |    Balance |    Average |        Max |        Min | Description
+    Total           |        N/A |        N/A |        N/A |        N/A | Total Monthly Expenditures
  1. Education       |       0.00 |        N/A |        N/A |        N/A | Tuition, books, etc.
  2. Entertainment   |       0.00 |        N/A |        N/A |        N/A | Games, books, subscriptions, going out for food or fun
  3. Food            |     300.00 |        N/A |        N/A |        N/A | Food other than what's covered in entertainment
@@ -381,6 +384,7 @@ Allowance recorded
 """,
                         """Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$4,500.00]
     Account         |    Balance |    Average |        Max |        Min | Description
+    Total           |        N/A |        N/A |        N/A |        N/A | Total Monthly Expenditures
  1. Education       |       0.00 |        N/A |        N/A |        N/A | Tuition, books, etc.
  2. Entertainment   |       0.00 |        N/A |        N/A |        N/A | Games, books, subscriptions, going out for food or fun
  3. Food            |     300.00 |        N/A |        N/A |        N/A | Food other than what's covered in entertainment
@@ -398,7 +402,7 @@ Allowance recorded
 """,
                         "Enter selection: ",
                         "Recent allowances:\n",
-                        "2024-08-08 19:00:02 |     300.00 | allowance into 'Food'\n",
+                        "2024-08-08 19:00:03 |     300.00 | allowance into 'Food'\n",
                         "Enter the AMOUNT to ALLOCATE into '$defaultFoodAccountName' [0.01, 4500.00]: ",
                         """
                             |
@@ -415,6 +419,7 @@ Allowance recorded
                         """.trimMargin(),
                         """Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$4,500.00]
     Account         |    Balance |    Average |        Max |        Min | Description
+    Total           |        N/A |        N/A |        N/A |        N/A | Total Monthly Expenditures
  1. Education       |       0.00 |        N/A |        N/A |        N/A | Tuition, books, etc.
  2. Entertainment   |       0.00 |        N/A |        N/A |        N/A | Games, books, subscriptions, going out for food or fun
  3. Food            |     300.00 |        N/A |        N/A |        N/A | Food other than what's covered in entertainment
@@ -485,9 +490,9 @@ Allowance recorded
                         """
                         |'General' Account Transactions
                         |    Time Stamp          | Amount     | Balance    | Description
-                        | 1. 2024-08-08 19:00:04 |    -200.00 |   4,500.00 | allowance into 'Medical'
-                        | 2. 2024-08-08 19:00:03 |    -200.00 |   4,700.00 | allowance into 'Necessities'
-                        | 3. 2024-08-08 19:00:02 |    -300.00 |   4,900.00 | allowance into 'Food'
+                        | 1. 2024-08-08 19:00:05 |    -200.00 |   4,500.00 | allowance into 'Medical'
+                        | 2. 2024-08-08 19:00:04 |    -200.00 |   4,700.00 | allowance into 'Necessities'
+                        | 3. 2024-08-08 19:00:03 |    -300.00 |   4,900.00 | allowance into 'Food'
                         | 4. 2024-08-08 19:00:01 |     200.00 |   5,200.00 | income into 'Wallet'
                         | 5. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
                         | 6. Delete a transaction (d)
@@ -501,7 +506,7 @@ Allowance recorded
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |2024-08-08 19:00:02
+                        |2024-08-08 19:00:03
                         |allowance into 'Food'
                         |Category         | Amount     | Description
                         |Food             |     300.00 |
@@ -510,9 +515,9 @@ Allowance recorded
                         """
                         |'General' Account Transactions
                         |    Time Stamp          | Amount     | Balance    | Description
-                        | 1. 2024-08-08 19:00:04 |    -200.00 |   4,500.00 | allowance into 'Medical'
-                        | 2. 2024-08-08 19:00:03 |    -200.00 |   4,700.00 | allowance into 'Necessities'
-                        | 3. 2024-08-08 19:00:02 |    -300.00 |   4,900.00 | allowance into 'Food'
+                        | 1. 2024-08-08 19:00:05 |    -200.00 |   4,500.00 | allowance into 'Medical'
+                        | 2. 2024-08-08 19:00:04 |    -200.00 |   4,700.00 | allowance into 'Necessities'
+                        | 3. 2024-08-08 19:00:03 |    -300.00 |   4,900.00 | allowance into 'Food'
                         | 4. 2024-08-08 19:00:01 |     200.00 |   5,200.00 | income into 'Wallet'
                         | 5. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
                         | 6. Delete a transaction (d)
@@ -528,16 +533,16 @@ Allowance recorded
                         """
                         |Choose a transaction to DELETE
                         |    Time Stamp          | Amount     | Balance    | Description
-                        | 1. 2024-08-08 19:00:04 |    -200.00 |   4,500.00 | allowance into 'Medical'
-                        | 2. 2024-08-08 19:00:03 |    -200.00 |   4,700.00 | allowance into 'Necessities'
-                        | 3. 2024-08-08 19:00:02 |    -300.00 |   4,900.00 | allowance into 'Food'
+                        | 1. 2024-08-08 19:00:05 |    -200.00 |   4,500.00 | allowance into 'Medical'
+                        | 2. 2024-08-08 19:00:04 |    -200.00 |   4,700.00 | allowance into 'Necessities'
+                        | 3. 2024-08-08 19:00:03 |    -300.00 |   4,900.00 | allowance into 'Food'
                         | 4. 2024-08-08 19:00:01 |     200.00 |   5,200.00 | income into 'Wallet'
                         | 5. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
                         | 6. Back (b)
                         | 7. Quit (q)
                         |""".trimMargin(),
                         "Select a transaction to DELETE: ",
-                        """2024-08-08 19:00:04
+                        """2024-08-08 19:00:05
 allowance into 'Medical'
 Category         | Amount     | Description
 General          |    -200.00 |
@@ -553,8 +558,8 @@ Medical          |     200.00 |
                         """
                         |Choose a transaction to DELETE
                         |    Time Stamp          | Amount     | Balance    | Description
-                        | 1. 2024-08-08 19:00:03 |    -200.00 |       0.00 | allowance into 'Necessities'
-                        | 2. 2024-08-08 19:00:02 |    -300.00 |     200.00 | allowance into 'Food'
+                        | 1. 2024-08-08 19:00:04 |    -200.00 |       0.00 | allowance into 'Necessities'
+                        | 2. 2024-08-08 19:00:03 |    -300.00 |     200.00 | allowance into 'Food'
                         | 3. 2024-08-08 19:00:01 |     200.00 |     500.00 | income into 'Wallet'
                         | 4. 2024-08-08 19:00:00 |   5,000.00 |     300.00 | income into 'Checking'
                         | 5. Back (b)
@@ -564,8 +569,8 @@ Medical          |     200.00 |
                         """
                             |'General' Account Transactions
                             |    Time Stamp          | Amount     | Balance    | Description
-                            | 1. 2024-08-08 19:00:03 |    -200.00 |       0.00 | allowance into 'Necessities'
-                            | 2. 2024-08-08 19:00:02 |    -300.00 |     200.00 | allowance into 'Food'
+                            | 1. 2024-08-08 19:00:04 |    -200.00 |       0.00 | allowance into 'Necessities'
+                            | 2. 2024-08-08 19:00:03 |    -300.00 |     200.00 | allowance into 'Food'
                             | 3. 2024-08-08 19:00:01 |     200.00 |     500.00 | income into 'Wallet'
                             | 4. 2024-08-08 19:00:00 |   5,000.00 |     300.00 | income into 'Checking'
                             | 5. Delete a transaction (d)
@@ -850,7 +855,7 @@ Spending recorded
                 validateInteraction(
                     expectedOutputs = listOf(
                         "Recent checks:\n",
-                        "2024-08-08 19:00:06 |     300.00 | SuperMarket\n",
+                        "2024-08-08 19:00:07 |     300.00 | SuperMarket\n",
                         "Enter the AMOUNT of check on 'Checking' [0.01, 4700.00]: ",
                     ),
                     toInput = listOf("25"),
@@ -915,13 +920,13 @@ Spending recorded
                         """
                         |Select the check to DELETE on 'Checking'
                         |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:07 |      25.00 | SuperMarket2
-                        | 2. 2024-08-08 19:00:06 |     300.00 | SuperMarket
+                        | 1. 2024-08-08 19:00:08 |      25.00 | SuperMarket2
+                        | 2. 2024-08-08 19:00:07 |     300.00 | SuperMarket
                         | 3. Back (b)
                         | 4. Quit (q)
                         |""".trimMargin(),
                         "Select the check to DELETE: ",
-                        """2024-08-08 19:00:07
+                        """2024-08-08 19:00:08
 SuperMarket2
 Category         | Amount     | Description
 Food             |     -25.00 |
@@ -940,7 +945,7 @@ Check deleted
 """,
                         """Select the check to DELETE on 'Checking'
     Time Stamp          | Amount     | Description
- 1. 2024-08-08 19:00:06 |     300.00 | SuperMarket
+ 1. 2024-08-08 19:00:07 |     300.00 | SuperMarket
  2. Back (b)
  3. Quit (q)
 """,
@@ -976,7 +981,7 @@ Check deleted
                         """
                         |Select the check that CLEARED on 'Checking'
                         |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:06 |     300.00 | SuperMarket
+                        | 1. 2024-08-08 19:00:07 |     300.00 | SuperMarket
                         | 2. Back (b)
                         | 3. Quit (q)
                         |""".trimMargin(),
@@ -1081,7 +1086,7 @@ Check deleted
                         """
                         |'Checking' Account Transactions
                         |    Time Stamp          | Amount     | Balance    | Description
-                        | 1. 2024-08-08 19:00:08 |    -300.00 |   4,700.00 | SuperMarket
+                        | 1. 2024-08-08 19:00:09 |    -300.00 |   4,700.00 | SuperMarket
                         | 2. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
                         | 3. Delete a transaction (d)
                         | 4. Back (b)
@@ -1118,7 +1123,7 @@ Check deleted
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |2024-08-08 19:00:08
+                        |2024-08-08 19:00:09
                         |SuperMarket
                         |Real             | Amount     | Description
                         |Checking         |    -300.00 | SuperMarket
@@ -1128,7 +1133,7 @@ Check deleted
                         """
                         |'Checking' Account Transactions
                         |    Time Stamp          | Amount     | Balance    | Description
-                        | 1. 2024-08-08 19:00:08 |    -300.00 |   4,700.00 | SuperMarket
+                        | 1. 2024-08-08 19:00:09 |    -300.00 |   4,700.00 | SuperMarket
                         | 2. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
                         | 3. Delete a transaction (d)
                         | 4. Back (b)
@@ -1367,7 +1372,7 @@ Spending recorded
                 validateInteraction(
                     expectedOutputs = listOf(
                         "Recent expenditures:\n",
-                        "2024-08-08 19:00:09 |     -30.00 | Costco\n",
+                        "2024-08-08 19:00:10 |     -30.00 | Costco\n",
                         "Enter the AMOUNT of the charge on 'Costco Visa': ",
                         "Enter the RECIPIENT of the charge on 'Costco Visa': ",
                         "Use current time [Y]? ",
@@ -1396,7 +1401,7 @@ Spending recorded
                         |""".trimMargin(),
                         "Enter selection: ",
                         "Recent expenditures:\n",
-                        "2024-08-08 19:00:09 |     -10.00 | Costco\n",
+                        "2024-08-08 19:00:10 |     -10.00 | Costco\n",
                         "Enter the AMOUNT spent on 'Necessities' for 'Target' [0.01, [20.00]]: ",
                         "Enter DESCRIPTION for 'Necessities' spend [Target]: ",
                     ),
@@ -1485,10 +1490,10 @@ Spending recorded
                         """
                         |'Food' Account Transactions
                         |    Time Stamp          | Amount     | Balance    | Description
-                        | 1. 2024-08-08 19:00:09 |     -20.00 |      78.50 | Costco
-                        | 2. 2024-08-08 19:00:06 |    -200.00 |      98.50 | SuperMarket
-                        | 3. 2024-08-08 19:00:05 |      -1.50 |     298.50 | Pepsi
-                        | 4. 2024-08-08 19:00:02 |     300.00 |     300.00 | allowance into 'Food'
+                        | 1. 2024-08-08 19:00:10 |     -20.00 |      78.50 | Costco
+                        | 2. 2024-08-08 19:00:07 |    -200.00 |      98.50 | SuperMarket
+                        | 3. 2024-08-08 19:00:06 |      -1.50 |     298.50 | Pepsi
+                        | 4. 2024-08-08 19:00:03 |     300.00 |     300.00 | allowance into 'Food'
                         | 5. Delete a transaction (d)
                         | 6. Back (b)
                         | 7. Quit (q)
@@ -1500,7 +1505,7 @@ Spending recorded
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |2024-08-08 19:00:09
+                        |2024-08-08 19:00:10
                         |Costco
                         |Category         | Amount     | Description
                         |Food             |     -20.00 |
@@ -1511,10 +1516,10 @@ Spending recorded
                         """
                         |'$defaultFoodAccountName' Account Transactions
                         |    Time Stamp          | Amount     | Balance    | Description
-                        | 1. 2024-08-08 19:00:09 |     -20.00 |      78.50 | Costco
-                        | 2. 2024-08-08 19:00:06 |    -200.00 |      98.50 | SuperMarket
-                        | 3. 2024-08-08 19:00:05 |      -1.50 |     298.50 | Pepsi
-                        | 4. 2024-08-08 19:00:02 |     300.00 |     300.00 | allowance into 'Food'
+                        | 1. 2024-08-08 19:00:10 |     -20.00 |      78.50 | Costco
+                        | 2. 2024-08-08 19:00:07 |    -200.00 |      98.50 | SuperMarket
+                        | 3. 2024-08-08 19:00:06 |      -1.50 |     298.50 | Pepsi
+                        | 4. 2024-08-08 19:00:03 |     300.00 |     300.00 | allowance into 'Food'
                         | 5. Delete a transaction (d)
                         | 6. Back (b)
                         | 7. Quit (q)
@@ -1618,8 +1623,8 @@ Spending recorded
                         """
                         |Select all transactions from this 'Costco Visa' bill.  Amount to be covered: $35.00
                         |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:10 |     -20.00 | Target
-                        | 2. 2024-08-08 19:00:09 |     -30.00 | Costco
+                        | 1. 2024-08-08 19:00:11 |     -20.00 | Target
+                        | 2. 2024-08-08 19:00:10 |     -30.00 | Costco
                         | 3. Record a missing transaction from this 'Costco Visa' bill
                         | 4. Back (b)
                         | 5. Quit (q)
@@ -1638,7 +1643,7 @@ Item prepared
                         """
                         |Select all transactions from this 'Costco Visa' bill.  Amount to be covered: $5.00
                         |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:10 |     -20.00 | Target
+                        | 1. 2024-08-08 19:00:11 |     -20.00 | Target
                         | 2. Record a missing transaction from this 'Costco Visa' bill
                         | 3. Back (b)
                         | 4. Quit (q)
@@ -1658,7 +1663,7 @@ Item prepared
                         """
                         |Select all transactions from this 'Costco Visa' bill.  Amount to be covered: $5.00
                         |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:10 |     -20.00 | Target
+                        | 1. 2024-08-08 19:00:11 |     -20.00 | Target
                         | 2. Record a missing transaction from this 'Costco Visa' bill
                         | 3. Back (b)
                         | 4. Quit (q)
@@ -1670,8 +1675,8 @@ Item prepared
                 validateInteraction(
                     expectedOutputs = listOf(
                         "Recent expenditures:\n",
-                        "2024-08-08 19:00:10 |     -20.00 | Target\n",
-                        "2024-08-08 19:00:09 |     -30.00 | Costco\n",
+                        "2024-08-08 19:00:11 |     -20.00 | Target\n",
+                        "2024-08-08 19:00:10 |     -30.00 | Costco\n",
                         "Enter the AMOUNT of the charge on 'Costco Visa': ",
                         "Enter the RECIPIENT of the charge on 'Costco Visa': ",
                         "Use current time [Y]? ",
@@ -1700,8 +1705,8 @@ Item prepared
                         |""".trimMargin(),
                         "Enter selection: ",
                         "Recent expenditures:\n",
-                        "2024-08-08 19:00:10 |     -20.00 | Target\n",
-                        "2024-08-08 19:00:09 |     -10.00 | Costco\n",
+                        "2024-08-08 19:00:11 |     -20.00 | Target\n",
+                        "2024-08-08 19:00:10 |     -10.00 | Costco\n",
                         "Enter the AMOUNT spent on 'Necessities' for 'Brausen's' [0.01, [5.00]]: ",
                         "Enter DESCRIPTION for 'Necessities' spend [Brausen's]: ",
                     ),
@@ -1716,8 +1721,8 @@ Spending recorded
                         """
                         |Select all transactions from this 'Costco Visa' bill.  Amount to be covered: $5.00
                         |    Time Stamp          | Amount     | Description
-                        | 1. 2024-08-08 19:00:12 |      -5.00 | Brausen's
-                        | 2. 2024-08-08 19:00:10 |     -20.00 | Target
+                        | 1. 2024-08-08 19:00:13 |      -5.00 | Brausen's
+                        | 2. 2024-08-08 19:00:11 |     -20.00 | Target
                         | 3. Record a missing transaction from this 'Costco Visa' bill
                         | 4. Back (b)
                         | 5. Quit (q)
@@ -1805,8 +1810,8 @@ Spending recorded
                         """
                         |'Checking' Account Transactions
                         |    Time Stamp          | Amount     | Balance    | Description
-                        | 1. 2024-08-08 19:00:11 |     -35.00 |   4,665.00 | pay 'Costco Visa' bill
-                        | 2. 2024-08-08 19:00:08 |    -300.00 |   4,700.00 | SuperMarket
+                        | 1. 2024-08-08 19:00:12 |     -35.00 |   4,665.00 | pay 'Costco Visa' bill
+                        | 2. 2024-08-08 19:00:09 |    -300.00 |   4,700.00 | SuperMarket
                         | 3. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
                         | 4. Delete a transaction (d)
                         | 5. Back (b)
@@ -1844,7 +1849,7 @@ Spending recorded
                 validateInteraction(
                     expectedOutputs = listOf(
                         """
-                        |2024-08-08 19:00:08
+                        |2024-08-08 19:00:09
                         |SuperMarket
                         |Real             | Amount     | Description
                         |Checking         |    -300.00 | SuperMarket
@@ -1854,8 +1859,8 @@ Spending recorded
                         """
                         |'Checking' Account Transactions
                         |    Time Stamp          | Amount     | Balance    | Description
-                        | 1. 2024-08-08 19:00:11 |     -35.00 |   4,665.00 | pay 'Costco Visa' bill
-                        | 2. 2024-08-08 19:00:08 |    -300.00 |   4,700.00 | SuperMarket
+                        | 1. 2024-08-08 19:00:12 |     -35.00 |   4,665.00 | pay 'Costco Visa' bill
+                        | 2. 2024-08-08 19:00:09 |    -300.00 |   4,700.00 | SuperMarket
                         | 3. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
                         | 4. Delete a transaction (d)
                         | 5. Back (b)
@@ -2104,9 +2109,9 @@ Editing done
                         """
                         |'General' Account Transactions
                         |    Time Stamp          | Amount     | Balance    | Description
-                        | 1. 2024-08-08 19:00:13 |   1,000.00 |   5,700.00 | initial balance in 'Savings'
-                        | 2. 2024-08-08 19:00:03 |    -200.00 |   4,700.00 | allowance into 'Necessities'
-                        | 3. 2024-08-08 19:00:02 |    -300.00 |   4,900.00 | allowance into 'Food'
+                        | 1. 2024-08-08 19:00:14 |   1,000.00 |   5,700.00 | initial balance in 'Savings'
+                        | 2. 2024-08-08 19:00:04 |    -200.00 |   4,700.00 | allowance into 'Necessities'
+                        | 3. 2024-08-08 19:00:03 |    -300.00 |   4,900.00 | allowance into 'Food'
                         | 4. 2024-08-08 19:00:01 |     200.00 |   5,200.00 | income into 'Wallet'
                         | 5. 2024-08-08 19:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
                         | 6. Delete a transaction (d)
@@ -2195,7 +2200,7 @@ Editing done
                 validateInteraction(
                     expectedOutputs = listOf(
                         "Recent transactions\n",
-                        "2024-08-08 19:00:13 |   1,000.00 | initial balance in 'Savings'\n",
+                        "2024-08-08 19:00:14 |   1,000.00 | initial balance in 'Savings'\n",
                         """
                 |Select account to TRANSFER money TO (from 'Savings')
                 | 1.   4,665.00 | Checking        | Account from which checks clear
@@ -2211,8 +2216,8 @@ Editing done
                 validateInteraction(
                     expectedOutputs = listOf(
                         "Recent transactions\n",
-                        "2024-08-08 19:00:11 |     -35.00 | pay 'Costco Visa' bill\n",
-                        "2024-08-08 19:00:08 |    -300.00 | SuperMarket\n",
+                        "2024-08-08 19:00:12 |     -35.00 | pay 'Costco Visa' bill\n",
+                        "2024-08-08 19:00:09 |    -300.00 | SuperMarket\n",
                         "2024-08-08 19:00:00 |   5,000.00 | income into 'Checking'\n",
                         "Enter the AMOUNT to TRANSFER from 'Savings' into 'Checking' [0.01, 1000.00]: ",
                         "Enter DESCRIPTION of transaction [transfer from 'Savings' into 'Checking']: ",
@@ -2365,9 +2370,9 @@ Transfer recorded
                         """
                         |'General' Account Transactions
                         |    Time Stamp          | Amount     | Balance    | Description
-                        | 1. 2024-08-08 20:00:13 |   1,000.00 |   5,700.00 | initial balance in 'Savings'
-                        | 2. 2024-08-08 20:00:03 |    -200.00 |   4,700.00 | allowance into 'Necessities'
-                        | 3. 2024-08-08 20:00:02 |    -300.00 |   4,900.00 | allowance into 'Food'
+                        | 1. 2024-08-08 20:00:14 |   1,000.00 |   5,700.00 | initial balance in 'Savings'
+                        | 2. 2024-08-08 20:00:04 |    -200.00 |   4,700.00 | allowance into 'Necessities'
+                        | 3. 2024-08-08 20:00:03 |    -300.00 |   4,900.00 | allowance into 'Food'
                         | 4. 2024-08-08 20:00:01 |     200.00 |   5,200.00 | income into 'Wallet'
                         | 5. 2024-08-08 20:00:00 |   5,000.00 |   5,000.00 | income into 'Checking'
                         | 6. Delete a transaction (d)
