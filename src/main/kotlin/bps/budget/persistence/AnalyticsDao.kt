@@ -2,6 +2,7 @@ package bps.budget.persistence
 
 import bps.budget.analytics.AnalyticsOptions
 import bps.budget.model.CategoryAccount
+import bps.budget.model.RealAccount
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import java.math.BigDecimal
@@ -17,6 +18,20 @@ interface AnalyticsDao {
         budgetId: UUID,
     ): BigDecimal? =
         TODO()
+
+    fun averageIncome(
+        realAccount: RealAccount,
+        timeZone: TimeZone,
+        options: AnalyticsOptions,
+        budgetId: UUID,
+    ): BigDecimal? =
+        TODO()
+
+    fun maxIncome(): BigDecimal? =
+        TODO("Not yet implemented")
+
+    fun minIncome(): BigDecimal? =
+        TODO("Not yet implemented")
 
     fun averageExpenditure(
         categoryAccount: CategoryAccount,

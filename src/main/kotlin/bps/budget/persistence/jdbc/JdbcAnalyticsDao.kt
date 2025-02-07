@@ -2,6 +2,7 @@ package bps.budget.persistence.jdbc
 
 import bps.budget.analytics.AnalyticsOptions
 import bps.budget.model.CategoryAccount
+import bps.budget.model.RealAccount
 import bps.budget.persistence.AccountDao
 import bps.budget.persistence.AnalyticsDao
 import bps.jdbc.JdbcFixture
@@ -163,6 +164,14 @@ class JdbcAnalyticsDao(
 
     }
 
+    // FIXME
+    override fun maxIncome(): BigDecimal? =
+        null
+
+    // FIXME
+    override fun minIncome(): BigDecimal? =
+        null
+
     override fun averageIncome(
         timeZone: TimeZone,
         options: AnalyticsOptions,
@@ -179,7 +188,7 @@ class JdbcAnalyticsDao(
                 |where t.type = 'income'
                 |  and ti.amount > 0
                 |  and t.timestamp_utc >= ?
-                |  ${if (options.excludeCurrentUnit || options.excludeFutureTransactions || options.excludePreviousUnit) "and t.timestamp_utc < ?" else ""}
+                |  ${if (options.endDateLimited) "and t.timestamp_utc < ?" else ""}
                 |  and ti.budget_id = ?
                 |order by t.timestamp_utc asc
             """.trimMargin(),
@@ -191,6 +200,57 @@ class JdbcAnalyticsDao(
                     statement.setInstant(1, options.since)
                     statement.setUuid(
                         setEndTimeStampMaybe(options, statement, 2, this@JdbcAnalyticsDao.clock.now(), timeZone),
+                        budgetId,
+                    )
+                    statement.executeQuery()
+                        .use { resultSet: ResultSet ->
+                            while (resultSet.next()) {
+                                incomes.add(
+                                    Item(
+                                        resultSet.getBigDecimal("amount"),
+                                        resultSet.getInstantOrNull()!!
+                                            // FIXME do these really need to be LocalDateTimes?
+                                            //       if not, we may avoid some problems my leaving them as Instants
+                                            .toLocalDateTime(timeZone),
+                                    ),
+                                )
+                            }
+                        }
+                }
+            incomes.average(options)
+        }
+
+    override fun averageIncome(
+        realAccount: RealAccount,
+        timeZone: TimeZone,
+        options: AnalyticsOptions,
+        budgetId: UUID,
+    ): BigDecimal? =
+        connection.transactOrThrow {
+            val incomes = MonthlyItemSeries()
+            prepareStatement(
+                """
+                |select t.timestamp_utc, ti.amount from transaction_items ti
+                |join transactions t
+                |  on ti.transaction_id = t.id
+                |    and ti.budget_id = t.budget_id
+                |where ti.account_id = ?
+                |  and t.type = 'income'
+                |  and ti.amount > 0
+                |  and t.timestamp_utc >= ?
+                |  ${if (options.endDateLimited) "and t.timestamp_utc < ?" else ""}
+                |  and ti.budget_id = ?
+                |order by t.timestamp_utc asc
+            """.trimMargin(),
+                // TODO page this if we run into DB latency
+//                |offset ?
+//                |limit 100
+            )
+                .use { statement: PreparedStatement ->
+                    statement.setUuid(1, realAccount.id)
+                    statement.setInstant(2, options.since)
+                    statement.setUuid(
+                        setEndTimeStampMaybe(options, statement, 3, this@JdbcAnalyticsDao.clock.now(), timeZone),
                         budgetId,
                     )
                     statement.executeQuery()
@@ -227,7 +287,7 @@ class JdbcAnalyticsDao(
                 |where t.type = 'expense'
                 |  and ti.amount < 0
                 |  and t.timestamp_utc >= ?
-                |  ${if (options.excludeCurrentUnit || options.excludeFutureTransactions || options.excludePreviousUnit) "and t.timestamp_utc < ?" else ""}
+                |  ${if (options.endDateLimited) "and t.timestamp_utc < ?" else ""}
                 |  and ti.budget_id = ?
                 |order by t.timestamp_utc asc
             """.trimMargin(),
@@ -279,7 +339,7 @@ class JdbcAnalyticsDao(
                 |  and t.type = 'expense'
                 |  and ti.amount < 0
                 |  and t.timestamp_utc >= ?
-                |  ${if (options.excludeCurrentUnit || options.excludeFutureTransactions || options.excludePreviousUnit) "and t.timestamp_utc < ?" else ""}
+                |  ${if (options.endDateLimited) "and t.timestamp_utc < ?" else ""}
                 |  and ti.budget_id = ?
                 |order by t.timestamp_utc asc
             """.trimMargin(),

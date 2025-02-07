@@ -2,6 +2,7 @@ package bps.budget.allowance
 
 import bps.budget.analytics.AnalyticsOptions
 import bps.budget.consistency.commitTransactionConsistently
+import bps.budget.income.formatAccountAnalyticsLabel
 import bps.budget.model.BudgetData
 import bps.budget.model.CategoryAccount
 import bps.budget.model.Transaction
@@ -51,7 +52,7 @@ fun WithIo.makeAllowancesSelectionMenu(
                 """
                     |Select account to ALLOCATE money into from '%s' [$%,.2f]
                     |    Account         |    Balance |    Average |        Max |        Min | Description
-                    |    Total           |        N/A | ${
+                    |    Total Spend     |        N/A | ${
                     if (averageExpenditure === null)
                         "       N/A"
                     else
@@ -98,30 +99,7 @@ fun WithIo.makeAllowancesSelectionMenu(
             )
             val max = analyticsDao.maxExpenditure()
             val min = analyticsDao.minExpenditure()
-            String.format(
-                "%-15s | %,10.2f | ${
-                    if (ave === null)
-                        "       N/A"
-                    else
-                        "%,10.2f"
-                } | ${
-                    if (max === null)
-                        "       N/A"
-                    else
-                        "%4$,10.2f"
-                } | ${
-                    if (min === null)
-                        "       N/A"
-                    else
-                        "%5$,10.2f"
-                } | %6\$s",
-                name,
-                balance,
-                ave,
-                max,
-                min,
-                description,
-            )
+            formatAccountAnalyticsLabel(ave, max, min)
         },
     ) { _: MenuSession, selectedCategoryAccount: CategoryAccount ->
         outPrinter.verticalSpace()
