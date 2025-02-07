@@ -191,7 +191,7 @@ class JdbcAnalyticsDao(
                     statement.setInstant(1, options.since)
                     statement.setUuid(
                         setEndTimeStampMaybe(options, statement, 2, this@JdbcAnalyticsDao.clock.now(), timeZone),
-                        budgetId
+                        budgetId,
                     )
                     statement.executeQuery()
                         .use { resultSet: ResultSet ->
@@ -210,6 +210,55 @@ class JdbcAnalyticsDao(
                 }
             incomes.average(options)
         }
+
+    override fun averageExpenditure(
+        timeZone: TimeZone,
+        options: AnalyticsOptions,
+        budgetId: UUID,
+    ): BigDecimal? =
+        connection.transactOrThrow {
+            val expenditures = MonthlyItemSeries()
+            prepareStatement(
+                """
+                |select t.timestamp_utc, ti.amount from transaction_items ti
+                |join transactions t
+                |  on ti.transaction_id = t.id
+                |    and ti.budget_id = t.budget_id
+                |where t.type = 'expense'
+                |  and ti.amount < 0
+                |  and t.timestamp_utc >= ?
+                |  ${if (options.excludeCurrentUnit || options.excludeFutureTransactions || options.excludePreviousUnit) "and t.timestamp_utc < ?" else ""}
+                |  and ti.budget_id = ?
+                |order by t.timestamp_utc asc
+            """.trimMargin(),
+                // TODO page this if we run into DB latency
+//                |offset ?
+//                |limit 100
+            )
+                .use { statement: PreparedStatement ->
+                    statement.setInstant(1, options.since)
+                    statement.setUuid(
+                        setEndTimeStampMaybe(options, statement, 2, this@JdbcAnalyticsDao.clock.now(), timeZone),
+                        budgetId,
+                    )
+                    statement.executeQuery()
+                        .use { resultSet: ResultSet ->
+                            while (resultSet.next()) {
+                                expenditures.add(
+                                    Item(
+                                        -resultSet.getBigDecimal("amount"),
+                                        resultSet.getInstantOrNull()!!
+                                            // FIXME do these really need to be LocalDateTimes?
+                                            //       if not, we may avoid some problems my leaving them as Instants
+                                            .toLocalDateTime(timeZone),
+                                    ),
+                                )
+                            }
+                        }
+                }
+            expenditures.average(options)
+        }
+
 
     // TODO make a single function that returns various analytics to avoid multiple trips to the DB.
     //      I imagine each of these analytics functions will be pulling the same data.
@@ -230,7 +279,7 @@ class JdbcAnalyticsDao(
                 |  and t.type = 'expense'
                 |  and ti.amount < 0
                 |  and t.timestamp_utc >= ?
-                |  ${if (options.excludeCurrentUnit || options.excludeFutureTransactions) "and t.timestamp_utc < ?" else ""}
+                |  ${if (options.excludeCurrentUnit || options.excludeFutureTransactions || options.excludePreviousUnit) "and t.timestamp_utc < ?" else ""}
                 |  and ti.budget_id = ?
                 |order by t.timestamp_utc asc
             """.trimMargin(),
@@ -243,7 +292,7 @@ class JdbcAnalyticsDao(
                     statement.setInstant(2, options.since)
                     statement.setUuid(
                         setEndTimeStampMaybe(options, statement, 3, this@JdbcAnalyticsDao.clock.now(), timeZone),
-                        categoryAccount.budgetId
+                        categoryAccount.budgetId,
                     )
 
                     statement.executeQuery()

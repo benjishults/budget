@@ -35,13 +35,44 @@ fun WithIo.makeAllowancesSelectionMenu(
     val now = clock.now()
     return ScrollingSelectionMenu(
         header = {
+            val averageExpenditure = analyticsDao.averageExpenditure(
+                budgetData.timeZone,
+                AnalyticsOptions(
+                    excludeFutureUnits = true,
+                    excludeCurrentUnit = true,
+                    excludePreviousUnit = true,
+                    since = budgetData.analyticsStart,
+                ),
+                budgetData.id,
+            )
+            val max: BigDecimal? = analyticsDao.maxExpenditure()
+            val min: BigDecimal? = analyticsDao.minExpenditure()
             String.format(
                 """
                     |Select account to ALLOCATE money into from '%s' [$%,.2f]
                     |    Account         |    Balance |    Average |        Max |        Min | Description
+                    |    Total           |        N/A | ${
+                    if (averageExpenditure === null)
+                        "       N/A"
+                    else
+                        "%,10.2f"
+                } | ${
+                    if (max === null)
+                        "       N/A"
+                    else
+                        "%4$,10.2f"
+                } | ${
+                    if (min === null)
+                        "       N/A"
+                    else
+                        "%5$,10.2f"
+                } | Total Monthly Expenditures
                 """.trimMargin(),
                 budgetData.generalAccount.name,
                 budgetData.generalAccount.balance,
+                averageExpenditure,
+                max,
+                min,
             )
         },
         limit = userConfig.numberOfItemsInScrollingList,

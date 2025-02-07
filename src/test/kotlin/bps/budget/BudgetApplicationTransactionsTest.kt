@@ -281,6 +281,7 @@ Deactivated account 'Cosmetics'
                         "\nEvery month or so, you may want to distribute the income from the \"general\" category fund account into the other category fund accounts.\n\n\n",
                         "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$5,200.00]" + """
     Account         |    Balance |    Average |        Max |        Min | Description
+    Total           |        N/A |        N/A |        N/A |        N/A | Total Monthly Expenditures
  1. Education       |       0.00 |        N/A |        N/A |        N/A | Tuition, books, etc.
  2. Entertainment   |       0.00 |        N/A |        N/A |        N/A | Games, books, subscriptions, going out for food or fun
  3. Food            |       0.00 |        N/A |        N/A |        N/A | Food other than what's covered in entertainment
@@ -316,6 +317,7 @@ Allowance recorded
 """,
                         "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$4,900.00]" + """
     Account         |    Balance |    Average |        Max |        Min | Description
+    Total           |        N/A |        N/A |        N/A |        N/A | Total Monthly Expenditures
  1. Education       |       0.00 |        N/A |        N/A |        N/A | Tuition, books, etc.
  2. Entertainment   |       0.00 |        N/A |        N/A |        N/A | Games, books, subscriptions, going out for food or fun
  3. Food            |     300.00 |        N/A |        N/A |        N/A | Food other than what's covered in entertainment
@@ -351,6 +353,7 @@ Allowance recorded
 """,
                         "Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$4,700.00]" + """
     Account         |    Balance |    Average |        Max |        Min | Description
+    Total           |        N/A |        N/A |        N/A |        N/A | Total Monthly Expenditures
  1. Education       |       0.00 |        N/A |        N/A |        N/A | Tuition, books, etc.
  2. Entertainment   |       0.00 |        N/A |        N/A |        N/A | Games, books, subscriptions, going out for food or fun
  3. Food            |     300.00 |        N/A |        N/A |        N/A | Food other than what's covered in entertainment
@@ -381,6 +384,7 @@ Allowance recorded
 """,
                         """Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$4,500.00]
     Account         |    Balance |    Average |        Max |        Min | Description
+    Total           |        N/A |        N/A |        N/A |        N/A | Total Monthly Expenditures
  1. Education       |       0.00 |        N/A |        N/A |        N/A | Tuition, books, etc.
  2. Entertainment   |       0.00 |        N/A |        N/A |        N/A | Games, books, subscriptions, going out for food or fun
  3. Food            |     300.00 |        N/A |        N/A |        N/A | Food other than what's covered in entertainment
@@ -415,6 +419,7 @@ Allowance recorded
                         """.trimMargin(),
                         """Select account to ALLOCATE money into from '${application.budgetData.generalAccount.name}' [$4,500.00]
     Account         |    Balance |    Average |        Max |        Min | Description
+    Total           |        N/A |        N/A |        N/A |        N/A | Total Monthly Expenditures
  1. Education       |       0.00 |        N/A |        N/A |        N/A | Tuition, books, etc.
  2. Entertainment   |       0.00 |        N/A |        N/A |        N/A | Games, books, subscriptions, going out for food or fun
  3. Food            |     300.00 |        N/A |        N/A |        N/A | Food other than what's covered in entertainment

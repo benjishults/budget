@@ -25,6 +25,13 @@ interface AnalyticsDao {
     ): BigDecimal? =
         TODO()
 
+    fun averageExpenditure(
+        timeZone: TimeZone,
+        options: AnalyticsOptions,
+        budgetId: UUID,
+    ): BigDecimal? =
+        TODO()
+
     fun maxExpenditure(): BigDecimal? =
         TODO("Not yet implemented")
 
