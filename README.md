@@ -1,5 +1,25 @@
 # BPS Budget
 
+## KMP notes
+
+I just started translating this to a KMP app. This README may not be up-to-date with that progress immediately as
+I'll probably be fiddling for a while.
+
+This is a Kotlin Multiplatform project targeting Android, Web, Desktop, Server.
+
+* `/composeApp` is for code that will be shared across Compose Multiplatform applications.
+  It contains several subfolders:
+    - `commonMain` is for code that’s common for all targets.
+    - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
+
+* `/server` is for the Ktor server application.
+
+* `/shared` is for the code that will be shared between all targets in the project.
+  The most important subfolder is `commonMain`. If preferred, you can add code to the platform-specific folders here
+  too.
+
+You can open the web application by running the `:composeApp:wasmJsBrowserDevelopmentRun` Gradle task.
+
 ## One-Time Setup
 
 ### Set up the env for DB
