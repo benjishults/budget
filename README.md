@@ -1,5 +1,18 @@
 # BPS Budget
 
+## MOVED
+
+The code in this repo is no longer maintained.
+
+The work is continuing in the budget-kmp repository where the intention is to
+
+1. continue developing the application
+2. learn about KMP by
+    1. building a server
+    2. building an android app
+    3. building a web app
+    4. organizing code for better sharing
+
 ## One-Time Setup
 
 ### Set up the env for DB
