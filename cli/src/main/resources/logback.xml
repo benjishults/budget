@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+
+    <appender name="FILE-ROLLING-DEBUG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+
+        <file>${user.home}/.local/share/bps-budget/logs/bps-budget-cli.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${user.home}/.local/share/bps-budget/logs/bps-budget-cli.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!-- each archived file, size max 10MB -->
+            <maxHistory>10</maxHistory>
+            <maxFileSize>1MB</maxFileSize>
+        </rollingPolicy>
+
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+
+        <encoder>
+            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="STDOUT-ERROR" class="ch.qos.logback.core.ConsoleAppender">
+
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+
+        <encoder>
+            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} %msg%n</pattern>
+        </encoder>
+
+    </appender>
+
+    <!--  This should result in debug logs only from bps classes being logged   -->
+    <logger name="bps" level="DEBUG">
+        <appender-ref ref="FILE-ROLLING-DEBUG"/>
+    </logger>
+
+    <root level="WARN">
+        <appender-ref ref="FILE-ROLLING-DEBUG"/>
+        <appender-ref ref="STDOUT-ERROR"/>
+    </root>
+
+</configuration>
